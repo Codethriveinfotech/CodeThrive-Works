@@ -19,7 +19,7 @@ const SplashScreen = ({ isFading }) => {
 
       <div className="splash-content">
         <img 
-          src="/logo.png" 
+          src="/full_logo.png" 
           alt="CodeThrive Infotech Logo" 
           className="splash-logo"
           onError={(e) => {

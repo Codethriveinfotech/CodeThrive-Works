@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const res = await axios.post('/auth/login', { identifier, password });
+      const res = await axios.post('/auth/login', { employeeId: identifier, password });
       setUser(res.data.user);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       localStorage.removeItem('isMock');

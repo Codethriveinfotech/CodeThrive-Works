@@ -49,7 +49,7 @@ exports.registerEmployee = async (req, res) => {
     });
     
     if (existingEmployee) {
-      return res.status(400).json({ success: false, message: 'Employee ID, Email ID, or Phone Number is already registered.' });
+      return res.status(400).json({ success: false, message: 'An account with this Employee ID already exists.' });
     }
 
     // Create User Account First

@@ -62,6 +62,9 @@ const Register = () => {
   return (
     <div className="auth-page" style={{ margin: '2rem 0' }}>
       <div className="auth-card card" style={{ maxWidth: '600px', padding: '2.5rem' }}>
+        <div className="auth-logo-circle" style={{ width: '65px', height: '65px', overflow: 'hidden', border: 'none', background: 'transparent' }}>
+          <img src="/logo.png" alt="CTI Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.2)' }} />
+        </div>
         <div className="auth-header">
           <h2>New Employee Registration</h2>
           <p>Please register to create your account.</p>
