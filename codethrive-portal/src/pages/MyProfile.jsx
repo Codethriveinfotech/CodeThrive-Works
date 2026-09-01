@@ -141,7 +141,7 @@ const MyProfile = () => {
                 <span style={{ fontSize: '3rem', color: 'var(--primary)', fontWeight: 'bold' }}>{profile.fullName.charAt(0)}</span>
               )}
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', padding: '0.2rem', cursor: 'pointer' }}>
-                <Camera size={16} color="#fff" />
+                <Camera size={16} color="var(--text-main)" />
               </div>
             </div>
             <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.4rem' }}>{profile.fullName}</h2>

@@ -82,7 +82,7 @@ const Topbar = () => {
           {unreadCount > 0 && (
             <span style={{
               position: 'absolute', top: '-4px', right: '-4px',
-              background: 'var(--danger)', color: '#fff', fontSize: '0.65rem',
+              background: 'var(--danger)', color: 'var(--text-main)', fontSize: '0.65rem',
               width: '16px', height: '16px', display: 'flex', alignItems: 'center',
               justifyContent: 'center', borderRadius: '50%', fontWeight: 'bold'
             }}>
@@ -98,7 +98,7 @@ const Topbar = () => {
             width: '40px', height: '40px', borderRadius: '50%', 
             background: 'linear-gradient(135deg, var(--primary), var(--accent))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 'bold', fontSize: '1.1rem', color: '#fff'
+            fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--text-main)'
           }}>
             {getInitials(user?.name || user?.email || 'User')}
           </div>

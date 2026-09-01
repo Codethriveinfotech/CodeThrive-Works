@@ -219,7 +219,7 @@ const Attendance = () => {
         </Card>
         <Card>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'rgba(155, 89, 182, 0.1)', borderRadius: 'var(--radius-sm)' }}><FileText size={24} color="#9b59b6" /></div>
+            <div style={{ padding: '1rem', background: 'var(--primary-bg)', borderRadius: 'var(--radius-sm)' }}><FileText size={24} color="var(--primary)" /></div>
             <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Avg Working Hrs</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{summary?.averageWorkingHours || 0}h</h3></div>
           </div>
         </Card>
@@ -319,7 +319,7 @@ const Attendance = () => {
         <form onSubmit={submitLeave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="form-group">
             <label>Leave Type</label>
-            <select className="input-field" required onChange={e => setFormPayload({...formPayload, leaveType: e.target.value})} style={{ backgroundColor: '#0f172a' }}>
+            <select className="input-field" required onChange={e => setFormPayload({...formPayload, leaveType: e.target.value})} style={{ backgroundColor: 'var(--bg-card)' }}>
               <option value="">Select Type</option>
               <option value="Casual">Casual Leave</option>
               <option value="Sick">Sick Leave</option>

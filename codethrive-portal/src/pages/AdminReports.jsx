@@ -159,7 +159,7 @@ const AdminReports = () => {
             {selectedReport.blockers && (
               <div>
                 <h5 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Blockers</h5>
-                <p style={{ lineHeight: 1.6, margin: 0, padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: 'var(--radius-sm)', color: '#fca5a5' }}>
+                <p style={{ lineHeight: 1.6, margin: 0, padding: '1rem', background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)', color: 'var(--danger)' }}>
                   {selectedReport.blockers}
                 </p>
               </div>

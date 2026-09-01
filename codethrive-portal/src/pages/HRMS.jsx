@@ -196,7 +196,7 @@ const HRMS = () => {
           </div>
           <div className="form-group">
             <label>Employment Type</label>
-            <select className="input-field" value={formData.employmentType} onChange={(e) => setFormData({...formData, employmentType: e.target.value})} style={{ backgroundColor: '#0f172a' }}>
+            <select className="input-field" value={formData.employmentType} onChange={(e) => setFormData({...formData, employmentType: e.target.value})} style={{ backgroundColor: 'var(--bg-card)' }}>
               <option value="Full-Time">Full-Time</option>
               <option value="Part-Time">Part-Time</option>
               <option value="Contract">Contract</option>

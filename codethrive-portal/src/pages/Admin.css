@@ -12,8 +12,8 @@
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--glass-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   padding: 1.5rem;
   border-radius: var(--radius-md);
   display: flex;
@@ -23,8 +23,8 @@
 }
 
 .stat-card:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
 }
 
 .stat-icon {
@@ -66,7 +66,7 @@
 }
 
 .enterprise-table th {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-card);
   color: var(--text-muted);
   font-weight: 500;
   font-size: 0.85rem;
@@ -75,7 +75,7 @@
 }
 
 .enterprise-table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-card-hover);
 }
 
 /* Status Badges */
@@ -87,7 +87,7 @@
   font-weight: 600;
 }
 
-.status-badge.working { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
-.status-badge.on-break { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
-.status-badge.logged-out { background: rgba(255, 255, 255, 0.1); color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.2); }
-.status-badge.absent { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+.status-badge.working { background: var(--success-bg); color: var(--success); border: 1px solid var(--success); }
+.status-badge.on-break { background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+.status-badge.logged-out { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-hover); }
+.status-badge.absent { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }

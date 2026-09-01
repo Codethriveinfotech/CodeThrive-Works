@@ -134,7 +134,7 @@ const Employees = () => {
           <div style={{ 
             width: '36px', height: '36px', borderRadius: '50%', 
             background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold'
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', fontWeight: 'bold'
           }}>
             {row.fullName.charAt(0)}
           </div>
@@ -193,11 +193,11 @@ const Employees = () => {
                   onChange={e => setFilterDept(e.target.value)} 
                   style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-sm)' }}
                 >
-                  <option value="" style={{ color: '#000' }}>All Departments</option>
-                  <option value="Engineering" style={{ color: '#000' }}>Engineering</option>
-                  <option value="Design" style={{ color: '#000' }}>Design</option>
-                  <option value="HR" style={{ color: '#000' }}>HR</option>
-                  <option value="Marketing" style={{ color: '#000' }}>Marketing</option>
+                  <option value="" style={{ color: 'var(--bg-main)' }}>All Departments</option>
+                  <option value="Engineering" style={{ color: 'var(--bg-main)' }}>Engineering</option>
+                  <option value="Design" style={{ color: 'var(--bg-main)' }}>Design</option>
+                  <option value="HR" style={{ color: 'var(--bg-main)' }}>HR</option>
+                  <option value="Marketing" style={{ color: 'var(--bg-main)' }}>Marketing</option>
                 </select>
               </div>
             </div>
@@ -215,7 +215,7 @@ const Employees = () => {
               <div style={{ 
                 width: '80px', height: '80px', borderRadius: '50%', 
                 background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '2rem', fontWeight: 'bold'
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', fontSize: '2rem', fontWeight: 'bold'
               }}>
                 {selectedEmployee?.fullName?.charAt(0) || 'U'}
               </div>

@@ -10,7 +10,7 @@
   flex: 1;
   position: relative;
   display: none; /* Hide on mobile */
-  background: #000;
+  background: var(--bg-card);
   overflow: hidden;
 }
 
@@ -58,7 +58,7 @@
 
 .auth-quote p {
   font-size: 1.25rem;
-  color: #CBD5E1;
+  color: var(--text-secondary);
   max-width: 80%;
   line-height: 1.6;
 }
@@ -102,14 +102,14 @@
 .auth-logo-circle {
   width: 56px;
   height: 56px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .auth-header h2 {
@@ -149,7 +149,7 @@
   color: var(--text-main);
   font-weight: 500;
   text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.2);
+  text-decoration-color: var(--border-hover);
   text-underline-offset: 4px;
 }
 .forgot-link:hover {
@@ -169,7 +169,7 @@
 .divider::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .divider::before {
@@ -205,7 +205,7 @@
   text-align: center;
   font-size: 1.5rem;
   font-weight: 600;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-main);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-main);
@@ -214,9 +214,9 @@
 }
 
 .otp-field:focus {
-  background: rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-glow);
 }
 
 .resend-text {
@@ -232,7 +232,7 @@
 .role-tabs {
   display: flex;
   gap: 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-main);
   padding: 0.35rem;
   border-radius: var(--radius-sm);
   margin-bottom: 2rem;
@@ -257,14 +257,14 @@
 
 .role-tab:hover {
   color: var(--text-main);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-card);
 }
 
 .role-tab.active {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-card-hover);
   color: var(--text-main);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Password Toggle & Inputs */
@@ -302,18 +302,18 @@
 
 .input-error {
   border-color: var(--danger) !important;
-  background: rgba(239, 68, 68, 0.05) !important;
+  background: var(--danger-bg) !important;
 }
 .input-error:focus {
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+  box-shadow: 0 0 0 2px var(--danger) !important;
 }
 
 .auth-error-msg {
-  background: rgba(239, 68, 68, 0.1);
-  color: #FCA5A5;
+  background: var(--danger-bg);
+  color: var(--danger);
   padding: 0.85rem 1rem;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--danger);
   font-size: 0.85rem;
   margin-bottom: 1.5rem;
   display: flex;

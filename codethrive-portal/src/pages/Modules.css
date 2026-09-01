@@ -137,7 +137,7 @@
 }
 
 .video-tile {
-  background: #000000;
+  background: var(--bg-main);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   position: relative;
@@ -291,7 +291,7 @@
 .circle-inner {
   width: 190px;
   height: 190px;
-  background: #0A0A0A;
+  background: var(--bg-secondary);
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -639,7 +639,7 @@
 .task-search-input {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-main);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   color: var(--text-main);

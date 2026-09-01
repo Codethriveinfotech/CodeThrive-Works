@@ -42,16 +42,19 @@ const Performance = () => {
 
   const renderStars = (rating) => {
     const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      if (i <= Math.floor(rating)) {
-        stars.push(<Star key={i} size={20} fill="#F59E0B" color="#F59E0B" />);
-      } else if (i === Math.ceil(rating) && !Number.isInteger(rating)) {
-         // Half star logic can go here if needed, keeping it simple for now
-         stars.push(<Star key={i} size={20} fill="#F59E0B" color="#F59E0B" style={{ clipPath: 'inset(0 50% 0 0)' }} />);
-      } else {
-        stars.push(<Star key={i} size={20} color="var(--border-color)" />);
-      }
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<Star key={i} size={20} fill="var(--warning)" color="var(--warning)" />);
     }
+    if (hasHalfStar) {
+      stars.push(<Star key="half" size={20} fill="var(--warning)" color="var(--warning)" style={{ clipPath: 'inset(0 50% 0 0)' }} />);
+    }
+    for (let i = stars.length; i < 5; i++) {
+      stars.push(<Star key={i} size={20} color="var(--border-color)" />);
+    }
+    
     return <div style={{ display: 'flex', gap: '4px' }}>{stars}</div>;
   };
 

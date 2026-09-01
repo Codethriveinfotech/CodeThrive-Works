@@ -94,10 +94,10 @@
 .cal-present { border-color: var(--success); color: var(--success); }
 .cal-absent { border-color: var(--danger); color: var(--danger); }
 .cal-late { border-color: var(--warning); color: var(--warning); }
-.cal-leave { border-color: #9b59b6; color: #9b59b6; }
+.cal-leave { border-color: var(--primary-light); color: var(--primary-light); }
 .cal-holiday { border-color: var(--text-muted); color: var(--text-muted); }
 .cal-wfh { border-color: var(--primary); color: var(--primary); }
-.cal-halfday { border-color: #e67e22; color: #e67e22; }
+.cal-halfday { border-color: var(--warning); color: var(--warning); }
 
 .chart-container {
   height: 300px;

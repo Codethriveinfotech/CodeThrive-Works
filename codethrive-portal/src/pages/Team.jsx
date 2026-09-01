@@ -156,16 +156,16 @@ const TeamTasks = () => {
           <div style={{ display: 'flex', gap: '1rem' }}>
             <div className="form-group" style={{ flex: 1 }}>
               <label>Priority</label>
-              <select className="input-field" value={newTask.priority} onChange={e => setNewTask({...newTask, priority: e.target.value})} style={{ backgroundColor: '#0f172a' }}>
+              <select className="input-field" value={newTask.priority} onChange={e => setNewTask({...newTask, priority: e.target.value})} style={{ backgroundColor: 'var(--bg-card)' }}>
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
                 <option value="High">High</option>
-                <option value="Urgent">Urgent</option>
+                <option value="Critical">Critical</option>
               </select>
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label>Status</label>
-              <select className="input-field" value={newTask.status} onChange={e => setNewTask({...newTask, status: e.target.value})} style={{ backgroundColor: '#0f172a' }}>
+              <select className="input-field" value={newTask.status} onChange={e => setNewTask({...newTask, status: e.target.value})} style={{ backgroundColor: 'var(--bg-card)' }}>
                 <option value="To Do">To Do</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Review">Review</option>

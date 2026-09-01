@@ -6,6 +6,7 @@ import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
 import './Admin.css';
+import './Dashboard.css'; // added to use premium dashboard styles
 
 const Admin = () => {
   const { user } = useAuth();
@@ -82,69 +83,82 @@ const Admin = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div>
-        <h1 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Management Console</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Live Overview & System Health</p>
+    <div className="dashboard-container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', padding: 0 }}>
+      {/* Welcome / Header */}
+      <div className="welcome-hero-section ultra-premium-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '2rem' }}>
+        <div className="welcome-content">
+          <p style={{ margin: '0 0 0.5rem 0', color: 'var(--primary-light)', fontSize: '0.95rem', fontWeight: 500, letterSpacing: '0.5px' }}>Administrator Panel</p>
+          <h1 className="welcome-title">Management Console</h1>
+          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontStyle: 'italic' }}>Live Overview & System Health</p>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'var(--primary-bg)', borderRadius: 'var(--radius-sm)' }}>
-              <Users size={24} color="var(--primary-light)" />
-            </div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Total Employees</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{stats.totalEmployees}</h3></div>
+      <div className="metrics-grid">
+        <Card className="metric-card premium-hover">
+          <div className="metric-icon bg-primary-light">
+            <Users size={26} color="var(--primary)" />
+          </div>
+          <div className="metric-data">
+            <p>Total Employees</p>
+            <h3>{stats.totalEmployees}</h3>
           </div>
         </Card>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)' }}>
-              <UserCheck size={24} color="var(--success)" />
-            </div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Working Now</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{stats.working}</h3></div>
+        
+        <Card className="metric-card premium-hover">
+          <div className="metric-icon bg-success-light">
+            <UserCheck size={26} color="var(--success)" />
+          </div>
+          <div className="metric-data">
+            <p>Working Now</p>
+            <h3>{stats.working}</h3>
           </div>
         </Card>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)' }}>
-              <Coffee size={24} color="var(--warning)" />
-            </div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>On Break</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{stats.onBreak}</h3></div>
+        
+        <Card className="metric-card premium-hover">
+          <div className="metric-icon bg-warning-light">
+            <Coffee size={26} color="var(--warning)" />
+          </div>
+          <div className="metric-data">
+            <p>On Break</p>
+            <h3>{stats.onBreak}</h3>
           </div>
         </Card>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)' }}>
-              <UserX size={24} color="var(--danger)" />
-            </div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Absent</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{stats.absent}</h3></div>
+        
+        <Card className="metric-card premium-hover">
+          <div className="metric-icon bg-danger-light">
+            <UserX size={26} color="var(--danger)" />
+          </div>
+          <div className="metric-data">
+            <p>Absent</p>
+            <h3>{stats.absent}</h3>
           </div>
         </Card>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'rgba(139, 92, 246, 0.1)', borderRadius: 'var(--radius-sm)' }}>
-              <UserPlus size={24} color="#8b5cf6" />
-            </div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Pending Registrations</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{stats.pendingRegistrations}</h3></div>
+      <div className="metrics-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+        <Card className="metric-card premium-hover">
+          <div className="metric-icon" style={{ background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+            <UserPlus size={26} color="var(--secondary)" />
+          </div>
+          <div className="metric-data">
+            <p>Pending Registrations</p>
+            <h3>{stats.pendingRegistrations}</h3>
           </div>
         </Card>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'rgba(236, 72, 153, 0.1)', borderRadius: 'var(--radius-sm)' }}>
-              <FileCheck size={24} color="#ec4899" />
-            </div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Pending Task Reviews</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{stats.pendingTaskReviews}</h3></div>
+        <Card className="metric-card premium-hover">
+          <div className="metric-icon" style={{ background: 'rgba(236, 72, 153, 0.12)', border: '1px solid rgba(236, 72, 153, 0.2)' }}>
+            <FileCheck size={26} color="var(--accent)" />
+          </div>
+          <div className="metric-data">
+            <p>Pending Task Reviews</p>
+            <h3>{stats.pendingTaskReviews}</h3>
           </div>
         </Card>
       </div>
 
       {/* Live Monitoring Table */}
-      <Card title="Live Employee Monitoring" action={<button className="btn btn-outline" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>View Full Report</button>} style={{ padding: 0 }}>
+      <Card className="premium-card" title="Live Employee Monitoring" action={<button className="btn btn-outline" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}>View Full Report</button>} style={{ padding: 0 }}>
         <DataTable 
           columns={columns} 
           data={liveMonitoring} 

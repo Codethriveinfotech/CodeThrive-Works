@@ -60,7 +60,7 @@ const Login = () => {
               <button 
                 type="button"
                 className="btn btn-outline"
-                style={{ padding: '0.5rem', width: '100%', borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}
+                style={{ padding: '0.5rem', width: '100%', borderColor: 'rgba(255,255,255,0.3)', color: 'var(--text-main)' }}
                 onClick={() => navigate('/register')}
               >
                 Register Now

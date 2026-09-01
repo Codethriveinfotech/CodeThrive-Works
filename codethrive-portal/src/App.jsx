@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import AdminSidebar from './components/AdminSidebar';
 import AdminTopbar from './components/AdminTopbar';
 import SplashScreen from './components/SplashScreen';
+import PageTransition from './components/PageTransition';
 import './App.css';
 
 // Lazy loading all pages to significantly improve initial load performance
@@ -35,6 +37,7 @@ const MyTasks = lazy(() => import('./pages/MyTasks'));
 const DailyReports = lazy(() => import('./pages/DailyReports'));
 const Meetings = lazy(() => import('./pages/Meetings'));
 const Leave = lazy(() => import('./pages/Leave'));
+const AdminLeave = lazy(() => import('./pages/AdminLeave'));
 const Documents = lazy(() => import('./pages/Documents'));
 
 const Toast = ({ message, show }) => {
@@ -83,15 +86,20 @@ const ProtectedRoute = ({ allowedRoles, loginPath = '/employee/login', defaultRe
 };
 
 const EmployeeLayout = () => {
+  const location = useLocation();
   return (
     <div className="app-container">
       <Sidebar />
       <div className="main-wrapper">
         <Topbar />
         <main className="main-content">
-          <Suspense fallback={<PageLoader />}>
-            <Outlet />
-          </Suspense>
+          <AnimatePresence mode="wait">
+            <PageTransition key={location.pathname}>
+              <Suspense fallback={<PageLoader />}>
+                <Outlet />
+              </Suspense>
+            </PageTransition>
+          </AnimatePresence>
         </main>
       </div>
     </div>
@@ -99,15 +107,20 @@ const EmployeeLayout = () => {
 };
 
 const AdminLayout = () => {
+  const location = useLocation();
   return (
     <div className="app-container">
       <AdminSidebar />
       <div className="main-wrapper">
         <AdminTopbar />
         <main className="main-content">
-          <Suspense fallback={<PageLoader />}>
-            <Outlet />
-          </Suspense>
+          <AnimatePresence mode="wait">
+            <PageTransition key={location.pathname}>
+              <Suspense fallback={<PageLoader />}>
+                <Outlet />
+              </Suspense>
+            </PageTransition>
+          </AnimatePresence>
         </main>
       </div>
     </div>
@@ -115,6 +128,7 @@ const AdminLayout = () => {
 };
 
 const AuthLayout = () => {
+  const location = useLocation();
   return (
     <div className="auth-split-container">
       <div className="auth-split-image">
@@ -126,9 +140,13 @@ const AuthLayout = () => {
         </div>
       </div>
       <div className="auth-split-content">
-        <Suspense fallback={<PageLoader />}>
-          <Outlet />
-        </Suspense>
+        <AnimatePresence mode="wait">
+          <PageTransition key={location.pathname}>
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
+          </PageTransition>
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -201,6 +219,7 @@ function App() {
               <Route path="/admin/employees" element={<Employees />} />
               <Route path="/admin/tasks" element={<AdminTasks />} />
               <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/leave" element={<AdminLeave />} />
               <Route path="/admin/payroll" element={<AdminPayroll />} />
               <Route path="/admin/documents" element={<AdminDocuments />} />
               <Route path="/admin/profile" element={<MyProfile />} />

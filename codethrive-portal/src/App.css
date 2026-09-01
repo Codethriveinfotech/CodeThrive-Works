@@ -137,7 +137,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  background: var(--gradient-primary);
   display: flex;
   align-items: center;
   justify-content: center;

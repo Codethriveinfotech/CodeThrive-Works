@@ -26,8 +26,8 @@
 
 /* Timer Card */
 .attendance-timer-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--glass-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   padding: 1rem 1.5rem;
   border-radius: var(--radius-md);
   display: flex;
@@ -124,7 +124,7 @@
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+  background: linear-gradient(135deg, var(--border-hover) 0%, transparent 100%);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -140,14 +140,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: inset 0 2px 4px rgba(255,255,255,0.1);
+  box-shadow: inset 0 2px 4px var(--border-hover);
 }
 
-.bg-primary-light { background: var(--primary-bg); border: 1px solid rgba(99, 102, 241, 0.2); }
-.bg-warning-light { background: var(--warning-bg); border: 1px solid rgba(245, 158, 11, 0.2); }
-.bg-danger-light { background: var(--danger-bg); border: 1px solid rgba(244, 63, 94, 0.2); }
-.bg-success-light { background: var(--success-bg); border: 1px solid rgba(16, 185, 129, 0.2); }
-.bg-accent-light { background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.2); }
+.bg-primary-light { background: var(--primary-bg); border: 1px solid var(--border-accent); }
+.bg-warning-light { background: var(--warning-bg); border: 1px solid var(--warning); }
+.bg-danger-light { background: var(--danger-bg); border: 1px solid var(--danger); }
+.bg-success-light { background: var(--success-bg); border: 1px solid var(--success); }
+.bg-accent-light { background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.3); }
 
 .metric-data {
   z-index: 1;
@@ -197,14 +197,14 @@
   padding: 1rem 1.25rem;
   border-radius: var(--radius-sm);
   margin-bottom: 0.75rem;
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   transition: all 0.25s ease;
 }
 
 .task-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
   transform: translateX(4px);
 }
 
@@ -236,7 +236,7 @@
 }
 
 .notification-item:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-card);
 }
 
 .notification-item p {
@@ -258,10 +258,10 @@
   flex-wrap: wrap;
   gap: 2rem;
   padding: 2.5rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  background: linear-gradient(135deg, var(--primary-bg) 0%, rgba(6, 182, 212, 0.05) 100%);
+  border: 1px solid var(--border-accent);
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3), inset 0 1px 0 var(--border-color);
   position: relative;
   overflow: hidden;
 }
@@ -271,7 +271,7 @@
   position: absolute;
   top: 0; right: 0;
   width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--primary-bg) 0%, transparent 70%);
   filter: blur(40px);
   z-index: 0;
   pointer-events: none;
@@ -293,7 +293,7 @@
 }
 
 .highlight-name {
-  background: linear-gradient(90deg, #818CF8, #C084FC);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
@@ -316,8 +316,8 @@
   font-size: 0.85rem;
   font-weight: 500;
   letter-spacing: 0.3px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   backdrop-filter: blur(8px);
 }
@@ -335,9 +335,9 @@
 .role-badge strong { color: var(--primary-light); font-weight: 400; opacity: 0.8; }
 
 .premium-timer {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  background: var(--bg-modal);
+  border: 1px solid var(--border-hover);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
   z-index: 1;
   padding: 1.5rem;
   border-radius: var(--radius-md);
@@ -385,7 +385,7 @@
 
 /* Ultra Premium Additions */
 .icon-btn-subtle {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-card);
   border: 1px solid transparent;
   color: var(--text-muted);
   width: 32px;
@@ -399,9 +399,9 @@
 }
 
 .icon-btn-subtle:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-card-hover);
   color: var(--text-main);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-hover);
 }
 
 .task-id-badge {
@@ -417,8 +417,8 @@
 .empty-state-premium {
   padding: 4rem 2rem;
   text-align: center;
-  background: rgba(255, 255, 255, 0.01);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border: 1px dashed var(--border-hover);
   border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;

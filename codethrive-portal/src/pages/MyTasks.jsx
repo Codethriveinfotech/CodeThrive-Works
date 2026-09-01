@@ -133,7 +133,7 @@ const MyTasks = () => {
         </Card>
         <Card className="summary-card premium-hover">
           <div className="summary-icon-box bg-info-light" style={{ background: 'rgba(14, 165, 233, 0.1)' }}>
-            <Play size={24} color="#0ea5e9" />
+            <Play size={24} color="var(--info)" />
           </div>
           <div className="summary-info">
             <p>In Progress</p>

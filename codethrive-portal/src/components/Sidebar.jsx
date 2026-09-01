@@ -3,8 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, CheckSquare, FileText, Banknote, 
-  CalendarCheck, Clock, FileBarChart, CalendarDays, 
-  UserCircle, LogOut, ChevronLeft, ChevronRight, FolderOpen 
+  CalendarOff, UserCircle, LogOut, ChevronLeft, ChevronRight, FolderOpen 
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -12,14 +11,14 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
-  // Employee Portal Links Only
   const navLinks = [
-    { name: 'Dashboard', path: '/employee/dashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'My Tasks', path: '/employee/tasks', icon: <CheckSquare size={20} /> },
-    { name: 'Today\'s Work', path: '/employee/reports', icon: <FileText size={20} /> },
-    { name: 'Payslips', path: '/employee/payslips', icon: <Banknote size={20} /> },
-    { name: 'Documents', path: '/employee/documents', icon: <FolderOpen size={20} /> },
-    { name: 'My Profile', path: '/employee/profile', icon: <UserCircle size={20} /> },
+    { name: 'Dashboard', path: '/employee/dashboard', icon: <LayoutDashboard size={26} /> },
+    { name: 'My Tasks', path: '/employee/tasks', icon: <CheckSquare size={26} /> },
+    { name: 'Today\'s Work', path: '/employee/reports', icon: <FileText size={26} /> },
+    { name: 'Leave', path: '/employee/leave', icon: <CalendarOff size={26} /> },
+    { name: 'Payslips', path: '/employee/payslips', icon: <Banknote size={26} /> },
+    { name: 'Documents', path: '/employee/documents', icon: <FolderOpen size={26} /> },
+    { name: 'My Profile', path: '/employee/profile', icon: <UserCircle size={26} /> },
   ];
 
   const handleLogout = () => {
@@ -33,13 +32,13 @@ const Sidebar = () => {
       <div className="sidebar-header">
         {!collapsed && (
           <div className="logo-container">
-            <div className="logo-icon">C</div>
-            <span className="logo-text">CodeThrive</span>
+            <img src="/logo.png" alt="CodeThrive Infotech Logo" className="sidebar-logo-img" style={{ width: '38px', height: '38px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />
+            <span className="logo-text" style={{ fontSize: '1.15rem' }}>CodeThrive<br/><span style={{ fontSize: '0.8rem', opacity: 0.8, letterSpacing: '1px' }}>Infotech</span></span>
           </div>
         )}
-        {collapsed && <div className="logo-icon small">C</div>}
+        {collapsed && <img src="/logo.png" alt="Logo" className="sidebar-logo-img small" style={{ width: '38px', height: '38px', objectFit: 'contain', margin: '0 auto', filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />}
         <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
       </div>
 
@@ -57,7 +56,7 @@ const Sidebar = () => {
 
       <div className="sidebar-footer">
         <button className="nav-item logout-btn" onClick={handleLogout} title={collapsed ? "Logout" : ""}>
-          <LogOut size={20} />
+          <LogOut size={26} />
           {!collapsed && <span>Logout</span>}
         </button>
       </div>

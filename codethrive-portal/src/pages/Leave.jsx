@@ -3,6 +3,7 @@ import api from '../utils/api';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
+import { motion } from 'framer-motion';
 import { Calendar, PlusCircle, CheckCircle2, Clock, AlertCircle, CalendarRange } from 'lucide-react';
 import './Modules.css';
 
@@ -25,8 +26,8 @@ const Leave = () => {
   const fetchLeaves = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/attendance/leaves');
-      setData(res.data || { requests: [] });
+      const res = await api.get('/leaves/my-leaves');
+      setData(res.data.data || { requests: [] });
     } catch (err) {
       console.error('Failed to fetch leaves', err);
     } finally {
@@ -37,14 +38,14 @@ const Leave = () => {
   const handleApplyLeave = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/attendance/leaves', formData);
+      const res = await api.post('/leaves', formData);
       setData(prev => ({
         ...prev,
         requests: [res.data, ...prev.requests]
       }));
       setIsModalOpen(false);
       setFormData({ leaveType: 'Casual', startDate: '', endDate: '', reason: '' });
-      alert('Leave requested successfully');
+      fetchLeaves(); // Refresh balances
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to apply leave');
     }
@@ -58,7 +59,12 @@ const Leave = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Leave & Attendance</h1>
@@ -70,7 +76,7 @@ const Leave = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-        <Card>
+        <Card className="hover-lift">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ padding: '1rem', background: 'var(--primary-bg)', borderRadius: 'var(--radius-sm)' }}>
               <CheckCircle2 size={24} color="var(--primary-light)" />
@@ -81,7 +87,7 @@ const Leave = () => {
             </div>
           </div>
         </Card>
-        <Card>
+        <Card className="hover-lift">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ padding: '1rem', background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)' }}>
               <AlertCircle size={24} color="var(--danger)" />
@@ -92,7 +98,7 @@ const Leave = () => {
             </div>
           </div>
         </Card>
-        <Card>
+        <Card className="hover-lift">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ padding: '1rem', background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)' }}>
               <CalendarRange size={24} color="var(--success)" />
@@ -103,14 +109,14 @@ const Leave = () => {
             </div>
           </div>
         </Card>
-        <Card>
+        <Card className="hover-lift">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ padding: '1rem', background: 'var(--warning-bg)', borderRadius: 'var(--radius-sm)' }}>
               <Clock size={24} color="var(--warning)" />
             </div>
             <div>
-              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Unpaid / WFH</p>
-              <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{data.unpaidLeave || 0} / {data.workFromHomeCount || 0}</h3>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Pending Requests</p>
+              <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{data.pendingRequests || 0}</h3>
             </div>
           </div>
         </Card>
@@ -198,7 +204,7 @@ const Leave = () => {
         </form>
       </Modal>
 
-    </div>
+    </motion.div>
   );
 };
 

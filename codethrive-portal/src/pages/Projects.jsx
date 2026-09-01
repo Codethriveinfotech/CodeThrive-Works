@@ -155,7 +155,7 @@ const Projects = () => {
           <div style={{ display: 'flex', gap: '1rem' }}>
             <div className="form-group" style={{ flex: 1 }}>
               <label>Status</label>
-              <select className="input-field" value={newProject.status} onChange={e => setNewProject({...newProject, status: e.target.value})} style={{ backgroundColor: '#0f172a' }}>
+              <select className="input-field" value={newProject.status} onChange={e => setNewProject({...newProject, status: e.target.value})} style={{ backgroundColor: 'var(--bg-card)' }}>
                 <option value="Active">Active</option>
                 <option value="On Hold">On Hold</option>
                 <option value="Completed">Completed</option>

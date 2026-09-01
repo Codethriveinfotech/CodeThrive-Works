@@ -40,8 +40,8 @@ const AdminTasks = () => {
         api.get('/tasks'),
         api.get('/employees')
       ]);
-      setTasks(taskRes.data.data);
-      setEmployees(empRes.data.data);
+      setTasks(taskRes.data || []);
+      setEmployees(empRes.data || []);
     } catch (err) {
       console.error('Failed to fetch tasks', err);
     } finally {
@@ -189,12 +189,15 @@ const AdminTasks = () => {
         </div>
 
         {!filteredTasks || filteredTasks.length === 0 ? (
-          <div className="empty-state-premium" style={{ margin: '2rem' }}>
-            <CheckSquare size={64} className="icon" />
-            <h3 style={{ fontSize: '1.4rem', color: 'var(--text-main)', margin: '0 0 0.5rem 0' }}>No Tasks Found</h3>
-            <p style={{ maxWidth: '400px', margin: '0 auto', lineHeight: 1.6 }}>
-              There are currently no tasks matching your search. Click "Create Task" to assign a new one.
+          <div className="empty-state-premium" style={{ margin: '2rem', padding: '4rem 2rem' }}>
+            <CheckSquare size={64} className="icon" style={{ marginBottom: '1rem', color: 'var(--text-muted)', opacity: 0.5 }} />
+            <h3 style={{ fontSize: '1.5rem', color: 'var(--text-main)', margin: '0 0 0.5rem 0' }}>No Tasks Available</h3>
+            <p style={{ maxWidth: '400px', margin: '0 auto 1.5rem auto', lineHeight: 1.6, color: 'var(--text-muted)' }}>
+              Create and assign tasks to employees to manage their work efficiently.
             </p>
+            <button className="btn btn-primary" onClick={openCreateModal}>
+              <Plus size={16} /> Create Task
+            </button>
           </div>
         ) : (
           <div style={{ padding: '1rem' }}>
