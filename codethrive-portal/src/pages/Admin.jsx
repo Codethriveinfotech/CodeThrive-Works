@@ -26,30 +26,15 @@ const Admin = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // const res = await api.get('/dashboard/admin-stats');
-        // if (res.success) { ... }
-        
-        // Simulating Backend Response
-        setTimeout(() => {
-          setStats({
-            totalEmployees: 45,
-            online: 38,
-            working: 32,
-            onBreak: 6,
-            absent: 7,
-            pendingRegistrations: 3,
-            pendingTaskReviews: 12
-          });
-          setLiveMonitoring([
-            { id: 'EMP-001', name: 'Alice Smith', dept: 'Engineering', status: 'Working', task: 'API Integration', duration: '04:12:00' },
-            { id: 'EMP-002', name: 'Bob Johnson', dept: 'Design', status: 'On Break', task: 'UI Mockups', duration: '03:45:10' },
-            { id: 'EMP-003', name: 'Charlie Davis', dept: 'Marketing', status: 'Working', task: 'Campaign Analysis', duration: '05:20:00' },
-            { id: 'EMP-004', name: 'Diana Prince', dept: 'HR', status: 'Absent', task: 'Leave', duration: '00:00:00' },
-          ]);
-          setLoading(false);
-        }, 800);
+        setLoading(true);
+        const res = await api.get('/dashboard/admin-stats');
+        if (res.data.success) {
+          setStats(res.data.stats);
+          setLiveMonitoring(res.data.liveMonitoring || []);
+        }
       } catch (err) {
         console.error('Failed to load admin stats', err);
+      } finally {
         setLoading(false);
       }
     };

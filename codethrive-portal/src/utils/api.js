@@ -37,7 +37,9 @@ api.interceptors.response.use(
       if (!isMock) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/employee/login';
+        }
       } else {
         console.warn('Mock mode: Suppressed 401 Unauthorized redirect');
       }

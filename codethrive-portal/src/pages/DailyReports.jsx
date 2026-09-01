@@ -5,7 +5,7 @@ import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
 import { 
   FileText, Send, CheckCircle2, Clock, 
-  AlertCircle, Download, FilePlus
+  AlertCircle, Download, PlusCircle
 } from 'lucide-react';
 import './Modules.css';
 
@@ -89,39 +89,48 @@ const DailyReports = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Daily Work Reports</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Submit and track your daily work progress.</p>
+      <div className="welcome-hero-section ultra-premium-hero" style={{ marginBottom: '1rem', padding: '1.5rem 2rem' }}>
+        <div className="welcome-content">
+          <h1 className="welcome-title">Daily Reports</h1>
+          <p className="page-subtitle" style={{ margin: 0, color: 'var(--text-muted)' }}>Submit and track your daily work progress.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsSubmitModalOpen(true)}>
-          <FilePlus size={16} style={{marginRight: '0.5rem'}} /> Submit Today's Report
-        </button>
+        <div style={{ zIndex: 1 }}>
+          <button className="btn btn-primary premium-hover" onClick={() => setIsSubmitModalOpen(true)} style={{ padding: '0.6rem 1.2rem', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)' }}>
+            <PlusCircle size={18} style={{marginRight: '0.5rem'}} /> Submit Today's Report
+          </button>
+        </div>
       </div>
 
-      <Card style={{ padding: 0 }}>
-        <div className="table-responsive">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Hours Logged</th>
-                <th>Tasks Worked</th>
-                <th>Status</th>
-                <th>Manager Comments</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.length === 0 ? (
+      <Card style={{ padding: (!reports || reports.length === 0) ? '3rem 2rem' : 0 }} className="premium-card">
+        {(!reports || reports.length === 0) ? (
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1.5rem', borderRadius: '50%', marginBottom: '0.5rem' }}>
+              <FileText size={48} color="var(--primary)" style={{ opacity: 0.8 }} />
+            </div>
+            <h3 style={{ fontSize: '1.4rem', color: 'var(--text-main)', margin: 0 }}>No Daily Reports Yet</h3>
+            <p style={{ maxWidth: '400px', margin: '0 auto', lineHeight: 1.6 }}>
+              You haven't submitted any daily reports. Once you submit a report summarizing your work, it will appear here for you and your manager to review.
+            </p>
+            <button className="btn btn-outline premium-hover" onClick={() => setIsSubmitModalOpen(true)} style={{ marginTop: '1rem' }}>
+              <PlusCircle size={16} style={{marginRight: '0.5rem'}} /> Create First Report
+            </button>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="data-table">
+              <thead>
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    No daily reports submitted yet.
-                  </td>
+                  <th>Date</th>
+                  <th>Hours Logged</th>
+                  <th>Tasks Worked</th>
+                  <th>Status</th>
+                  <th>Manager Comments</th>
+                  <th>Action</th>
                 </tr>
-              ) : (
-                reports.map(report => (
-                  <tr key={report._id}>
+              </thead>
+              <tbody>
+                {reports.map(report => (
+                  <tr key={report._id} className="premium-hover" style={{ background: 'rgba(255, 255, 255, 0.01)' }}>
                     <td style={{ fontWeight: 500 }}>{new Date(report.date).toLocaleDateString()}</td>
                     <td>{report.hoursWorked} hrs</td>
                     <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -137,11 +146,11 @@ const DailyReports = () => {
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
 
       {/* Submit Report Modal */}

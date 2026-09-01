@@ -1,34 +1,41 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
+import AdminSidebar from './components/AdminSidebar';
+import AdminTopbar from './components/AdminTopbar';
 import SplashScreen from './components/SplashScreen';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
-import ForgotPassword from './pages/Auth/ForgotPassword';
-import CreateCredentials from './pages/Auth/CreateCredentials';
-import TwoFactorAuth from './pages/Auth/TwoFactorAuth';
-import Attendance from './pages/Attendance';
-import Timesheet from './pages/Timesheet';
-import Team from './pages/Team';
-import Projects from './pages/Projects';
-import HRMS from './pages/HRMS';
-import Payroll from './pages/Payroll';
-import Performance from './pages/Performance';
-import Reports from './pages/Reports';
-import Admin from './pages/Admin';
-import Employees from './pages/Employees';
-import Notifications from './pages/Notifications';
-import MyProfile from './pages/MyProfile';
-import MyTasks from './pages/MyTasks';
-import DailyReports from './pages/DailyReports';
-import Meetings from './pages/Meetings';
-import Leave from './pages/Leave';
-import Documents from './pages/Documents';
-import Support from './pages/Support';
 import './App.css';
+
+// Lazy loading all pages to significantly improve initial load performance
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Login = lazy(() => import('./pages/Auth/Login'));
+const AdminLogin = lazy(() => import('./pages/Auth/AdminLogin'));
+const Register = lazy(() => import('./pages/Auth/Register'));
+const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
+const CreateCredentials = lazy(() => import('./pages/Auth/CreateCredentials'));
+
+const Attendance = lazy(() => import('./pages/Attendance'));
+const Timesheet = lazy(() => import('./pages/Timesheet'));
+const Team = lazy(() => import('./pages/Team'));
+const Projects = lazy(() => import('./pages/Projects'));
+const HRMS = lazy(() => import('./pages/HRMS'));
+const Payroll = lazy(() => import('./pages/Payroll'));
+const Performance = lazy(() => import('./pages/Performance'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Admin = lazy(() => import('./pages/Admin'));
+const AdminTasks = lazy(() => import('./pages/AdminTasks'));
+const AdminReports = lazy(() => import('./pages/AdminReports'));
+const AdminPayroll = lazy(() => import('./pages/AdminPayroll'));
+const AdminDocuments = lazy(() => import('./pages/AdminDocuments'));
+const Employees = lazy(() => import('./pages/Employees'));
+const MyProfile = lazy(() => import('./pages/MyProfile'));
+const MyTasks = lazy(() => import('./pages/MyTasks'));
+const DailyReports = lazy(() => import('./pages/DailyReports'));
+const Meetings = lazy(() => import('./pages/Meetings'));
+const Leave = lazy(() => import('./pages/Leave'));
+const Documents = lazy(() => import('./pages/Documents'));
 
 const Toast = ({ message, show }) => {
   return (
@@ -39,7 +46,14 @@ const Toast = ({ message, show }) => {
   );
 };
 
-const ProtectedRoute = ({ allowedRoles }) => {
+const PageLoader = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '60vh', flexDirection: 'column' }}>
+    <div className="loader"></div>
+    <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Loading module...</p>
+  </div>
+);
+
+const ProtectedRoute = ({ allowedRoles, loginPath = '/employee/login', defaultRedirect = '/employee/dashboard' }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -47,36 +61,53 @@ const ProtectedRoute = ({ allowedRoles }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={loginPath} replace />;
   }
 
   // Account status check
   if (user.status === 'pending' || user.status === 'inactive' || user.status === 'rejected') {
-    // If somehow they bypassed the login error, kick them out
-    return <Navigate to="/login" replace />;
+    return <Navigate to={loginPath} replace />;
   }
 
   // Role check
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If admin, go to admin. If employee, go to dashboard.
-    if (user.role === 'admin' || user.role === 'superadmin' || user.role === 'hr') {
-      return <Navigate to="/admin" replace />;
+    // If they are an admin trying to access employee routes, or vice versa, send them to their own dashboard
+    if (['superadmin', 'admin', 'hr'].includes(user.role)) {
+      return <Navigate to="/admin/dashboard" replace />;
     } else {
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to="/employee/dashboard" replace />;
     }
   }
 
   return <Outlet />;
 };
 
-const MainLayout = () => {
+const EmployeeLayout = () => {
   return (
     <div className="app-container">
       <Sidebar />
       <div className="main-wrapper">
         <Topbar />
         <main className="main-content">
-          <Outlet />
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+const AdminLayout = () => {
+  return (
+    <div className="app-container">
+      <AdminSidebar />
+      <div className="main-wrapper">
+        <AdminTopbar />
+        <main className="main-content">
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
@@ -95,7 +126,9 @@ const AuthLayout = () => {
         </div>
       </div>
       <div className="auth-split-content">
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </div>
     </div>
   );
@@ -129,45 +162,53 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
+          <Route path="/" element={<Navigate to="/employee/login" replace />} />
+
           <Route element={<AuthLayout />}>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/create-credentials" element={<CreateCredentials />} />
-            <Route path="/2fa" element={<TwoFactorAuth />} />
+            <Route path="/employee/login" element={<Login />} />
+            <Route path="/employee/register" element={<Register />} />
+            <Route path="/employee/forgot-password" element={<ForgotPassword />} />
+            <Route path="/employee/create-credentials" element={<CreateCredentials />} />
+            
+            <Route path="/admin/login" element={<AdminLogin />} />
           </Route>
 
           {/* Protected Employee Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['employee', 'teamlead', 'intern']} />}>
-            <Route element={<MainLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/attendance" element={<Attendance />} />
-              <Route path="/timesheet" element={<Timesheet />} />
-              <Route path="/team" element={<Team />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/performance" element={<Performance />} />
-              <Route path="/profile" element={<MyProfile />} />
-              <Route path="/tasks" element={<MyTasks />} />
-              <Route path="/work/daily-report" element={<DailyReports />} />
-              <Route path="/meetings" element={<Meetings />} />
-              <Route path="/leave" element={<Leave />} />
-              <Route path="/documents" element={<Documents />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="/notifications" element={<Notifications />} />
+          <Route element={<ProtectedRoute allowedRoles={['employee', 'teamlead', 'intern']} loginPath="/employee/login" defaultRedirect="/employee/dashboard" />}>
+            <Route element={<EmployeeLayout />}>
+              <Route path="/employee/dashboard" element={<Dashboard />} />
+              <Route path="/employee/tasks" element={<MyTasks />} />
+              <Route path="/employee/reports" element={<DailyReports />} />
+              <Route path="/employee/payslips" element={<Payroll />} />
+              <Route path="/employee/documents" element={<Documents />} />
+              <Route path="/employee/profile" element={<MyProfile />} />
+              
+              {/* Other legacy Employee routes (optional but kept for existing components) */}
+              <Route path="/employee/attendance" element={<Attendance />} />
+              <Route path="/employee/timesheet" element={<Timesheet />} />
+              <Route path="/employee/team" element={<Team />} />
+              <Route path="/employee/projects" element={<Projects />} />
+              <Route path="/employee/performance" element={<Performance />} />
+              <Route path="/employee/meetings" element={<Meetings />} />
+              <Route path="/employee/leave" element={<Leave />} />
             </Route>
           </Route>
 
-          {/* Protected Admin/HR Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'hr']} />}>
-            <Route element={<MainLayout />}>
-              <Route path="/admin" element={<Admin />} />
+          {/* Protected Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'hr']} loginPath="/admin/login" defaultRedirect="/admin/dashboard" />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/admin/dashboard" element={<Admin />} />
               <Route path="/admin/employees" element={<Employees />} />
-              <Route path="/hrms" element={<HRMS />} />
-              <Route path="/payroll" element={<Payroll />} />
-              <Route path="/reports" element={<Reports />} />
+              <Route path="/admin/tasks" element={<AdminTasks />} />
+              <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/payroll" element={<AdminPayroll />} />
+              <Route path="/admin/documents" element={<AdminDocuments />} />
+              <Route path="/admin/profile" element={<MyProfile />} />
             </Route>
           </Route>
+          
+          {/* Fallback for unknown routes */}
+          <Route path="*" element={<Navigate to="/employee/login" replace />} />
         </Routes>
         <Toast message={toast.message} show={toast.show} />
       </Router>

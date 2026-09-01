@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
-import { Download, FileText, Banknote, CreditCard, Clock, CheckCircle2 } from 'lucide-react';
+import { Download, FileText, Search, CreditCard, ChevronRight, Calendar, CheckCircle2 } from 'lucide-react';
 import './Payroll.css';
 
 const Payroll = () => {
@@ -13,6 +13,11 @@ const Payroll = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterYear, setFilterYear] = useState('');
 
   useEffect(() => {
     fetchPayslips();
@@ -21,8 +26,8 @@ const Payroll = () => {
   const fetchPayslips = async () => {
     try {
       setLoading(true);
-      // Determine endpoint based on role
-      const endpoint = ['admin', 'superadmin', 'hr'].includes(user?.role) ? '/payroll' : '/payroll/my-payslips';
+      // For Employee Portal, use the secure my-payslips endpoint
+      const endpoint = '/payroll/my-payslips';
       const res = await api.get(endpoint);
       setPayslips(res.data.data);
     } catch (err) {
@@ -38,9 +43,33 @@ const Payroll = () => {
   };
 
   const downloadPayslip = (payslip) => {
-    // In a real app, this would hit an endpoint that generates a PDF, or use jsPDF
+    // Mock download action
     alert(`Downloading Payslip PDF for ${payslip.month}`);
   };
+
+  // Derived state for filters
+  const filteredPayslips = useMemo(() => {
+    if (!payslips || !Array.isArray(payslips)) return [];
+    
+    return payslips.filter(ps => {
+      const psId = ps?.payslipId || '';
+      const psMonthStr = ps?.month || '';
+
+      const matchSearch = psId.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          psMonthStr.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const psMonth = psMonthStr.split(' ')[0] || ''; 
+      const psYear = psMonthStr.split(' ')[1] || ''; 
+
+      const matchMonth = filterMonth ? psMonth === filterMonth : true;
+      const matchYear = filterYear ? psYear === filterYear : true;
+
+      return matchSearch && matchMonth && matchYear;
+    });
+  }, [payslips, searchTerm, filterMonth, filterYear]);
+
+  // Derived state for latest payslip
+  const latestPayslip = payslips && payslips.length > 0 ? payslips[0] : null;
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', flexDirection: 'column' }}>
@@ -52,35 +81,91 @@ const Payroll = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>My Payslips</h1>
-          <p style={{ color: 'var(--text-muted)' }}>View and download your monthly salary slips.</p>
+      <div className="welcome-hero-section ultra-premium-hero" style={{ marginBottom: '0.5rem', padding: '1.5rem 2rem' }}>
+        <div className="welcome-content">
+          <h1 className="welcome-title">My Payslips</h1>
+          <p className="page-subtitle" style={{ margin: 0, color: 'var(--text-muted)' }}>View, manage, and download your monthly salary payslips.</p>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-        {payslips.length > 0 && (
-          <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ padding: '1rem', background: 'var(--primary-bg)', borderRadius: 'var(--radius-sm)' }}>
-                <Banknote size={24} color="var(--primary-light)" />
-              </div>
-              <div>
-                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Current Net Salary</p>
-                <h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>${payslips[0].netPayable.toLocaleString()}</h3>
-              </div>
+      {latestPayslip && (
+        <div className="payslip-summary-card">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+               <span style={{ fontSize: '0.85rem', color: 'var(--primary-light)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Latest Payslip</span>
+               <StatusBadge status={latestPayslip.status} />
             </div>
-          </Card>
-        )}
-      </div>
+            <h2 style={{ fontSize: '2rem', margin: '0 0 0.25rem 0', color: 'var(--text-main)' }}>{latestPayslip.month}</h2>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Calendar size={14} /> Issued on {new Date(latestPayslip.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+            <div className="payslip-amount-box">
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Net Salary</span>
+              <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--success)' }}>${latestPayslip?.netPayable?.toLocaleString() || 0}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <button className="btn btn-primary" onClick={() => viewPayslip(latestPayslip)} style={{ width: '100%', justifyContent: 'center' }}>
+                <FileText size={16} /> View Payslip
+              </button>
+              <button className="btn btn-outline" onClick={() => downloadPayslip(latestPayslip)} style={{ width: '100%', justifyContent: 'center' }}>
+                <Download size={16} /> Download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <Card title="Salary History" style={{ padding: 0 }}>
-        {payslips.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-muted)' }}>
-            <FileText size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-            <h3>No Payslips Found</h3>
-            <p>Your payroll history will appear here once processed.</p>
+      <Card style={{ padding: 0 }} className="premium-card">
+        <div className="payslip-filters">
+          <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
+            <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              type="text" 
+              className="filter-input" 
+              placeholder="Search payslips..." 
+              style={{ width: '100%', paddingLeft: '2.5rem' }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <select className="filter-input" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}>
+            <option value="">All Months</option>
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+          </select>
+          <select className="filter-input" value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
+            <option value="">All Years</option>
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+          </select>
+        </div>
+
+        {(!payslips || payslips.length === 0) ? (
+          <div className="empty-state-premium" style={{ margin: '2rem' }}>
+            <CreditCard size={64} className="icon" />
+            <h3 style={{ fontSize: '1.4rem', color: 'var(--text-main)', margin: '0 0 0.5rem 0' }}>No Payslips Available Yet</h3>
+            <p style={{ maxWidth: '400px', margin: '0 auto', lineHeight: 1.6 }}>
+              Your payslips will appear here once your salary has been processed by the HR department.
+            </p>
+          </div>
+        ) : filteredPayslips.length === 0 ? (
+          <div className="empty-state-premium" style={{ margin: '2rem' }}>
+            <Search size={48} className="icon" />
+            <p>No payslips found matching your filters.</p>
           </div>
         ) : (
           <div className="table-responsive">
@@ -91,27 +176,27 @@ const Payroll = () => {
                   <th>Month</th>
                   <th>Basic Salary</th>
                   <th>Gross Salary</th>
-                  <th>Net Payable</th>
+                  <th>Net Salary</th>
                   <th>Status</th>
-                  <th>Action</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {payslips.map(ps => (
-                  <tr key={ps._id}>
+                {filteredPayslips.map(ps => (
+                  <tr key={ps._id} className="premium-hover" style={{ background: 'rgba(255, 255, 255, 0.01)' }}>
                     <td style={{ fontWeight: 500 }}>{ps.payslipId}</td>
-                    <td style={{ fontWeight: 500 }}>{ps.month}</td>
-                    <td>${ps.basicSalary.toLocaleString()}</td>
-                    <td>${ps.grossSalary.toLocaleString()}</td>
-                    <td style={{ fontWeight: 600, color: 'var(--success)' }}>${ps.netPayable.toLocaleString()}</td>
+                    <td style={{ fontWeight: 500, color: 'var(--text-main)' }}>{ps.month}</td>
+                    <td>${ps.basicSalary?.toLocaleString() || 0}</td>
+                    <td>${ps.grossSalary?.toLocaleString() || 0}</td>
+                    <td style={{ fontWeight: 700, color: 'var(--success)' }}>${ps.netPayable?.toLocaleString() || 0}</td>
                     <td><StatusBadge status={ps.status} /></td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => viewPayslip(ps)}>
-                          View
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                        <button className="icon-btn-subtle" title="View Details" onClick={() => viewPayslip(ps)}>
+                          <FileText size={16} />
                         </button>
-                        <button className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => downloadPayslip(ps)}>
-                          <Download size={14} />
+                        <button className="icon-btn-subtle" title="Download" onClick={() => downloadPayslip(ps)}>
+                          <Download size={16} />
                         </button>
                       </div>
                     </td>
@@ -125,75 +210,115 @@ const Payroll = () => {
 
       {/* Detailed Payslip Modal */}
       {selectedPayslip && (
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Payslip: ${selectedPayslip.month}`}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Salary Payslip">
+          <div className="modal-payslip-details">
+            
+            <div className="payslip-header-info">
               <div>
-                <h4 style={{ margin: '0 0 0.25rem 0' }}>CodeThrive Infotech</h4>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Payslip for {selectedPayslip.month}</p>
+                <div className="payslip-company-logo">CodeThrive Infotech</div>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Salary slip for the month of {selectedPayslip.month}</p>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <StatusBadge status={selectedPayslip.status} />
-                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>ID: {selectedPayslip.payslipId}</p>
+                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Payslip ID: {selectedPayslip.payslipId}</p>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-              {/* Earnings */}
-              <div>
-                <h5 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', margin: '0 0 1rem 0' }}>Earnings</h5>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Basic Pay</span>
-                  <span>${selectedPayslip.basicSalary.toLocaleString()}</span>
+            <div className="payslip-employee-details">
+              <div className="detail-item">
+                <span className="detail-label">Employee Name</span>
+                <span className="detail-value">{user?.name}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Employee ID</span>
+                <span className="detail-value">{user?.employeeId || 'N/A'}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Designation</span>
+                <span className="detail-value">{user?.designation || (user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Employee')}</span>
+              </div>
+            </div>
+
+            <div className="salary-breakdown-grid">
+              {/* Earnings Section */}
+              <div className="breakdown-section">
+                <h5 className="breakdown-title">Earnings</h5>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Basic Salary</span>
+                  <span>${selectedPayslip?.basicSalary?.toLocaleString() || 0}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>HRA (Calculated)</span>
-                  <span>${(selectedPayslip.basicSalary * 0.4).toLocaleString()}</span>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>House Rent Allowance (HRA)</span>
+                  <span>${(selectedPayslip?.allowanceDetails?.hra || 0).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Special Allowance</span>
-                  <span>${(selectedPayslip.allowances - (selectedPayslip.basicSalary * 0.4)).toLocaleString()}</span>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Travel / Conveyance</span>
+                  <span>${(selectedPayslip?.allowanceDetails?.travel || 0).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Bonus</span>
-                  <span>${(selectedPayslip.bonus || 0).toLocaleString()}</span>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Medical Allowance</span>
+                  <span>${(selectedPayslip?.allowanceDetails?.medical || 0).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)', fontWeight: 600 }}>
-                  <span>Gross Salary</span>
-                  <span>${selectedPayslip.grossSalary.toLocaleString()}</span>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Other Allowances</span>
+                  <span>${(selectedPayslip?.allowanceDetails?.other || 0).toLocaleString()}</span>
+                </div>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Bonus / Incentives</span>
+                  <span>${(selectedPayslip?.bonus || 0).toLocaleString()}</span>
+                </div>
+                <div className="breakdown-row total-row" style={{ color: 'var(--primary-light)' }}>
+                  <span>Total Earnings</span>
+                  <span>${selectedPayslip?.grossSalary?.toLocaleString() || 0}</span>
                 </div>
               </div>
 
-              {/* Deductions */}
-              <div>
-                <h5 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', margin: '0 0 1rem 0' }}>Deductions</h5>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>PF (Provident Fund)</span>
-                  <span>${(selectedPayslip.deductions * 0.6).toLocaleString()}</span>
+              {/* Deductions Section */}
+              <div className="breakdown-section">
+                <h5 className="breakdown-title">Deductions</h5>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Provident Fund (PF)</span>
+                  <span>${(selectedPayslip?.deductionDetails?.pf || 0).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <div className="breakdown-row">
                   <span style={{ color: 'var(--text-muted)' }}>ESI</span>
-                  <span>${(selectedPayslip.deductions * 0.2).toLocaleString()}</span>
+                  <span>${(selectedPayslip?.deductionDetails?.esi || 0).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <div className="breakdown-row">
                   <span style={{ color: 'var(--text-muted)' }}>Professional Tax</span>
-                  <span>${(selectedPayslip.deductions * 0.2).toLocaleString()}</span>
+                  <span>${(selectedPayslip?.deductionDetails?.professionalTax || 0).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)', fontWeight: 600 }}>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Income Tax (TDS)</span>
+                  <span>${(selectedPayslip?.deductionDetails?.incomeTax || 0).toLocaleString()}</span>
+                </div>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Leave Deduction</span>
+                  <span>${(selectedPayslip?.deductionDetails?.leaveDeduction || 0).toLocaleString()}</span>
+                </div>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Loan / Advance</span>
+                  <span>${(selectedPayslip?.deductionDetails?.loanAdvance || 0).toLocaleString()}</span>
+                </div>
+                <div className="breakdown-row">
+                  <span style={{ color: 'var(--text-muted)' }}>Other Deductions</span>
+                  <span>${(selectedPayslip?.deductionDetails?.other || 0).toLocaleString()}</span>
+                </div>
+                <div className="breakdown-row total-row" style={{ color: 'var(--danger)' }}>
                   <span>Total Deductions</span>
-                  <span>${selectedPayslip.deductions.toLocaleString()}</span>
+                  <span>${selectedPayslip?.deductions?.toLocaleString() || 0}</span>
                 </div>
               </div>
             </div>
 
-            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '1.5rem', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '1.1rem', fontWeight: 500 }}>Net Salary Payable</span>
-              <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--success)' }}>${selectedPayslip.netPayable.toLocaleString()}</span>
+            <div className="net-salary-banner">
+              <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>Net Salary Payable</span>
+              <span style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--success)' }}>${selectedPayslip?.netPayable?.toLocaleString() || 0}</span>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
                <button className="btn btn-primary" onClick={() => downloadPayslip(selectedPayslip)}>
-                  <Download size={16} style={{marginRight: '0.5rem'}} /> Download PDF
+                  <Download size={18} style={{marginRight: '0.5rem'}} /> Download PDF Payslip
                </button>
             </div>
           </div>
@@ -205,3 +330,4 @@ const Payroll = () => {
 };
 
 export default Payroll;
+

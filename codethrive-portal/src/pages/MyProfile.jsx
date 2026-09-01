@@ -42,16 +42,17 @@ const MyProfile = () => {
     try {
       setLoading(true);
       const res = await api.get('/employees/me');
-      setProfile(res.data.data);
+      const data = res.data || {};
+      setProfile(data);
       setFormData({
-        personalPhoneNumber: res.data.data.personalPhoneNumber || '',
-        personalEmailAddress: res.data.data.personalEmailAddress || '',
-        currentAddress: res.data.data.currentAddress || '',
-        permanentAddress: res.data.data.permanentAddress || '',
-        emergencyContactName: res.data.data.emergencyContact?.name || '',
-        emergencyContactPhone: res.data.data.emergencyContact?.phone || '',
-        emergencyContactRelation: res.data.data.emergencyContact?.relationship || '',
-        skills: res.data.data.skills?.join(', ') || ''
+        personalPhoneNumber: data.personalPhoneNumber || '',
+        personalEmailAddress: data.personalEmailAddress || '',
+        currentAddress: data.currentAddress || '',
+        permanentAddress: data.permanentAddress || '',
+        emergencyContactName: data.emergencyContact?.name || '',
+        emergencyContactPhone: data.emergencyContact?.phone || '',
+        emergencyContactRelation: data.emergencyContact?.relationship || '',
+        skills: data.skills?.join(', ') || ''
       });
     } catch (err) {
       console.error('Failed to fetch profile', err);
@@ -77,7 +78,7 @@ const MyProfile = () => {
       };
       
       const res = await api.put('/employees/me', updatePayload);
-      setProfile(res.data.data);
+      setProfile(res.data || {});
       setIsEditModalOpen(false);
       alert('Profile updated successfully');
     } catch (err) {

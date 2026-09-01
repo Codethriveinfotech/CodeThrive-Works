@@ -2,24 +2,24 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
-  LayoutDashboard, CheckSquare, FileText, Banknote, 
-  CalendarCheck, Clock, FileBarChart, CalendarDays, 
-  UserCircle, LogOut, ChevronLeft, ChevronRight, FolderOpen 
+  LayoutDashboard, Users, CheckSquare, 
+  FileText, Banknote, FolderOpen, UserCircle, 
+  Settings, LogOut, ChevronLeft, ChevronRight 
 } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = () => {
-  const { user, logout } = useAuth();
+const AdminSidebar = () => {
+  const { logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
-  // Employee Portal Links Only
-  const navLinks = [
-    { name: 'Dashboard', path: '/employee/dashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'My Tasks', path: '/employee/tasks', icon: <CheckSquare size={20} /> },
-    { name: 'Today\'s Work', path: '/employee/reports', icon: <FileText size={20} /> },
-    { name: 'Payslips', path: '/employee/payslips', icon: <Banknote size={20} /> },
-    { name: 'Documents', path: '/employee/documents', icon: <FolderOpen size={20} /> },
-    { name: 'My Profile', path: '/employee/profile', icon: <UserCircle size={20} /> },
+  const adminLinks = [
+    { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
+    { name: 'Employees', path: '/admin/employees', icon: <Users size={20} /> },
+    { name: 'Tasks', path: '/admin/tasks', icon: <CheckSquare size={20} /> },
+    { name: 'Daily Reports', path: '/admin/reports', icon: <FileText size={20} /> },
+    { name: 'Payroll', path: '/admin/payroll', icon: <Banknote size={20} /> },
+    { name: 'Documents', path: '/admin/documents', icon: <FolderOpen size={20} /> },
+    { name: 'Profile', path: '/admin/profile', icon: <UserCircle size={20} /> }
   ];
 
   const handleLogout = () => {
@@ -45,8 +45,8 @@ const Sidebar = () => {
 
       <nav className="sidebar-nav">
         <div className="nav-section">
-          {!collapsed && <span className="nav-section-title">EMPLOYEE PORTAL</span>}
-          {navLinks.map((link) => (
+          {!collapsed && <span className="nav-section-title">ADMIN PORTAL</span>}
+          {adminLinks.map((link) => (
             <NavLink key={link.name} to={link.path} className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'} title={collapsed ? link.name : ''}>
               {link.icon}
               {!collapsed && <span>{link.name}</span>}
@@ -65,4 +65,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default AdminSidebar;

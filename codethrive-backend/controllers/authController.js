@@ -3,7 +3,7 @@ const Employee = require('../models/Employee');
 const Attendance = require('../models/Attendance');
 
 // Helper to send token response
-const sendTokenResponse = (user, statusCode, res) => {
+const sendTokenResponse = async (user, statusCode, res) => {
   const token = require('jsonwebtoken').sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'dev_secret', {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   });
@@ -15,6 +15,8 @@ const sendTokenResponse = (user, statusCode, res) => {
     sameSite: 'strict'
   };
 
+  const employee = await Employee.findOne({ user: user._id });
+
   res.status(statusCode)
     .cookie('token', token, options)
     .json({
@@ -24,7 +26,10 @@ const sendTokenResponse = (user, statusCode, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
-        status: user.status
+        status: user.status,
+        name: employee ? employee.fullName : user.email.split('@')[0],
+        employeeId: employee ? employee.employeeId : null,
+        designation: employee ? employee.designation : null
       }
     });
 };
@@ -171,7 +176,7 @@ exports.createCredentials = async (req, res) => {
   }
 };
 
-// 4. Login
+// 4. Employee Login
 exports.login = async (req, res) => {
   try {
     const { employeeId, password } = req.body;
@@ -191,6 +196,11 @@ exports.login = async (req, res) => {
     }
 
     const user = employee.user;
+
+    // Prevent Admins from using the Employee login route
+    if (user.role === 'admin' || user.role === 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Admin credentials cannot be used here. Please use the Admin Portal login.' });
+    }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
@@ -232,7 +242,41 @@ exports.login = async (req, res) => {
     }
     // ------------------------------------
 
-    sendTokenResponse(user, 200, res);
+    await sendTokenResponse(user, 200, res);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 4.5 Admin Login
+exports.adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide Email and password' });
+    }
+
+    const user = await User.findOne({ email }).select('+password');
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Invalid Admin credentials' });
+    }
+
+    if (user.role !== 'admin' && user.role !== 'superadmin' && user.role !== 'hr') {
+      return res.status(403).json({ success: false, message: 'Access denied. You do not have Admin privileges.' });
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Incorrect password. Please try again.' });
+    }
+
+    if (user.status !== 'active') {
+      return res.status(403).json({ success: false, message: `Account is ${user.status}. Contact Super Admin.` });
+    }
+
+    await sendTokenResponse(user, 200, res);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -304,9 +348,23 @@ exports.updatePassword = async (req, res) => {
     const { createNotification } = require('./notificationController');
     await createNotification(user._id, 'Password Changed', 'Your account password has been successfully updated.', 'Profile', 'High', '/profile');
 
-    sendTokenResponse(user, 200, res);
+    await sendTokenResponse(user, 200, res);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
+// @desc    Get current logged in user
+// @route   GET /api/v1/auth/me
+// @access  Private
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    await sendTokenResponse(user, 200, res);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

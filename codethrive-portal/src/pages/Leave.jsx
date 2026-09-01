@@ -26,7 +26,7 @@ const Leave = () => {
     try {
       setLoading(true);
       const res = await api.get('/attendance/leaves');
-      setData(res.data.data);
+      setData(res.data || { requests: [] });
     } catch (err) {
       console.error('Failed to fetch leaves', err);
     } finally {
@@ -40,7 +40,7 @@ const Leave = () => {
       const res = await api.post('/attendance/leaves', formData);
       setData(prev => ({
         ...prev,
-        requests: [res.data.data, ...prev.requests]
+        requests: [res.data, ...prev.requests]
       }));
       setIsModalOpen(false);
       setFormData({ leaveType: 'Casual', startDate: '', endDate: '', reason: '' });

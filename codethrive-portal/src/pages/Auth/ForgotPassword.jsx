@@ -38,7 +38,7 @@ const ForgotPassword = () => {
         </form>
         
         <div className="auth-footer" style={{ marginTop: '2rem' }}>
-          <Link to="/login">Back to Login</Link>
+          <Link to="/employee/login">Back to Login</Link>
         </div>
       </div>
     </div>

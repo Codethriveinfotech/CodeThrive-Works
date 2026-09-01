@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
+const path = require('path');
 
 // Load env vars
 dotenv.config();
@@ -43,6 +44,9 @@ app.use(cors({
   credentials: true
 }));
 
+// Serve static uploads folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 mins
@@ -71,8 +75,32 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
+const User = require('./models/User');
+
 // Connect to database, then start the server
-connectDB().then(() => {
+connectDB().then(async () => {
+  // Auto-seed admin user if missing
+  try {
+    let admin = await User.findOne({ email: 'admin@codethrive.com' });
+    if (!admin) {
+      await User.create({
+        email: 'admin@codethrive.com',
+        password: 'Password@123',
+        role: 'superadmin',
+        status: 'active'
+      });
+      console.log('Admin user auto-seeded (admin@codethrive.com)');
+    } else {
+      admin.password = 'Password@123';
+      admin.role = 'superadmin';
+      admin.status = 'active';
+      await admin.save();
+      console.log('Admin user verified (admin@codethrive.com)');
+    }
+  } catch (err) {
+    console.error('Failed to auto-seed admin:', err.message);
+  }
+
   app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
   });

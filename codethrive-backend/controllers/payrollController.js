@@ -28,49 +28,66 @@ exports.getAllPayroll = async (req, res) => {
   }
 };
 
-// @desc    Process monthly payroll
-// @route   POST /api/v1/payroll/process
+// @desc    Create individual payroll
+// @route   POST /api/v1/payroll
 // @access  Private (Admin/HR)
-exports.processPayroll = async (req, res) => {
+exports.createIndividualPayroll = async (req, res) => {
   try {
-    const { month } = req.body; // e.g. "June 2026"
-    
-    // Check if already processed for this month
-    const existing = await Payroll.findOne({ month });
+    const { 
+      employeeId, month, basicSalary, bonus, 
+      allowanceDetails, deductionDetails, 
+      status, paymentDate
+    } = req.body;
+
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    // Check if payroll for this month already exists for this employee
+    const existing = await Payroll.findOne({ employee: employee._id, month });
     if (existing) {
-      return res.status(400).json({ success: false, message: `Payroll for ${month} has already been processed.` });
+      return res.status(400).json({ success: false, message: `Payroll for ${month} already exists for this employee.` });
     }
 
-    const employees = await Employee.find({ status: { $in: ['Active', 'Approved'] } });
-    if (employees.length === 0) {
-      return res.status(400).json({ success: false, message: 'No active employees to process.' });
-    }
+    // Calculate totals
+    const totalAllowances = 
+      (allowanceDetails?.hra || 0) + 
+      (allowanceDetails?.travel || 0) + 
+      (allowanceDetails?.medical || 0) + 
+      (allowanceDetails?.other || 0);
 
-    const payrolls = [];
-    
-    employees.forEach(emp => {
-      const basicSalary = emp.salaryAmount || 25000; // default for demo
-      const allowances = basicSalary * 0.2; // 20%
-      const deductions = basicSalary * 0.05; // 5%
-      const gross = basicSalary + allowances;
-      const netPayable = gross - deductions;
+    const totalDeductions = 
+      (deductionDetails?.pf || 0) + 
+      (deductionDetails?.esi || 0) + 
+      (deductionDetails?.professionalTax || 0) + 
+      (deductionDetails?.incomeTax || 0) + 
+      (deductionDetails?.leaveDeduction || 0) + 
+      (deductionDetails?.loanAdvance || 0) + 
+      (deductionDetails?.other || 0);
 
-      payrolls.push({
-        employee: emp._id,
-        payslipId: `PS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
-        month,
-        basicSalary,
-        allowances,
-        deductions,
-        grossSalary: gross,
-        netPayable,
-        status: 'Paid'
-      });
+    const grossSalary = Number(basicSalary) + totalAllowances + Number(bonus || 0);
+    const netPayable = grossSalary - totalDeductions;
+
+    const payslipId = `PS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+
+    const payroll = await Payroll.create({
+      employee: employee._id,
+      payslipId,
+      month,
+      basicSalary,
+      allowanceDetails,
+      allowances: totalAllowances,
+      bonus: bonus || 0,
+      deductionDetails,
+      deductions: totalDeductions,
+      grossSalary,
+      netPayable,
+      status: status || 'Pending',
+      paymentDate: paymentDate || null
     });
 
-    await Payroll.insertMany(payrolls);
-
-    res.status(201).json({ success: true, message: `Successfully processed payroll for ${employees.length} employees.` });
+    res.status(201).json({ success: true, data: payroll });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

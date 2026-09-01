@@ -30,7 +30,7 @@ const Documents = () => {
     try {
       setLoading(true);
       const res = await api.get('/documents');
-      setDocuments(res.data.data);
+      setDocuments(res.data || []);
     } catch (err) {
       console.error('Failed to fetch documents', err);
     } finally {
@@ -52,7 +52,7 @@ const Documents = () => {
       const res = await api.post('/documents', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setDocuments([res.data.data, ...documents]);
+      setDocuments([res.data, ...documents]);
       setIsUploadModalOpen(false);
       setFormData({ title: '', documentType: 'Other', file: null, isPublic: false });
       alert('Document uploaded successfully');

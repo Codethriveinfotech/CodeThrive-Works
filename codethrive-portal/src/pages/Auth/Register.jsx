@@ -53,7 +53,7 @@ const Register = () => {
 
     if (result.success) {
       setSuccess(result.message);
-      setTimeout(() => navigate('/login'), 3000);
+      setTimeout(() => navigate('/employee/login'), 3000);
     } else {
       setError(result.message || 'Registration failed.');
     }
@@ -117,7 +117,7 @@ const Register = () => {
         </form>
         
         <div className="auth-footer" style={{ marginTop: '2rem' }}>
-          <p>Already have an account? <Link to="/login">Sign In</Link></p>
+          <p>Already have an account? <Link to="/employee/login">Sign In</Link></p>
         </div>
       </div>
     </div>

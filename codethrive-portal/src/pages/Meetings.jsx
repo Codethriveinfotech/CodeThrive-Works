@@ -34,7 +34,7 @@ const Meetings = () => {
     try {
       setLoading(true);
       const res = await api.get('/meetings/my-meetings');
-      setMeetings(res.data.data);
+      setMeetings(res.data || []);
     } catch (err) {
       console.error('Failed to fetch meetings', err);
     } finally {
@@ -45,7 +45,7 @@ const Meetings = () => {
   const fetchEmployees = async () => {
     try {
       const res = await api.get('/employees');
-      setEmployees(res.data.data);
+      setEmployees(res.data || []);
     } catch (err) {
       console.error('Failed to fetch employees', err);
     }
@@ -55,7 +55,7 @@ const Meetings = () => {
     e.preventDefault();
     try {
       const res = await api.post('/meetings', formData);
-      setMeetings([...meetings, res.data.data]);
+      setMeetings([...meetings, res.data]);
       setIsScheduleModalOpen(false);
       setFormData({
         title: '', date: '', time: '', agenda: '', meetingLink: '', location: '', participants: []

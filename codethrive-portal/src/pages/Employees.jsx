@@ -39,20 +39,13 @@ const Employees = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      // const res = await api.get('/employees');
-      // setEmployees(res.data);
-      
-      // Simulating API
-      setTimeout(() => {
-        setEmployees([
-          { _id: '1', employeeId: 'EMP-001', fullName: 'Alice Smith', department: 'Engineering', designation: 'Senior Developer', status: 'Active', profilePhoto: null },
-          { _id: '2', employeeId: 'EMP-002', fullName: 'Bob Johnson', department: 'Design', designation: 'UX Designer', status: 'Active', profilePhoto: null },
-          { _id: '3', employeeId: 'EMP-003', fullName: 'Charlie Davis', department: 'Marketing', designation: 'SEO Expert', status: 'Inactive', profilePhoto: null },
-        ]);
-        setLoading(false);
-      }, 800);
+      const res = await api.get('/employees');
+      if (res.data.success) {
+        setEmployees(res.data.data);
+      }
     } catch (err) {
       console.error('Failed to fetch employees', err);
+    } finally {
       setLoading(false);
     }
   };
@@ -60,31 +53,14 @@ const Employees = () => {
   const fetchMyProfile = async () => {
     try {
       setLoading(true);
-      // const res = await api.get('/employees/me');
-      
-      setTimeout(() => {
-        setSelectedEmployee({
-          _id: '1',
-          employeeId: 'EMP-001',
-          fullName: user?.name || 'Alice Smith',
-          department: 'Engineering',
-          designation: 'Senior Developer',
-          status: 'Active',
-          personalEmailAddress: 'alice@example.com',
-          personalPhoneNumber: '+1 234 567 8900',
-          currentAddress: '123 Tech Lane, Silicon Valley',
-          permanentAddress: '456 Native Rd, Hometown',
-          emergencyContact: { name: 'John Doe', phone: '+1 987 654 3210', relationship: 'Spouse' },
-          skills: ['React', 'Node.js', 'MongoDB'],
-          gender: 'Female',
-          bloodGroup: 'O+',
-          employmentType: 'Full-time'
-        });
+      const res = await api.get('/employees/me');
+      if (res.data.success) {
+        setSelectedEmployee(res.data.data);
         fetchSummaryMock();
-        setLoading(false);
-      }, 500);
+      }
     } catch (err) {
       console.error('Failed to fetch my profile', err);
+    } finally {
       setLoading(false);
     }
   };
@@ -92,26 +68,16 @@ const Employees = () => {
   const handleViewProfile = async (emp) => {
     try {
       setLoading(true);
-      setTimeout(() => {
-        setSelectedEmployee({
-          ...emp,
-          personalEmailAddress: `${emp.fullName.split(' ')[0].toLowerCase()}@example.com`,
-          personalPhoneNumber: '+1 555 0199',
-          currentAddress: 'Sample Address',
-          permanentAddress: 'Sample Address',
-          emergencyContact: { name: 'Sample Contact', phone: '555-0100', relationship: 'Parent' },
-          skills: ['Communication', 'Teamwork'],
-          gender: 'Not Specified',
-          bloodGroup: 'B+',
-          employmentType: 'Full-time'
-        });
+      const res = await api.get(`/employees/${emp._id}`);
+      if (res.data.success) {
+        setSelectedEmployee(res.data.data);
         setViewMode('profile');
         setIsEditing(false);
         fetchSummaryMock();
-        setLoading(false);
-      }, 500);
+      }
     } catch (err) {
       console.error('Failed to fetch profile details', err);
+    } finally {
       setLoading(false);
     }
   };
@@ -139,14 +105,24 @@ const Employees = () => {
   };
 
   const handleSaveProfile = async () => {
-    // API Call to update profile
-    setIsEditing(false);
-    // Refresh data
-    setSelectedEmployee(prev => ({
-      ...prev,
-      ...editFormData,
-      skills: editFormData.skills.split(',').map(s => s.trim()).filter(Boolean)
-    }));
+    try {
+      const payload = {
+        ...editFormData,
+        skills: editFormData.skills.split(',').map(s => s.trim()).filter(Boolean)
+      };
+      
+      const endpoint = isProfileRoute ? '/employees/me' : `/employees/${selectedEmployee._id}`;
+      const res = await api.put(endpoint, payload);
+      
+      if (res.data.success) {
+        setIsEditing(false);
+        setSelectedEmployee(res.data.data);
+        if (!isProfileRoute) fetchEmployees();
+      }
+    } catch (err) {
+      console.error('Failed to update profile', err);
+      alert('Failed to update profile');
+    }
   };
 
   const columns = [

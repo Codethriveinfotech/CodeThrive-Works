@@ -15,36 +15,42 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
+      // Set initially for fast render
       setUser(JSON.parse(storedUser));
+      
+      // Fetch fresh data in background
+      axios.get('/auth/me').then(res => {
+        setUser(res.data.user);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+      }).catch(err => {
+        console.warn('Failed to refresh user session', err);
+      }).finally(() => {
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = async (identifier, password) => {
-    // MOCK LOGIN FOR DEVELOPMENT WHEN DB IS OFFLINE
-    if (identifier === 'CTI-2026-001' && password === '123456') {
-      const mockUser = { id: 'emp123', email: 'employee@test.com', role: 'employee', status: 'active', name: 'Test Employee' };
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      localStorage.setItem('isMock', 'true');
-      return { success: true, user: mockUser };
-    }
-    if (identifier === 'admin' && password === '123456') {
-      const mockUser = { id: 'adm123', email: 'admin@test.com', role: 'superadmin', status: 'active', name: 'Super Admin' };
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      localStorage.setItem('isMock', 'true');
-      return { success: true, user: mockUser };
-    }
-
     try {
       const res = await axios.post('/auth/login', { employeeId: identifier, password });
       setUser(res.data.user);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      localStorage.removeItem('isMock');
       return { success: true, user: res.data.user };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Login failed' };
+    }
+  };
+
+  const adminLogin = async (email, password) => {
+    try {
+      const res = await axios.post('/auth/admin-login', { email, password });
+      setUser(res.data.user);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      return { success: true, user: res.data.user };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Admin Login failed' };
     }
   };
 
@@ -81,7 +87,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, registerEmployee, createCredentials, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, adminLogin, registerEmployee, createCredentials, logout }}>
       {children}
     </AuthContext.Provider>
   );

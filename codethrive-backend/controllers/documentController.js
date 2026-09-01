@@ -23,7 +23,7 @@ exports.uploadDocument = async (req, res) => {
       documentType,
       owner: ownerId,
       uploadedBy: req.user._id,
-      fileUrl: req.file.path,
+      fileUrl: req.file.path.startsWith('http') ? req.file.path : `uploads/${req.file.filename}`,
       isPublic: isPublic === 'true'
     });
 

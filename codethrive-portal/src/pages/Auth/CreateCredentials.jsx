@@ -56,7 +56,7 @@ const CreateCredentials = () => {
 
     if (result.success) {
       setSuccess('Credentials created successfully! Redirecting to login...');
-      setTimeout(() => navigate('/login'), 3000);
+      setTimeout(() => navigate('/employee/login'), 3000);
     } else {
       setError(result.message || 'Verification failed');
     }
@@ -127,7 +127,7 @@ const CreateCredentials = () => {
         </form>
         
         <div className="auth-footer" style={{ marginTop: '2rem' }}>
-          <p>Back to <Link to="/login">Login</Link></p>
+          <p>Back to <Link to="/employee/login">Login</Link></p>
         </div>
       </div>
     </div>

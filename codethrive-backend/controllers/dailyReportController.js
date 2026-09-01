@@ -82,3 +82,15 @@ exports.updateReport = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// @desc    Get all daily reports
+// @route   GET /api/v1/daily-reports
+// @access  Private (Admin/HR/TeamLead)
+exports.getAllReports = async (req, res) => {
+  try {
+    const reports = await DailyReport.find().populate('employee', 'fullName employeeId department').sort('-date');
+    res.status(200).json({ success: true, count: reports.length, data: reports });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

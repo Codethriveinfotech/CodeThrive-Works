@@ -1,54 +1,167 @@
-/* Payroll CSS */
-.payroll-container {
-  padding: 1.5rem;
-  max-width: 1600px;
-  margin: 0 auto;
-}
-
-.payroll-header {
-  margin-bottom: 1.5rem;
-}
-
-.payroll-tabs {
-  display: flex;
-  gap: 0.5rem;
-  border-bottom: 1px solid var(--glass-border);
-  margin-bottom: 1.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-}
-
-.payroll-tab-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.payroll-tab-btn:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.payroll-tab-btn.active {
-  color: var(--primary);
-  border-bottom: 2px solid var(--primary);
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.payroll-toolbar {
+/* Payroll Premium CSS */
+.payslip-summary-card {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.payslip-amount-box {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.25rem 2rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.payslip-filters {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--bg-card);
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--glass-border);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.filter-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  outline: none;
+  min-width: 150px;
+}
+
+.filter-input:focus {
+  border-color: var(--primary);
+  background: rgba(0,0,0,0.2);
+}
+
+.modal-payslip-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.payslip-header-info {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1.25rem;
+  align-items: flex-start;
+}
+
+.payslip-company-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.25rem;
+}
+
+.payslip-employee-details {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.payslip-employee-details .detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.payslip-employee-details .detail-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payslip-employee-details .detail-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.salary-breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.breakdown-section {
+  background: rgba(0,0,0,0.15);
+  border-radius: var(--radius-sm);
+  padding: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.breakdown-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 0.75rem;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  font-size: 0.95rem;
+}
+
+.breakdown-row.total-row {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.net-salary-banner {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 1.5rem 2rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .salary-breakdown-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .payslip-summary-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .payslip-amount-box {
+    width: 100%;
+    align-items: flex-start;
+  }
 }

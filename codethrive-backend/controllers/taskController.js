@@ -81,8 +81,50 @@ exports.updateTaskProgress = async (req, res) => {
 exports.getMyTasks = async (req, res) => {
   try {
     const employee = await Employee.findOne({ user: req.user._id });
+    if (!employee) return res.status(200).json({ success: true, count: 0, data: [] });
+    
     const tasks = await Task.find({ assignedTo: employee._id }).sort('-createdAt');
     res.status(200).json({ success: true, count: tasks.length, data: tasks });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Get all tasks (Admin)
+// @route   GET /api/v1/tasks
+// @access  Private (Admin)
+exports.getAllTasks = async (req, res) => {
+  try {
+    const tasks = await Task.find().populate('assignedTo', 'fullName employeeId').sort('-createdAt');
+    res.status(200).json({ success: true, count: tasks.length, data: tasks });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Update task details (Admin)
+// @route   PUT /api/v1/tasks/:id
+// @access  Private (Admin)
+exports.updateTask = async (req, res) => {
+  try {
+    const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
+    res.status(200).json({ success: true, data: task });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Delete task (Admin)
+// @route   DELETE /api/v1/tasks/:id
+// @access  Private (Admin)
+exports.deleteTask = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ success: false, message: 'Task not found' });
+    await task.deleteOne();
+    await TaskActivity.deleteMany({ task: req.params.id });
+    res.status(200).json({ success: true, message: 'Task deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
