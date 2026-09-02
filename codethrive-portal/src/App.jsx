@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
 import AdminSidebar from './components/AdminSidebar';
@@ -50,10 +50,14 @@ const Toast = ({ message, show }) => {
 };
 
 const PageLoader = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '60vh', flexDirection: 'column' }}>
-    <div className="loader"></div>
-    <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Loading module...</p>
-  </div>
+  <motion.div 
+    initial={{ opacity: 0 }} 
+    animate={{ opacity: 1 }} 
+    exit={{ opacity: 0 }}
+    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '60vh', flexDirection: 'column' }}
+  >
+    <div className="loader-small" style={{ width: '30px', height: '30px', borderColor: 'var(--primary)', borderTopColor: 'transparent', animation: 'spin 0.6s linear infinite' }}></div>
+  </motion.div>
 );
 
 const ProtectedRoute = ({ allowedRoles, loginPath = '/employee/login', defaultRedirect = '/employee/dashboard' }) => {

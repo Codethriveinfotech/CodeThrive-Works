@@ -13,6 +13,8 @@ import './Modules.css';
 const MyProfile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
+  const [attendanceSummary, setAttendanceSummary] = useState(null);
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -41,9 +43,17 @@ const MyProfile = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/employees/me');
-      const data = res.data || {};
+      const [profileRes, summaryRes, historyRes] = await Promise.all([
+        api.get('/employees/me'),
+        api.get('/attendance/summary'),
+        api.get('/attendance/history')
+      ]);
+
+      const data = profileRes.data || {};
       setProfile(data);
+      setAttendanceSummary(summaryRes.data?.data || null);
+      setAttendanceHistory(historyRes.data?.data || []);
+
       setFormData({
         personalPhoneNumber: data.personalPhoneNumber || '',
         personalEmailAddress: data.personalEmailAddress || '',
@@ -55,7 +65,7 @@ const MyProfile = () => {
         skills: data.skills?.join(', ') || ''
       });
     } catch (err) {
-      console.error('Failed to fetch profile', err);
+      console.error('Failed to fetch profile data', err);
     } finally {
       setLoading(false);
     }
@@ -251,6 +261,66 @@ const MyProfile = () => {
                 <span style={{ color: 'var(--text-muted)' }}>No skills listed. Update your profile.</span>
               )}
             </div>
+          </Card>
+
+          {/* New: Attendance Summary */}
+          {attendanceSummary && (
+            <Card title="Work & Attendance Summary (This Month)">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1.5rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total Working Days</span>
+                  <div style={{ fontWeight: 600, fontSize: '1.5rem', marginTop: '0.25rem' }}>{attendanceSummary.totalWorkingDays}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Days Present</span>
+                  <div style={{ fontWeight: 600, fontSize: '1.5rem', marginTop: '0.25rem', color: 'var(--success)' }}>{attendanceSummary.presentDays}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Days Absent</span>
+                  <div style={{ fontWeight: 600, fontSize: '1.5rem', marginTop: '0.25rem', color: 'var(--danger)' }}>{attendanceSummary.absentDays}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Avg. Hours / Day</span>
+                  <div style={{ fontWeight: 600, fontSize: '1.5rem', marginTop: '0.25rem', color: 'var(--primary)' }}>{attendanceSummary.averageWorkingHours}h</div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* New: Work History */}
+          <Card title="Recent Work History">
+            {attendanceHistory.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>No recent work history found.</p>
+            ) : (
+              <div className="table-responsive">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Status</th>
+                      <th>Check-In</th>
+                      <th>Check-Out</th>
+                      <th>Total Hours</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendanceHistory.slice(0, 5).map(att => (
+                      <tr key={att._id}>
+                        <td>{new Date(att.date).toLocaleDateString()}</td>
+                        <td><StatusBadge status={att.status} /></td>
+                        <td>{att.firstLoginTime ? new Date(att.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}</td>
+                        <td>{att.lastLogoutTime ? new Date(att.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}</td>
+                        <td>
+                          {att.totalWorkDurationInSeconds 
+                            ? `${Math.floor(att.totalWorkDurationInSeconds / 3600)}h ${Math.floor((att.totalWorkDurationInSeconds % 3600) / 60)}m` 
+                            : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </Card>
 
         </div>

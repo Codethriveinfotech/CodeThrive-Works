@@ -28,7 +28,7 @@ const SplashScreen = ({ isFading }) => {
           }}
         />
         <div className="fallback-logo" style={{ display: 'none' }}>
-          CodeThrive Infotech
+          CODETHRIVE INFOTECH
         </div>
       </div>
     </div>

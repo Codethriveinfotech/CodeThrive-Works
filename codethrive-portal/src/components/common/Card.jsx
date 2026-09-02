@@ -1,9 +1,16 @@
 import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import './common.css';
 
-const Card = ({ title, children, className = '', action }) => {
+const Card = ({ title, children, className = '', action, variants }) => {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
-    <div className={`ct-card ${className}`}>
+    <motion.div 
+      className={`ct-card ${className}`}
+      variants={variants}
+      whileHover={shouldReduceMotion ? {} : { y: -3, transition: { duration: 0.2 } }}
+    >
       {(title || action) && (
         <div className="ct-card-header">
           {title && <h3 className="ct-card-title">{title}</h3>}
@@ -13,7 +20,7 @@ const Card = ({ title, children, className = '', action }) => {
       <div className="ct-card-body">
         {children}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

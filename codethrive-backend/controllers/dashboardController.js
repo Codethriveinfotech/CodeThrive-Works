@@ -83,15 +83,16 @@ exports.getEmployeeDashboard = async (req, res) => {
       date: { $gte: today, $lte: end }
     });
 
-    let currentWorkingDuration = 0;
-    let breakDuration = 0; // Requires deeper session tracking, mocking break for now
     let attStatus = 'Not Checked In';
+    let activeSession = null;
 
     if (attendance) {
       attStatus = attendance.status;
-      if (attendance.firstLoginTime && attStatus === 'Working') {
-        currentWorkingDuration = Math.floor((Date.now() - attendance.firstLoginTime.getTime()) / 1000);
-      }
+      activeSession = await require('../models/AttendanceSession').findOne({
+        attendanceId: attendance._id,
+        sessionType: 'Work',
+        status: 'Active'
+      });
     }
 
     // 2. Tasks
@@ -115,12 +116,8 @@ exports.getEmployeeDashboard = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        attendance: {
-          status: attStatus,
-          loginTime: attendance ? attendance.firstLoginTime : null,
-          currentWorkingDuration,
-          breakDuration
-        },
+        attendance: attendance || null,
+        activeSession: activeSession || null,
         tasks: {
           today: activeTasks,
           pending,

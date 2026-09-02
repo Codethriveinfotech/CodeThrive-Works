@@ -24,7 +24,16 @@ exports.getTodayAttendance = async (req, res) => {
       date: { $gte: start, $lte: end }
     });
 
-    res.status(200).json({ success: true, data: attendance || null });
+    let activeSession = null;
+    if (attendance) {
+      activeSession = await AttendanceSession.findOne({
+        attendanceId: attendance._id,
+        sessionType: 'Work',
+        status: 'Active'
+      });
+    }
+
+    res.status(200).json({ success: true, data: { attendance, activeSession } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -50,14 +59,14 @@ exports.startWorkSession = async (req, res) => {
         employee: employee._id,
         date: new Date(),
         firstLoginTime: new Date(),
-        status: 'Working' // Complex Late calculation will be added in Phase 9 rules
+        status: 'Working' 
       });
     } else {
       attendance.status = 'Working';
       await attendance.save();
     }
 
-    // 2. Check for existing ACTIVE work session
+    // 2. Check for existing ACTIVE work session to prevent duplicate check-ins
     const activeSession = await AttendanceSession.findOne({
       attendanceId: attendance._id,
       sessionType: 'Work',
@@ -65,27 +74,10 @@ exports.startWorkSession = async (req, res) => {
     });
 
     if (activeSession) {
-      return res.status(200).json({ success: true, message: 'Work session already active', data: activeSession });
+      return res.status(400).json({ success: false, message: 'You are already checked in.' });
     }
 
-    // 3. Check and close active break session if they forgot to end break
-    const activeBreak = await AttendanceSession.findOne({
-      attendanceId: attendance._id,
-      sessionType: 'Break',
-      status: 'Active'
-    });
-
-    if (activeBreak) {
-      activeBreak.endTime = new Date();
-      activeBreak.durationInSeconds = Math.floor((activeBreak.endTime - activeBreak.startTime) / 1000);
-      activeBreak.status = 'Completed';
-      await activeBreak.save();
-
-      attendance.totalBreakDurationInSeconds += activeBreak.durationInSeconds;
-      await attendance.save();
-    }
-
-    // 4. Create new Work Session
+    // 3. Create new Work Session (Check-in)
     const workSession = await AttendanceSession.create({
       attendanceId: attendance._id,
       employee: employee._id,
@@ -93,7 +85,7 @@ exports.startWorkSession = async (req, res) => {
       startTime: new Date()
     });
 
-    res.status(201).json({ success: true, data: workSession });
+    res.status(201).json({ success: true, data: { attendance, activeSession: workSession } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -163,33 +155,30 @@ exports.checkout = async (req, res) => {
     });
 
     if (!attendance) {
-      return res.status(400).json({ success: false, message: 'No attendance found' });
+      return res.status(400).json({ success: false, message: 'No attendance found for today.' });
     }
 
-    // Close any active sessions
+    // Close the active work session
     const activeSession = await AttendanceSession.findOne({
       attendanceId: attendance._id,
+      sessionType: 'Work',
       status: 'Active'
     });
 
     if (activeSession) {
       activeSession.endTime = new Date();
-      activeSession.durationInSeconds = Math.floor((activeSession.endTime - activeSession.startTime) / 1000);
+      activeSession.durationInSeconds = Math.floor((activeSession.endTime.getTime() - activeSession.startTime.getTime()) / 1000);
       activeSession.status = 'Completed';
       await activeSession.save();
 
-      if (activeSession.sessionType === 'Work') {
-        attendance.totalWorkDurationInSeconds += activeSession.durationInSeconds;
-      } else {
-        attendance.totalBreakDurationInSeconds += activeSession.durationInSeconds;
-      }
+      attendance.totalWorkDurationInSeconds += activeSession.durationInSeconds;
     }
 
     attendance.lastLogoutTime = new Date();
-    attendance.status = 'Checked Out'; // Can be evaluated later for Half Day / Present
+    attendance.status = 'Checked Out';
     await attendance.save();
 
-    res.status(200).json({ success: true, message: 'Successfully checked out for the day' });
+    res.status(200).json({ success: true, message: 'Successfully checked out for the day', data: { attendance, activeSession: null } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

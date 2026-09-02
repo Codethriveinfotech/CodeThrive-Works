@@ -2,53 +2,52 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { 
-  Clock, Play, Pause, AlertCircle, CheckCircle2, 
-  Bell, MoreVertical, Briefcase, CalendarDays, 
-  Activity, TrendingUp, AlertTriangle, ArrowRight, CheckSquare, Calendar, FileText
+  Clock, LogIn, LogOut, CheckCircle2, 
+  Bell, Activity, AlertTriangle, 
+  CheckSquare, Calendar, FileText, Sun, Moon, Briefcase, ListTodo, MoreHorizontal, UserCircle
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
+import SkeletonLoader from '../components/common/SkeletonLoader';
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { user } = useAuth();
   
-  const [attendance, setAttendance] = useState({
-    status: 'Not Checked In',
-    loginTime: null,
-    currentWorkingDuration: 0,
-    breakDuration: 0
-  });
+  const [attendance, setAttendance] = useState(null);
+  const [activeSession, setActiveSession] = useState(null);
+  const [liveDuration, setLiveDuration] = useState(0);
 
-  const [allTasks, setAllTasks] = useState([]);
+  const [tasksData, setTasksData] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isActionLoading, setIsActionLoading] = useState(false);
+
+  const shouldReduceMotion = useReducedMotion();
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: shouldReduceMotion ? 0 : 0.08 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 15 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+  };
 
   // Stats
-  const [taskStats, setTaskStats] = useState({
-    total: 0,
-    pending: 0,
-    inProgress: 0,
-    completed: 0,
-    progressPercentage: 0
-  });
+  const [taskStats, setTaskStats] = useState({ total: 0, pending: 0, completed: 0 });
 
   // Derived arrays
   const [priorityTasks, setPriorityTasks] = useState([]);
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState({
-    today: [],
-    tomorrow: [],
-    upcoming: []
-  });
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
 
-  const formatDuration = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
+  // Load Dashboard Data
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -58,73 +57,39 @@ const Dashboard = () => {
           api.get('/tasks/my-tasks')
         ]);
         
-        const { attendance: attData } = dashRes.data || { attendance: {} };
-        const tasksData = tasksRes.data?.data || [];
+        const dashData = dashRes.data?.data || {};
+        setAttendance(dashData.attendance);
+        setActiveSession(dashData.activeSession);
         
-        setAttendance({
-          status: attData?.status || 'Not Checked In',
-          loginTime: attData?.loginTime || null,
-          currentWorkingDuration: attData?.currentWorkingDuration || 0,
-          breakDuration: attData?.breakDuration || 0
-        });
-        
-        setAllTasks(tasksData);
+        const tasks = tasksRes.data?.data || [];
+        setTasksData(tasks);
         setNotifications(notifRes.data?.data || []);
         
         // Calculate Task Stats
         let pending = 0;
-        let inProgress = 0;
         let completed = 0;
-        const total = tasksData.length;
-        
         const priority = [];
-        const dueToday = [];
-        const dueTomorrow = [];
-        const dueUpcoming = [];
+        const deadlines = [];
         
-        const todayStr = new Date().toDateString();
-        const tomorrowDate = new Date();
-        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-        const tomorrowStr = tomorrowDate.toDateString();
-
-        tasksData.forEach(task => {
-          // Status counts
+        tasks.forEach(task => {
           if (task.status === 'Completed') completed++;
-          else if (task.status === 'In Progress') inProgress++;
-          else pending++; // Not Started, Assigned, Ready for Review, etc
+          else pending++; 
 
-          // Priority
           if ((task.priority === 'High' || task.priority === 'Urgent') && task.status !== 'Completed') {
             priority.push(task);
           }
 
-          // Deadlines (Only for active tasks)
           if (task.dueDate && task.status !== 'Completed') {
-            const dueDateStr = new Date(task.dueDate).toDateString();
-            if (dueDateStr === todayStr) dueToday.push(task);
-            else if (dueDateStr === tomorrowStr) dueTomorrow.push(task);
-            else if (new Date(task.dueDate) > new Date()) dueUpcoming.push(task);
+            deadlines.push(task);
           }
         });
 
-        // Limit lists to keep UI clean
         priority.sort((a, b) => new Date(a.dueDate || '2099') - new Date(b.dueDate || '2099'));
-        dueUpcoming.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+        deadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
-        setTaskStats({
-          total,
-          pending,
-          inProgress,
-          completed,
-          progressPercentage: total > 0 ? Math.round((completed / total) * 100) : 0
-        });
-
-        setPriorityTasks(priority.slice(0, 5));
-        setUpcomingDeadlines({
-          today: dueToday,
-          tomorrow: dueTomorrow,
-          upcoming: dueUpcoming.slice(0, 5)
-        });
+        setTaskStats({ total: tasks.length, pending, completed });
+        setPriorityTasks(priority.slice(0, 4));
+        setUpcomingDeadlines(deadlines.slice(0, 4));
 
         setLoading(false);
       } catch (err) {
@@ -135,312 +100,291 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
+  // Timer Logic
   useEffect(() => {
     let interval;
-    if (attendance.status === 'Working') {
+    if (activeSession && activeSession.startTime) {
+      const startTime = new Date(activeSession.startTime).getTime();
+      const prevDuration = attendance?.totalWorkDurationInSeconds || 0;
+
+      // Update timer immediately
+      setLiveDuration(Math.floor((Date.now() - startTime) / 1000) + prevDuration);
+
       interval = setInterval(() => {
-        setAttendance(prev => ({ ...prev, currentWorkingDuration: prev.currentWorkingDuration + 1 }));
+        setLiveDuration(Math.floor((Date.now() - startTime) / 1000) + prevDuration);
       }, 1000);
-    } else if (attendance.status === 'On Break') {
-      interval = setInterval(() => {
-        setAttendance(prev => ({ ...prev, breakDuration: prev.breakDuration + 1 }));
-      }, 1000);
+    } else if (attendance && attendance.status === 'Checked Out') {
+      setLiveDuration(attendance.totalWorkDurationInSeconds || 0);
+    } else {
+      setLiveDuration(attendance?.totalWorkDurationInSeconds || 0);
     }
     return () => clearInterval(interval);
-  }, [attendance.status]);
+  }, [activeSession, attendance]);
 
-  const handleStartBreak = () => setAttendance(prev => ({ ...prev, status: 'On Break' }));
-  const handleEndBreak = () => setAttendance(prev => ({ ...prev, status: 'Working' }));
+  const handleCheckIn = async () => {
+    setIsActionLoading(true);
+    try {
+      const res = await api.post('/attendance/start-work');
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (res.data.success) {
+        setAttendance(res.data.data.attendance);
+        setActiveSession(res.data.data.activeSession);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || 'Check-in failed');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleCheckOut = async () => {
+    setIsActionLoading(true);
+    try {
+      const res = await api.post('/attendance/checkout');
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (res.data.success) {
+        setAttendance(res.data.data.attendance);
+        setActiveSession(res.data.data.activeSession);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || 'Check-out failed');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const formatDuration = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
+  };
 
   if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', flexDirection: 'column' }}>
-      <div className="loader"></div>
-      <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Loading Dashboard...</p>
+    <div className="dashboard-container">
+      <SkeletonLoader type="dashboard" />
     </div>
   );
 
-  const getDayGreeting = () => {
-    const hr = new Date().getHours();
-    if (hr < 12) return 'Good Morning';
-    if (hr < 17) return 'Good Afternoon';
-    return 'Good Evening';
-  };
+  const hr = new Date().getHours();
+  const isMorning = hr < 12;
+  const isEvening = hr >= 17;
+  const greeting = isMorning ? 'Good Morning' : (isEvening ? 'Good Evening' : 'Good Afternoon');
+  const GreetingIcon = isEvening ? Moon : Sun;
 
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
+  const isCheckedIn = !!activeSession;
+  const isCheckedOut = attendance && attendance.status === 'Checked Out';
+  const roleDisplay = user?.designation || (user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Employee');
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      
-      {/* 1. Main Dashboard Section (Welcome) */}
-      <div className="welcome-hero-section ultra-premium-hero" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '2rem' }}>
-        <div className="welcome-content">
-          <p style={{ margin: '0 0 0.5rem 0', color: 'var(--primary-light)', fontSize: '0.95rem', fontWeight: 500, letterSpacing: '0.5px' }}>{currentDate}</p>
-          <h1 className="welcome-title">{getDayGreeting()}, <span className="highlight-name">{user?.name || 'Employee'}</span></h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontStyle: 'italic' }}>"Success is the sum of small efforts, repeated day in and day out."</p>
-          
-          <div className="employee-badges" style={{ marginTop: '1.5rem' }}>
-            <span className="badge-pill employee-id-badge">
-              <strong>ID:</strong> {user?.employeeId || user?.id || 'N/A'}
-            </span>
-            <span className="badge-pill role-badge">
-              <strong>Role:</strong> {user?.designation || (user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Employee')}
-            </span>
+    <motion.div 
+      className="dashboard-container"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      {/* -----------------------------
+          Tier 1: Hero Banner
+      ----------------------------- */}
+      <motion.div className="dashboard-hero" variants={itemVariants}>
+        <div className="hero-content">
+          <div className="hero-date">
+            <Calendar size={14} />
+            {currentDate}
+          </div>
+          <h1 className="hero-title">
+            <GreetingIcon size={28} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
+            {greeting}, <span>{user?.name || 'Employee'}</span>
+          </h1>
+          <div className="hero-badges">
+            <span className="hero-badge"><Briefcase size={14} /> {roleDisplay}</span>
+            <span className="hero-badge"><UserCircle size={14} /> ID: {user?.employeeId || user?.id}</span>
           </div>
         </div>
         
-        {/* Attendance Timer */}
-        <Card className="attendance-timer-card premium-timer ultra-glass" style={{ minWidth: '280px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div className={`status-dot ${attendance.status === 'Working' ? 'pulse-green' : attendance.status === 'On Break' ? 'pulse-yellow' : 'pulse-red'}`}></div>
-            <div>
-              <h3 style={{ fontSize: '1.4rem', margin: 0, fontFamily: 'monospace' }}>
-                {formatDuration(attendance.status === 'Working' ? attendance.currentWorkingDuration : attendance.breakDuration)}
-              </h3>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{attendance.status}</p>
-            </div>
-          </div>
-          <div style={{ marginTop: '1rem' }}>
-            {attendance.status === 'Working' && (
-              <button onClick={handleStartBreak} className="btn btn-outline" style={{ width: '100%' }}><Pause size={16} style={{marginRight: '0.5rem'}}/> Start Break</button>
-            )}
-            {attendance.status === 'On Break' && (
-              <button onClick={handleEndBreak} className="btn btn-primary" style={{ width: '100%' }}><Play size={16} style={{marginRight: '0.5rem'}}/> Resume Work</button>
-            )}
-            {attendance.status !== 'Working' && attendance.status !== 'On Break' && (
-               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, textAlign: 'center' }}>Check-in from Attendance Page</p>
-            )}
-          </div>
-        </Card>
-      </div>
+        <div className="hero-actions">
+           <Link to="/tasks" className="btn btn-outline">
+             <CheckSquare size={16} /> My Tasks
+           </Link>
+           <Link to="/work/daily-report" className="btn btn-primary">
+             <FileText size={16} /> Submit Report
+           </Link>
+        </div>
+      </motion.div>
 
-      {/* 2. Today's Work Overview (Dynamic Counts) */}
+      {/* -----------------------------
+          Tier 2: Metric Cards Grid
+      ----------------------------- */}
       <div className="metrics-grid">
-        <Card className="metric-card premium-hover">
-          <div className="metric-icon bg-primary-light">
-            <Briefcase size={26} color="var(--primary)" />
+        <motion.div className="metric-card" variants={itemVariants}>
+          <div className="metric-icon-wrapper primary">
+            <ListTodo size={24} />
           </div>
-          <div className="metric-data">
-            <p>Total Tasks</p>
-            <h3>{taskStats.total}</h3>
+          <div className="metric-content">
+            <span className="metric-label">Total Tasks</span>
+            <span className="metric-value">{taskStats.total}</span>
           </div>
-        </Card>
-        
-        <Card className="metric-card premium-hover">
-          <div className="metric-icon bg-warning-light">
-            <Clock size={26} color="var(--warning)" />
-          </div>
-          <div className="metric-data">
-            <p>Pending</p>
-            <h3>{taskStats.pending}</h3>
-          </div>
-        </Card>
-        
-        <Card className="metric-card premium-hover">
-          <div className="metric-icon bg-accent-light">
-            <Activity size={26} color="var(--accent)" />
-          </div>
-          <div className="metric-data">
-            <p>In Progress</p>
-            <h3>{taskStats.inProgress}</h3>
-          </div>
-        </Card>
+        </motion.div>
 
-        <Card className="metric-card premium-hover">
-          <div className="metric-icon bg-success-light">
-            <CheckCircle2 size={26} color="var(--success)" />
+        <motion.div className="metric-card" variants={itemVariants}>
+          <div className="metric-icon-wrapper warning">
+            <AlertTriangle size={24} />
           </div>
-          <div className="metric-data">
-            <p>Completed</p>
-            <h3>{taskStats.completed}</h3>
+          <div className="metric-content">
+            <span className="metric-label">Pending</span>
+            <span className="metric-value">{taskStats.pending}</span>
           </div>
-        </Card>
+        </motion.div>
+
+        <motion.div className="metric-card" variants={itemVariants}>
+          <div className="metric-icon-wrapper success">
+            <CheckCircle2 size={24} />
+          </div>
+          <div className="metric-content">
+            <span className="metric-label">Completed</span>
+            <span className="metric-value">{taskStats.completed}</span>
+          </div>
+        </motion.div>
+
+        <motion.div className="metric-card" variants={itemVariants}>
+          <div className="metric-icon-wrapper info">
+            <Clock size={24} />
+          </div>
+          <div className="metric-content">
+            <span className="metric-label">Time Logged</span>
+            <span className="metric-value">{formatDuration(liveDuration)}</span>
+          </div>
+        </motion.div>
       </div>
 
-      {/* 4. Task Progress & Useful Actions */}
-      <div className="dashboard-content-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-        <Card className="premium-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.2rem' }}><TrendingUp size={20} color="var(--primary)"/> Task Progress</h3>
-             <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>{taskStats.progressPercentage}%</span>
-          </div>
-          <div style={{ width: '100%', height: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', overflow: 'hidden', marginBottom: '1.25rem', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.3)' }}>
-             <div style={{ width: `${taskStats.progressPercentage}%`, height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--accent-light))', borderRadius: '6px', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(99, 102, 241, 0.4)' }}></div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CheckCircle2 size={16} color="var(--success)" /> {taskStats.completed} Completed Tasks</span>
-             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Clock size={16} color="var(--warning)" /> {taskStats.total - taskStats.completed} Remaining Tasks</span>
-          </div>
-        </Card>
-
-        <Card className="premium-card" title="Quick Actions">
-           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', height: '100%', alignItems: 'center' }}>
-             <Link to="/tasks" className="btn btn-outline premium-hover" style={{ textDecoration: 'none', justifyContent: 'center', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-               <CheckSquare size={24} /> <span>View My Tasks</span>
-             </Link>
-             <Link to="/work/daily-report" className="btn btn-primary premium-hover" style={{ textDecoration: 'none', justifyContent: 'center', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-               <FileText size={24} /> <span>Submit Report</span>
-             </Link>
-           </div>
-        </Card>
-      </div>
-
-      {/* Main Content Split Area */}
-      <div className="dashboard-content-grid" style={{ gridTemplateColumns: '1.8fr 1.2fr', gap: '2rem' }}>
+      {/* -----------------------------
+          Tier 3: Workspace Grid
+      ----------------------------- */}
+      <div className="workspace-grid">
         
-        {/* Left Column: Priority Tasks */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          
-          <Card 
-            title={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <AlertTriangle size={18} color="var(--danger)" /> Today's Priority Tasks
+        {/* Left Col: Timer Widget */}
+        <motion.div variants={itemVariants}>
+          <div className="timer-widget">
+            <div className="timer-header">
+              <div>
+                <h3 style={{margin: '0 0 0.25rem 0', fontSize: '1.1rem'}}>Work Session</h3>
+                <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>Track today's activity</span>
               </div>
-            } 
-            className="premium-card"
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {priorityTasks.length === 0 ? (
-                 <div className="empty-state-premium">
-                   <CheckCircle2 size={48} className="icon" />
-                   <p>No high priority tasks currently. Great job!</p>
-                 </div>
-              ) : priorityTasks.map(task => {
-                const isOverdue = task.dueDate && new Date(task.dueDate) < new Date(new Date().setHours(0,0,0,0));
-                return (
-                  <div key={task._id} className="task-item premium-task-item premium-hover" style={{ borderLeft: '3px solid var(--danger)' }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                        <span className="task-id-badge">{task.taskId || 'Task'}</span>
-                        <StatusBadge status={task.priority} />
-                        {isOverdue && <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', borderRadius: '12px', fontWeight: 500 }}>OVERDUE</span>}
-                      </div>
-                      <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.05rem', color: 'var(--text-main)' }}>{task.title}</h4>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {task.description || 'No description provided.'}
-                      </p>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                      <StatusBadge status={task.status} />
-                      {task.dueDate && <span style={{ fontSize: '0.8rem', color: isOverdue ? 'var(--danger)' : 'var(--text-muted)' }}><CalendarDays size={12} style={{display:'inline', marginRight:'0.2rem'}}/> {new Date(task.dueDate).toLocaleDateString()}</span>}
-                    </div>
-                  </div>
-                )
-              })}
+              <div className="timer-status">
+                {isCheckedIn && <><span className="status-dot active"></span> Active</>}
+                {!isCheckedIn && !isCheckedOut && <><span className="status-dot"></span> Not Started</>}
+                {isCheckedOut && <><CheckCircle2 size={16} color="var(--success)"/> Completed</>}
+              </div>
             </div>
-          </Card>
 
-        </div>
+            <div className="timer-display">
+              {isCheckedIn && <div className="timer-ring"></div>}
+              <span className="timer-value">{formatDuration(liveDuration)}</span>
+              <span className="timer-label">{isCheckedIn ? "Checked In" : (isCheckedOut ? "Total Duration" : "0 Hours Logged")}</span>
+            </div>
 
-        {/* Right Column: Deadlines & Activity */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          
-          {/* Upcoming Deadlines */}
-          <Card 
-            title={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Calendar size={18} color="var(--warning)" /> Upcoming Deadlines
+            <div className="timer-details">
+              <div className="timer-detail-item">
+                <span className="timer-detail-label">Check-In</span>
+                <span className="timer-detail-value">
+                  {attendance?.firstLoginTime 
+                    ? new Date(attendance.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                    : '--:--'}
+                </span>
               </div>
-            }
-            className="premium-card"
-          >
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-               
-               {/* Due Today */}
-               {upcomingDeadlines.today.length > 0 && (
-                 <div>
-                   <h5 style={{ margin: '0 0 0.75rem 0', color: 'var(--danger)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Due Today</h5>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                     {upcomingDeadlines.today.map(task => (
-                       <div key={task._id} style={{ padding: '0.75rem', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                          <div style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-main)', marginBottom: '0.25rem' }}>{task.title}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-                            <span>{task.taskId}</span>
-                            <StatusBadge status={task.status} />
-                          </div>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               )}
-
-               {/* Due Tomorrow */}
-               {upcomingDeadlines.tomorrow.length > 0 && (
-                 <div>
-                   <h5 style={{ margin: '0 0 0.75rem 0', color: 'var(--warning)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Due Tomorrow</h5>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                     {upcomingDeadlines.tomorrow.map(task => (
-                       <div key={task._id} style={{ padding: '0.75rem', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                          <div style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-main)', marginBottom: '0.25rem' }}>{task.title}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{task.taskId}</div>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               )}
-
-               {/* Later */}
-               {upcomingDeadlines.upcoming.length > 0 && (
-                 <div>
-                   <h5 style={{ margin: '0 0 0.75rem 0', color: 'var(--primary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Upcoming</h5>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                     {upcomingDeadlines.upcoming.map(task => (
-                       <div key={task._id} style={{ padding: '0.75rem', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>{task.title}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}</div>
-                       </div>
-                     ))}
-                   </div>
-                 </div>
-               )}
-
-               {upcomingDeadlines.today.length === 0 && upcomingDeadlines.tomorrow.length === 0 && upcomingDeadlines.upcoming.length === 0 && (
-                 <div className="empty-state-premium">
-                    <CalendarDays size={48} className="icon" />
-                    <p>No upcoming deadlines to worry about.</p>
-                 </div>
-               )}
-
-             </div>
-          </Card>
-
-          {/* Recent Activity / Notifications */}
-          <Card 
-            title={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Activity size={18} color="var(--primary)" /> Recent Activity
+              <div className="timer-detail-item">
+                <span className="timer-detail-label">Check-Out</span>
+                <span className="timer-detail-value">
+                  {isCheckedOut && attendance?.lastLogoutTime 
+                    ? new Date(attendance.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                    : '--:--'}
+                </span>
               </div>
-            }
-            className="premium-card"
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {notifications.length === 0 ? (
-                 <div className="empty-state-premium">
-                   <Bell size={48} className="icon" />
-                   <p>No recent activities.</p>
-                 </div>
-              ) : (
-                notifications.slice(0, 5).map(notif => (
-                  <div key={notif._id} className="notification-item" style={{ 
-                    borderLeft: `3px solid var(--${notif.type === 'Alert' ? 'danger' : notif.type === 'Success' ? 'success' : 'primary'})`, 
-                    padding: '0.75rem 1rem',
-                    background: 'var(--bg-main)',
-                    borderRadius: '0 8px 8px 0',
-                    transition: 'all 0.2s',
-                    border: '1px solid var(--border-color)',
-                    borderLeftWidth: '3px'
-                  }}>
-                    <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-main)' }}>{notif.title}</p>
-                    <p style={{ margin: '0 0 0.4rem 0', fontSize: '0.8rem', color: 'var(--text-muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{notif.message}</p>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(notif.createdAt).toLocaleDateString()}</span>
-                  </div>
-                ))
+            </div>
+
+            <div style={{ marginTop: 'auto' }}>
+              {!isCheckedIn && !isCheckedOut && (
+                <button onClick={handleCheckIn} disabled={isActionLoading} className={`btn-huge btn-primary ${!isActionLoading ? 'pulse-btn' : ''}`}>
+                  {isActionLoading ? <span className="loader-small"></span> : <><LogIn size={20} style={{marginRight: '0.5rem'}} /> START SESSION</>}
+                </button>
+              )}
+              {isCheckedIn && (
+                <button onClick={handleCheckOut} disabled={isActionLoading} className="btn-huge btn-danger">
+                  {isActionLoading ? <span className="loader-small"></span> : <><LogOut size={20} style={{marginRight: '0.5rem'}} /> END SESSION</>}
+                </button>
+              )}
+              {isCheckedOut && (
+                <div className="btn-huge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', cursor: 'default' }}>
+                   Session Completed
+                </div>
               )}
             </div>
+          </div>
+        </motion.div>
+
+        {/* Right Col: Tasks & Deadlines */}
+        <motion.div variants={itemVariants} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          
+          <Card title={<div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}><AlertTriangle size={18} color="var(--warning)"/> Priority Tasks</div>}>
+            {priorityTasks.length === 0 ? (
+              <div className="empty-state-modern">
+                <CheckCircle2 size={32} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                <p>No high priority tasks currently.</p>
+              </div>
+            ) : (
+              <ul className="modern-list">
+                {priorityTasks.map(task => (
+                  <li key={task._id} className="modern-list-item">
+                    <div className={`item-icon ${task.priority?.toLowerCase() === 'urgent' ? 'urgent' : 'high'}`}>
+                      <AlertTriangle size={18} />
+                    </div>
+                    <div className="item-content">
+                      <h4 className="item-title">{task.title}</h4>
+                      <div className="item-meta">
+                        <span className="item-meta-info"><CheckSquare size={12}/> {task.taskId}</span>
+                        {task.dueDate && <span className="item-meta-info"><Calendar size={12}/> {new Date(task.dueDate).toLocaleDateString()}</span>}
+                      </div>
+                    </div>
+                    <StatusBadge status={task.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
 
-        </div>
+          <Card title={<div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}><Calendar size={18} color="var(--primary)"/> Upcoming Deadlines</div>}>
+            {upcomingDeadlines.length === 0 ? (
+              <div className="empty-state-modern">
+                <Calendar size={32} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                <p>No upcoming deadlines.</p>
+              </div>
+            ) : (
+              <ul className="modern-list">
+                {upcomingDeadlines.map(task => (
+                  <li key={task._id} className="modern-list-item">
+                    <div className="item-icon normal">
+                      <Clock size={18} />
+                    </div>
+                    <div className="item-content">
+                      <h4 className="item-title">{task.title}</h4>
+                      <div className="item-meta">
+                        <span className="item-meta-info"><MoreHorizontal size={12}/> {task.status}</span>
+                      </div>
+                    </div>
+                    <span style={{fontSize: '0.85rem', color: 'var(--danger)', fontWeight: '600'}}>
+                      {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+        </motion.div>
+
       </div>
-    </div>
+    </motion.div>
   );
 };
 
