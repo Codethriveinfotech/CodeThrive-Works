@@ -92,3 +92,83 @@ exports.createIndividualPayroll = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// @desc    Bulk generate payroll for all active employees
+// @route   POST /api/v1/payroll/bulk-generate
+// @access  Private (Admin/HR)
+exports.bulkGeneratePayroll = async (req, res) => {
+  try {
+    const { month, paymentDate, status } = req.body;
+    if (!month) {
+      return res.status(400).json({ success: false, message: 'Month is required' });
+    }
+
+    const employees = await Employee.find();
+    if (employees.length === 0) {
+      return res.status(400).json({ success: false, message: 'No employees found to generate payroll.' });
+    }
+
+    let createdCount = 0;
+    let skippedCount = 0;
+    const createdPayrolls = [];
+
+    for (const emp of employees) {
+      const existing = await Payroll.findOne({ employee: emp._id, month });
+      if (existing) {
+        skippedCount++;
+        continue;
+      }
+
+      const basicSalary = emp.salaryAmount || 45000;
+      const allowanceDetails = {
+        hra: Math.round(basicSalary * 0.4),
+        travel: 2500,
+        medical: 1500,
+        other: 1000
+      };
+      const deductionDetails = {
+        pf: Math.round(basicSalary * 0.12),
+        esi: 0,
+        professionalTax: 200,
+        incomeTax: 1500,
+        leaveDeduction: 0,
+        loanAdvance: 0,
+        other: 0
+      };
+
+      const totalAllowances = allowanceDetails.hra + allowanceDetails.travel + allowanceDetails.medical + allowanceDetails.other;
+      const totalDeductions = deductionDetails.pf + deductionDetails.professionalTax + deductionDetails.incomeTax;
+      const grossSalary = basicSalary + totalAllowances;
+      const netPayable = grossSalary - totalDeductions;
+      const payslipId = `PS-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+
+      const payroll = await Payroll.create({
+        employee: emp._id,
+        payslipId,
+        month,
+        basicSalary,
+        allowanceDetails,
+        allowances: totalAllowances,
+        bonus: 0,
+        deductionDetails,
+        deductions: totalDeductions,
+        grossSalary,
+        netPayable,
+        status: status || 'Paid',
+        paymentDate: paymentDate || new Date()
+      });
+
+      createdPayrolls.push(payroll);
+      createdCount++;
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Payroll generated for ${createdCount} employee(s). (${skippedCount} skipped as already generated)`,
+      count: createdCount,
+      data: createdPayrolls
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

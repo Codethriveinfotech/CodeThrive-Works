@@ -13,6 +13,7 @@ const Register = () => {
     employeeId: '',
     emailId: '',
     phoneNumber: '',
+    role: '',
     password: '',
     confirmPassword: ''
   });
@@ -38,7 +39,7 @@ const Register = () => {
       !formData.password || 
       !formData.confirmPassword
     ) {
-      setError('All fields are mandatory.');
+      setError('All mandatory fields must be filled.');
       return;
     }
 
@@ -88,6 +89,19 @@ const Register = () => {
           <div className="form-group" style={{ gridColumn: 'span 2' }}>
             <label>Employee ID *</label>
             <input type="text" name="employeeId" value={formData.employeeId} onChange={handleChange} className="input-field" required />
+          </div>
+
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+            <label>Role / Position *</label>
+            <input 
+              type="text" 
+              name="role" 
+              placeholder="e.g. Senior Software Engineer, UI/UX Designer, Project Manager" 
+              value={formData.role} 
+              onChange={handleChange} 
+              className="input-field" 
+              required 
+            />
           </div>
           
           <div className="form-group" style={{ gridColumn: 'span 2' }}>

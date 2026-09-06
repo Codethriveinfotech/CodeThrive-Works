@@ -37,7 +37,7 @@ const sendTokenResponse = async (user, statusCode, res) => {
 // 1. Employee Registration
 exports.registerEmployee = async (req, res) => {
   try {
-    const { fullName, employeeId, emailId, phoneNumber, password } = req.body;
+    const { fullName, employeeId, emailId, phoneNumber, password, role } = req.body;
 
     // Validate required fields
     if (!fullName || !employeeId || !emailId || !phoneNumber || !password) {
@@ -54,14 +54,29 @@ exports.registerEmployee = async (req, res) => {
     });
     
     if (existingEmployee) {
-      return res.status(400).json({ success: false, message: 'An account with this Employee ID already exists.' });
+      return res.status(400).json({ success: false, message: 'An account with this Employee ID, Email, or Phone already exists.' });
+    }
+
+    // Handle custom typed role/designation
+    const customRoleText = role ? role.trim() : 'Employee';
+    const lowerRole = customRoleText.toLowerCase();
+    
+    let userRole = 'employee';
+    if (lowerRole.includes('admin') || lowerRole.includes('superadmin')) {
+      userRole = 'admin';
+    } else if (lowerRole.includes('hr')) {
+      userRole = 'hr';
+    } else if (lowerRole.includes('lead') || lowerRole.includes('manager') || lowerRole.includes('head')) {
+      userRole = 'teamlead';
+    } else if (lowerRole.includes('intern')) {
+      userRole = 'intern';
     }
 
     // Create User Account First
     const user = await User.create({
       email: emailId,
       password: password,
-      role: 'employee',
+      role: userRole,
       status: 'active'
     });
 
@@ -72,6 +87,7 @@ exports.registerEmployee = async (req, res) => {
       employeeId: employeeId,
       personalEmailAddress: emailId,
       personalPhoneNumber: phoneNumber,
+      designation: customRoleText,
       status: 'Active'
     });
 

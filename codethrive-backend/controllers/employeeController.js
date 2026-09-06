@@ -77,9 +77,26 @@ exports.getEmployee = async (req, res) => {
 // @access  Private
 exports.getMe = async (req, res) => {
   try {
-    const employee = await Employee.findOne({ user: req.user._id }).populate('user', 'email role status');
+    let employee = await Employee.findOne({ user: req.user._id }).populate('user', 'email role status');
     if (!employee) {
-      return res.status(404).json({ success: false, message: 'Employee profile not found' });
+      // Auto-create profile for Admin/User if missing
+      const isManagement = ['superadmin', 'admin', 'hr'].includes(req.user.role);
+      const roleTitle = req.user.role === 'superadmin' ? 'Super Administrator' : (req.user.role === 'admin' ? 'Administrator' : 'HR Manager');
+      const defaultName = req.user.email ? req.user.email.split('@')[0].toUpperCase() : 'ADMINISTRATOR';
+
+      employee = await Employee.create({
+        user: req.user._id,
+        employeeId: isManagement ? `CTI-ADM-001` : `CTI-EMP-001`,
+        fullName: isManagement ? 'System Administrator' : defaultName,
+        personalEmailAddress: req.user.email,
+        personalPhoneNumber: '9876543210',
+        designation: roleTitle,
+        department: isManagement ? 'System Administration & Management' : 'Engineering',
+        employmentType: 'Full-Time',
+        status: 'Active',
+        workLocation: 'Office'
+      });
+      employee = await Employee.findById(employee._id).populate('user', 'email role status');
     }
     res.status(200).json({ success: true, data: employee });
   } catch (err) {
@@ -142,36 +159,49 @@ exports.updateMe = async (req, res) => {
   try {
     let employee = await Employee.findOne({ user: req.user._id });
     if (!employee) {
-      return res.status(404).json({ success: false, message: 'Employee profile not found' });
+      const isManagement = ['superadmin', 'admin', 'hr'].includes(req.user.role);
+      const roleTitle = req.user.role === 'superadmin' ? 'Super Administrator' : (req.user.role === 'admin' ? 'Administrator' : 'HR Manager');
+      employee = await Employee.create({
+        user: req.user._id,
+        employeeId: isManagement ? `CTI-ADM-001` : `CTI-EMP-001`,
+        fullName: req.body.fullName || (isManagement ? 'System Administrator' : 'User'),
+        personalEmailAddress: req.user.email,
+        personalPhoneNumber: req.body.personalPhoneNumber || '9876543210',
+        designation: roleTitle,
+        department: isManagement ? 'System Administration & Management' : 'Engineering',
+        status: 'Active'
+      });
     }
 
-    // Extract only allowed fields
-    const { 
-      personalPhoneNumber, 
-      personalEmailAddress, 
-      currentAddress, 
-      permanentAddress, 
-      emergencyContact, 
-      skills 
-    } = req.body;
+    const updateFields = [
+      'fullName', 'profilePhoto', 'dateOfBirth', 'gender', 'bloodGroup',
+      'personalPhoneNumber', 'personalEmailAddress', 'currentAddress', 'permanentAddress',
+      'emergencyContact', 'department', 'designation', 'employmentType', 'dateOfJoining',
+      'workLocation', 'reportingManager', 'qualification', 'collegeName', 'graduationYear',
+      'previousCompany', 'totalExperience', 'skills', 'technologyKnowledge'
+    ];
 
     const updateData = {};
-    if (personalPhoneNumber) updateData.personalPhoneNumber = personalPhoneNumber;
-    if (personalEmailAddress) updateData.personalEmailAddress = personalEmailAddress;
-    if (currentAddress) updateData.currentAddress = currentAddress;
-    if (permanentAddress) updateData.permanentAddress = permanentAddress;
-    if (emergencyContact) updateData.emergencyContact = emergencyContact;
-    if (skills) updateData.skills = skills;
+    updateFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
 
-    // Handle photo upload if exists
+    // Handle photo upload if file exists
     if (req.file) {
-      updateData.profilePhoto = req.file.path; // Cloudinary URL
+      updateData.profilePhoto = req.file.path;
     }
 
     employee = await Employee.findByIdAndUpdate(employee._id, updateData, {
       new: true,
       runValidators: true
     });
+
+    // Sync email with User model if personalEmailAddress changed
+    if (updateData.personalEmailAddress) {
+      await User.findByIdAndUpdate(req.user._id, { email: updateData.personalEmailAddress });
+    }
 
     res.status(200).json({ success: true, data: employee });
   } catch (err) {
