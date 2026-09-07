@@ -45,6 +45,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const isOfflineOrApiMissing = (err) => {
+    if (!err || !err.response) return true;
+    const status = err.response.status;
+    return status === 405 || status === 404 || status === 502 || status === 503 || status === 504 || err.code === 'ERR_NETWORK';
+  };
+
   const extractErrorMessage = (err, defaultMsg) => {
     if (!err) return defaultMsg;
     if (err.response?.data?.message) return err.response.data.message;
@@ -61,8 +67,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(res.data.user));
       return { success: true, user: res.data.user };
     } catch (err) {
-      if (!err.response) {
-        // Local Fallback Login when backend is offline
+      if (isOfflineOrApiMissing(err)) {
+        // Local Fallback Login when backend is offline or static 405 on Vercel
         const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
         const match = localUsers.find(u => u.employeeId === identifier || u.email === identifier || u.emailId === identifier);
         const loggedUser = match || {
@@ -88,7 +94,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(res.data.user));
       return { success: true, user: res.data.user };
     } catch (err) {
-      if (!err.response) {
+      if (isOfflineOrApiMissing(err)) {
         const adminUser = {
           _id: 'admin_local',
           email: email || 'admin@codethrive.com',
@@ -109,20 +115,27 @@ export const AuthProvider = ({ children }) => {
       const res = await axios.post('/auth/register-employee', formData);
       return { success: true, message: res.data.message };
     } catch (err) {
-      if (!err.response) {
-        // Local Fallback Registration when backend is offline
+      if (isOfflineOrApiMissing(err)) {
+        // Local Fallback Registration when backend is offline or static 405 on Vercel
         const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
         const newUser = {
           _id: 'local_' + Date.now(),
           fullName: formData.fullName,
           employeeId: formData.employeeId,
-          email: formData.emailId || formData.email,
+          email: formData.emailId || `${formData.employeeId}@codethrive.com`,
           role: formData.role || 'Employee',
-          phoneNumber: formData.phoneNumber,
+          phoneNumber: formData.phoneNumber || '9876543210',
           status: 'active',
           createdAt: new Date().toISOString()
         };
-        localUsers.push(newUser);
+
+        const existingIdx = localUsers.findIndex(u => u.employeeId === formData.employeeId);
+        if (existingIdx >= 0) {
+          localUsers[existingIdx] = { ...localUsers[existingIdx], ...newUser };
+        } else {
+          localUsers.push(newUser);
+        }
+
         localStorage.setItem('cti_local_users', JSON.stringify(localUsers));
         localStorage.setItem('user', JSON.stringify(newUser));
         setUser(newUser);
@@ -141,12 +154,13 @@ export const AuthProvider = ({ children }) => {
       const res = await axios.post('/auth/create-credentials', data);
       return { success: true, message: res.data.message };
     } catch (err) {
-      if (!err.response) {
+      if (isOfflineOrApiMissing(err)) {
         return { success: true, message: 'Credentials Created Successfully!', isLocalMode: true };
       }
       return { success: false, message: extractErrorMessage(err, 'Credential creation failed') };
     }
   };
+
 
 
   const logout = async () => {

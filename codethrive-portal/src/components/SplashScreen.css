@@ -112,16 +112,21 @@
   justify-content: center;
   align-items: center;
   margin-bottom: 0.75rem;
+  background: transparent !important;
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .splash-logo {
   width: 100%;
-  max-width: min(320px, 75vw);
+  max-width: min(240px, 60vw);
   height: auto;
   object-fit: contain;
-  /* Soft glow without being over-bright */
-  filter: drop-shadow(0 0 25px rgba(0, 198, 255, 0.35)) drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+  background: transparent !important;
+  mix-blend-mode: screen; /* Strips out any dark/black background pixels */
+  filter: drop-shadow(0 0 25px rgba(0, 210, 255, 0.6));
 }
+
 
 @keyframes introPop {
   0% { 
