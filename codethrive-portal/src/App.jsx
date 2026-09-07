@@ -159,13 +159,15 @@ const EmployeeLayout = () => {
       <div className="main-wrapper">
         <Topbar />
         <main className="main-content">
-          <AnimatePresence mode="wait">
-            <PageTransition key={location.pathname}>
-              <Suspense fallback={<PageLoader />}>
-                <Outlet />
-              </Suspense>
-            </PageTransition>
-          </AnimatePresence>
+          <ErrorBoundary>
+            <AnimatePresence mode="wait">
+              <PageTransition key={location.pathname}>
+                <Suspense fallback={<PageLoader />}>
+                  <Outlet />
+                </Suspense>
+              </PageTransition>
+            </AnimatePresence>
+          </ErrorBoundary>
         </main>
       </div>
     </div>
@@ -180,18 +182,21 @@ const AdminLayout = () => {
       <div className="main-wrapper">
         <AdminTopbar />
         <main className="main-content">
-          <AnimatePresence mode="wait">
-            <PageTransition key={location.pathname}>
-              <Suspense fallback={<PageLoader />}>
-                <Outlet />
-              </Suspense>
-            </PageTransition>
-          </AnimatePresence>
+          <ErrorBoundary>
+            <AnimatePresence mode="wait">
+              <PageTransition key={location.pathname}>
+                <Suspense fallback={<PageLoader />}>
+                  <Outlet />
+                </Suspense>
+              </PageTransition>
+            </AnimatePresence>
+          </ErrorBoundary>
         </main>
       </div>
     </div>
   );
 };
+
 
 const AuthLayout = () => {
   const location = useLocation();

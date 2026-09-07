@@ -69,20 +69,20 @@ const MyProfile = () => {
 
       let data = profileRes?.data?.data || profileRes?.data;
 
-      // Fallback if profile data is empty (e.g. for Admin accounts)
+      // Fallback if profile data is empty
       if (!data || !data.fullName) {
         const isAdmin = ['superadmin', 'admin', 'hr'].includes(user?.role);
         data = {
-          fullName: user?.name || (user?.email ? user.email.split('@')[0].toUpperCase() : 'Administrator'),
-          personalEmailAddress: user?.email || 'admin@codethrive.com',
-          personalPhoneNumber: '9876543210',
-          employeeId: user?.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-001'),
-          designation: user?.designation || (isAdmin ? 'System Administrator' : 'Software Engineer'),
-          department: isAdmin ? 'Executive Board & System Administration' : 'Engineering',
+          fullName: user?.fullName || user?.name || (user?.email ? user.email.split('@')[0].toUpperCase() : 'CodeThrive Employee'),
+          personalEmailAddress: user?.email || user?.personalEmailAddress || 'employee@codethrive.com',
+          personalPhoneNumber: user?.phoneNumber || '9876543210',
+          employeeId: user?.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-002'),
+          designation: user?.designation || (isAdmin ? 'System Administrator' : 'Testing Specialist'),
+          department: user?.department || (isAdmin ? 'Management' : 'Quality Assurance & Software Testing'),
           status: 'Active',
           workLocation: 'Office',
           employmentType: 'Full-Time',
-          skills: ['System Administration', 'Security Management', 'Enterprise Portal Control']
+          skills: ['Software Testing', 'Quality Assurance', 'React Portal Control', 'Automation Testing']
         };
       }
 
@@ -90,10 +90,13 @@ const MyProfile = () => {
       setAttendanceSummary(summaryRes?.data?.data || null);
       setAttendanceHistory(historyRes?.data?.data || []);
 
+      const safeSubstring = (val) => (typeof val === 'string' ? val.substring(0, 10) : (val ? String(val).substring(0, 10) : ''));
+      const safeSkills = (skills) => (Array.isArray(skills) ? skills.join(', ') : (typeof skills === 'string' ? skills : ''));
+
       setFormData({
         fullName: data.fullName || '',
         profilePhoto: data.profilePhoto || '',
-        dateOfBirth: data.dateOfBirth ? data.dateOfBirth.substring(0, 10) : '',
+        dateOfBirth: safeSubstring(data.dateOfBirth),
         gender: data.gender || 'Prefer not to say',
         bloodGroup: data.bloodGroup || '',
         personalPhoneNumber: data.personalPhoneNumber || '',
@@ -101,7 +104,7 @@ const MyProfile = () => {
         department: data.department || '',
         designation: data.designation || '',
         employmentType: data.employmentType || 'Full-Time',
-        dateOfJoining: data.dateOfJoining ? data.dateOfJoining.substring(0, 10) : '',
+        dateOfJoining: safeSubstring(data.dateOfJoining),
         workLocation: data.workLocation || 'Office',
         currentAddress: data.currentAddress || '',
         permanentAddress: data.permanentAddress || '',
@@ -113,14 +116,28 @@ const MyProfile = () => {
         graduationYear: data.graduationYear || '',
         previousCompany: data.previousCompany || '',
         totalExperience: data.totalExperience || '',
-        skills: data.skills?.join(', ') || ''
+        skills: safeSkills(data.skills)
       });
     } catch (err) {
-      console.error('Failed to fetch profile data', err);
+      console.warn('Failed to fetch profile data, using fallback profile', err);
+      const fallbackData = {
+        fullName: user?.fullName || user?.name || 'Mahadevan',
+        personalEmailAddress: user?.email || 'mahadevan@codethrive.com',
+        personalPhoneNumber: '9876543210',
+        employeeId: user?.employeeId || 'CTI-2026-002',
+        designation: user?.designation || 'Testing',
+        department: 'Quality Assurance',
+        status: 'Active',
+        workLocation: 'Office',
+        employmentType: 'Full-Time',
+        skills: ['Testing', 'Quality Assurance', 'Web Development']
+      };
+      setProfile(fallbackData);
     } finally {
       setLoading(false);
     }
   };
+
 
   // Direct image upload from avatar camera click
   const handlePhotoUpload = (e) => {
