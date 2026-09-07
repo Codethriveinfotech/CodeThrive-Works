@@ -20,18 +20,10 @@ const SplashScreen = ({ isFading }) => {
       <div className="splash-content">
         <div className="logo-wrapper">
           <img 
-            src="/CodeThriveinfotech Only Logo.png" 
+            src="/full_logo.png" 
             alt="CodeThrive Infotech Logo" 
             className="splash-logo"
-            onError={(e) => {
-              e.target.src = '/logo.png';
-            }}
           />
-        </div>
-
-        <div className="company-title">
-          <span className="brand-main">CODETHRIVE</span>
-          <span className="brand-sub">INFOTECH</span>
         </div>
       </div>
 
