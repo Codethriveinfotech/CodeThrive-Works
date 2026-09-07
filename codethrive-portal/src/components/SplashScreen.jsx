@@ -18,19 +18,22 @@ const SplashScreen = ({ isFading }) => {
       </div>
 
       <div className="splash-content">
-        <img 
-          src="/full_logo.png" 
-          alt="CodeThrive Infotech Logo" 
-          className="splash-logo"
-          onError={(e) => {
-            e.target.style.display = 'none';
-            e.target.nextSibling.style.display = 'block';
-          }}
-        />
-        <div className="fallback-logo" style={{ display: 'none' }}>
-          CODETHRIVE INFOTECH
+        <div className="logo-wrapper">
+          <img 
+            src="/full_logo.png.png" 
+            alt="CodeThrive Infotech Logo" 
+            className="splash-logo"
+            onError={(e) => {
+              e.target.src = '/logo.png';
+            }}
+          />
+        </div>
+        <div className="company-title">
+          <span className="brand-main">CODETHRIVE</span>
+          <span className="brand-sub">INFOTECH</span>
         </div>
       </div>
+
     </div>
   );
 };

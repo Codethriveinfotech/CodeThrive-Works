@@ -99,15 +99,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 1.5rem;
+  max-width: 100vw;
   /* Smooth fade and pop in */
   animation: introPop 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
 .splash-logo {
-  width: 350px;
+  width: 100%;
+  max-width: min(320px, 75vw);
   height: auto;
+  object-fit: contain;
   /* Soft glow without being over-bright */
-  filter: drop-shadow(0 0 25px rgba(0, 198, 255, 0.3)) drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 0 25px rgba(0, 198, 255, 0.35)) drop-shadow(0 10px 20px rgba(0,0,0,0.5));
 }
 
 @keyframes introPop {
@@ -121,13 +134,44 @@
   }
 }
 
-.fallback-logo {
-  font-size: 4.5rem;
-  font-weight: 800;
+.company-title {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  margin-top: 0.5rem;
   font-family: 'Outfit', sans-serif;
-  letter-spacing: -1px;
-  background: linear-gradient(to right, #0072ff, #00d2ff, #32cd32);
+  filter: drop-shadow(0 4px 12px rgba(0, 198, 255, 0.25));
+}
+
+.company-title .brand-main {
+  font-size: clamp(1.8rem, 6vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #ffffff 0%, #00d2ff 50%, #0072ff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.2));
 }
+
+.company-title .brand-sub {
+  font-size: clamp(1.6rem, 5.5vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 480px) {
+  .splash-content {
+    padding: 0 1rem;
+  }
+  .splash-logo {
+    max-width: 240px;
+  }
+  .company-title {
+    gap: 0.2rem 0.4rem;
+  }
+}
+

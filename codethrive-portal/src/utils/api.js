@@ -1,6 +1,21 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:5000/api/v1';
+  }
+  return '/api/v1';
+};
+
+const API_URL = getApiUrl();
+
+export const getFileUrl = (fileUrl) => {
+  if (!fileUrl) return '#';
+  if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) return fileUrl;
+  const baseUrl = API_URL.replace('/api/v1', '');
+  return `${baseUrl}/${fileUrl.replace(/^\//, '')}`;
+};
 
 const api = axios.create({
   baseURL: API_URL,
@@ -9,6 +24,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
 
 // Add a request interceptor
 api.interceptors.request.use(

@@ -79,19 +79,19 @@ const Register = () => {
           </div>
         )}
 
-        <form onSubmit={handleRegister} className="auth-form" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <form onSubmit={handleRegister} className="auth-form registration-grid">
           
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <div className="form-group full-width">
             <label>Full Name *</label>
             <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="input-field" required />
           </div>
           
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <div className="form-group full-width">
             <label>Employee ID *</label>
             <input type="text" name="employeeId" value={formData.employeeId} onChange={handleChange} className="input-field" required />
           </div>
 
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <div className="form-group full-width">
             <label>Role / Position *</label>
             <input 
               type="text" 
@@ -104,31 +104,32 @@ const Register = () => {
             />
           </div>
           
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <div className="form-group full-width">
             <label>Email ID *</label>
             <input type="email" name="emailId" value={formData.emailId} onChange={handleChange} className="input-field" required />
           </div>
           
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <div className="form-group full-width">
             <label>Phone Number *</label>
             <input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} className="input-field" required />
           </div>
 
-          <div className="form-group">
+          <div className="form-group half-width">
             <label>Create Password *</label>
             <input type="password" name="password" value={formData.password} onChange={handleChange} className="input-field" required />
           </div>
           
-          <div className="form-group">
+          <div className="form-group half-width">
             <label>Confirm Password *</label>
             <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} className="input-field" required />
           </div>
           
-          <button type="submit" className="btn btn-primary w-100" disabled={isLoading || success} style={{ gridColumn: 'span 2', padding: '1rem', marginTop: '1.5rem', fontSize: '1rem' }}>
+          <button type="submit" className="btn btn-primary w-100 full-width" disabled={isLoading || success} style={{ padding: '1rem', marginTop: '1.5rem', fontSize: '1rem' }}>
             {isLoading ? 'Registering...' : 'Register'}
           </button>
           
         </form>
+
         
         <div className="auth-footer" style={{ marginTop: '2rem' }}>
           <p>Already have an account? <Link to="/employee/login">Sign In</Link></p>
