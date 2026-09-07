@@ -45,6 +45,15 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const extractErrorMessage = (err, defaultMsg) => {
+    if (!err) return defaultMsg;
+    if (err.response?.data?.message) return err.response.data.message;
+    if (err.response?.data?.error) return err.response.data.error;
+    if (typeof err.response?.data === 'string' && err.response.data.trim()) return err.response.data;
+    if (err.message) return err.message;
+    return defaultMsg;
+  };
+
   const login = async (identifier, password) => {
     try {
       const res = await axios.post('/auth/login', { employeeId: identifier, password });
@@ -68,7 +77,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(loggedUser));
         return { success: true, user: loggedUser, isLocalMode: true };
       }
-      return { success: false, message: err.response?.data?.message || 'Login failed' };
+      return { success: false, message: extractErrorMessage(err, 'Login failed') };
     }
   };
 
@@ -91,7 +100,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(adminUser));
         return { success: true, user: adminUser, isLocalMode: true };
       }
-      return { success: false, message: err.response?.data?.message || 'Admin Login failed' };
+      return { success: false, message: extractErrorMessage(err, 'Admin Login failed') };
     }
   };
 
@@ -123,7 +132,7 @@ export const AuthProvider = ({ children }) => {
           isLocalMode: true 
         };
       }
-      return { success: false, message: err.response?.data?.message || 'Registration failed' };
+      return { success: false, message: extractErrorMessage(err, 'Registration failed') };
     }
   };
 
@@ -135,9 +144,10 @@ export const AuthProvider = ({ children }) => {
       if (!err.response) {
         return { success: true, message: 'Credentials Created Successfully!', isLocalMode: true };
       }
-      return { success: false, message: err.response?.data?.message || 'Credential creation failed' };
+      return { success: false, message: extractErrorMessage(err, 'Credential creation failed') };
     }
   };
+
 
   const logout = async () => {
     try {

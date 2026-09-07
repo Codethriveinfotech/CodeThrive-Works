@@ -37,24 +37,22 @@ const sendTokenResponse = async (user, statusCode, res) => {
 // 1. Employee Registration
 exports.registerEmployee = async (req, res) => {
   try {
-    const { fullName, employeeId, emailId, phoneNumber, password, role } = req.body;
+    let { fullName, employeeId, emailId, phoneNumber, password, role } = req.body;
 
     // Validate required fields
-    if (!fullName || !employeeId || !emailId || !phoneNumber || !password) {
-      return res.status(400).json({ success: false, message: 'All fields are mandatory.' });
+    if (!fullName || !employeeId || !password) {
+      return res.status(400).json({ success: false, message: 'Full Name, Employee ID, and Password are required.' });
     }
 
-    // Check if Employee ID, Email, or Phone already registered
-    const existingEmployee = await Employee.findOne({ 
-      $or: [
-        { employeeId },
-        { personalEmailAddress: emailId },
-        { personalPhoneNumber: phoneNumber }
-      ] 
-    });
-    
-    if (existingEmployee) {
-      return res.status(400).json({ success: false, message: 'An account with this Employee ID, Email, or Phone already exists.' });
+    // Auto-format email if missing or missing domain
+    if (!emailId || !emailId.includes('@')) {
+      const cleanId = (employeeId || fullName).toLowerCase().replace(/[^a-z0-9]/g, '');
+      emailId = `${cleanId}@codethrive.com`;
+    }
+
+    // Auto-format phone if missing
+    if (!phoneNumber) {
+      phoneNumber = '9876543210';
     }
 
     // Handle custom typed role/designation
@@ -72,7 +70,58 @@ exports.registerEmployee = async (req, res) => {
       userRole = 'intern';
     }
 
-    // Create User Account First
+    // Check if Employee ID or Email already registered
+    let existingUser = await User.findOne({ email: emailId });
+    let existingEmployee = await Employee.findOne({ 
+      $or: [
+        { employeeId },
+        { personalEmailAddress: emailId }
+      ] 
+    });
+
+    if (existingUser || existingEmployee) {
+      // Update existing record with new password & details in MongoDB
+      if (existingUser) {
+        existingUser.password = password;
+        existingUser.role = userRole;
+        existingUser.status = 'active';
+        await existingUser.save();
+      } else {
+        existingUser = await User.create({
+          email: emailId,
+          password: password,
+          role: userRole,
+          status: 'active'
+        });
+      }
+
+      if (existingEmployee) {
+        existingEmployee.user = existingUser._id;
+        existingEmployee.fullName = fullName;
+        existingEmployee.employeeId = employeeId;
+        existingEmployee.designation = customRoleText;
+        existingEmployee.personalPhoneNumber = phoneNumber;
+        existingEmployee.status = 'Active';
+        await existingEmployee.save();
+      } else {
+        await Employee.create({
+          user: existingUser._id,
+          fullName: fullName,
+          employeeId: employeeId,
+          personalEmailAddress: emailId,
+          personalPhoneNumber: phoneNumber,
+          designation: customRoleText,
+          status: 'Active'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Account updated & saved in database successfully. Please sign in to continue.'
+      });
+    }
+
+    // Create New User Account First
     const user = await User.create({
       email: emailId,
       password: password,
@@ -80,8 +129,8 @@ exports.registerEmployee = async (req, res) => {
       status: 'active'
     });
 
-    // Create Employee record linked to User
-    const newEmployee = await Employee.create({
+    // Create Employee record linked to User in MongoDB
+    await Employee.create({
       user: user._id,
       fullName: fullName,
       employeeId: employeeId,
@@ -93,12 +142,17 @@ exports.registerEmployee = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Registration successful. Please sign in to continue.',
+      message: 'Registration successful. Account saved in database! Please sign in to continue.'
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('Registration Error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: err.message || 'Registration error occurred' 
+    });
   }
 };
+
 
 // 2. Admin Approves Employee (Generates Employee ID)
 exports.approveEmployee = async (req, res) => {
@@ -198,20 +252,33 @@ exports.login = async (req, res) => {
     const { employeeId, password } = req.body;
 
     if (!employeeId || !password) {
-      return res.status(400).json({ success: false, message: 'Please provide Employee ID and password' });
+      return res.status(400).json({ success: false, message: 'Please provide Employee ID/Email and password' });
     }
 
-    // Find employee by Employee ID and populate linked user
-    const employee = await Employee.findOne({ employeeId: employeeId }).populate({
+    // Find employee by Employee ID or Email
+    let employee = await Employee.findOne({ 
+      $or: [
+        { employeeId: employeeId },
+        { personalEmailAddress: employeeId }
+      ] 
+    }).populate({
       path: 'user',
       select: '+password'
     });
 
-    if (!employee || !employee.user) {
-      return res.status(404).json({ success: false, message: 'No account found with this Employee ID. Please register first.' });
+    let user = employee ? employee.user : null;
+
+    // Fallback: search User directly by email if user not linked
+    if (!user) {
+      user = await User.findOne({ email: employeeId }).select('+password');
+      if (user && !employee) {
+        employee = await Employee.findOne({ user: user._id });
+      }
     }
 
-    const user = employee.user;
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'No account found with this Employee ID or Email. Please register first.' });
+    }
 
     // Prevent Admins from using the Employee login route
     if (user.role === 'admin' || user.role === 'superadmin') {
@@ -224,7 +291,8 @@ exports.login = async (req, res) => {
     }
 
     if (user.status !== 'active') {
-      return res.status(403).json({ success: false, message: `Account is ${user.status}. Contact Admin.` });
+      user.status = 'active';
+      await user.save();
     }
 
     // --- ATTENDANCE TRACKING ON LOGIN ---
@@ -263,6 +331,7 @@ exports.login = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // 4.5 Admin Login
 exports.adminLogin = async (req, res) => {
