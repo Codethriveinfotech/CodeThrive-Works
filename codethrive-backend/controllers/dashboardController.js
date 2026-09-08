@@ -8,8 +8,9 @@ const Task = require('../models/Task');
 // @access  Private (Admin/HR)
 exports.getDashboardStats = async (req, res) => {
   try {
-    const totalEmployees = await Employee.countDocuments({ status: { $in: ['Approved', 'Active'] } });
-    const pendingRegistrations = await Employee.countDocuments({ status: 'Pending' });
+    const employees = await Employee.find({ status: { $in: ['Approved', 'Active', 'Pending'] } }).populate('user', 'email role');
+    const totalEmployees = employees.length;
+    const pendingRegistrations = employees.filter(e => e.status === 'Pending').length;
     
     // Get today's attendance stats
     const start = new Date();
@@ -17,32 +18,70 @@ exports.getDashboardStats = async (req, res) => {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
     
-    const attendances = await Attendance.find({ date: { $gte: start, $lte: end } }).populate('employee');
-    
-    let working = 0;
-    let onBreak = 0;
-    
-    const liveMonitoring = [];
-    
+    const attendances = await Attendance.find({ date: { $gte: start, $lte: end } });
+    const attendanceMap = new Map();
     attendances.forEach(att => {
-      if (att.status === 'Working') working++;
-      if (att.status === 'On Break') onBreak++;
-      
-      if (att.employee) {
-        liveMonitoring.push({
-          id: att.employee.employeeId || 'New',
-          name: att.employee.fullName,
-          dept: att.employee.department || 'Not Assigned',
-          status: att.status,
-          task: '-', // Task integration placeholder
-          duration: `${Math.floor((att.totalWorkDurationInSeconds || 0) / 3600)}h ${Math.floor(((att.totalWorkDurationInSeconds || 0) % 3600) / 60)}m`
-        });
+      attendanceMap.set(att.employee.toString(), att);
+    });
+
+    // Fetch all active tasks
+    const allTasks = await Task.find({}).sort({ createdAt: -1 });
+    const tasksMap = new Map();
+    allTasks.forEach(task => {
+      if (task.assignedTo) {
+        const empIdStr = task.assignedTo.toString();
+        if (!tasksMap.has(empIdStr)) tasksMap.set(empIdStr, []);
+        tasksMap.get(empIdStr).push(task);
       }
     });
     
-    const absent = totalEmployees - working - onBreak - attendances.filter(a => a.status === 'Checked Out').length;
+    let working = 0;
+    let onBreak = 0;
+    let onLunch = 0;
+    let checkedOut = 0;
+    
+    const liveMonitoring = employees.map(emp => {
+      const att = attendanceMap.get(emp._id.toString());
+      const empTasks = tasksMap.get(emp._id.toString()) || [];
+      const currentStatus = att ? att.status : 'Not Checked In';
 
-    // Get Pending Task Reviews (Mock query for now until task reviews are implemented)
+      if (currentStatus === 'Working') working++;
+      else if (currentStatus === 'On Break') onBreak++;
+      else if (currentStatus === 'On Lunch') onLunch++;
+      else if (currentStatus === 'Checked Out') checkedOut++;
+
+      const workSec = att?.totalWorkDurationInSeconds || 0;
+      const breakSec = att?.totalBreakDurationInSeconds || 0;
+      const lunchSec = att?.totalLunchDurationInSeconds || 0;
+
+      return {
+        _id: emp._id,
+        id: emp.employeeId || `CTI-EMP-${emp._id.toString().slice(-4).toUpperCase()}`,
+        name: emp.fullName,
+        email: emp.email || emp.user?.email || 'N/A',
+        dept: emp.department || 'General',
+        designation: emp.designation || 'Software Engineer',
+        joiningDate: emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString() : 'Recent',
+        status: currentStatus,
+        firstLoginTime: att?.firstLoginTime || null,
+        lastLogoutTime: att?.lastLogoutTime || null,
+        workSec,
+        breakSec,
+        lunchSec,
+        duration: `${Math.floor(workSec / 3600)}h ${Math.floor((workSec % 3600) / 60)}m`,
+        assignedTasksCount: empTasks.length,
+        tasks: empTasks.map(t => ({
+          _id: t._id,
+          taskId: t.taskId || t._id,
+          title: t.title,
+          status: t.status,
+          priority: t.priority,
+          dueDate: t.dueDate
+        }))
+      };
+    });
+    
+    const absent = totalEmployees - working - onBreak - onLunch - checkedOut;
     const pendingTaskReviews = await Task.countDocuments({ status: 'Ready for Review' });
 
     res.status(200).json({
@@ -51,6 +90,8 @@ exports.getDashboardStats = async (req, res) => {
         totalEmployees,
         working,
         onBreak,
+        onLunch,
+        checkedOut,
         absent: absent > 0 ? absent : 0,
         pendingRegistrations,
         pendingTaskReviews

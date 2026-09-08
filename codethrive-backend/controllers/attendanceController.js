@@ -28,7 +28,6 @@ exports.getTodayAttendance = async (req, res) => {
     if (attendance) {
       activeSession = await AttendanceSession.findOne({
         attendanceId: attendance._id,
-        sessionType: 'Work',
         status: 'Active'
       });
     }
@@ -66,15 +65,14 @@ exports.startWorkSession = async (req, res) => {
       await attendance.save();
     }
 
-    // 2. Check for existing ACTIVE work session to prevent duplicate check-ins
+    // 2. Check for existing ACTIVE session to prevent duplicate check-ins
     const activeSession = await AttendanceSession.findOne({
       attendanceId: attendance._id,
-      sessionType: 'Work',
       status: 'Active'
     });
 
     if (activeSession) {
-      return res.status(400).json({ success: false, message: 'You are already checked in.' });
+      return res.status(400).json({ success: false, message: 'You already have an active session.' });
     }
 
     // 3. Create new Work Session (Check-in)
@@ -105,10 +103,10 @@ exports.startBreak = async (req, res) => {
     });
 
     if (!attendance) {
-      return res.status(400).json({ success: false, message: 'No attendance record found for today. Please log in first.' });
+      return res.status(400).json({ success: false, message: 'No attendance record found for today. Please check in first.' });
     }
 
-    // Close active work session
+    // Close active work session if any
     const activeWork = await AttendanceSession.findOne({
       attendanceId: attendance._id,
       sessionType: 'Work',
@@ -135,7 +133,112 @@ exports.startBreak = async (req, res) => {
     attendance.status = 'On Break';
     await attendance.save();
 
-    res.status(200).json({ success: true, message: 'Break started', data: breakSession });
+    res.status(200).json({ success: true, message: 'Break started', data: { attendance, activeSession: breakSession } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Start Lunch (Pauses work session)
+// @route   POST /api/v1/attendance/start-lunch
+// @access  Private
+exports.startLunch = async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ user: req.user._id });
+    const { start, end } = getTodayRange();
+
+    const attendance = await Attendance.findOne({
+      employee: employee._id,
+      date: { $gte: start, $lte: end }
+    });
+
+    if (!attendance) {
+      return res.status(400).json({ success: false, message: 'No attendance record found for today. Please check in first.' });
+    }
+
+    // Close active work session if any
+    const activeWork = await AttendanceSession.findOne({
+      attendanceId: attendance._id,
+      sessionType: 'Work',
+      status: 'Active'
+    });
+
+    if (activeWork) {
+      activeWork.endTime = new Date();
+      activeWork.durationInSeconds = Math.floor((activeWork.endTime - activeWork.startTime) / 1000);
+      activeWork.status = 'Completed';
+      await activeWork.save();
+
+      attendance.totalWorkDurationInSeconds += activeWork.durationInSeconds;
+    }
+
+    // Start Lunch Session
+    const lunchSession = await AttendanceSession.create({
+      attendanceId: attendance._id,
+      employee: employee._id,
+      sessionType: 'Lunch',
+      startTime: new Date()
+    });
+
+    attendance.status = 'On Lunch';
+    await attendance.save();
+
+    res.status(200).json({ success: true, message: 'Lunch started', data: { attendance, activeSession: lunchSession } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Resume Work (Ends break or lunch session and starts work session)
+// @route   POST /api/v1/attendance/resume-work
+// @access  Private
+exports.resumeWork = async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ user: req.user._id });
+    const { start, end } = getTodayRange();
+
+    const attendance = await Attendance.findOne({
+      employee: employee._id,
+      date: { $gte: start, $lte: end }
+    });
+
+    if (!attendance) {
+      return res.status(400).json({ success: false, message: 'No attendance record found for today.' });
+    }
+
+    // Close active Break or Lunch session
+    const activeSession = await AttendanceSession.findOne({
+      attendanceId: attendance._id,
+      status: 'Active'
+    });
+
+    if (activeSession) {
+      activeSession.endTime = new Date();
+      activeSession.durationInSeconds = Math.floor((activeSession.endTime - activeSession.startTime) / 1000);
+      activeSession.status = 'Completed';
+      await activeSession.save();
+
+      if (activeSession.sessionType === 'Break') {
+        attendance.totalBreakDurationInSeconds = (attendance.totalBreakDurationInSeconds || 0) + activeSession.durationInSeconds;
+      } else if (activeSession.sessionType === 'Lunch') {
+        attendance.totalLunchDurationInSeconds = (attendance.totalLunchDurationInSeconds || 0) + activeSession.durationInSeconds;
+      } else if (activeSession.sessionType === 'Work') {
+        attendance.totalWorkDurationInSeconds = (attendance.totalWorkDurationInSeconds || 0) + activeSession.durationInSeconds;
+      }
+    }
+
+    // Start new Work Session
+    const workSession = await AttendanceSession.create({
+      attendanceId: attendance._id,
+      employee: employee._id,
+      sessionType: 'Work',
+      startTime: new Date()
+    });
+
+    attendance.status = 'Working';
+    await attendance.save();
+
+    res.status(200).json({ success: true, message: 'Work resumed', data: { attendance, activeSession: workSession } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -158,10 +261,9 @@ exports.checkout = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No attendance found for today.' });
     }
 
-    // Close the active work session
+    // Close any active session (Work, Break, or Lunch)
     const activeSession = await AttendanceSession.findOne({
       attendanceId: attendance._id,
-      sessionType: 'Work',
       status: 'Active'
     });
 
@@ -171,7 +273,13 @@ exports.checkout = async (req, res) => {
       activeSession.status = 'Completed';
       await activeSession.save();
 
-      attendance.totalWorkDurationInSeconds += activeSession.durationInSeconds;
+      if (activeSession.sessionType === 'Work') {
+        attendance.totalWorkDurationInSeconds = (attendance.totalWorkDurationInSeconds || 0) + activeSession.durationInSeconds;
+      } else if (activeSession.sessionType === 'Break') {
+        attendance.totalBreakDurationInSeconds = (attendance.totalBreakDurationInSeconds || 0) + activeSession.durationInSeconds;
+      } else if (activeSession.sessionType === 'Lunch') {
+        attendance.totalLunchDurationInSeconds = (attendance.totalLunchDurationInSeconds || 0) + activeSession.durationInSeconds;
+      }
     }
 
     attendance.lastLogoutTime = new Date();

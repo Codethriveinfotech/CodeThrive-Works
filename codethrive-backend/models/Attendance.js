@@ -25,9 +25,13 @@ const attendanceSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  totalLunchDurationInSeconds: {
+    type: Number,
+    default: 0
+  },
   status: {
     type: String,
-    enum: ['Not Checked In', 'Working', 'On Break', 'Checked Out', 'Present', 'Late', 'Half Day', 'Absent', 'Work From Home', 'On Leave'],
+    enum: ['Not Checked In', 'Working', 'On Break', 'On Lunch', 'Checked Out', 'Present', 'Late', 'Half Day', 'Absent', 'Work From Home', 'On Leave'],
     default: 'Working'
   },
   isManualCorrection: {

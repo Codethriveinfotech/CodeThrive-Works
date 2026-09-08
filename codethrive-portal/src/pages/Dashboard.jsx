@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { 
   Clock, LogIn, LogOut, CheckCircle2, 
   Bell, Activity, AlertTriangle, 
-  CheckSquare, Calendar, FileText, Sun, Moon, Briefcase, ListTodo, MoreHorizontal, UserCircle
+  CheckSquare, Calendar, FileText, Sun, Moon, Briefcase, ListTodo, MoreHorizontal, UserCircle,
+  Coffee, Utensils, Play
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
@@ -18,7 +19,11 @@ const Dashboard = () => {
   
   const [attendance, setAttendance] = useState(null);
   const [activeSession, setActiveSession] = useState(null);
-  const [liveDuration, setLiveDuration] = useState(0);
+  
+  // Dynamic live duration trackers (in seconds)
+  const [liveWorkDuration, setLiveWorkDuration] = useState(0);
+  const [liveBreakDuration, setLiveBreakDuration] = useState(0);
+  const [liveLunchDuration, setLiveLunchDuration] = useState(0);
 
   const [tasksData, setTasksData] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -106,30 +111,50 @@ const Dashboard = () => {
         setNotifications([
           { _id: 'n1', title: 'Welcome to CodeThrive Portal!', message: 'Your workspace is ready and active.', createdAt: new Date().toISOString() }
         ]);
-        setAttendance({ status: 'Not Checked In', totalWorkDurationInSeconds: 0 });
+        setAttendance({ status: 'Not Checked In', totalWorkDurationInSeconds: 0, totalBreakDurationInSeconds: 0, totalLunchDurationInSeconds: 0 });
         setLoading(false);
       }
     };
     fetchDashboardData();
   }, []);
 
-  // Timer Logic
+  // Real-time Dynamic Multi-timer Logic
   useEffect(() => {
     let interval;
+    const updateTimers = () => {
+      const prevWork = attendance?.totalWorkDurationInSeconds || 0;
+      const prevBreak = attendance?.totalBreakDurationInSeconds || 0;
+      const prevLunch = attendance?.totalLunchDurationInSeconds || 0;
+
+      if (activeSession && activeSession.startTime) {
+        const startTime = new Date(activeSession.startTime).getTime();
+        const elapsed = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+        
+        const type = activeSession.sessionType || (attendance?.status === 'On Break' ? 'Break' : (attendance?.status === 'On Lunch' ? 'Lunch' : 'Work'));
+
+        if (type === 'Work') {
+          setLiveWorkDuration(prevWork + elapsed);
+          setLiveBreakDuration(prevBreak);
+          setLiveLunchDuration(prevLunch);
+        } else if (type === 'Break') {
+          setLiveWorkDuration(prevWork);
+          setLiveBreakDuration(prevBreak + elapsed);
+          setLiveLunchDuration(prevLunch);
+        } else if (type === 'Lunch') {
+          setLiveWorkDuration(prevWork);
+          setLiveBreakDuration(prevBreak);
+          setLiveLunchDuration(prevLunch + elapsed);
+        }
+      } else {
+        setLiveWorkDuration(prevWork);
+        setLiveBreakDuration(prevBreak);
+        setLiveLunchDuration(prevLunch);
+      }
+    };
+
+    updateTimers();
     if (activeSession && activeSession.startTime) {
-      const startTime = new Date(activeSession.startTime).getTime();
-      const prevDuration = attendance?.totalWorkDurationInSeconds || 0;
-
-      // Update timer immediately
-      setLiveDuration(Math.floor((Date.now() - startTime) / 1000) + prevDuration);
-
-      interval = setInterval(() => {
-        setLiveDuration(Math.floor((Date.now() - startTime) / 1000) + prevDuration);
-      }, 1000);
-    } else if (attendance && attendance.status === 'Checked Out') {
-      setLiveDuration(attendance.totalWorkDurationInSeconds || 0);
-    } else {
-      setLiveDuration(attendance?.totalWorkDurationInSeconds || 0);
+      interval = setInterval(updateTimers, 1000);
     }
     return () => clearInterval(interval);
   }, [activeSession, attendance]);
@@ -144,10 +169,88 @@ const Dashboard = () => {
         setActiveSession(res.data.data.activeSession);
       }
     } catch (error) {
-      // Fallback check-in for local mode
+      // Local fallback check-in
       const now = new Date();
-      setActiveSession({ startTime: now.toISOString() });
-      setAttendance({ status: 'Working', firstLoginTime: now, totalWorkDurationInSeconds: 0 });
+      const newAttendance = { 
+        status: 'Working', 
+        firstLoginTime: now.toISOString(), 
+        totalWorkDurationInSeconds: liveWorkDuration,
+        totalBreakDurationInSeconds: liveBreakDuration,
+        totalLunchDurationInSeconds: liveLunchDuration
+      };
+      setAttendance(newAttendance);
+      setActiveSession({ startTime: now.toISOString(), sessionType: 'Work' });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleStartBreak = async () => {
+    setIsActionLoading(true);
+    try {
+      const res = await api.post('/attendance/start-break');
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (res.data.success) {
+        setAttendance(res.data.data.attendance);
+        setActiveSession(res.data.data.activeSession);
+      }
+    } catch (error) {
+      // Local fallback start break
+      const now = new Date();
+      setAttendance(prev => ({
+        ...prev,
+        status: 'On Break',
+        totalWorkDurationInSeconds: liveWorkDuration
+      }));
+      setActiveSession({ startTime: now.toISOString(), sessionType: 'Break' });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleStartLunch = async () => {
+    setIsActionLoading(true);
+    try {
+      const res = await api.post('/attendance/start-lunch');
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (res.data.success) {
+        setAttendance(res.data.data.attendance);
+        setActiveSession(res.data.data.activeSession);
+      }
+    } catch (error) {
+      // Local fallback start lunch
+      const now = new Date();
+      setAttendance(prev => ({
+        ...prev,
+        status: 'On Lunch',
+        totalWorkDurationInSeconds: liveWorkDuration
+      }));
+      setActiveSession({ startTime: now.toISOString(), sessionType: 'Lunch' });
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleResumeWork = async () => {
+    setIsActionLoading(true);
+    try {
+      const res = await api.post('/attendance/resume-work');
+      await new Promise(resolve => setTimeout(resolve, 600));
+      if (res.data.success) {
+        setAttendance(res.data.data.attendance);
+        setActiveSession(res.data.data.activeSession);
+      }
+    } catch (error) {
+      // Local fallback resume work
+      const now = new Date();
+      const currentType = activeSession?.sessionType;
+      setAttendance(prev => ({
+        ...prev,
+        status: 'Working',
+        totalBreakDurationInSeconds: currentType === 'Break' ? liveBreakDuration : (prev?.totalBreakDurationInSeconds || 0),
+        totalLunchDurationInSeconds: currentType === 'Lunch' ? liveLunchDuration : (prev?.totalLunchDurationInSeconds || 0)
+      }));
+      setActiveSession({ startTime: now.toISOString(), sessionType: 'Work' });
     } finally {
       setIsActionLoading(false);
     }
@@ -163,18 +266,31 @@ const Dashboard = () => {
         setActiveSession(res.data.data.activeSession);
       }
     } catch (error) {
-      // Fallback check-out for local mode
+      // Local fallback checkout
+      const now = new Date();
       setActiveSession(null);
-      setAttendance({ status: 'Checked Out', totalWorkDurationInSeconds: liveDuration });
+      setAttendance(prev => ({
+        ...prev,
+        status: 'Checked Out',
+        lastLogoutTime: now.toISOString(),
+        totalWorkDurationInSeconds: activeSession?.sessionType === 'Work' ? liveWorkDuration : (prev?.totalWorkDurationInSeconds || 0),
+        totalBreakDurationInSeconds: activeSession?.sessionType === 'Break' ? liveBreakDuration : (prev?.totalBreakDurationInSeconds || 0),
+        totalLunchDurationInSeconds: activeSession?.sessionType === 'Lunch' ? liveLunchDuration : (prev?.totalLunchDurationInSeconds || 0)
+      }));
     } finally {
       setIsActionLoading(false);
     }
   };
 
   const formatDuration = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
+    const totalSec = Math.max(0, Math.floor(seconds || 0));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) {
+      return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
+    }
+    return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
   };
 
   if (loading) return (
@@ -191,10 +307,29 @@ const Dashboard = () => {
 
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  const isCheckedIn = !!activeSession;
-  const isCheckedOut = attendance && attendance.status === 'Checked Out';
+  const currentStatus = attendance?.status || 'Not Checked In';
+  const isWorking = currentStatus === 'Working' && !!activeSession;
+  const isOnBreak = currentStatus === 'On Break';
+  const isOnLunch = currentStatus === 'On Lunch';
+  const isCheckedOut = currentStatus === 'Checked Out';
+  const isNotStarted = !activeSession && !isCheckedOut;
+
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Employee';
   const roleDisplay = user?.designation || (user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Software Engineer');
+
+  // Active Timer Value and Label Calculation
+  let displayMainTimer = liveWorkDuration;
+  let timerLabelText = "Work Duration";
+  if (isOnBreak) {
+    displayMainTimer = liveBreakDuration;
+    timerLabelText = "On Break Time";
+  } else if (isOnLunch) {
+    displayMainTimer = liveLunchDuration;
+    timerLabelText = "Lunch Break Time";
+  } else if (isCheckedOut) {
+    displayMainTimer = liveWorkDuration;
+    timerLabelText = "Total Work Logged";
+  }
 
   return (
     <motion.div 
@@ -272,8 +407,8 @@ const Dashboard = () => {
             <Clock size={24} />
           </div>
           <div className="metric-content">
-            <span className="metric-label">Time Logged</span>
-            <span className="metric-value">{formatDuration(liveDuration)}</span>
+            <span className="metric-label">Work Logged</span>
+            <span className="metric-value">{formatDuration(liveWorkDuration)}</span>
           </div>
         </motion.div>
       </div>
@@ -283,30 +418,50 @@ const Dashboard = () => {
       ----------------------------- */}
       <div className="workspace-grid">
         
-        {/* Left Col: Timer Widget */}
+        {/* Left Col: Work Session & Multi-Timer Widget */}
         <motion.div variants={itemVariants}>
           <div className="timer-widget">
             <div className="timer-header">
               <div>
                 <h3 style={{margin: '0 0 0.25rem 0', fontSize: '1.1rem'}}>Work Session</h3>
-                <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>Track today's activity</span>
+                <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>Track today's activity & breaks</span>
               </div>
               <div className="timer-status">
-                {isCheckedIn && <><span className="status-dot active"></span> Active</>}
-                {!isCheckedIn && !isCheckedOut && <><span className="status-dot"></span> Not Started</>}
+                {isWorking && <><span className="status-dot active"></span> Working</>}
+                {isOnBreak && <><span className="status-dot break"></span> On Break</>}
+                {isOnLunch && <><span className="status-dot lunch"></span> On Lunch</>}
+                {isNotStarted && <><span className="status-dot"></span> Not Started</>}
                 {isCheckedOut && <><CheckCircle2 size={16} color="var(--success)"/> Completed</>}
               </div>
             </div>
 
             <div className="timer-display">
-              {isCheckedIn && <div className="timer-ring"></div>}
-              <span className="timer-value">{formatDuration(liveDuration)}</span>
-              <span className="timer-label">{isCheckedIn ? "Checked In" : (isCheckedOut ? "Total Duration" : "0 Hours Logged")}</span>
+              {isWorking && <div className="timer-ring"></div>}
+              {isOnBreak && <div className="timer-ring ring-break"></div>}
+              {isOnLunch && <div className="timer-ring ring-lunch"></div>}
+              <span className="timer-value">{formatDuration(displayMainTimer)}</span>
+              <span className="timer-label">{timerLabelText}</span>
+            </div>
+
+            {/* 3-Way Duration Breakdown */}
+            <div className="timer-breakdown-grid">
+              <div className="timer-breakdown-item">
+                <span className="tb-label"><Clock size={12} /> Work</span>
+                <span className="tb-value" style={{ color: 'var(--primary-light)' }}>{formatDuration(liveWorkDuration)}</span>
+              </div>
+              <div className="timer-breakdown-item">
+                <span className="tb-label"><Coffee size={12} /> Break</span>
+                <span className="tb-value" style={{ color: '#fbbf24' }}>{formatDuration(liveBreakDuration)}</span>
+              </div>
+              <div className="timer-breakdown-item">
+                <span className="tb-label"><Utensils size={12} /> Lunch</span>
+                <span className="tb-value" style={{ color: '#60a5fa' }}>{formatDuration(liveLunchDuration)}</span>
+              </div>
             </div>
 
             <div className="timer-details">
               <div className="timer-detail-item">
-                <span className="timer-detail-label">Check-In</span>
+                <span className="timer-detail-label">Check-In Time</span>
                 <span className="timer-detail-value">
                   {attendance?.firstLoginTime 
                     ? new Date(attendance.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
@@ -314,7 +469,7 @@ const Dashboard = () => {
                 </span>
               </div>
               <div className="timer-detail-item">
-                <span className="timer-detail-label">Check-Out</span>
+                <span className="timer-detail-label">Check-Out Time</span>
                 <span className="timer-detail-value">
                   {isCheckedOut && attendance?.lastLogoutTime 
                     ? new Date(attendance.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
@@ -323,20 +478,44 @@ const Dashboard = () => {
               </div>
             </div>
 
+            {/* Action Buttons depending on status */}
             <div style={{ marginTop: 'auto' }}>
-              {!isCheckedIn && !isCheckedOut && (
+              {isNotStarted && (
                 <button onClick={handleCheckIn} disabled={isActionLoading} className={`btn-huge btn-primary ${!isActionLoading ? 'pulse-btn' : ''}`}>
-                  {isActionLoading ? <span className="loader-small"></span> : <><LogIn size={20} style={{marginRight: '0.5rem'}} /> START SESSION</>}
+                  {isActionLoading ? <span className="loader-small"></span> : <><LogIn size={20} style={{marginRight: '0.5rem'}} /> START WORK (CHECK IN)</>}
                 </button>
               )}
-              {isCheckedIn && (
-                <button onClick={handleCheckOut} disabled={isActionLoading} className="btn-huge btn-danger">
-                  {isActionLoading ? <span className="loader-small"></span> : <><LogOut size={20} style={{marginRight: '0.5rem'}} /> END SESSION</>}
-                </button>
+
+              {isWorking && (
+                <div className="btn-session-group">
+                  <div className="btn-session-row">
+                    <button onClick={handleStartBreak} disabled={isActionLoading} className="btn-session btn-break">
+                      <Coffee size={18} /> Break
+                    </button>
+                    <button onClick={handleStartLunch} disabled={isActionLoading} className="btn-session btn-lunch">
+                      <Utensils size={18} /> Lunch
+                    </button>
+                  </div>
+                  <button onClick={handleCheckOut} disabled={isActionLoading} className="btn-huge btn-danger">
+                    {isActionLoading ? <span className="loader-small"></span> : <><LogOut size={20} style={{marginRight: '0.5rem'}} /> CHECK OUT</>}
+                  </button>
+                </div>
               )}
+
+              {(isOnBreak || isOnLunch) && (
+                <div className="btn-session-group">
+                  <button onClick={handleResumeWork} disabled={isActionLoading} className="btn-huge btn-resume">
+                    {isActionLoading ? <span className="loader-small"></span> : <><Play size={20} style={{marginRight: '0.5rem'}} /> RESUME WORK</>}
+                  </button>
+                  <button onClick={handleCheckOut} disabled={isActionLoading} className="btn-session btn-danger" style={{width: '100%'}}>
+                    <LogOut size={18} /> Check Out
+                  </button>
+                </div>
+              )}
+
               {isCheckedOut && (
                 <div className="btn-huge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', cursor: 'default' }}>
-                   Session Completed
+                   Today's Session Completed
                 </div>
               )}
             </div>

@@ -13,7 +13,7 @@ const attendanceSessionSchema = new mongoose.Schema({
   },
   sessionType: {
     type: String,
-    enum: ['Work', 'Break'],
+    enum: ['Work', 'Break', 'Lunch'],
     required: true
   },
   startTime: {
