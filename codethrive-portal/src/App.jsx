@@ -32,6 +32,7 @@ const AdminReports = lazy(() => import('./pages/AdminReports'));
 const AdminPayroll = lazy(() => import('./pages/AdminPayroll'));
 const AdminDocuments = lazy(() => import('./pages/AdminDocuments'));
 const Employees = lazy(() => import('./pages/Employees'));
+const EmployeeDetail = lazy(() => import('./pages/EmployeeDetail'));
 const MyProfile = lazy(() => import('./pages/MyProfile'));
 const MyTasks = lazy(() => import('./pages/MyTasks'));
 const DailyReports = lazy(() => import('./pages/DailyReports'));
@@ -288,6 +289,7 @@ function App() {
             <Route element={<AdminLayout />}>
               <Route path="/admin/dashboard" element={<Admin />} />
               <Route path="/admin/employees" element={<Employees />} />
+              <Route path="/admin/employees/:id" element={<EmployeeDetail />} />
               <Route path="/admin/tasks" element={<AdminTasks />} />
               <Route path="/admin/reports" element={<AdminReports />} />
               <Route path="/admin/leave" element={<AdminLeave />} />

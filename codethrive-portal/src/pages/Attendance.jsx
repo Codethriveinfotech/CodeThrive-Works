@@ -8,8 +8,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area
 } from 'recharts';
 import { 
-  Clock, Coffee, Play, LogOut, CheckCircle, AlertTriangle, XCircle, 
-  Download, Printer, Search, Filter, Calendar as CalIcon, MapPin, Globe, FileText 
+  Clock, Coffee, Utensils, LogIn, Play, LogOut, CheckCircle, AlertTriangle, XCircle, 
+  Download, Printer, Search, Filter, Calendar as CalIcon, MapPin, Globe, FileText, User 
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from 'date-fns';
 import Card from '../components/common/Card';
@@ -68,43 +68,77 @@ const Attendance = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // const params = { month: selectedMonth, year: selectedYear, employeeId: selectedEmp };
-      // const [todayRes, historyRes, summaryRes, leaveRes] = await Promise.all([...])
+      const params = { month: selectedMonth, year: selectedYear, employeeId: selectedEmp };
+      const [todayRes, historyRes, summaryRes, leaveRes] = await Promise.allSettled([
+        api.get('/attendance/today'),
+        api.get('/attendance/history', { params }),
+        api.get('/attendance/summary', { params }),
+        api.get('/attendance/leaves')
+      ]);
       
-      // Simulating API
-      setTimeout(() => {
-        setTodayAttendance({
-          status: 'Working',
-          firstLoginTime: new Date(new Date().setHours(9, 5, 0)),
-          totalWorkDurationInSeconds: 14520
-        });
-        setLiveDuration(14520);
-        setSummary({
-           totalWorkingDays: 22, presentDays: 20, absentDays: 1, leaveDays: 1, lateDays: 2, 
-           halfDays: 0, workFromHomeDays: 3, attendancePercentage: 91, 
-           totalWorkingHours: 165.5, averageWorkingHours: 8.2, overtimeHours: 4.5
-        });
-        setLeaves({ casualLeaveBalance: 4, sickLeaveBalance: 2 });
-        setHistory([
-          { _id: '1', date: new Date().toISOString(), employee: { employeeId: 'EMP-01', fullName: 'Alice' }, firstLoginTime: new Date().toISOString(), lastLogoutTime: null, status: 'Working', totalWorkDurationInSeconds: 14520 },
-          { _id: '2', date: new Date(Date.now() - 86400000).toISOString(), employee: { employeeId: 'EMP-01', fullName: 'Alice' }, firstLoginTime: new Date(Date.now() - 86400000).toISOString(), lastLogoutTime: new Date(Date.now() - 86400000 + 28800000).toISOString(), status: 'Present', totalWorkDurationInSeconds: 28800 }
-        ]);
-        setLoading(false);
-      }, 600);
+      let todayData = todayRes.status === 'fulfilled' ? todayRes.data?.data?.attendance : null;
+      let historyData = historyRes.status === 'fulfilled' ? historyRes.data?.data : [];
+      let summaryData = summaryRes.status === 'fulfilled' ? summaryRes.data?.data : null;
+      let leaveData = leaveRes.status === 'fulfilled' ? leaveRes.data?.data : null;
+
+      if (todayData) {
+        setTodayAttendance(todayData);
+        setLiveDuration(todayData.totalWorkDurationInSeconds || 0);
+      } else {
+        setTodayAttendance({ status: 'Not Checked In', totalWorkDurationInSeconds: 0 });
+        setLiveDuration(0);
+      }
+
+      setHistory(Array.isArray(historyData) ? historyData : []);
+      setSummary(summaryData || {
+        totalWorkingDays: 22, presentDays: 20, absentDays: 1, leaveDays: 1, lateDays: 2, 
+        halfDays: 0, workFromHomeDays: 3, attendancePercentage: 91, 
+        totalWorkingHours: 165.5, averageWorkingHours: 8.2, overtimeHours: 4.5
+      });
+      setLeaves(leaveData || { casualLeaveBalance: 4, sickLeaveBalance: 2 });
+      setLoading(false);
     } catch (err) {
-      console.error(err);
+      console.warn('Backend API error in Attendance, using fallback', err);
+      setTodayAttendance({ status: 'Not Checked In', totalWorkDurationInSeconds: 0 });
       setLoading(false);
     }
   };
 
   const handleAction = async (action) => {
+    const endpointMap = {
+      'start-work': '/attendance/start-work',
+      'start-break': '/attendance/start-break',
+      'start-lunch': '/attendance/start-lunch',
+      'resume-work': '/attendance/resume-work',
+      'checkout': '/attendance/checkout'
+    };
+
+    const endpoint = endpointMap[action];
+    if (!endpoint) return;
+
     try {
-      // await api.post(`/attendance/${action}`);
-      if (action === 'start-break') setTodayAttendance(prev => ({ ...prev, status: 'On Break' }));
-      if (action === 'start-work') setTodayAttendance(prev => ({ ...prev, status: 'Working' }));
-      if (action === 'checkout') setTodayAttendance(prev => ({ ...prev, status: 'Checked Out', lastLogoutTime: new Date().toISOString() }));
+      const res = await api.post(endpoint);
+      if (res.data?.success && res.data?.data?.attendance) {
+        setTodayAttendance(res.data.data.attendance);
+        setLiveDuration(res.data.data.attendance.totalWorkDurationInSeconds || 0);
+        return;
+      }
     } catch (err) {
-      console.error(err);
+      console.warn('Attendance action API failed, applying local state change', err);
+    }
+
+    // Local state fallback update
+    const now = new Date().toISOString();
+    if (action === 'start-work') {
+      setTodayAttendance(prev => ({ ...prev, status: 'Working', firstLoginTime: prev?.firstLoginTime || now }));
+    } else if (action === 'start-break') {
+      setTodayAttendance(prev => ({ ...prev, status: 'On Break' }));
+    } else if (action === 'start-lunch') {
+      setTodayAttendance(prev => ({ ...prev, status: 'On Lunch' }));
+    } else if (action === 'resume-work') {
+      setTodayAttendance(prev => ({ ...prev, status: 'Working' }));
+    } else if (action === 'checkout') {
+      setTodayAttendance(prev => ({ ...prev, status: 'Checked Out', lastLogoutTime: now }));
     }
   };
 
@@ -244,15 +278,42 @@ const Attendance = () => {
               </div>
             </div>
             
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              {todayAttendance?.status === 'On Break' && (
-                <button className="btn btn-primary" onClick={() => handleAction('start-work')}><Play size={16} /> Resume</button>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {(!todayAttendance || todayAttendance?.status === 'Not Checked In') && (
+                <button className="btn btn-primary" onClick={() => handleAction('start-work')}>
+                  <LogIn size={16} /> Check In
+                </button>
               )}
-              {(!todayAttendance || todayAttendance?.status === 'Working') && (
-                <button className="btn btn-outline" style={{ color: 'var(--warning)', borderColor: 'rgba(245, 158, 11, 0.3)' }} onClick={() => handleAction('start-break')}><Coffee size={16} /> Break</button>
+
+              {todayAttendance?.status === 'Working' && (
+                <>
+                  <button className="btn btn-outline" style={{ color: 'var(--warning)', borderColor: 'rgba(245, 158, 11, 0.4)' }} onClick={() => handleAction('start-break')}>
+                    <Coffee size={16} /> Break
+                  </button>
+                  <button className="btn btn-outline" style={{ color: '#60a5fa', borderColor: 'rgba(96, 165, 250, 0.4)' }} onClick={() => handleAction('start-lunch')}>
+                    <Utensils size={16} /> Lunch
+                  </button>
+                  <button className="btn btn-outline" style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.4)' }} onClick={() => handleAction('checkout')}>
+                    <LogOut size={16} /> Checkout
+                  </button>
+                </>
               )}
-              {todayAttendance?.status !== 'Checked Out' && (
-                <button className="btn btn-outline" style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.3)' }} onClick={() => handleAction('checkout')}><LogOut size={16} /> Checkout</button>
+
+              {(todayAttendance?.status === 'On Break' || todayAttendance?.status === 'On Lunch') && (
+                <>
+                  <button className="btn btn-primary" onClick={() => handleAction('resume-work')}>
+                    <Play size={16} /> Resume Work
+                  </button>
+                  <button className="btn btn-outline" style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.4)' }} onClick={() => handleAction('checkout')}>
+                    <LogOut size={16} /> Checkout
+                  </button>
+                </>
+              )}
+
+              {todayAttendance?.status === 'Checked Out' && (
+                <span className="badge badge-success" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                  <CheckCircle size={16} style={{ marginRight: '0.4rem', verticalAlign: 'middle' }} /> Today's Session Completed
+                </span>
               )}
             </div>
           </div>

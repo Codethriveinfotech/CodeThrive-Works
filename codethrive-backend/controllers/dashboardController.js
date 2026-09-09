@@ -24,6 +24,12 @@ exports.getDashboardStats = async (req, res) => {
       attendanceMap.set(att.employee.toString(), att);
     });
 
+    const activeSessions = await require('../models/AttendanceSession').find({ status: 'Active' });
+    const activeSessionMap = new Map();
+    activeSessions.forEach(sess => {
+      activeSessionMap.set(sess.attendanceId.toString(), sess);
+    });
+
     // Fetch all active tasks
     const allTasks = await Task.find({}).sort({ createdAt: -1 });
     const tasksMap = new Map();
@@ -50,9 +56,17 @@ exports.getDashboardStats = async (req, res) => {
       else if (currentStatus === 'On Lunch') onLunch++;
       else if (currentStatus === 'Checked Out') checkedOut++;
 
-      const workSec = att?.totalWorkDurationInSeconds || 0;
-      const breakSec = att?.totalBreakDurationInSeconds || 0;
-      const lunchSec = att?.totalLunchDurationInSeconds || 0;
+      let workSec = att?.totalWorkDurationInSeconds || 0;
+      let breakSec = att?.totalBreakDurationInSeconds || 0;
+      let lunchSec = att?.totalLunchDurationInSeconds || 0;
+
+      const activeSess = att ? activeSessionMap.get(att._id.toString()) : null;
+      if (activeSess && activeSess.startTime) {
+        const elapsed = Math.max(0, Math.floor((Date.now() - new Date(activeSess.startTime).getTime()) / 1000));
+        if (activeSess.sessionType === 'Work') workSec += elapsed;
+        else if (activeSess.sessionType === 'Break') breakSec += elapsed;
+        else if (activeSess.sessionType === 'Lunch') lunchSec += elapsed;
+      }
 
       return {
         _id: emp._id,
@@ -131,7 +145,6 @@ exports.getEmployeeDashboard = async (req, res) => {
       attStatus = attendance.status;
       activeSession = await require('../models/AttendanceSession').findOne({
         attendanceId: attendance._id,
-        sessionType: 'Work',
         status: 'Active'
       });
     }

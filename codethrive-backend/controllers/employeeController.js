@@ -27,23 +27,37 @@ exports.getEmployees = async (req, res) => {
 // @desc    Add new employee directly (Admin)
 exports.addEmployee = async (req, res) => {
   try {
-    const { personalEmailAddress, personalPhoneNumber, fullName } = req.body;
+    const { personalEmailAddress, personalPhoneNumber, fullName, password, role, designation } = req.body;
     const existingEmployee = await Employee.findOne({ $or: [{ personalEmailAddress }, { personalPhoneNumber }] });
     if (existingEmployee) {
-      return res.status(400).json({ success: false, message: 'Email or Phone already exists' });
+      return res.status(400).json({ success: false, message: 'Email or Phone already registered' });
     }
     
     const year = new Date().getFullYear();
     const count = await Employee.countDocuments();
-    const employeeId = `CTI-${year}-${String(count + 1).padStart(3, '0')}`;
+    const employeeId = req.body.employeeId || `CTI-${year}-${String(count + 1).padStart(3, '0')}`;
     
+    const userRole = role ? role.toLowerCase() : 'employee';
+    let user = await User.findOne({ email: personalEmailAddress });
+    if (!user) {
+      user = await User.create({
+        email: personalEmailAddress,
+        password: password || '123456',
+        role: userRole,
+        status: 'active'
+      });
+    }
+
     const newEmployee = await Employee.create({
       ...req.body,
+      user: user._id,
       employeeId,
-      status: 'Active'
+      designation: designation || req.body.designation || 'Employee',
+      status: req.body.status || 'Active'
     });
-    
-    res.status(201).json({ success: true, data: newEmployee });
+
+    const populatedEmp = await Employee.findById(newEmployee._id).populate('user', 'email role status');
+    res.status(201).json({ success: true, data: populatedEmp });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -119,10 +133,37 @@ exports.updateEmployee = async (req, res) => {
       req.body.profilePhoto = req.file.path; // Cloudinary URL
     }
 
+    // Synchronize User account changes (role, status, password) if provided
+    if (employee.user) {
+      const userDoc = await User.findById(employee.user);
+      if (userDoc) {
+        let userChanged = false;
+        if (req.body.userRole || req.body.role) {
+          userDoc.role = (req.body.userRole || req.body.role).toLowerCase();
+          userChanged = true;
+        }
+        if (req.body.userStatus || req.body.status) {
+          userDoc.status = (req.body.userStatus || req.body.status).toLowerCase();
+          userChanged = true;
+        }
+        if (req.body.password && req.body.password.trim().length > 0) {
+          userDoc.password = req.body.password.trim();
+          userChanged = true;
+        }
+        if (req.body.personalEmailAddress) {
+          userDoc.email = req.body.personalEmailAddress;
+          userChanged = true;
+        }
+        if (userChanged) {
+          await userDoc.save();
+        }
+      }
+    }
+
     employee = await Employee.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
-    });
+    }).populate('user', 'email role status');
 
     res.status(200).json({ success: true, data: employee });
   } catch (err) {

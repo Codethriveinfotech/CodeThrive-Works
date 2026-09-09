@@ -111,7 +111,22 @@ const Dashboard = () => {
         setNotifications([
           { _id: 'n1', title: 'Welcome to CodeThrive Portal!', message: 'Your workspace is ready and active.', createdAt: new Date().toISOString() }
         ]);
-        setAttendance({ status: 'Not Checked In', totalWorkDurationInSeconds: 0, totalBreakDurationInSeconds: 0, totalLunchDurationInSeconds: 0 });
+        let savedAttendance = null;
+        let savedActiveSession = null;
+        try {
+          const cached = localStorage.getItem('codethrive_session');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            const todayStr = new Date().toDateString();
+            if (parsed.savedDate === todayStr) {
+              savedAttendance = parsed.attendance;
+              savedActiveSession = parsed.activeSession;
+            }
+          }
+        } catch (e) {}
+
+        setAttendance(savedAttendance || { status: 'Not Checked In', totalWorkDurationInSeconds: 0, totalBreakDurationInSeconds: 0, totalLunchDurationInSeconds: 0 });
+        setActiveSession(savedActiveSession || null);
         setLoading(false);
       }
     };
@@ -126,11 +141,13 @@ const Dashboard = () => {
       const prevBreak = attendance?.totalBreakDurationInSeconds || 0;
       const prevLunch = attendance?.totalLunchDurationInSeconds || 0;
 
-      if (activeSession && activeSession.startTime) {
-        const startTime = new Date(activeSession.startTime).getTime();
+      const sessionStartTime = activeSession?.startTime || attendance?.lastSessionStartTime || (attendance?.firstLoginTime && attendance?.status === 'Working' ? attendance.firstLoginTime : null);
+
+      if (sessionStartTime && (attendance?.status === 'Working' || attendance?.status === 'On Break' || attendance?.status === 'On Lunch')) {
+        const startTime = new Date(sessionStartTime).getTime();
         const elapsed = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
         
-        const type = activeSession.sessionType || (attendance?.status === 'On Break' ? 'Break' : (attendance?.status === 'On Lunch' ? 'Lunch' : 'Work'));
+        const type = activeSession?.sessionType || (attendance?.status === 'On Break' ? 'Break' : (attendance?.status === 'On Lunch' ? 'Lunch' : 'Work'));
 
         if (type === 'Work') {
           setLiveWorkDuration(prevWork + elapsed);
@@ -153,11 +170,22 @@ const Dashboard = () => {
     };
 
     updateTimers();
-    if (activeSession && activeSession.startTime) {
-      interval = setInterval(updateTimers, 1000);
-    }
+    interval = setInterval(updateTimers, 1000);
     return () => clearInterval(interval);
   }, [activeSession, attendance]);
+
+  // Sync session state to localStorage to persist tab closes and page refreshes
+  useEffect(() => {
+    if (attendance) {
+      try {
+        localStorage.setItem('codethrive_session', JSON.stringify({
+          savedDate: new Date().toDateString(),
+          attendance,
+          activeSession
+        }));
+      } catch (e) {}
+    }
+  }, [attendance, activeSession]);
 
   const handleCheckIn = async () => {
     setIsActionLoading(true);
@@ -308,11 +336,11 @@ const Dashboard = () => {
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   const currentStatus = attendance?.status || 'Not Checked In';
-  const isWorking = currentStatus === 'Working' && !!activeSession;
+  const isWorking = currentStatus === 'Working';
   const isOnBreak = currentStatus === 'On Break';
   const isOnLunch = currentStatus === 'On Lunch';
   const isCheckedOut = currentStatus === 'Checked Out';
-  const isNotStarted = !activeSession && !isCheckedOut;
+  const isNotStarted = currentStatus === 'Not Checked In' || (!attendance?.firstLoginTime && !isWorking && !isOnBreak && !isOnLunch && !isCheckedOut);
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Employee';
   const roleDisplay = user?.designation || (user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Software Engineer');
