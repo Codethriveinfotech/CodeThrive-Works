@@ -145,7 +145,7 @@ const Leave = () => {
 
           <button className="btn-primary-glow" onClick={() => setIsModalOpen(true)}>
             <PlusCircle size={19} />
-            <span>+ Apply for Leave</span>
+            <span>Apply for Leave</span>
           </button>
         </div>
       </div>

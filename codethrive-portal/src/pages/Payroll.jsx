@@ -181,78 +181,7 @@ const Payroll = () => {
         </div>
       </div>
 
-      {/* --------------------------------------------------------------------------
-          2. FINANCIAL OVERVIEW METRIC CARDS (4 CARDS)
-         -------------------------------------------------------------------------- */}
-      <div className="payroll-metrics-grid">
-        {/* Card 1: Latest Net Pay */}
-        <motion.div 
-          className="payroll-metric-card emerald"
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-        >
-          <div className="metric-icon-wrapper emerald">
-            <DollarSign size={24} />
-          </div>
-          <div className="metric-details">
-            <span className="metric-title">Latest Net Take-Home</span>
-            <div className="metric-value-row">
-              <span className="metric-value">₹{(latestPayslip?.netPayable || 0).toLocaleString()}</span>
-            </div>
-            <span className="metric-subtext">{latestPayslip?.month || 'Current Month'} • Disbursed</span>
-          </div>
-        </motion.div>
 
-        {/* Card 2: Cumulative YTD Gross */}
-        <motion.div 
-          className="payroll-metric-card blue"
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-        >
-          <div className="metric-icon-wrapper blue">
-            <TrendingUp size={24} />
-          </div>
-          <div className="metric-details">
-            <span className="metric-title">Cumulative YTD Gross</span>
-            <div className="metric-value-row">
-              <span className="metric-value">₹{totalYTDGross.toLocaleString()}</span>
-            </div>
-            <span className="metric-subtext">Total Gross Earnings Logged</span>
-          </div>
-        </motion.div>
-
-        {/* Card 3: YTD Deductions & Tax */}
-        <motion.div 
-          className="payroll-metric-card amber"
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-        >
-          <div className="metric-icon-wrapper amber">
-            <Landmark size={24} />
-          </div>
-          <div className="metric-details">
-            <span className="metric-title">YTD Deductions & Tax</span>
-            <div className="metric-value-row">
-              <span className="metric-value">₹{totalYTDDeductions.toLocaleString()}</span>
-            </div>
-            <span className="metric-subtext">PF, ESI & Professional Tax</span>
-          </div>
-        </motion.div>
-
-        {/* Card 4: Disbursement Status */}
-        <motion.div 
-          className="payroll-metric-card purple"
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-        >
-          <div className="metric-icon-wrapper purple">
-            <ShieldCheck size={24} />
-          </div>
-          <div className="metric-details">
-            <span className="metric-title">Disbursement Method</span>
-            <div className="metric-value-row">
-              <span className="metric-value" style={{ fontSize: '1.25rem' }}>Direct Bank Transfer</span>
-            </div>
-            <span className="metric-subtext">Salary Credited via NEFT/IMPS</span>
-          </div>
-        </motion.div>
-      </div>
 
       {/* --------------------------------------------------------------------------
           3. PAYSLIPS FILTER TOOLBAR
