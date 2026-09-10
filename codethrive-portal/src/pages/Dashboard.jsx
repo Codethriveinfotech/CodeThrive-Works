@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Clock, LogIn, LogOut, CheckCircle2, 
   Bell, Activity, AlertTriangle, 
   CheckSquare, Calendar, FileText, Sun, Moon, Briefcase, ListTodo, MoreHorizontal, UserCircle,
-  Coffee, Utensils, Play
+  Coffee, Utensils, Play, ArrowUpRight, Edit3, ExternalLink, Sparkles
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
+import Modal from '../components/common/Modal';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
@@ -16,6 +17,7 @@ import './Dashboard.css';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const [attendance, setAttendance] = useState(null);
   const [activeSession, setActiveSession] = useState(null);
@@ -29,6 +31,17 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
+
+  // Interactive Task Breakdown Modal States
+  const [taskModalType, setTaskModalType] = useState(null); // 'All' | 'Pending' | 'Completed'
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [taskToUpdate, setTaskToUpdate] = useState(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [updateData, setUpdateData] = useState({
+    progressPercentage: 0,
+    status: '',
+    comment: ''
+  });
 
   const shouldReduceMotion = useReducedMotion();
 
@@ -310,6 +323,43 @@ const Dashboard = () => {
     }
   };
 
+  const openTaskModal = (type) => {
+    setTaskModalType(type);
+    setIsTaskModalOpen(true);
+  };
+
+  const openUpdateModal = (task) => {
+    setTaskToUpdate(task);
+    setUpdateData({
+      progressPercentage: task.progressPercentage || 0,
+      status: task.status || 'In Progress',
+      comment: ''
+    });
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleUpdateTaskFromDashboard = async (e) => {
+    e.preventDefault();
+    if (!taskToUpdate) return;
+
+    try {
+      const res = await api.put(`/tasks/${taskToUpdate._id}/progress`, updateData);
+      const updated = res.data?.data;
+      setTasksData(prev => prev.map(t => t._id === taskToUpdate._id ? (updated || { ...t, ...updateData }) : t));
+      setIsUpdateModalOpen(false);
+    } catch (err) {
+      setTasksData(prev => prev.map(t => t._id === taskToUpdate._id ? { ...t, ...updateData } : t));
+      setIsUpdateModalOpen(false);
+    }
+  };
+
+  // Filter tasks for Breakdown Modal
+  const modalTasks = tasksData.filter(t => {
+    if (taskModalType === 'Pending') return t.status !== 'Completed' && t.status !== 'Approved';
+    if (taskModalType === 'Completed') return t.status === 'Completed' || t.status === 'Approved';
+    return true; // 'All' or 'Total'
+  });
+
   const formatDuration = (seconds) => {
     const totalSec = Math.max(0, Math.floor(seconds || 0));
     const h = Math.floor(totalSec / 3600);
@@ -387,10 +437,10 @@ const Dashboard = () => {
         </div>
         
         <div className="hero-actions">
-           <Link to="/tasks" className="btn btn-outline">
+           <Link to="/employee/tasks" className="btn btn-outline">
              <CheckSquare size={16} /> My Tasks
            </Link>
-           <Link to="/work/daily-report" className="btn btn-primary">
+           <Link to="/employee/reports" className="btn btn-primary">
              <FileText size={16} /> Submit Report
            </Link>
         </div>
@@ -400,7 +450,11 @@ const Dashboard = () => {
           Tier 2: Metric Cards Grid
       ----------------------------- */}
       <div className="metrics-grid">
-        <motion.div className="metric-card" variants={itemVariants}>
+        <motion.div 
+          className="metric-card clickable" 
+          variants={itemVariants}
+          onClick={() => openTaskModal('All')}
+        >
           <div className="metric-icon-wrapper primary">
             <ListTodo size={24} />
           </div>
@@ -408,9 +462,16 @@ const Dashboard = () => {
             <span className="metric-label">Total Tasks</span>
             <span className="metric-value">{taskStats.total}</span>
           </div>
+          <div className="metric-action-arrow">
+            <ArrowUpRight size={16} />
+          </div>
         </motion.div>
 
-        <motion.div className="metric-card" variants={itemVariants}>
+        <motion.div 
+          className="metric-card clickable" 
+          variants={itemVariants}
+          onClick={() => openTaskModal('Pending')}
+        >
           <div className="metric-icon-wrapper warning">
             <AlertTriangle size={24} />
           </div>
@@ -418,15 +479,25 @@ const Dashboard = () => {
             <span className="metric-label">Pending</span>
             <span className="metric-value">{taskStats.pending}</span>
           </div>
+          <div className="metric-action-arrow">
+            <ArrowUpRight size={16} />
+          </div>
         </motion.div>
 
-        <motion.div className="metric-card" variants={itemVariants}>
+        <motion.div 
+          className="metric-card clickable" 
+          variants={itemVariants}
+          onClick={() => openTaskModal('Completed')}
+        >
           <div className="metric-icon-wrapper success">
             <CheckCircle2 size={24} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Completed</span>
             <span className="metric-value">{taskStats.completed}</span>
+          </div>
+          <div className="metric-action-arrow">
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
 
@@ -611,6 +682,131 @@ const Dashboard = () => {
         </motion.div>
 
       </div>
+
+      {/* -----------------------------
+          Task Breakdown Modal (Pop-up on Metric Card Click)
+      ----------------------------- */}
+      <Modal 
+        isOpen={isTaskModalOpen} 
+        onClose={() => setIsTaskModalOpen(false)}
+        title={
+          taskModalType === 'Pending' 
+            ? `Pending & In-Progress Tasks (${modalTasks.length})` 
+            : (taskModalType === 'Completed' 
+                ? `Completed Tasks (${modalTasks.length})` 
+                : `All Assigned Tasks (${modalTasks.length})`)
+        }
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Showing {modalTasks.length} {taskModalType?.toLowerCase()} task(s)
+            </span>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => {
+                setIsTaskModalOpen(false);
+                navigate(`/employee/tasks?filter=${taskModalType || 'All'}`);
+              }}
+              style={{ borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              Open Full Tasks Page <ExternalLink size={14} />
+            </button>
+          </div>
+        }
+      >
+        <div className="task-breakdown-list">
+          {modalTasks.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
+              <CheckCircle2 size={42} style={{ marginBottom: '0.75rem', opacity: 0.5, color: '#38bdf8', margin: '0 auto 0.75rem auto' }} />
+              <p style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>No {taskModalType?.toLowerCase()} tasks found.</p>
+              <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem' }}>All clear! You don't have any tasks in this category.</p>
+            </div>
+          ) : (
+            modalTasks.map(task => (
+              <div key={task._id} className="task-breakdown-item">
+                <div className="breakdown-header">
+                  <span className="task-id-badge" style={{ background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                    {task.taskId || 'TSK-00'}
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <StatusBadge status={task.priority} />
+                    <StatusBadge status={task.status} />
+                  </div>
+                </div>
+
+                <h4 className="breakdown-title">{task.title}</h4>
+                <p className="breakdown-desc">{task.description || 'No detailed instructions provided.'}</p>
+
+                <div className="breakdown-footer">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    <span>Progress: <strong style={{ color: '#38bdf8' }}>{task.progressPercentage || 0}%</strong></span>
+                    {task.dueDate && <span>Due: <strong style={{ color: '#fbbf24' }}>{new Date(task.dueDate).toLocaleDateString()}</strong></span>}
+                  </div>
+                  <button 
+                    className="btn btn-outline btn-sm" 
+                    onClick={() => openUpdateModal(task)}
+                    style={{ borderRadius: '8px', padding: '0.35rem 0.85rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    <Edit3 size={13} /> Update Status
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
+
+      {/* Quick Task Update Modal */}
+      {taskToUpdate && (
+        <Modal 
+          isOpen={isUpdateModalOpen} 
+          onClose={() => setIsUpdateModalOpen(false)} 
+          title={`Update Progress: ${taskToUpdate.taskId || 'Task'}`}
+        >
+          <div style={{ marginBottom: '1rem', padding: '0.85rem', background: 'rgba(15, 23, 42, 0.7)', borderRadius: '10px' }}>
+            <h4 style={{ margin: '0 0 0.3rem 0', color: '#fff' }}>{taskToUpdate.title}</h4>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{taskToUpdate.description}</p>
+          </div>
+          
+          <form onSubmit={handleUpdateTaskFromDashboard} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div className="form-group">
+              <label style={{ color: '#f1f5f9', fontWeight: '600', marginBottom: '0.4rem', display: 'block' }}>Status</label>
+              <select 
+                className="input-field" 
+                value={updateData.status} 
+                onChange={e => setUpdateData({...updateData, status: e.target.value})} 
+                required
+                style={{ background: 'rgba(15, 23, 42, 0.8)', color: '#fff', padding: '0.65rem', borderRadius: '8px' }}
+              >
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="On Hold">On Hold</option>
+                <option value="Blocked">Blocked</option>
+                <option value="Ready for Review">Ready for Review</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: '600', marginBottom: '0.4rem' }}>
+                <span>Completion Percentage</span>
+                <span style={{ color: '#38bdf8' }}>{updateData.progressPercentage}%</span>
+              </div>
+              <input 
+                type="range" min="0" max="100" step="5"
+                value={updateData.progressPercentage} 
+                onChange={e => setUpdateData({...updateData, progressPercentage: parseInt(e.target.value)})}
+                style={{ width: '100%', accentColor: '#6366f1' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button type="button" className="btn btn-outline" onClick={() => setIsUpdateModalOpen(false)}>Cancel</button>
+              <button type="submit" className="btn btn-primary">Save Changes</button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </motion.div>
   );
 };

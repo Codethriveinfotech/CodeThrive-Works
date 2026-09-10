@@ -171,27 +171,24 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  opacity: 0;
-  animation: fadeIn 0.2s forwards;
 }
 
 .ct-modal-content {
-  background: var(--bg-main);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  background: var(--bg-main, #0f172a);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 16px);
   width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
+  max-width: 620px;
+  max-height: 85vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  transform: translateY(20px);
-  animation: slideUp 0.3s forwards cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .ct-modal-header {

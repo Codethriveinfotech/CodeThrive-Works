@@ -161,7 +161,7 @@ const EmployeeLayout = () => {
         <Topbar />
         <main className="main-content">
           <ErrorBoundary>
-            <AnimatePresence mode="wait">
+            <AnimatePresence initial={false}>
               <PageTransition key={location.pathname}>
                 <Suspense fallback={<PageLoader />}>
                   <Outlet />
@@ -184,7 +184,7 @@ const AdminLayout = () => {
         <AdminTopbar />
         <main className="main-content">
           <ErrorBoundary>
-            <AnimatePresence mode="wait">
+            <AnimatePresence initial={false}>
               <PageTransition key={location.pathname}>
                 <Suspense fallback={<PageLoader />}>
                   <Outlet />
