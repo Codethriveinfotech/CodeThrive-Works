@@ -9,7 +9,7 @@ import {
   CheckCircle2, Clock, AlertCircle, Play, 
   Search, Filter, Calendar, RefreshCw, LayoutGrid, 
   List, ArrowUpRight, Sparkles, AlertTriangle, ChevronRight,
-  Layers, CheckSquare, Edit3, X, SlidersHorizontal
+  Layers, CheckSquare, Edit3, Eye, X, SlidersHorizontal
 } from 'lucide-react';
 import './MyTasks.css';
 
@@ -67,6 +67,10 @@ const MyTasks = () => {
 
   // Modal State
   const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTaskDetail, setSelectedTaskDetail] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [taskBreakdownType, setTaskBreakdownType] = useState(null);
+  const [isBreakdownModalOpen, setIsBreakdownModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updateData, setUpdateData] = useState({
     progressPercentage: 0,
@@ -101,12 +105,13 @@ const MyTasks = () => {
         setTasks(fetched);
         setUsingDemoData(false);
       } else {
-        // If server returns empty array (no tasks assigned yet), store empty array
-        setTasks([]);
+        setTasks(DEMO_TASKS);
+        setUsingDemoData(true);
       }
     } catch (err) {
       console.warn('API fetch failed or offline, initializing tasks state', err);
-      setTasks([]);
+      setTasks(DEMO_TASKS);
+      setUsingDemoData(true);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -126,6 +131,16 @@ const MyTasks = () => {
   const clearDemoTasks = () => {
     setUsingDemoData(false);
     fetchTasks();
+  };
+
+  const openViewDetailsModal = (task) => {
+    setSelectedTaskDetail(task);
+    setIsDetailModalOpen(true);
+  };
+
+  const openStatBreakdownModal = (type) => {
+    setTaskBreakdownType(type);
+    setIsBreakdownModalOpen(true);
   };
 
   const openUpdateModal = (task) => {
@@ -288,7 +303,7 @@ const MyTasks = () => {
         <motion.div 
           className={`task-stat-card clickable ${activeChip === 'All' && statusFilter === 'All' ? 'active' : ''}`} 
           variants={itemVariants}
-          onClick={() => { setActiveChip('All'); setStatusFilter('All'); }}
+          onClick={() => { setActiveChip('All'); setStatusFilter('All'); openStatBreakdownModal('All'); }}
           title="Click to view all assigned tasks"
         >
           <div className="stat-icon-wrapper total">
@@ -306,7 +321,7 @@ const MyTasks = () => {
         <motion.div 
           className={`task-stat-card clickable ${activeChip === 'Pending' ? 'active' : ''}`} 
           variants={itemVariants}
-          onClick={() => { setActiveChip('Pending'); setStatusFilter('All'); }}
+          onClick={() => { setActiveChip('Pending'); setStatusFilter('All'); openStatBreakdownModal('Pending'); }}
           title="Click to view pending tasks"
         >
           <div className="stat-icon-wrapper pending">
@@ -324,7 +339,7 @@ const MyTasks = () => {
         <motion.div 
           className={`task-stat-card clickable ${activeChip === 'In Progress' ? 'active' : ''}`} 
           variants={itemVariants}
-          onClick={() => { setActiveChip('In Progress'); setStatusFilter('All'); }}
+          onClick={() => { setActiveChip('In Progress'); setStatusFilter('All'); openStatBreakdownModal('In Progress'); }}
           title="Click to view in-progress tasks"
         >
           <div className="stat-icon-wrapper progress">
@@ -342,7 +357,7 @@ const MyTasks = () => {
         <motion.div 
           className={`task-stat-card clickable ${activeChip === 'Completed' ? 'active' : ''}`} 
           variants={itemVariants}
-          onClick={() => { setActiveChip('Completed'); setStatusFilter('All'); }}
+          onClick={() => { setActiveChip('Completed'); setStatusFilter('All'); openStatBreakdownModal('Completed'); }}
           title="Click to view completed tasks"
         >
           <div className="stat-icon-wrapper completed">
@@ -603,9 +618,14 @@ const MyTasks = () => {
                     )}
                   </div>
 
-                  <button className="btn-update-task" onClick={() => openUpdateModal(task)}>
-                    <Edit3 size={14} /> Update
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-outline" onClick={() => openViewDetailsModal(task)} style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Eye size={14} /> View
+                    </button>
+                    <button className="btn-update-task" onClick={() => openUpdateModal(task)}>
+                      <Edit3 size={14} /> Update
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -631,7 +651,7 @@ const MyTasks = () => {
                       <StatusBadge status={task.priority} />
                       <StatusBadge status={task.status} />
                     </div>
-                    <h3 className="task-row-title">{task.title}</h3>
+                    <h3 className="task-row-title" style={{ cursor: 'pointer' }} onClick={() => openViewDetailsModal(task)}>{task.title}</h3>
                     <p className="task-row-desc">{task.description}</p>
                   </div>
                 </div>
@@ -656,9 +676,14 @@ const MyTasks = () => {
                     )}
                   </div>
 
-                  <button className="btn-update-task" onClick={() => openUpdateModal(task)}>
-                    <Edit3 size={14} /> Update
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-outline" onClick={() => openViewDetailsModal(task)} style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Eye size={14} /> View
+                    </button>
+                    <button className="btn-update-task" onClick={() => openUpdateModal(task)}>
+                      <Edit3 size={14} /> Update
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -667,7 +692,121 @@ const MyTasks = () => {
       )}
 
       {/* --------------------------------------------------------------------------
-          6. UPDATE PROGRESS MODAL
+          6. STAT BREAKDOWN MODAL (ON STAT CARD CLICK)
+         -------------------------------------------------------------------------- */}
+      <Modal 
+        isOpen={isBreakdownModalOpen}
+        onClose={() => setIsBreakdownModalOpen(false)}
+        title={
+          taskBreakdownType === 'Pending' 
+            ? `Pending Action Tasks (${pendingTasks})` 
+            : (taskBreakdownType === 'In Progress' 
+                ? `In Progress Tasks (${inProgressTasks})`
+                : (taskBreakdownType === 'Completed'
+                    ? `Completed Tasks (${completedTasks})`
+                    : `Total Assigned Tasks (${totalTasks})`))
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '60vh', overflowY: 'auto' }}>
+          {filteredTasks.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+              No tasks currently in this category.
+            </div>
+          ) : (
+            filteredTasks.map(task => (
+              <div 
+                key={task._id}
+                style={{ 
+                  background: 'rgba(15, 23, 42, 0.6)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '12px', 
+                  padding: '1rem', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '0.5rem' 
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="task-code-badge">{task.taskId}</span>
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <StatusBadge status={task.priority} />
+                    <StatusBadge status={task.status} />
+                  </div>
+                </div>
+                <h4 style={{ margin: 0, fontSize: '1rem', color: '#fff' }}>{task.title}</h4>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{task.description}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed var(--border-color)' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#38bdf8' }}>Progress: {task.progressPercentage || 0}%</span>
+                  <button className="btn btn-outline btn-sm" onClick={() => { setIsBreakdownModalOpen(false); openViewDetailsModal(task); }} style={{ borderRadius: '8px', padding: '0.3rem 0.75rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Eye size={13} /> Full Overview
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
+
+      {/* --------------------------------------------------------------------------
+          7. DEDICATED TASK DETAILS OVERVIEW MODAL
+         -------------------------------------------------------------------------- */}
+      {selectedTaskDetail && (
+        <Modal 
+          isOpen={isDetailModalOpen} 
+          onClose={() => setIsDetailModalOpen(false)} 
+          title={`Task Details • ${selectedTaskDetail.taskId}`}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span className="task-code-badge" style={{ fontSize: '0.9rem', padding: '0.3rem 0.75rem' }}>{selectedTaskDetail.taskId}</span>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <StatusBadge status={selectedTaskDetail.priority} />
+                <StatusBadge status={selectedTaskDetail.status} />
+              </div>
+            </div>
+
+            <div>
+              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.3rem', color: '#fff' }}>{selectedTaskDetail.title}</h3>
+              <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-muted)', lineHeight: 1.6, background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+                {selectedTaskDetail.description || 'No detailed instructions specified for this deliverable.'}
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(15,23,42,0.8)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Assigned Date</span>
+                <strong style={{ fontSize: '0.9rem', color: '#fff' }}>{selectedTaskDetail.createdAt ? new Date(selectedTaskDetail.createdAt).toLocaleDateString() : 'Today'}</strong>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Target Due Date</span>
+                <strong style={{ fontSize: '0.9rem', color: '#fbbf24' }}>{selectedTaskDetail.dueDate ? new Date(selectedTaskDetail.dueDate).toLocaleDateString() : 'N/A'}</strong>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Current Progress Rate</span>
+                <strong style={{ color: '#38bdf8' }}>{selectedTaskDetail.progressPercentage || 0}%</strong>
+              </div>
+              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ width: `${selectedTaskDetail.progressPercentage || 0}%`, background: 'linear-gradient(90deg, #6366f1, #38bdf8)', height: '100%' }}></div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button className="btn btn-outline" onClick={() => setIsDetailModalOpen(false)} style={{ borderRadius: '10px' }}>
+                Close
+              </button>
+              <button className="btn btn-primary" onClick={() => { setIsDetailModalOpen(false); openUpdateModal(selectedTaskDetail); }} style={{ borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Edit3 size={15} /> Update Progress & Status
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* --------------------------------------------------------------------------
+          8. UPDATE PROGRESS MODAL
          -------------------------------------------------------------------------- */}
       {selectedTask && (
         <Modal 

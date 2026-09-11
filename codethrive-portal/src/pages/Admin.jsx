@@ -282,7 +282,7 @@ const Admin = () => {
 
       {/* Stats Grid */}
       <div className="metrics-grid">
-        <Card className="metric-card premium-hover">
+        <Card className="metric-card premium-hover clickable" style={{ cursor: 'pointer' }} onClick={() => setSelectedEmpId('ALL')}>
           <div className="metric-icon bg-primary-light">
             <Users size={26} color="var(--primary)" />
           </div>
@@ -292,7 +292,11 @@ const Admin = () => {
           </div>
         </Card>
         
-        <Card className="metric-card premium-hover">
+        <Card className="metric-card premium-hover clickable" style={{ cursor: 'pointer' }} onClick={() => {
+          const workingEmp = liveMonitoring.find(e => e.status === 'Working');
+          if (workingEmp) setSelectedEmpId(workingEmp._id);
+          else setSelectedEmpId('ALL');
+        }}>
           <div className="metric-icon bg-success-light">
             <UserCheck size={26} color="var(--success)" />
           </div>
@@ -302,7 +306,11 @@ const Admin = () => {
           </div>
         </Card>
         
-        <Card className="metric-card premium-hover">
+        <Card className="metric-card premium-hover clickable" style={{ cursor: 'pointer' }} onClick={() => {
+          const breakEmp = liveMonitoring.find(e => e.status === 'On Break' || e.status === 'On Lunch');
+          if (breakEmp) setSelectedEmpId(breakEmp._id);
+          else setSelectedEmpId('ALL');
+        }}>
           <div className="metric-icon bg-warning-light">
             <Coffee size={26} color="var(--warning)" />
           </div>
@@ -312,7 +320,11 @@ const Admin = () => {
           </div>
         </Card>
 
-        <Card className="metric-card premium-hover">
+        <Card className="metric-card premium-hover clickable" style={{ cursor: 'pointer' }} onClick={() => {
+          const outEmp = liveMonitoring.find(e => e.status === 'Checked Out');
+          if (outEmp) setSelectedEmpId(outEmp._id);
+          else setSelectedEmpId('ALL');
+        }}>
           <div className="metric-icon bg-info-light">
             <CheckCircle2 size={26} color="var(--info)" />
           </div>
