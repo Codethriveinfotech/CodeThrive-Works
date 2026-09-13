@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
+import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar, PlusCircle, CheckCircle2, Clock, 
   AlertCircle, CalendarRange, Sparkles, Filter, 
-  FileText, ArrowUpRight, Search, RefreshCw, UserCheck, ShieldCheck
+  FileText, ArrowUpRight, Search, RefreshCw, UserCheck, ShieldCheck, MessageSquare
 } from 'lucide-react';
 import './Leave.css';
 
 const Leave = () => {
+  const { user } = useAuth();
   const [data, setData] = useState({ requests: [], casualLeaveBalance: 12, sickLeaveBalance: 6, paidLeaveBalance: 15, pendingRequests: 0 });
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -18,12 +20,15 @@ const Leave = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     leaveType: 'Casual',
+    customCategory: '',
     startDate: '',
     endDate: '',
     reason: ''
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
     fetchLeaves();
@@ -32,12 +37,37 @@ const Leave = () => {
   const fetchLeaves = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/leaves/my-leaves');
-      if (res.data?.data) {
-        setData(res.data.data);
+      let apiRequests = [];
+      let summaryData = {};
+      try {
+        const res = await api.get('/leaves/my-leaves');
+        if (res.data?.data) {
+          summaryData = res.data.data;
+          apiRequests = res.data.data.requests || [];
+        }
+      } catch (err) {
+        console.warn('Backend API offline or empty, using fallback leave data', err);
       }
+
+      // Sync with cti_shared_leaves in localStorage
+      const localShared = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
+      const myEmpId = user?.employeeId || 'CTI-EMP-001';
+      const myLocal = localShared.filter(l => l.employeeId === myEmpId || l.employee?.employeeId === myEmpId);
+
+      // Merge localShared and API requests (localShared status changes take priority)
+      const mergedMap = new Map();
+      apiRequests.forEach(r => mergedMap.set(r._id, r));
+      myLocal.forEach(r => mergedMap.set(r._id, r));
+
+      const mergedRequests = Array.from(mergedMap.values());
+
+      setData(prev => ({
+        ...prev,
+        ...summaryData,
+        requests: mergedRequests.length > 0 ? mergedRequests : (prev.requests || [])
+      }));
     } catch (err) {
-      console.warn('Backend API offline or empty, using fallback leave data', err);
+      console.warn('Error fetching leaves', err);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -49,43 +79,110 @@ const Leave = () => {
     await fetchLeaves();
   };
 
+  const sendWhatsAppToHR = (leaveRecord) => {
+    const hrPhone = '917812864905';
+
+    const empName = user?.fullName || user?.name || 'Employee User';
+    const empId = user?.employeeId || 'CTI-EMP-001';
+    const empRole = user?.role || user?.designation || 'Software Engineer';
+    const empEmail = user?.email || user?.emailId || `${empId.toLowerCase()}@codethrive.com`;
+    const empPhone = user?.phoneNumber || user?.phone || user?.mobile || '7812864905';
+
+    const categoryTitle = leaveRecord.leaveType === 'Others'
+      ? `Others (${leaveRecord.customCategory || 'Custom Reason'})`
+      : `${leaveRecord.leaveType} Leave`;
+
+    const daysCount = calcDays(leaveRecord.startDate, leaveRecord.endDate) || 1;
+
+    const messageText = 
+`*🚨 NEW LEAVE APPLICATION SUBMITTED*
+
+👤 *APPLICANT DETAILS:*
+• *Name:* ${empName}
+• *Employee ID:* ${empId}
+• *Role:* ${empRole}
+• *Email ID:* ${empEmail}
+• *Phone Number:* ${empPhone}
+
+📋 *TIME-OFF DETAILS:*
+• *Leave Category:* ${categoryTitle}
+• *Start Date:* ${leaveRecord.startDate}
+• *End Date:* ${leaveRecord.endDate}
+• *Total Duration:* ${daysCount} ${daysCount === 1 ? 'Day' : 'Days'}
+• *Reason / Notes:* ${leaveRecord.reason}
+
+_Submitted automatically via CodeThrive HR Portal_`;
+
+    const whatsappUrl = `https://wa.me/${hrPhone}?text=${encodeURIComponent(messageText)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handleApplyLeave = async (e) => {
     e.preventDefault();
+
+    const finalCategory = formData.leaveType === 'Others' && formData.customCategory
+      ? `Others (${formData.customCategory})`
+      : formData.leaveType;
+
+    const newLeaveObj = {
+      _id: 'l-local-' + Date.now(),
+      employee: {
+        _id: user?._id || 'emp_1',
+        fullName: user?.fullName || user?.name || 'Employee User',
+        employeeId: user?.employeeId || 'CTI-EMP-001',
+        email: user?.email || 'emp@codethrive.com',
+        role: user?.role || 'Software Engineer'
+      },
+      employeeId: user?.employeeId || 'CTI-EMP-001',
+      leaveType: finalCategory,
+      startDate: formData.startDate,
+      endDate: formData.endDate,
+      reason: formData.reason,
+      status: 'Pending',
+      createdAt: new Date().toISOString()
+    };
+
+    // Save to cti_shared_leaves so Admin Portal instantly sees it
     try {
-      const res = await api.post('/leaves', formData);
-      const newLeave = res.data?.data || {
-        _id: 'l-local-' + Date.now(),
-        ...formData,
-        status: 'Pending',
-        createdAt: new Date().toISOString()
-      };
-      
-      setData(prev => ({
-        ...prev,
-        pendingRequests: (prev.pendingRequests || 0) + 1,
-        requests: [newLeave, ...(prev.requests || [])]
-      }));
-      setIsModalOpen(false);
-      setFormData({ leaveType: 'Casual', startDate: '', endDate: '', reason: '' });
+      const localShared = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
+      const updatedShared = [newLeaveObj, ...localShared];
+      localStorage.setItem('cti_shared_leaves', JSON.stringify(updatedShared));
     } catch (err) {
-      // Local fallback in case server fails
-      const fallbackLeave = {
-        _id: 'l-fallback-' + Date.now(),
-        ...formData,
-        status: 'Pending',
-        createdAt: new Date().toISOString()
-      };
+      console.warn('LocalStorage error', err);
+    }
+
+    try {
+      const res = await api.post('/leaves', { ...formData, leaveType: finalCategory });
+      if (res.data?.data?._id) {
+        newLeaveObj._id = res.data.data._id;
+      }
+    } catch (err) {
+      console.warn('API call fallback for leave application', err);
+    } finally {
       setData(prev => ({
         ...prev,
         pendingRequests: (prev.pendingRequests || 0) + 1,
-        requests: [fallbackLeave, ...(prev.requests || [])]
+        requests: [newLeaveObj, ...(prev.requests || [])]
       }));
+      sendWhatsAppToHR(formData);
       setIsModalOpen(false);
-      setFormData({ leaveType: 'Casual', startDate: '', endDate: '', reason: '' });
+      setFormData(initialFormState);
     }
   };
 
-  const safeRequests = Array.isArray(data.requests) ? data.requests : [];
+  const safeRequests = Array.isArray(data.requests) && data.requests.length > 0 
+    ? data.requests 
+    : [
+        {
+          _id: 'l-demo-1',
+          leaveType: 'Casual',
+          startDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString().split('T')[0],
+          endDate: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString().split('T')[0],
+          reason: 'Personal family commitments and home maintenance',
+          status: 'Approved',
+          createdAt: new Date(new Date().setDate(new Date().getDate() - 6)).toISOString()
+        }
+      ];
 
   const filteredRequests = safeRequests.filter(req => {
     const matchesTab = activeTab === 'All' || req.status === activeTab || req.leaveType === activeTab;
@@ -94,7 +191,7 @@ const Leave = () => {
     return matchesTab && matchesSearch;
   });
 
-  // Calculate day difference for preview
+  // Calculate day difference for preview & balances
   const calcDays = (start, end) => {
     if (!start || !end) return 0;
     const s = new Date(start);
@@ -102,6 +199,30 @@ const Leave = () => {
     const diff = Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1;
     return diff > 0 ? diff : 0;
   };
+
+  // Calculate dynamic monthly leaves & unpaid leave count (>2 days per month threshold)
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  let currentMonthLeaveDays = 0;
+  let explicitUnpaidDays = 0;
+
+  safeRequests.forEach(req => {
+    if (req.status === 'Rejected') return;
+    const start = req.startDate ? new Date(req.startDate) : new Date();
+    const end = req.endDate ? new Date(req.endDate) : start;
+    const days = calcDays(start, end) || 1;
+
+    if (start.getMonth() === currentMonth && start.getFullYear() === currentYear) {
+      currentMonthLeaveDays += days;
+    }
+    if (req.leaveType === 'Unpaid') {
+      explicitUnpaidDays += days;
+    }
+  });
+
+  const monthlyExceededUnpaid = currentMonthLeaveDays > 2 ? (currentMonthLeaveDays - 2) : 0;
+  const totalUnpaidDays = Math.max(monthlyExceededUnpaid, explicitUnpaidDays, data.unpaidLeaveDays || 0);
 
   const requestedDays = calcDays(formData.startDate, formData.endDate);
 
@@ -130,7 +251,7 @@ const Leave = () => {
           </div>
           <h1 className="hero-main-title">Leave & Attendance Hub</h1>
           <p className="hero-subtext">
-            Track your casual, sick, and earned leave balances, submit time-off requests, and monitor approval statuses in real-time.
+            Track casual and sick balances, monitor unpaid leaves (when monthly limit exceeds 2 days), and submit time-off requests seamlessly.
           </p>
         </div>
 
@@ -190,21 +311,27 @@ const Leave = () => {
           </div>
         </motion.div>
 
-        {/* Card 3: Paid Leave */}
+        {/* Card 3: Unpaid Leave (Calculates if monthly leave > 2 days) */}
         <motion.div 
-          className="leave-metric-card blue"
+          className="leave-metric-card red"
           whileHover={{ y: -4, transition: { duration: 0.2 } }}
         >
-          <div className="metric-icon-wrapper blue">
-            <CalendarRange size={24} />
+          <div className="metric-icon-wrapper red">
+            <AlertCircle size={24} />
           </div>
           <div className="metric-details">
-            <span className="metric-title">Earned / Paid Leave</span>
+            <span className="metric-title">Unpaid Leave</span>
             <div className="metric-value-row">
-              <span className="metric-value">{data.paidLeaveBalance || 15}</span>
-              <span className="metric-unit">days available</span>
+              <span className="metric-value" style={{ color: totalUnpaidDays > 0 ? '#f87171' : '#f8fafc' }}>
+                {totalUnpaidDays}
+              </span>
+              <span className="metric-unit">{totalUnpaidDays === 1 ? 'day incurred' : 'days incurred'}</span>
             </div>
-            <span className="metric-subtext">Carried over from Q3</span>
+            <span className="metric-subtext">
+              {currentMonthLeaveDays > 2 
+                ? `Exceeded 2 days limit (${currentMonthLeaveDays} days taken)` 
+                : 'Monthly limit: 2 days max'}
+            </span>
           </div>
         </motion.div>
 
@@ -377,9 +504,27 @@ const Leave = () => {
               <option value="Sick">🏥 Sick Leave (SL)</option>
               <option value="Paid">💼 Earned / Paid Leave (PL)</option>
               <option value="Unpaid">🚫 Unpaid Leave (LWP)</option>
-              <option value="WFH">🏠 Work From Home (WFH)</option>
-              <option value="Permission">⏱️ Short Permission (2 Hours)</option>
+              <option value="Others">✨ Others (Specify Custom Type)</option>
             </select>
+          </div>
+
+          {formData.leaveType === 'Others' && (
+            <div className="form-group-pro">
+              <label className="form-label-pro">Specify Custom Leave Type / Reason *</label>
+              <input 
+                type="text" 
+                className="input-field-pro" 
+                required 
+                placeholder="Type your custom leave type (e.g. Marriage, Exam, Emergency Travel)..." 
+                value={formData.customCategory || ''} 
+                onChange={e => setFormData({...formData, customCategory: e.target.value})} 
+              />
+            </div>
+          )}
+
+          <div style={{ background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.25)', padding: '0.65rem 0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#4ade80', fontSize: '0.8rem' }}>
+            <MessageSquare size={16} style={{ flexShrink: 0 }} />
+            <span>Submitting will dispatch leave details directly to HR WhatsApp (+91 7812864905) with your full employee profile.</span>
           </div>
 
           <div className="form-row-2col">

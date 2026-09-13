@@ -1,0 +1,163 @@
+.floating-contact-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+.floating-buttons-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  animation: floatSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes floatSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.floating-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 10px;
+  border-radius: 50px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.floating-btn .btn-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+/* WhatsApp Styling */
+.whatsapp-btn {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  border-color: rgba(37, 211, 102, 0.4);
+}
+
+.whatsapp-btn:hover {
+  transform: translateX(-6px) scale(1.03);
+  box-shadow: 0 12px 30px rgba(37, 211, 102, 0.5);
+  background: linear-gradient(135deg, #28e16f 0%, #15a090 100%);
+  color: #ffffff;
+}
+
+/* Call Button Styling */
+.call-btn {
+  background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.call-btn:hover {
+  transform: translateX(-6px) scale(1.03);
+  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.5);
+  background: linear-gradient(135deg, #60A5FA 0%, #2563EB 100%);
+  color: #ffffff;
+}
+
+/* Main Trigger Button */
+.floating-main-trigger {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.45);
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.floating-main-trigger:hover {
+  transform: scale(1.08);
+  box-shadow: 0 14px 35px rgba(79, 70, 229, 0.6);
+}
+
+.floating-main-trigger.active {
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Pulse Rings */
+.pulse-ring, .pulse-ring-outer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(79, 70, 229, 0.6);
+  pointer-events: none;
+  animation: pulseExpand 2.5s infinite;
+}
+
+.pulse-ring-outer {
+  animation-delay: 0.8s;
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+.floating-main-trigger.active .pulse-ring,
+.floating-main-trigger.active .pulse-ring-outer {
+  display: none;
+}
+
+@keyframes pulseExpand {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .floating-contact-container {
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .floating-btn .btn-label {
+    font-size: 0.85rem;
+  }
+  
+  .floating-main-trigger {
+    width: 50px;
+    height: 50px;
+  }
+}

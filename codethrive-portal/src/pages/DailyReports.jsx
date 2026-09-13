@@ -15,53 +15,50 @@ import {
 } from 'lucide-react';
 import './DailyReports.css';
 
-// Fallback demo reports for high-end preview
+// Fallback demo reports for high-end preview with clean field structures
 const DEMO_REPORTS = [
   {
     _id: 'rep-demo-1',
-    date: new Date().toISOString(),
-    workLocation: 'Work From Office',
-    shiftType: 'Day Shift',
-    hoursWorked: 8.5,
+    projectTitle: 'CodeThrive Enterprise SaaS Portal',
     tasksWorked: 'TASK-101, TASK-104',
+    date: new Date().toISOString(),
+    hoursWorked: 8.5,
     workSummary: 'Architected & engineered modern Daily Worklogs Workspace UI with responsive metric cards, view toggles (Cards, Data Grid, Timeline), and framer-motion micro-animations.',
     completedWork: 'Dashboard metrics integration, glassmorphic layout styling, and task filter state management.',
     pendingWork: 'Final regression testing across mobile viewports and edge-case browser validations.',
     issuesFaced: 'None. All REST API endpoints responding well within 110ms threshold.',
-    tomorrowsPlan: 'Initiate work on Admin Worklog Approval & Feedback Module.',
     productivityRating: 5,
+    progressStatus: 'Completed',
     status: 'Reviewed',
     teamLeadComments: 'Outstanding work! The UI animations and workspace layout are exceptionally clean and professional. Approved!'
   },
   {
     _id: 'rep-demo-2',
-    date: new Date(Date.now() - 86400000).toISOString(),
-    workLocation: 'Remote / WFH',
-    shiftType: 'Day Shift',
-    hoursWorked: 8.0,
+    projectTitle: 'MongoDB Backend Indexing & Auth API',
     tasksWorked: 'TASK-102',
+    date: new Date(Date.now() - 86400000).toISOString(),
+    hoursWorked: 8.0,
     workSummary: 'Optimized MongoDB database indexing strategies for employee daily report logs and attendance sessions.',
     completedWork: 'Created compound index on employee ID and submission timestamp in AttendanceSession collection.',
     pendingWork: 'Execute load test suite simulating 1,500 simultaneous user interactions.',
     issuesFaced: 'Minor rate-limiting restriction encountered during local load testing; threshold recalculated.',
-    tomorrowsPlan: 'Refactor AuthContext login token persistence and automatic session refresh.',
     productivityRating: 4,
+    progressStatus: 'Pending',
     status: 'Submitted',
     teamLeadComments: null
   },
   {
     _id: 'rep-demo-3',
-    date: new Date(Date.now() - 86400000 * 2).toISOString(),
-    workLocation: 'Work From Office',
-    shiftType: 'Day Shift',
-    hoursWorked: 9.0,
+    projectTitle: 'Employee Profile & Credential Manager',
     tasksWorked: 'TASK-098, TASK-099',
+    date: new Date(Date.now() - 86400000 * 2).toISOString(),
+    hoursWorked: 9.0,
     workSummary: 'Designed and deployed employee profile credential setup module and interactive attendance logger.',
     completedWork: 'Profile state synchronization, QR check-in utility, and JWT payload validation.',
     pendingWork: 'Documentation update for REST API endpoints.',
-    issuesFaced: 'None.',
-    tomorrowsPlan: 'Begin tasks sprint planning for Q4 platform enhancements.',
+    issuesFaced: 'Third-party API gateway timeout during deployment testing.',
     productivityRating: 5,
+    progressStatus: 'Not Completed',
     status: 'Reviewed',
     teamLeadComments: 'Great efficiency and code quality. Keep up the high standard!'
   }
@@ -87,20 +84,19 @@ const DailyReports = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form Fields
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    workLocation: 'Work From Office',
-    shiftType: 'Day Shift',
-    hoursWorked: 8,
+  // Clean form state without workLocation & tomorrowsPlan; Tasks Worked On is 2nd field
+  const initialFormState = {
+    projectTitle: '',
     tasksWorked: '',
+    date: new Date().toISOString().split('T')[0],
+    hoursWorked: 8,
     workSummary: '',
-    completedWork: '',
-    pendingWork: '',
-    issuesFaced: '',
-    tomorrowsPlan: '',
+    issuesFaced: 'None',
+    progressStatus: 'Completed',
     productivityRating: 5
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
     fetchReports();
@@ -143,19 +139,7 @@ const DailyReports = () => {
   };
 
   const resetForm = () => {
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      workLocation: 'Work From Office',
-      shiftType: 'Day Shift',
-      hoursWorked: 8,
-      tasksWorked: '',
-      workSummary: '',
-      completedWork: '',
-      pendingWork: '',
-      issuesFaced: '',
-      tomorrowsPlan: '',
-      productivityRating: 5
-    });
+    setFormData(initialFormState);
   };
 
   const handleSubmitReport = async (e) => {
@@ -219,14 +203,16 @@ const DailyReports = () => {
 
   const filteredReports = safeReports.filter(rep => {
     const summary = rep?.workSummary || '';
+    const project = rep?.projectTitle || '';
     const tasks = rep?.tasksWorked || '';
     const dateStr = rep?.date ? new Date(rep.date).toLocaleDateString() : '';
 
     const matchesSearch = summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          project.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           tasks.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           dateStr.includes(searchQuery);
 
-    const matchesTab = activeFilterTab === 'All' || rep?.status === activeFilterTab;
+    const matchesTab = activeFilterTab === 'All' || rep?.status === activeFilterTab || rep?.progressStatus === activeFilterTab;
 
     return matchesSearch && matchesTab;
   });
@@ -235,7 +221,7 @@ const DailyReports = () => {
   const totalReportsCount = safeReports.length;
   const totalHoursLogged = safeReports.reduce((acc, r) => acc + (parseFloat(r.hoursWorked) || 0), 0);
   const reviewedCount = safeReports.filter(r => r.status === 'Reviewed' || r.status === 'Approved').length;
-  const pendingReviewCount = safeReports.filter(r => r.status === 'Submitted').length;
+  const pendingReviewCount = safeReports.filter(r => r.status === 'Submitted' || r.progressStatus === 'Pending').length;
   const avgRating = totalReportsCount > 0 
     ? (safeReports.reduce((acc, r) => acc + (parseInt(r.productivityRating) || 5), 0) / totalReportsCount).toFixed(1) 
     : '5.0';
@@ -271,7 +257,7 @@ const DailyReports = () => {
           </div>
           <h1 className="hero-main-title">Today's Work & Daily Logs</h1>
           <p className="hero-subtext">
-            Track daily accomplishments, log hours worked, review manager comments, and document tomorrow's roadmap.
+            Log project titles, tasks worked on, submitting dates, working hours, work summary, issues/blockers, and process status.
           </p>
           <div className="hero-date-strip">
             <Calendar size={14} />
@@ -308,7 +294,66 @@ const DailyReports = () => {
         </div>
       </div>
 
+      {/* --------------------------------------------------------------------------
+          2. METRIC CARDS OVERVIEW (4 INTERACTIVE CARDS)
+         -------------------------------------------------------------------------- */}
+      <div className="reports-metrics-grid">
+        <div className="metric-card-exec">
+          <div className="metric-icon-box blue">
+            <FileText size={22} />
+          </div>
+          <div className="metric-info-body">
+            <span className="metric-label">Total Worklogs</span>
+            <div className="metric-value-row">
+              <span className="metric-value">{totalReportsCount}</span>
+              <span className="metric-unit">logs submitted</span>
+            </div>
+            <span className="metric-footer-text">Project activity record</span>
+          </div>
+        </div>
 
+        <div className="metric-card-exec">
+          <div className="metric-icon-box emerald">
+            <Clock size={22} />
+          </div>
+          <div className="metric-info-body">
+            <span className="metric-label">Total Hours Logged</span>
+            <div className="metric-value-row">
+              <span className="metric-value">{totalHoursLogged}</span>
+              <span className="metric-unit">hours</span>
+            </div>
+            <span className="metric-footer-text">Productive development time</span>
+          </div>
+        </div>
+
+        <div className="metric-card-exec">
+          <div className="metric-icon-box purple">
+            <ShieldCheck size={22} />
+          </div>
+          <div className="metric-info-body">
+            <span className="metric-label">Reviewed & Approved</span>
+            <div className="metric-value-row">
+              <span className="metric-value">{reviewedCount}</span>
+              <span className="metric-unit">verified</span>
+            </div>
+            <span className="metric-footer-text">Manager reviewed logs</span>
+          </div>
+        </div>
+
+        <div className="metric-card-exec">
+          <div className="metric-icon-box amber">
+            <Award size={22} />
+          </div>
+          <div className="metric-info-body">
+            <span className="metric-label">Avg Productivity</span>
+            <div className="metric-value-row">
+              <span className="metric-value">{avgRating}</span>
+              <span className="rating-badge-glow">★ Star</span>
+            </div>
+            <span className="metric-footer-text">Self & Lead Rating</span>
+          </div>
+        </div>
+      </div>
 
       {/* --------------------------------------------------------------------------
           3. WORKSPACE CONTROL TOOLBAR (SEARCH + FILTER TABS + VIEW TOGGLE)
@@ -319,7 +364,7 @@ const DailyReports = () => {
           <Search size={17} className="search-icon" />
           <input 
             type="text" 
-            placeholder="Search worklogs by task code, summary keywords, or date..."
+            placeholder="Search worklogs by project title, tasks, keywords, status, or date..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -340,7 +385,7 @@ const DailyReports = () => {
             className={`tab-btn-pill ${activeFilterTab === 'Submitted' ? 'active' : ''}`}
             onClick={() => setActiveFilterTab('Submitted')}
           >
-            Pending ({pendingReviewCount})
+            Pending Review ({pendingReviewCount})
           </button>
           <button 
             className={`tab-btn-pill ${activeFilterTab === 'Reviewed' ? 'active' : ''}`}
@@ -389,7 +434,7 @@ const DailyReports = () => {
           </div>
           <h2>No Daily Worklogs Found</h2>
           <p>
-            You haven't logged any daily reports yet. Submit your daily accomplishments to inform your manager and track performance.
+            You haven't logged any daily reports yet. Submit your project title, tasks worked on, working hours, work summary, and process status.
           </p>
           <div className="empty-actions-row">
             <button 
@@ -445,26 +490,40 @@ const DailyReports = () => {
                           <Calendar size={14} className="cal-icon" />
                           <span className="date-text">{repDateStr}</span>
                         </div>
-                        <StatusBadge status={rep.status} />
+                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                          <StatusBadge status={rep.progressStatus || 'Completed'} />
+                          <StatusBadge status={rep.status || 'Submitted'} />
+                        </div>
                       </div>
+
+                      {/* Project Title Header */}
+                      {rep.projectTitle && (
+                        <div style={{ margin: '0.2rem 0' }}>
+                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 800, letterSpacing: '0.04em' }}>
+                            PROJECT TITLE:
+                          </span>
+                          <h4 style={{ margin: '0.2rem 0 0 0', fontSize: '1.15rem', color: '#60a5fa', fontWeight: 700 }}>
+                            {rep.projectTitle}
+                          </h4>
+                        </div>
+                      )}
 
                       {/* Meta Tags Row */}
                       <div className="card-meta-tags">
                         <span className="tag-pill hours">
-                          <Clock size={12} /> {rep.hoursWorked || 8} hrs logged
+                          <Clock size={12} /> {rep.hoursWorked || 8} working hrs
                         </span>
-                        <span className="tag-pill location">
-                          <MapPin size={12} /> {rep.workLocation || 'Office'}
-                        </span>
-                        {rep.shiftType && (
-                          <span className="tag-pill shift">{rep.shiftType}</span>
+                        {rep.progressStatus && (
+                          <span className="tag-pill shift">
+                            Process: {rep.progressStatus}
+                          </span>
                         )}
                       </div>
 
                       {/* Tasks Worked */}
                       {rep.tasksWorked && (
                         <div className="task-codes-row">
-                          <span className="task-label">Tasks:</span>
+                          <span className="task-label">Tasks Worked On:</span>
                           {rep.tasksWorked.split(',').map((taskCode, i) => (
                             <span key={i} className="task-code-pill">{taskCode.trim()}</span>
                           ))}
@@ -472,25 +531,24 @@ const DailyReports = () => {
                       )}
 
                       {/* Work Summary Main Paragraph */}
-                      <p className="work-summary-body">
-                        {rep.workSummary}
-                      </p>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>
+                          Work Summary:
+                        </span>
+                        <p className="work-summary-body">
+                          {rep.workSummary}
+                        </p>
+                      </div>
 
-                      {/* Breakdown Box (Completed / Pending) */}
-                      {(rep.completedWork || rep.pendingWork) && (
-                        <div className="card-breakdown-box">
-                          {rep.completedWork && (
-                            <div className="breakdown-col">
-                              <span className="col-title green"><CheckCircle2 size={12} /> Completed</span>
-                              <p className="col-text">{rep.completedWork}</p>
-                            </div>
-                          )}
-                          {rep.pendingWork && (
-                            <div className="breakdown-col">
-                              <span className="col-title amber"><Clock size={12} /> In Progress</span>
-                              <p className="col-text">{rep.pendingWork}</p>
-                            </div>
-                          )}
+                      {/* Issues & Blockers */}
+                      {rep.issuesFaced && rep.issuesFaced !== 'None' && (
+                        <div className="doc-section-box blocker" style={{ padding: '0.65rem 0.85rem', margin: '0' }}>
+                          <span className="doc-section-title red" style={{ fontSize: '0.7rem' }}>
+                            Issues / Blockers:
+                          </span>
+                          <p className="doc-summary-text" style={{ fontSize: '0.825rem' }}>
+                            {rep.issuesFaced}
+                          </p>
                         </div>
                       )}
 
@@ -516,7 +574,7 @@ const DailyReports = () => {
                           className="btn-view-doc"
                           onClick={() => { setSelectedReport(rep); setIsViewModalOpen(true); }}
                         >
-                          <span>View Full Document</span>
+                          <span>Full Details</span>
                           <ArrowUpRight size={15} />
                         </button>
                       </div>
@@ -537,12 +595,13 @@ const DailyReports = () => {
               <table className="reports-data-table">
                 <thead>
                   <tr>
-                    <th>Date & Shift</th>
-                    <th>Tasks Worked</th>
-                    <th>Work Summary & Accomplishments</th>
-                    <th>Hours</th>
-                    <th>Rating</th>
-                    <th>Status</th>
+                    <th>Project Title</th>
+                    <th>Tasks Worked On</th>
+                    <th>Submitting Date</th>
+                    <th>Working Hours</th>
+                    <th>Work Summary</th>
+                    <th>Issues / Blockers</th>
+                    <th>Process Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -555,10 +614,9 @@ const DailyReports = () => {
                     return (
                       <tr key={rep._id}>
                         <td>
-                          <div className="table-date-cell">
-                            <span className="t-date">{repDateStr}</span>
-                            <span className="t-loc">{rep.workLocation || 'Office'}</span>
-                          </div>
+                          <span style={{ fontWeight: '700', color: '#60a5fa' }}>
+                            {rep.projectTitle || 'General Project'}
+                          </span>
                         </td>
                         <td>
                           <div className="table-tasks-cell">
@@ -571,21 +629,22 @@ const DailyReports = () => {
                             )}
                           </div>
                         </td>
+                        <td>
+                          <span className="t-date">{repDateStr}</span>
+                        </td>
+                        <td>
+                          <span className="t-hours-badge">{rep.hoursWorked || 8} hrs</span>
+                        </td>
                         <td className="table-summary-cell">
                           <p className="t-summary-text">{rep.workSummary}</p>
                         </td>
                         <td>
-                          <span className="t-hours-badge">{rep.hoursWorked} hrs</span>
+                          <span style={{ color: rep.issuesFaced && rep.issuesFaced !== 'None' ? '#f87171' : '#94a3b8', fontSize: '0.85rem' }}>
+                            {rep.issuesFaced || 'None'}
+                          </span>
                         </td>
                         <td>
-                          <div style={{ display: 'flex', gap: '2px', color: '#fbbf24' }}>
-                            {[...Array(rep.productivityRating || 5)].map((_, i) => (
-                              <Star key={i} size={12} fill="#fbbf24" color="#fbbf24" />
-                            ))}
-                          </div>
-                        </td>
-                        <td>
-                          <StatusBadge status={rep.status} />
+                          <StatusBadge status={rep.progressStatus || 'Completed'} />
                         </td>
                         <td>
                           <button 
@@ -635,21 +694,17 @@ const DailyReports = () => {
                     <div className="timeline-card-wrapper">
                       <div className="timeline-card-header">
                         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
+                          <span style={{ fontWeight: '700', color: '#60a5fa' }}>{rep.projectTitle || 'Project'}</span>
                           <span className="tag-pill hours">{rep.hoursWorked} hrs</span>
-                          <span className="tag-pill location"><MapPin size={12} /> {rep.workLocation || 'Office'}</span>
                         </div>
-                        <StatusBadge status={rep.status} />
+                        <StatusBadge status={rep.progressStatus || rep.status} />
                       </div>
 
                       <p className="timeline-card-body">{rep.workSummary}</p>
 
                       <div className="timeline-card-footer">
                         {rep.tasksWorked && (
-                          <div style={{ display: 'flex', gap: '0.4rem' }}>
-                            {rep.tasksWorked.split(',').map((t, i) => (
-                              <span key={i} className="task-code-pill">{t.trim()}</span>
-                            ))}
-                          </div>
+                          <span style={{ color: '#c084fc', fontSize: '0.8rem', fontWeight: 600 }}>Tasks: {rep.tasksWorked}</span>
                         )}
                         <button 
                           className="btn-view-doc"
@@ -668,7 +723,7 @@ const DailyReports = () => {
       )}
 
       {/* --------------------------------------------------------------------------
-          5. SUBMIT / LOG WORK FORM MODAL
+          5. SUBMIT / LOG WORK FORM MODAL (Updated order: 1. Project Title, 2. Tasks Worked On, 3. Date, 4. Hours, 5. Summary, 6. Issues, 7. Process Status)
          -------------------------------------------------------------------------- */}
       <Modal 
         isOpen={isSubmitModalOpen} 
@@ -676,9 +731,36 @@ const DailyReports = () => {
         title="Log Today's Work & Accomplishments"
       >
         <form onSubmit={handleSubmitReport} className="exec-modal-form">
+          {/* 1st Field: Project Title */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">1. Project Title *</label>
+            <input 
+              type="text" 
+              className="input-field-pro" 
+              placeholder="e.g. Enterprise HRMS Portal, E-Commerce App, Backend API"
+              value={formData.projectTitle}
+              onChange={e => setFormData({...formData, projectTitle: e.target.value})}
+              required
+            />
+          </div>
+
+          {/* 2nd Field: Tasks Worked On */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">2. Tasks Worked On (IDs / Titles) *</label>
+            <input 
+              type="text" 
+              className="input-field-pro" 
+              placeholder="e.g. TASK-101, Auth Redesign, Bug Fix #42"
+              value={formData.tasksWorked}
+              onChange={e => setFormData({...formData, tasksWorked: e.target.value})}
+              required
+            />
+          </div>
+
+          {/* 3rd Field: Submitting Date & 4th Field: Working Hours */}
           <div className="form-row-2col">
-            <div>
-              <label className="form-label-pro">Date</label>
+            <div className="form-group-pro">
+              <label className="form-label-pro">3. Submitting Date *</label>
               <input 
                 type="date" 
                 className="input-field-pro" 
@@ -688,14 +770,15 @@ const DailyReports = () => {
               />
             </div>
 
-            <div>
-              <label className="form-label-pro">Hours Logged</label>
+            <div className="form-group-pro">
+              <label className="form-label-pro">4. Working Hours *</label>
               <input 
                 type="number" 
                 step="0.5" 
                 min="0.5" 
                 max="24"
                 className="input-field-pro" 
+                placeholder="e.g. 8"
                 value={formData.hoursWorked}
                 onChange={e => setFormData({...formData, hoursWorked: parseFloat(e.target.value) || 0})}
                 required
@@ -703,91 +786,45 @@ const DailyReports = () => {
             </div>
           </div>
 
-          <div className="form-row-2col">
-            <div>
-              <label className="form-label-pro">Work Location</label>
-              <select 
-                className="input-field-pro"
-                value={formData.workLocation}
-                onChange={e => setFormData({...formData, workLocation: e.target.value})}
-              >
-                <option value="Work From Office">🏢 Work From Office</option>
-                <option value="Remote / WFH">🏠 Remote / WFH</option>
-                <option value="Client Site">🌐 Client Site</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="form-label-pro">Tasks Worked On (IDs/Titles)</label>
-              <input 
-                type="text" 
-                className="input-field-pro" 
-                placeholder="e.g. TASK-101, Auth Redesign"
-                value={formData.tasksWorked}
-                onChange={e => setFormData({...formData, tasksWorked: e.target.value})}
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="form-label-pro">Today's Summary & Accomplishments</label>
+          {/* 5th Field: Work Summary */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">5. Work Summary & Accomplishments *</label>
             <textarea 
               className="input-field-pro" 
               rows="3"
-              placeholder="Describe key features built, code committed, meetings attended, or issues resolved..."
+              placeholder="Describe key features built, code committed, meetings attended, or work accomplished..."
               value={formData.workSummary}
               onChange={e => setFormData({...formData, workSummary: e.target.value})}
               required
             ></textarea>
           </div>
 
-          <div className="form-row-2col">
-            <div>
-              <label className="form-label-pro">Completed Items</label>
-              <textarea 
-                className="input-field-pro" 
-                rows="2"
-                placeholder="Completed deliverables..."
-                value={formData.completedWork}
-                onChange={e => setFormData({...formData, completedWork: e.target.value})}
-              ></textarea>
-            </div>
-
-            <div>
-              <label className="form-label-pro">Pending / Carried Over</label>
-              <textarea 
-                className="input-field-pro" 
-                rows="2"
-                placeholder="Items pending..."
-                value={formData.pendingWork}
-                onChange={e => setFormData({...formData, pendingWork: e.target.value})}
-              ></textarea>
-            </div>
+          {/* 6th Field: Issues / Blockers */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">6. Issues / Blockers (If Any)</label>
+            <textarea 
+              className="input-field-pro" 
+              rows="2"
+              placeholder="State any technical blockers, API issues, or dependency delays (or enter 'None')..."
+              value={formData.issuesFaced}
+              onChange={e => setFormData({...formData, issuesFaced: e.target.value})}
+            ></textarea>
           </div>
 
-          <div className="form-row-2col">
-            <div>
-              <label className="form-label-pro">Issues / Blockers (if any)</label>
-              <input 
-                type="text"
-                className="input-field-pro" 
-                placeholder="None"
-                value={formData.issuesFaced}
-                onChange={e => setFormData({...formData, issuesFaced: e.target.value})}
-              />
-            </div>
-
-            <div>
-              <label className="form-label-pro">Tomorrow's Roadmap / Plan</label>
-              <input 
-                type="text"
-                className="input-field-pro" 
-                placeholder="Planned deliverables for tomorrow..."
-                value={formData.tomorrowsPlan}
-                onChange={e => setFormData({...formData, tomorrowsPlan: e.target.value})}
-              />
-            </div>
+          {/* 7th Field: Work Process Status Dropdown */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">7. Work Process Status *</label>
+            <select 
+              className="input-field-pro"
+              value={formData.progressStatus || 'Completed'}
+              onChange={e => setFormData({...formData, progressStatus: e.target.value})}
+              required
+            >
+              <option value="Completed">✅ Completed</option>
+              <option value="Pending">⏳ Pending</option>
+              <option value="Not Completed">❌ Not Completed</option>
+              <option value="In Progress">🔄 In Progress</option>
+            </select>
           </div>
 
           <div className="modal-actions-footer">
@@ -816,18 +853,25 @@ const DailyReports = () => {
         <Modal 
           isOpen={isViewModalOpen} 
           onClose={() => setIsViewModalOpen(false)} 
-          title={`Work Activity Brief • ${new Date(selectedReport.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'})}`}
+          title={`Work Activity Brief • ${selectedReport.projectTitle || 'Project Brief'}`}
         >
           <div className="doc-view-content">
             <div className="doc-meta-strip">
-              <StatusBadge status={selectedReport.status} />
-              <span className="doc-meta-item"><MapPin size={13} /> {selectedReport.workLocation || 'Office'}</span>
+              <StatusBadge status={selectedReport.progressStatus || 'Completed'} />
+              <StatusBadge status={selectedReport.status || 'Submitted'} />
               <span className="doc-meta-item highlight"><Clock size={13} /> {selectedReport.hoursWorked} hrs logged</span>
             </div>
 
+            {selectedReport.projectTitle && (
+              <div className="doc-section-box">
+                <span className="doc-section-title">Project Title</span>
+                <p className="doc-summary-text" style={{ fontWeight: '700', color: '#60a5fa' }}>{selectedReport.projectTitle}</p>
+              </div>
+            )}
+
             {selectedReport.tasksWorked && (
               <div className="doc-section-box">
-                <span className="doc-section-title">Associated Task Identifiers</span>
+                <span className="doc-section-title">Tasks Worked On</span>
                 <div className="doc-task-pills">
                   {selectedReport.tasksWorked.split(',').map((t, idx) => (
                     <span key={idx} className="task-code-pill">{t.trim()}</span>
@@ -837,19 +881,19 @@ const DailyReports = () => {
             )}
 
             <div className="doc-section-box">
-              <span className="doc-section-title">Accomplishments & Summary</span>
+              <span className="doc-section-title">Accomplishments & Work Summary</span>
               <p className="doc-summary-text">{selectedReport.workSummary}</p>
             </div>
 
             <div className="doc-grid-2col">
               <div className="doc-mini-card">
-                <span className="mini-card-title green"><CheckCircle2 size={13} /> Completed Work</span>
-                <p className="mini-card-desc">{selectedReport.completedWork || 'None documented'}</p>
+                <span className="mini-card-title green"><CheckCircle2 size={13} /> Process Status</span>
+                <p className="mini-card-desc">{selectedReport.progressStatus || 'Completed'}</p>
               </div>
 
               <div className="doc-mini-card">
-                <span className="mini-card-title amber"><Clock size={13} /> Pending Work</span>
-                <p className="mini-card-desc">{selectedReport.pendingWork || 'None documented'}</p>
+                <span className="mini-card-title amber"><Clock size={13} /> Working Hours</span>
+                <p className="mini-card-desc">{selectedReport.hoursWorked} Hours</p>
               </div>
             </div>
 
@@ -857,13 +901,6 @@ const DailyReports = () => {
               <div className="doc-section-box blocker">
                 <span className="doc-section-title red">Blockers & Issues Faced</span>
                 <p className="doc-summary-text">{selectedReport.issuesFaced}</p>
-              </div>
-            )}
-
-            {selectedReport.tomorrowsPlan && (
-              <div className="doc-section-box">
-                <span className="doc-section-title purple">Tomorrow's Planned Activities</span>
-                <p className="doc-summary-text">{selectedReport.tomorrowsPlan}</p>
               </div>
             )}
 

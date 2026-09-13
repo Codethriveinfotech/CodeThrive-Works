@@ -22,21 +22,37 @@ exports.getMyLeaves = async (req, res) => {
     let usedCasual = 0;
     let usedSick = 0;
     let usedPaid = 0;
+    let currentMonthLeaveDays = 0;
+    let explicitUnpaidDays = 0;
+
+    const curMonth = new Date().getMonth();
+    const curYear = new Date().getFullYear();
 
     requests.forEach(req => {
+      const start = new Date(req.startDate);
+      const days = Math.round((new Date(req.endDate) - start) / (1000 * 60 * 60 * 24)) + 1;
+      
       if (req.status === 'Approved') {
-        const days = Math.round((new Date(req.endDate) - new Date(req.startDate)) / (1000 * 60 * 60 * 24)) + 1;
         if (req.leaveType === 'Casual') usedCasual += days;
         if (req.leaveType === 'Sick') usedSick += days;
         if (req.leaveType === 'Paid') usedPaid += days;
       }
+
+      if (start.getMonth() === curMonth && start.getFullYear() === curYear && req.status !== 'Rejected') {
+        currentMonthLeaveDays += days;
+        if (req.leaveType === 'Unpaid') explicitUnpaidDays += days;
+      }
     });
+
+    const monthlyExceededUnpaid = currentMonthLeaveDays > 2 ? (currentMonthLeaveDays - 2) : 0;
+    const unpaidLeaveDays = Math.max(monthlyExceededUnpaid, explicitUnpaidDays);
 
     const summary = {
       casualLeaveBalance: Math.max(0, LEAVE_ALLOCATIONS.Casual - usedCasual),
       sickLeaveBalance: Math.max(0, LEAVE_ALLOCATIONS.Sick - usedSick),
-      paidLeaveBalance: Math.max(0, LEAVE_ALLOCATIONS.Paid - usedPaid),
-      totalAvailable: Math.max(0, LEAVE_ALLOCATIONS.Casual - usedCasual) + Math.max(0, LEAVE_ALLOCATIONS.Sick - usedSick) + Math.max(0, LEAVE_ALLOCATIONS.Paid - usedPaid),
+      unpaidLeaveDays: unpaidLeaveDays,
+      currentMonthLeaveDays: currentMonthLeaveDays,
+      totalAvailable: Math.max(0, LEAVE_ALLOCATIONS.Casual - usedCasual) + Math.max(0, LEAVE_ALLOCATIONS.Sick - usedSick),
       usedLeave: usedCasual + usedSick + usedPaid,
       pendingRequests: requests.filter(r => r.status === 'Pending').length,
       requests

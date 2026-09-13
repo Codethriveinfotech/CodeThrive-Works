@@ -8,6 +8,8 @@ import AdminSidebar from './components/AdminSidebar';
 import AdminTopbar from './components/AdminTopbar';
 import SplashScreen from './components/SplashScreen';
 import PageTransition from './components/PageTransition';
+import TeamsCallWidget from './components/TeamsCallWidget';
+import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
 // Lazy loading all pages to significantly improve initial load performance
@@ -55,7 +57,7 @@ const PageLoader = () => (
     initial={{ opacity: 0 }} 
     animate={{ opacity: 1 }} 
     exit={{ opacity: 0 }}
-    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '60vh', flexDirection: 'column' }}
+    style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem 0', flexDirection: 'column' }}
   >
     <div className="loader-small" style={{ width: '30px', height: '30px', borderColor: 'var(--primary)', borderTopColor: 'transparent', animation: 'spin 0.6s linear infinite' }}></div>
   </motion.div>
@@ -161,7 +163,7 @@ const EmployeeLayout = () => {
         <Topbar />
         <main className="main-content">
           <ErrorBoundary>
-            <AnimatePresence initial={false}>
+            <AnimatePresence mode="wait" initial={false}>
               <PageTransition key={location.pathname}>
                 <Suspense fallback={<PageLoader />}>
                   <Outlet />
@@ -184,7 +186,7 @@ const AdminLayout = () => {
         <AdminTopbar />
         <main className="main-content">
           <ErrorBoundary>
-            <AnimatePresence initial={false}>
+            <AnimatePresence mode="wait" initial={false}>
               <PageTransition key={location.pathname}>
                 <Suspense fallback={<PageLoader />}>
                   <Outlet />
@@ -251,6 +253,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Navigate to="/employee/login" replace />} />
 
@@ -303,6 +306,7 @@ function App() {
           <Route path="*" element={<Navigate to="/employee/login" replace />} />
         </Routes>
         <Toast message={toast.message} show={toast.show} />
+        <TeamsCallWidget />
       </Router>
     </AuthProvider>
   );

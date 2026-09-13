@@ -13,7 +13,7 @@ const StatusBadge = ({ status, text }) => {
     statusClass = 'success';
   } else if (['pending', 'in progress', 'review', 'half-day'].includes(s)) {
     statusClass = 'warning';
-  } else if (['inactive', 'rejected', 'failed', 'absent'].includes(s)) {
+  } else if (['inactive', 'rejected', 'failed', 'absent', 'not completed'].includes(s)) {
     statusClass = 'danger';
   } else if (['new', 'leave', 'on break'].includes(s)) {
     statusClass = 'info';

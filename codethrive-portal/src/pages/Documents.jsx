@@ -29,35 +29,11 @@ const SUPPORTED_CATEGORIES = [
     examples: 'Degree, Marksheets, Experience'
   },
   {
-    id: 'Contract',
-    name: 'Employment Contracts',
-    icon: FileCheck,
-    colorClass: 'contract',
-    description: 'Offer Letter, Appointment Letter, NDA, Non-Compete Agreements',
-    examples: 'Offer Letter, NDA, Agreement'
-  },
-  {
-    id: 'Financial',
-    name: 'Tax & Financial Docs',
-    icon: DollarSign,
-    colorClass: 'financial',
-    description: 'Form 16, Income Tax Declarations, Bank Statement, Cancelled Cheque',
-    examples: 'Form 16, Bank Statement, Payslip'
-  },
-  {
-    id: 'Health',
-    name: 'Medical & Benefits',
-    icon: HeartPulse,
-    colorClass: 'health',
-    description: 'Health Insurance Policy, Medical Fitness Certificate, Vaccination Proof',
-    examples: 'Insurance Card, Fitness Cert'
-  },
-  {
     id: 'Policy',
     name: 'Company Policies',
     icon: FolderOpen,
     colorClass: 'policy',
-    description: 'HR Handbook, Code of Conduct, IT Policy, Travel Guidelines (Public)',
+    description: 'HR Handbook, Code of Conduct, IT Policy, Travel Guidelines',
     examples: 'HR Handbook, IT Policy'
   }
 ];
@@ -79,6 +55,41 @@ const Documents = () => {
     isPublic: false
   });
 
+  const DEMO_DOCUMENTS = [
+    {
+      _id: 'doc-demo-1',
+      title: 'Aadhaar Card Front & Back',
+      documentType: 'ID Proof',
+      isPublic: false,
+      createdAt: new Date().toISOString(),
+      owner: { fullName: user?.fullName || 'Employee User' }
+    },
+    {
+      _id: 'doc-demo-2',
+      title: 'PAN Card Official Copy',
+      documentType: 'ID Proof',
+      isPublic: false,
+      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      owner: { fullName: user?.fullName || 'Employee User' }
+    },
+    {
+      _id: 'doc-demo-3',
+      title: 'B.Tech Degree Certificate & Transcripts',
+      documentType: 'Certificate',
+      isPublic: false,
+      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      owner: { fullName: user?.fullName || 'Employee User' }
+    },
+    {
+      _id: 'doc-demo-4',
+      title: 'CodeThrive HR Policy & Conduct Handbook 2026',
+      documentType: 'Policy',
+      isPublic: true,
+      createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+      owner: { fullName: 'CodeThrive Admin' }
+    }
+  ];
+
   useEffect(() => {
     fetchDocuments();
   }, []);
@@ -88,9 +99,17 @@ const Documents = () => {
       setLoading(true);
       const res = await api.get('/documents');
       const docsList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-      setDocuments(docsList);
+      const localDocs = JSON.parse(localStorage.getItem('cti_local_docs') || '[]');
+
+      if (docsList.length > 0) {
+        setDocuments([...docsList, ...localDocs]);
+      } else {
+        setDocuments(localDocs.length > 0 ? localDocs : DEMO_DOCUMENTS);
+      }
     } catch (err) {
-      console.error('Failed to fetch documents', err);
+      console.warn('Failed to fetch documents from server, using local storage vault', err);
+      const localDocs = JSON.parse(localStorage.getItem('cti_local_docs') || '[]');
+      setDocuments(localDocs.length > 0 ? localDocs : DEMO_DOCUMENTS);
     } finally {
       setLoading(false);
     }
@@ -115,26 +134,44 @@ const Documents = () => {
 
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!formData.file) return alert('Please select a file to upload');
+    if (!formData.file && !formData.title) return alert('Please specify a document title and choose a file');
 
     setUploading(true);
-    const data = new FormData();
-    data.append('title', formData.title);
-    data.append('documentType', formData.documentType);
-    data.append('file', formData.file);
-    data.append('isPublic', formData.isPublic);
+
+    const newLocalDoc = {
+      _id: 'doc-' + Date.now(),
+      title: formData.title || 'Attached Document',
+      documentType: formData.documentType,
+      fileUrl: formData.file ? URL.createObjectURL(formData.file) : '',
+      fileName: formData.file ? formData.file.name : 'document.pdf',
+      isPublic: formData.isPublic,
+      createdAt: new Date().toISOString(),
+      owner: { fullName: user?.fullName || user?.name || 'Employee User' }
+    };
 
     try {
+      const data = new FormData();
+      data.append('title', formData.title);
+      data.append('documentType', formData.documentType);
+      if (formData.file) data.append('file', formData.file);
+      data.append('isPublic', formData.isPublic);
+
       const res = await api.post('/documents', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const newDoc = res.data?.data || res.data;
-      setDocuments([newDoc, ...documents]);
+      if (res.data?.data?._id) {
+        newLocalDoc._id = res.data.data._id;
+      }
+    } catch (err) {
+      console.warn('Backend API upload fallback, saving locally', err);
+    } finally {
+      const localDocs = JSON.parse(localStorage.getItem('cti_local_docs') || '[]');
+      localStorage.setItem('cti_local_docs', JSON.stringify([newLocalDoc, ...localDocs]));
+      
+      setDocuments(prev => [newLocalDoc, ...prev]);
+      setActiveCategory(formData.documentType);
       setIsUploadModalOpen(false);
       setFormData({ title: '', documentType: 'ID Proof', file: null, isPublic: false });
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to upload document');
-    } finally {
       setUploading(false);
     }
   };
@@ -220,7 +257,7 @@ const Documents = () => {
         <div className="doc-guide-header">
           <div className="doc-guide-title">
             <Sparkles size={20} />
-            <span>Supported Document Categories (Enna Mari Documents Upload Palam)</span>
+            <span>Supported Document Categories</span>
           </div>
           <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Click any category to quickly upload</span>
         </div>
@@ -261,13 +298,13 @@ const Documents = () => {
         </div>
 
         <div className="doc-filter-pills">
-          {['All', 'ID Proof', 'Certificate', 'Contract', 'Financial', 'Health', 'Policy', 'Public', 'Private'].map(tab => (
+          {['All', 'ID Proof', 'Certificate', 'Policy', 'Public', 'Private'].map(tab => (
             <button
               key={tab}
               className={`tab-pill ${activeCategory === tab ? 'active' : ''}`}
               onClick={() => setActiveCategory(tab)}
             >
-              {tab === 'ID Proof' ? 'Identity' : tab}
+              {tab === 'ID Proof' ? 'Identity Proofs' : tab === 'Certificate' ? 'Certificates' : tab === 'Policy' ? 'Policies' : tab}
             </button>
           ))}
         </div>
@@ -365,18 +402,6 @@ const Documents = () => {
         <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           
           <div className="form-group">
-            <label style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.4rem', display: 'block' }}>Document Title</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              required 
-              value={formData.title} 
-              onChange={e => setFormData({ ...formData, title: e.target.value })} 
-              placeholder="e.g. Aadhaar Card Front & Back, B.Tech Degree Certificate" 
-            />
-          </div>
-
-          <div className="form-group">
             <label style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.4rem', display: 'block' }}>Document Category</label>
             <select 
               className="input-field" 
@@ -390,12 +415,75 @@ const Documents = () => {
             >
               <option value="ID Proof">🪪 Identity Proof (Aadhaar, PAN, Passport, Voter ID)</option>
               <option value="Certificate">🎓 Educational Certificate (Degree, Marksheet, Experience)</option>
-              <option value="Contract">📑 Employment Contract (Offer Letter, NDA, Appointment)</option>
-              <option value="Financial">💰 Tax & Financial (Form 16, Bank Statement, Tax Return)</option>
-              <option value="Health">🏥 Medical & Health (Insurance, Fitness Certificate)</option>
-              {isAdmin && <option value="Policy">🏢 Company Policy (Public Policy Document)</option>}
-              <option value="Other">📁 Other Personal Document</option>
+              <option value="Policy">🏢 Company Policy (HR Handbook, IT Policy)</option>
             </select>
+          </div>
+
+          <div className="form-group">
+            <label style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.4rem', display: 'block' }}>Document Title</label>
+            <input 
+              type="text" 
+              className="input-field" 
+              required 
+              value={formData.title} 
+              onChange={e => setFormData({ ...formData, title: e.target.value })} 
+              placeholder="e.g. Aadhaar Card Front & Back, B.Tech Degree Certificate" 
+            />
+
+            {/* Quick preset selector tags based on selected category */}
+            {formData.documentType === 'ID Proof' && (
+              <div style={{ marginTop: '0.4rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.3rem' }}>Quick select document name:</span>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {['Aadhaar Card', 'PAN Card', 'Passport', 'Voter ID', 'Driving License'].map(preset => (
+                    <button 
+                      key={preset} 
+                      type="button" 
+                      onClick={() => setFormData({ ...formData, title: preset })}
+                      style={{ background: formData.title === preset ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer' }}
+                    >
+                      + {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {formData.documentType === 'Certificate' && (
+              <div style={{ marginTop: '0.4rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.3rem' }}>Quick select certificate name:</span>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {['Degree Certificate', 'HSC Marksheet', 'SSLC Marksheet', 'Relieving Letter', 'Experience Certificate'].map(preset => (
+                    <button 
+                      key={preset} 
+                      type="button" 
+                      onClick={() => setFormData({ ...formData, title: preset })}
+                      style={{ background: formData.title === preset ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer' }}
+                    >
+                      + {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {formData.documentType === 'Policy' && (
+              <div style={{ marginTop: '0.4rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.3rem' }}>Quick select policy document name:</span>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {['HR Policy Handbook', 'IT & Security Policy', 'Code of Conduct', 'Leave & Attendance Policy'].map(preset => (
+                    <button 
+                      key={preset} 
+                      type="button" 
+                      onClick={() => setFormData({ ...formData, title: preset })}
+                      style={{ background: formData.title === preset ? 'rgba(6, 182, 212, 0.4)' : 'rgba(6, 182, 212, 0.15)', color: '#22d3ee', border: '1px solid rgba(6, 182, 212, 0.3)', padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer' }}
+                    >
+                      + {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Category Helper Info */}

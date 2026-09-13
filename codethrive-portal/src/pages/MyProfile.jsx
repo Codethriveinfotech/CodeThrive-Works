@@ -331,7 +331,54 @@ const MyProfile = () => {
       </div>
 
       {/* --------------------------------------------------------------------------
-          2. PROFILE COMPLETION STRENGTH BAR
+          2. EXECUTIVE QUICK STATS BANNER
+         -------------------------------------------------------------------------- */}
+      <div className="header-stats-strip">
+        <div className="header-stat-box">
+          <div className="quick-stat-icon">
+            <CreditCard size={20} />
+          </div>
+          <div>
+            <div className="quick-stat-label">Employee ID</div>
+            <div className="quick-stat-value">{profile.employeeId || 'CTI-EMP-001'}</div>
+          </div>
+        </div>
+
+        <div className="header-stat-box">
+          <div className="quick-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#34d399' }}>
+            <Mail size={20} />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div className="quick-stat-label">Work Email</div>
+            <div className="quick-stat-value" style={{ wordBreak: 'break-all', fontSize: '0.85rem' }}>
+              {profile.personalEmailAddress || user?.email || 'N/A'}
+            </div>
+          </div>
+        </div>
+
+        <div className="header-stat-box">
+          <div className="quick-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24' }}>
+            <Phone size={20} />
+          </div>
+          <div>
+            <div className="quick-stat-label">Phone Contact</div>
+            <div className="quick-stat-value">{profile.personalPhoneNumber || '9876543210'}</div>
+          </div>
+        </div>
+
+        <div className="header-stat-box">
+          <div className="quick-stat-icon" style={{ background: 'rgba(168, 85, 247, 0.12)', color: '#c084fc' }}>
+            <MapPin size={20} />
+          </div>
+          <div>
+            <div className="quick-stat-label">Work Location</div>
+            <div className="quick-stat-value">{profile.workLocation || 'Corporate HQ (Office)'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* --------------------------------------------------------------------------
+          3. PROFILE COMPLETION STRENGTH BAR
          -------------------------------------------------------------------------- */}
       <div className="profile-strength-bar-card">
         <div className="strength-info">
@@ -356,121 +403,10 @@ const MyProfile = () => {
       </div>
 
       {/* --------------------------------------------------------------------------
-          3. FULL PAGE PROFILE DASHBOARD (NO EMPTY SPACES)
+          4. FULL PAGE PROFILE DASHBOARD (NO BLANK SPACES, FULL WIDTH)
          -------------------------------------------------------------------------- */}
       <div className="profile-main-grid">
-        
-        {/* LEFT COLUMN: Quick Stats & 3D Interactive ID Card */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          <div className="profile-nav-card">
-            <div className="profile-quick-stats">
-              <div className="quick-stat-item">
-                <div className="quick-stat-icon">
-                  <CreditCard size={18} />
-                </div>
-                <div>
-                  <div className="quick-stat-label">Employee ID</div>
-                  <div className="quick-stat-value">{profile.employeeId || 'CTI-EMP-001'}</div>
-                </div>
-              </div>
-
-              <div className="quick-stat-item">
-                <div className="quick-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#34d399' }}>
-                  <Mail size={18} />
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div className="quick-stat-label">Work Email</div>
-                  <div className="quick-stat-value" style={{ wordBreak: 'break-all', fontSize: '0.85rem' }}>
-                    {profile.personalEmailAddress || user?.email || 'N/A'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="quick-stat-item">
-                <div className="quick-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24' }}>
-                  <Phone size={18} />
-                </div>
-                <div>
-                  <div className="quick-stat-label">Phone Contact</div>
-                  <div className="quick-stat-value">{profile.personalPhoneNumber || 'N/A'}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 3D Interactive Digital ID Card */}
-          <div className="id-card-flip-container" onClick={() => setIsIdFlipped(!isIdFlipped)} style={{ cursor: 'pointer' }}>
-            <div className={`id-card-inner ${isIdFlipped ? 'flipped' : ''}`}>
-              
-              {/* ID Card Front Face */}
-              <div className="id-badge-card">
-                <div className="id-badge-header">
-                  <div className="id-company-logo">
-                    <Sparkles size={18} color="#60a5fa" />
-                    CODETHRIVE <span>WORKS</span>
-                  </div>
-                  <span className="profile-badge-status" style={{ fontSize: '0.7rem' }}>OFFICIAL ID</span>
-                </div>
-
-                <div className="id-badge-body">
-                  <div className="id-photo-frame" style={{ width: '90px', height: '90px' }}>
-                    {profile.profilePhoto ? (
-                      <img src={profile.profilePhoto} alt={profile.fullName} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 800, color: '#fff' }}>
-                        {profile.fullName ? profile.fullName.charAt(0).toUpperCase() : 'E'}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="id-details-col">
-                    <h3 className="id-employee-name" style={{ fontSize: '1.15rem' }}>{profile.fullName}</h3>
-                    <div className="id-employee-role" style={{ fontSize: '0.8rem' }}>{profile.designation || 'Specialist'}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>ID: {profile.employeeId || 'CTI-EMP-001'}</div>
-                  </div>
-                </div>
-
-                <div className="id-barcode-graphic" style={{ marginTop: '1rem', padding: '0.5rem 0.8rem' }}>
-                  <div className="barcode-lines" style={{ width: '120px', height: '20px' }}></div>
-                  <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Click to Flip 🔄</span>
-                </div>
-              </div>
-
-              {/* ID Card Back Face */}
-              <div className="id-badge-card id-card-back-face">
-                <div className="id-badge-header">
-                  <div className="id-company-logo">
-                    <ShieldCheck size={18} color="#34d399" />
-                    SECURITY CARD
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', fontSize: '0.8rem' }}>
-                  <div>
-                    <label style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', display: 'block' }}>Emergency Phone</label>
-                    <span style={{ fontWeight: 700, color: '#60a5fa' }}>{profile.emergencyContact?.phone || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <label style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', display: 'block' }}>Blood Group</label>
-                    <span style={{ fontWeight: 700, color: '#ef4444' }}>{profile.bloodGroup || 'O+'}</span>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.6rem', fontSize: '0.7rem', color: '#94a3b8', marginTop: '1rem' }}>
-                  Official Property of CodeThrive Works HQ.
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-
-        {/* RIGHT COLUMN: Sequential Full Dashboard Cards (NO HIDING BEHIND TABS) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-          
-          {/* Card 1: Personal Information */}
+        {/* Card 1: Personal Information */}
           <Card title={
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <UserCircle size={22} color="#60a5fa" /> Personal Information
@@ -749,8 +685,6 @@ const MyProfile = () => {
               </div>
             </div>
           </Card>
-
-        </div>
 
       </div>
 

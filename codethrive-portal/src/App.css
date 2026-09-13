@@ -140,9 +140,9 @@
 }
 
 .main-content {
-  padding: 2.5rem;
-  flex: 1;
+  padding: 2rem 2.5rem;
   background: transparent;
+  width: 100%;
 }
 
 /* Page Header */

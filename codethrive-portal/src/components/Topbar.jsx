@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Settings, ChevronDown } from 'lucide-react';
+import { Search, Settings, ChevronDown, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SettingsModal from './SettingsModal';
@@ -8,10 +8,19 @@ const Topbar = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const getInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  };
+
+  const handleGlobalRefresh = () => {
+    setIsRefreshing(true);
+    window.dispatchEvent(new CustomEvent('cti_global_refresh'));
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 800);
   };
 
   return (
@@ -53,7 +62,31 @@ const Topbar = () => {
           />
         </div>
         
-        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Global Portal Refresh Button */}
+          <button 
+            onClick={handleGlobalRefresh}
+            title="Global Refresh Workspace"
+            style={{ 
+              background: 'rgba(255,255,255,0.05)', 
+              border: '1px solid var(--border-color)', 
+              color: 'var(--text-main)', 
+              cursor: 'pointer', 
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+          >
+            <RefreshCw size={19} className={isRefreshing ? 'spin' : ''} />
+          </button>
+
+          {/* Portal Settings Button */}
           <button 
             onClick={() => setIsSettingsOpen(true)}
             title="Portal Settings"

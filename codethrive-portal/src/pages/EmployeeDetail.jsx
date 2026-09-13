@@ -5,7 +5,7 @@ import {
   User, UserCheck, Search, X, Briefcase, FileText, Calendar, Clock, Banknote,
   KeyRound, ShieldAlert, Plus, CheckCircle, AlertTriangle, ArrowDownLeft, ArrowUpRight,
   Send, Trash2, Eye, Download, Save, RefreshCw, ArrowLeft, ChevronRight, Mail, Phone, MapPin,
-  Check, XCircle
+  Check, XCircle, FileCheck, Layers
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
@@ -36,11 +36,11 @@ const DEFAULT_DEMO_EMPLOYEES = [
     emergencyContact: { name: 'S. Ramanathan', phone: '9876500000', relationship: 'Father' },
     sentByEmployee: {
       dailyReports: [
-        { _id: 'dr1', date: '2026-09-09', title: 'Completed Admin Registered Employees Portal', hoursLogged: '8.0h', status: 'Pending' },
-        { _id: 'dr2', date: '2026-09-08', title: 'Implemented Standalone Employee Control Page', hoursLogged: '7.5h', status: 'Approved' }
+        { _id: 'dr1', date: '2026-09-09', title: 'Completed Admin Registered Employees Portal & Teams Call Widget', hoursLogged: '8.0h', status: 'Pending' },
+        { _id: 'dr2', date: '2026-09-08', title: 'Implemented Standalone Employee Control Page & Profile Settings', hoursLogged: '7.5h', status: 'Approved' }
       ],
       leaveApplications: [
-        { _id: 'l1', leaveType: 'Casual Leave', dates: '2026-08-10 to 2026-08-11', reason: 'Family event', status: 'Pending' }
+        { _id: 'l1', leaveType: 'Casual Leave', dates: '2026-08-10 to 2026-08-11', reason: 'Family event in hometown', status: 'Pending' }
       ],
       uploadedDocs: [
         { name: 'Aadhaar_Card_Mahadevan.pdf', type: 'Identity Proof', date: '2025-01-15', size: '1.2 MB' },
@@ -90,9 +90,11 @@ const DEFAULT_DEMO_EMPLOYEES = [
     emergencyContact: { name: 'R. Sharma', phone: '9876511111', relationship: 'Spouse' },
     sentByEmployee: {
       dailyReports: [
-        { _id: 'dr3', date: '2026-09-09', title: 'Designed Figma Mockups for Mobile HRMS App', hoursLogged: '7.0h', status: 'Pending' }
+        { _id: 'dr3', date: '2026-09-09', title: 'Designed Figma Mockups for Mobile HRMS App & Glassmorphic Themes', hoursLogged: '7.0h', status: 'Pending' }
       ],
-      leaveApplications: [],
+      leaveApplications: [
+        { _id: 'l2', leaveType: 'Medical Leave', dates: '2026-07-05 to 2026-07-06', reason: 'Dental Checkup', status: 'Approved' }
+      ],
       uploadedDocs: [
         { name: 'Priya_Design_Portfolio.pdf', type: 'Resume', date: '2025-03-01', size: '4.5 MB' },
         { name: 'Aadhaar_Priya.pdf', type: 'Identity Proof', date: '2025-03-01', size: '1.1 MB' }
@@ -131,14 +133,57 @@ const DEFAULT_DEMO_EMPLOYEES = [
     permanentAddress: '77, Civil Lines, Madurai, Tamil Nadu',
     emergencyContact: { name: 'S. Verma', phone: '9876522222', relationship: 'Wife' },
     sentByEmployee: {
-      dailyReports: [],
+      dailyReports: [
+        { _id: 'dr4', date: '2026-09-08', title: 'Reviewed Q3 Engineering Roadmap and Sprint Objectives', hoursLogged: '8.0h', status: 'Approved' }
+      ],
       leaveApplications: [],
-      uploadedDocs: [],
+      uploadedDocs: [
+        { name: 'Rahul_Aadhaar.pdf', type: 'Identity Proof', date: '2024-11-10', size: '1.4 MB' }
+      ],
       attendanceLogs: { todayStatus: 'Checked Out', checkIn: '08:45 AM', checkOut: '05:15 PM', workTime: '8h 00m', breakTime: '30m' }
     },
     assignedByAdmin: {
       tasks: [
         { _id: 't4', taskId: 'TSK-104', title: 'Q3 Product Deliverables Review', priority: 'High', status: 'Completed', dueDate: '2026-09-08' }
+      ],
+      notificationsSent: []
+    }
+  },
+  {
+    _id: 'emp_004',
+    employeeId: 'CTI-EMP-004',
+    fullName: 'Ananya Roy',
+    personalEmailAddress: 'ananya@codethrive.com',
+    personalPhoneNumber: '9876543213',
+    department: 'HR',
+    designation: 'HR Operations Manager',
+    employmentType: 'Full-Time',
+    status: 'Active',
+    dateOfJoining: '2025-02-01',
+    workLocation: 'Office',
+    salaryAmount: 72000,
+    bankName: 'HDFC Bank',
+    accountNumber: '50100987654321',
+    ifscCode: 'HDFC0001234',
+    panNumber: 'XYZZZ4321M',
+    user: { role: 'hr', status: 'active' },
+    skills: ['HR Operations', 'Talent Acquisition', 'Payroll Audit'],
+    currentAddress: '56, HR Enclave, Chennai, Tamil Nadu',
+    permanentAddress: '19, Lake View Road, Trichy, Tamil Nadu',
+    emergencyContact: { name: 'K. Roy', phone: '9876533333', relationship: 'Mother' },
+    sentByEmployee: {
+      dailyReports: [
+        { _id: 'dr5', date: '2026-09-09', title: 'Processed Monthly Onboarding & Verification Files', hoursLogged: '8.0h', status: 'Approved' }
+      ],
+      leaveApplications: [],
+      uploadedDocs: [
+        { name: 'Ananya_Aadhaar.pdf', type: 'Identity Proof', date: '2025-02-01', size: '1.0 MB' }
+      ],
+      attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '6h 00m', breakTime: '20m' }
+    },
+    assignedByAdmin: {
+      tasks: [
+        { _id: 't5', taskId: 'TSK-105', title: 'Finalize Q3 Performance Evaluation Sheets', priority: 'Medium', status: 'In Progress', dueDate: '2026-09-15' }
       ],
       notificationsSent: []
     }
@@ -153,11 +198,9 @@ const EmployeeDetail = () => {
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Main Tab Selection
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile', 'submissions', 'management'
-
-  // Sub-tabs for Submissions
-  const [subTab, setSubTab] = useState('reports'); // 'reports', 'leaves', 'docs', 'attendance'
+  // Dedicated Top-level Tabs:
+  // 'profile', 'tasks', 'reports', 'leaves', 'documents', 'attendance', 'management'
+  const [activeTab, setActiveTab] = useState('profile');
 
   // Edit Profile State
   const [isEditing, setIsEditing] = useState(false);
@@ -179,9 +222,6 @@ const EmployeeDetail = () => {
   const [taskPriority, setTaskPriority] = useState('Medium');
   const [taskDueDate, setTaskDueDate] = useState('');
   const [isTaskSubmitting, setIsTaskSubmitting] = useState(false);
-
-  // Direct Announcement State
-  const [announcementText, setAnnouncementText] = useState('');
 
   useEffect(() => {
     fetchEmployeeData();
@@ -289,11 +329,10 @@ const EmployeeDetail = () => {
       setTaskTitle('');
       setTaskDueDate('');
       setIsTaskSubmitting(false);
-      alert('New task assigned to employee!');
+      alert(`New task assigned specifically to ${employee.fullName}!`);
     }
   };
 
-  // Interactive Admin Approve / Reject Actions for Reports
   const handleReportAction = (reportId, newStatus) => {
     if (!employee) return;
     const updatedReports = employee.sentByEmployee?.dailyReports?.map(r => 
@@ -307,7 +346,6 @@ const EmployeeDetail = () => {
     alert(`Report marked as ${newStatus}!`);
   };
 
-  // Interactive Admin Approve / Reject Actions for Leaves
   const handleLeaveAction = (leaveId, newStatus) => {
     if (!employee) return;
     const updatedLeaves = employee.sentByEmployee?.leaveApplications?.map(l => 
@@ -341,7 +379,7 @@ const EmployeeDetail = () => {
     };
     setEmployee(updated);
     setNewPassword('');
-    alert(`Access Role set to '${editRole}' and Account Status set to '${editStatus}'!`);
+    alert(`Access Role set to '${editRole}' and Account Status set to '${editStatus}' for ${employee.fullName}!`);
   };
 
   const handleSaveSalary = async () => {
@@ -363,35 +401,7 @@ const EmployeeDetail = () => {
       accountNumber: editAccNo,
       ifscCode: editIfsc
     }));
-    alert('Salary structure and bank details saved!');
-  };
-
-  const handleSendAnnouncement = (e) => {
-    e.preventDefault();
-    if (!announcementText.trim() || !employee) return;
-    const newNotice = {
-      _id: 'notice_' + Date.now(),
-      title: announcementText,
-      date: new Date().toISOString().split('T')[0]
-    };
-    const updatedNotices = [newNotice, ...(employee.assignedByAdmin?.notificationsSent || [])];
-    setEmployee(prev => ({
-      ...prev,
-      assignedByAdmin: { ...prev.assignedByAdmin, notificationsSent: updatedNotices }
-    }));
-    setAnnouncementText('');
-    alert('Announcement sent to employee portal!');
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!window.confirm('Are you sure you want to permanently delete this employee account? This action cannot be undone.')) return;
-    try {
-      await api.delete(`/employees/${employee._id}`);
-    } catch (err) {
-      console.warn('Deleted locally');
-    }
-    alert('Employee account deleted.');
-    navigate('/admin/employees');
+    alert(`Salary structure and bank details saved for ${employee.fullName}!`);
   };
 
   if (loading || !employee) return (
@@ -404,7 +414,7 @@ const EmployeeDetail = () => {
   return (
     <div className="employee-detail-page">
       
-      {/* Top Breadcrumb & Navigation */}
+      {/* Top Breadcrumb & Quick Switcher */}
       <div className="detail-top-nav">
         <button className="btn btn-outline" onClick={() => navigate('/admin/employees')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <ArrowLeft size={16} /> Back to Employees Directory
@@ -412,7 +422,7 @@ const EmployeeDetail = () => {
 
         {/* Quick Employee Switcher */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Select Employee:</span>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Viewing Employee:</span>
           <select 
             className="emp-switch-select"
             value={employee._id}
@@ -430,7 +440,7 @@ const EmployeeDetail = () => {
         </div>
       </div>
 
-      {/* Hero Header Card - Clean without Monthly Salary & Location boxes */}
+      {/* Hero Header Card */}
       <div className="employee-hero-card">
         <div className="hero-left">
           <div className="hero-avatar">
@@ -453,39 +463,67 @@ const EmployeeDetail = () => {
         </div>
       </div>
 
-      {/* Primary Section Navigation Tabs */}
+      {/* Explicit Dedicated Section Tabs for Selected Employee */}
       <div className="detail-tabs-nav">
         <button 
           className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
-          <User size={16} /> Overview & HR Profile
+          <User size={16} /> Profile & HR
         </button>
 
         <button 
-          className={`tab-btn ${activeTab === 'submissions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('submissions')}
+          className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
+          onClick={() => setActiveTab('tasks')}
         >
-          <ArrowDownLeft size={16} /> Received from Employee (Submissions)
+          <Briefcase size={16} /> Tasks ({employee.assignedByAdmin?.tasks?.length || 0})
+        </button>
+
+        <button 
+          className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reports')}
+        >
+          <FileText size={16} /> Daily Reports ({employee.sentByEmployee?.dailyReports?.length || 0})
+        </button>
+
+        <button 
+          className={`tab-btn ${activeTab === 'leaves' ? 'active' : ''}`}
+          onClick={() => setActiveTab('leaves')}
+        >
+          <Calendar size={16} /> Leave Applications ({employee.sentByEmployee?.leaveApplications?.length || 0})
+        </button>
+
+        <button 
+          className={`tab-btn ${activeTab === 'documents' ? 'active' : ''}`}
+          onClick={() => setActiveTab('documents')}
+        >
+          <FileCheck size={16} /> Documents ({employee.sentByEmployee?.uploadedDocs?.length || 0})
+        </button>
+
+        <button 
+          className={`tab-btn ${activeTab === 'attendance' ? 'active' : ''}`}
+          onClick={() => setActiveTab('attendance')}
+        >
+          <Clock size={16} /> Attendance Audit
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'management' ? 'active' : ''}`}
           onClick={() => setActiveTab('management')}
         >
-          <ArrowUpRight size={16} /> Assigned by Admin (Management Control)
+          <KeyRound size={16} /> Payroll & Access Roles
         </button>
       </div>
 
       {/* Main Content Body */}
       <div className="detail-tab-body">
         
-        {/* SECTION 1: OVERVIEW & HR PROFILE */}
+        {/* TAB 1: PROFILE & HR OVERVIEW */}
         {activeTab === 'profile' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
-                Personal & Employment Profile
+                Personal & Employment Details for {employee.fullName}
               </h3>
               {isEditing ? (
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -566,202 +604,203 @@ const EmployeeDetail = () => {
           </div>
         )}
 
-        {/* SECTION 2: SUBMISSIONS RECEIVED FROM EMPLOYEE */}
-        {activeTab === 'submissions' && (
+        {/* TAB 2: TASKS & DELIVERABLES SPECIFIC TO THIS EMPLOYEE */}
+        {activeTab === 'tasks' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            
-            {/* Sub-tabs Navigation */}
-            <div className="sub-tab-bar">
-              <button className={`sub-tab-btn ${subTab === 'reports' ? 'active' : ''}`} onClick={() => setSubTab('reports')}>
-                <FileText size={15} /> Daily Work Reports ({employee.sentByEmployee?.dailyReports?.length || 0})
-              </button>
-              <button className={`sub-tab-btn ${subTab === 'leaves' ? 'active' : ''}`} onClick={() => setSubTab('leaves')}>
-                <Calendar size={15} /> Leave Applications ({employee.sentByEmployee?.leaveApplications?.length || 0})
-              </button>
-              <button className={`sub-tab-btn ${subTab === 'docs' ? 'active' : ''}`} onClick={() => setSubTab('docs')}>
-                <Eye size={15} /> Uploaded Documents ({employee.sentByEmployee?.uploadedDocs?.length || 0})
-              </button>
-              <button className={`sub-tab-btn ${subTab === 'attendance' ? 'active' : ''}`} onClick={() => setSubTab('attendance')}>
-                <Clock size={15} /> Attendance & Work Audit
-              </button>
-            </div>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+              Tasks Assigned Specifically to {employee.fullName}
+            </h3>
 
-            {/* Sub-tab 1: Daily Reports */}
-            {subTab === 'reports' && (
-              <div>
-                <h4 className="section-title">Submitted Daily Work Reports</h4>
-                {(!employee.sentByEmployee?.dailyReports || employee.sentByEmployee.dailyReports.length === 0) ? (
-                  <div className="empty-state">No daily work reports submitted by this employee yet.</div>
-                ) : (
-                  employee.sentByEmployee.dailyReports.map(r => (
-                    <div key={r._id} className="item-row">
-                      <div>
-                        <strong style={{ fontSize: '0.95rem', color: '#fff' }}>{r.title}</strong>
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Date: {r.date} &bull; Time Logged: {r.hoursLogged}</span>
-                      </div>
-                      
-                      {/* Interactive Admin Approve / Reject Buttons */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <StatusBadge status={r.status} />
-                        {r.status !== 'Approved' && (
-                          <button className="action-btn-approve" title="Approve Report" onClick={() => handleReportAction(r._id, 'Approved')}>
-                            <Check size={14} /> Approve
-                          </button>
-                        )}
-                        {r.status !== 'Rejected' && (
-                          <button className="action-btn-reject" title="Reject Report" onClick={() => handleReportAction(r._id, 'Rejected')}>
-                            <X size={14} /> Reject
-                          </button>
-                        )}
-                      </div>
+            {/* List of Tasks Assigned to this Employee */}
+            {(!employee.assignedByAdmin?.tasks || employee.assignedByAdmin.tasks.length === 0) ? (
+              <div className="empty-state">No tasks currently assigned to {employee.fullName}. Use the form below to assign a task.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {employee.assignedByAdmin.tasks.map(t => (
+                  <div key={t._id} className="item-row">
+                    <div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{t.taskId}</span>
+                      <h4 style={{ margin: '0.2rem 0', fontSize: '0.95rem' }}>{t.title}</h4>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Due Date: {t.dueDate} &bull; Priority: <strong>{t.priority}</strong></span>
                     </div>
-                  ))
-                )}
+                    <StatusBadge status={t.status} />
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Sub-tab 2: Leaves */}
-            {subTab === 'leaves' && (
-              <div>
-                <h4 className="section-title">Submitted Leave Applications</h4>
-                {(!employee.sentByEmployee?.leaveApplications || employee.sentByEmployee.leaveApplications.length === 0) ? (
-                  <div className="empty-state">No leave applications submitted by this employee yet.</div>
-                ) : (
-                  employee.sentByEmployee.leaveApplications.map(l => (
-                    <div key={l._id} className="item-row">
-                      <div>
-                        <strong style={{ fontSize: '0.95rem', color: '#fff' }}>{l.leaveType} ({l.dates})</strong>
-                        <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>Reason: {l.reason}</p>
-                      </div>
-                      
-                      {/* Interactive Admin Approve / Reject Buttons */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <StatusBadge status={l.status} />
-                        {l.status !== 'Approved' && (
-                          <button className="action-btn-approve" title="Approve Leave" onClick={() => handleLeaveAction(l._id, 'Approved')}>
-                            <Check size={14} /> Approve
-                          </button>
-                        )}
-                        {l.status !== 'Rejected' && (
-                          <button className="action-btn-reject" title="Reject Leave" onClick={() => handleLeaveAction(l._id, 'Rejected')}>
-                            <X size={14} /> Reject
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-
-            {/* Sub-tab 3: Uploaded Documents */}
-            {subTab === 'docs' && (
-              <div>
-                <h4 className="section-title">Uploaded Identity & Verification Documents</h4>
-                {(!employee.sentByEmployee?.uploadedDocs || employee.sentByEmployee.uploadedDocs.length === 0) ? (
-                  <div className="empty-state">No identity or verification documents uploaded by this employee yet.</div>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-                    {employee.sentByEmployee.uploadedDocs.map((doc, i) => (
-                      <div key={i} className="doc-card">
-                        <div>
-                          <strong style={{ fontSize: '0.9rem', color: '#fff', display: 'block' }}>{doc.name}</strong>
-                          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{doc.type} &bull; {doc.size}</span>
-                        </div>
-                        <button className="btn btn-outline" style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}>
-                          <Download size={13} /> Download
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Sub-tab 4: Attendance Logs */}
-            {subTab === 'attendance' && (
-              <div>
-                <h4 className="section-title">Today's Attendance Session Audit</h4>
-                <div className="metrics-grid-4">
-                  <div className="metric-box">
-                    <span className="box-title">Today Status</span>
-                    <StatusBadge status={employee.sentByEmployee?.attendanceLogs?.todayStatus || 'Working'} />
-                  </div>
-                  <div className="metric-box">
-                    <span className="box-title">Check-In Time</span>
-                    <span className="box-val" style={{ color: 'var(--success)' }}>{employee.sentByEmployee?.attendanceLogs?.checkIn || '09:15 AM'}</span>
-                  </div>
-                  <div className="metric-box">
-                    <span className="box-title">Check-Out Time</span>
-                    <span className="box-val" style={{ color: 'var(--info)' }}>{employee.sentByEmployee?.attendanceLogs?.checkOut || '--:--'}</span>
-                  </div>
-                  <div className="metric-box">
-                    <span className="box-title">Work Time Logged</span>
-                    <span className="box-val" style={{ color: 'var(--primary-light)' }}>{employee.sentByEmployee?.attendanceLogs?.workTime || '5h 15m'}</span>
-                  </div>
+            {/* Assign New Task Panel */}
+            <div className="form-panel">
+              <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Plus size={16} /> Assign New Task to {employee.fullName}
+              </h4>
+              <form onSubmit={handleAssignTask} className="task-assign-form">
+                <div className="form-field">
+                  <label className="field-label">Task Title</label>
+                  <input type="text" placeholder="e.g. Implement Payment Gateway API" className="input-box" value={taskTitle} onChange={e => setTaskTitle(e.target.value)} required />
                 </div>
-              </div>
-            )}
-
+                <div className="form-field">
+                  <label className="field-label">Priority</label>
+                  <select className="input-box" value={taskPriority} onChange={e => setTaskPriority(e.target.value)}>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                  </select>
+                </div>
+                <div className="form-field">
+                  <label className="field-label">Due Date</label>
+                  <input type="date" className="input-box" value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} />
+                </div>
+                <div className="form-field btn-container">
+                  <button type="submit" disabled={isTaskSubmitting} className="assign-btn">
+                    {isTaskSubmitting ? 'Assigning...' : `Assign to ${employee.fullName}`}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
-        {/* SECTION 3: MANAGEMENT CONTROLS & ASSIGNED RESOURCES */}
+        {/* TAB 3: DAILY WORK REPORTS SUBMITTED BY THIS EMPLOYEE */}
+        {activeTab === 'reports' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+              Daily Work Reports Submitted by {employee.fullName}
+            </h3>
+
+            {(!employee.sentByEmployee?.dailyReports || employee.sentByEmployee.dailyReports.length === 0) ? (
+              <div className="empty-state">No daily work reports submitted by {employee.fullName} yet.</div>
+            ) : (
+              employee.sentByEmployee.dailyReports.map(r => (
+                <div key={r._id} className="item-row">
+                  <div>
+                    <strong style={{ fontSize: '0.95rem', color: '#fff' }}>{r.title}</strong>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Date: {r.date} &bull; Time Logged: {r.hoursLogged}</span>
+                  </div>
+                  
+                  {/* Interactive Admin Approve / Reject Buttons */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <StatusBadge status={r.status} />
+                    {r.status !== 'Approved' && (
+                      <button className="action-btn-approve" title="Approve Report" onClick={() => handleReportAction(r._id, 'Approved')}>
+                        <Check size={14} /> Approve
+                      </button>
+                    )}
+                    {r.status !== 'Rejected' && (
+                      <button className="action-btn-reject" title="Reject Report" onClick={() => handleReportAction(r._id, 'Rejected')}>
+                        <X size={14} /> Reject
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: LEAVE APPLICATIONS SUBMITTED BY THIS EMPLOYEE */}
+        {activeTab === 'leaves' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+              Leave Applications Submitted by {employee.fullName}
+            </h3>
+
+            {(!employee.sentByEmployee?.leaveApplications || employee.sentByEmployee.leaveApplications.length === 0) ? (
+              <div className="empty-state">No leave applications submitted by {employee.fullName} yet.</div>
+            ) : (
+              employee.sentByEmployee.leaveApplications.map(l => (
+                <div key={l._id} className="item-row">
+                  <div>
+                    <strong style={{ fontSize: '0.95rem', color: '#fff' }}>{l.leaveType} ({l.dates})</strong>
+                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>Reason: {l.reason}</p>
+                  </div>
+                  
+                  {/* Interactive Admin Approve / Reject Buttons */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <StatusBadge status={l.status} />
+                    {l.status !== 'Approved' && (
+                      <button className="action-btn-approve" title="Approve Leave" onClick={() => handleLeaveAction(l._id, 'Approved')}>
+                        <Check size={14} /> Approve
+                      </button>
+                    )}
+                    {l.status !== 'Rejected' && (
+                      <button className="action-btn-reject" title="Reject Leave" onClick={() => handleLeaveAction(l._id, 'Rejected')}>
+                        <X size={14} /> Reject
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* TAB 5: UPLOADED IDENTITY DOCUMENTS */}
+        {activeTab === 'documents' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+              Uploaded Verification Documents for {employee.fullName}
+            </h3>
+
+            {(!employee.sentByEmployee?.uploadedDocs || employee.sentByEmployee.uploadedDocs.length === 0) ? (
+              <div className="empty-state">No verification documents uploaded by {employee.fullName} yet.</div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                {employee.sentByEmployee.uploadedDocs.map((doc, i) => (
+                  <div key={i} className="doc-card">
+                    <div>
+                      <strong style={{ fontSize: '0.9rem', color: '#fff', display: 'block' }}>{doc.name}</strong>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{doc.type} &bull; {doc.size}</span>
+                    </div>
+                    <button className="btn btn-outline" style={{ padding: '0.35rem 0.75rem', fontSize: '0.78rem' }}>
+                      <Download size={13} /> Download
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 6: ATTENDANCE & WORK SESSION AUDIT */}
+        {activeTab === 'attendance' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+              Today's Attendance Audit for {employee.fullName}
+            </h3>
+
+            <div className="metrics-grid-4">
+              <div className="metric-box">
+                <span className="box-title">Today Status</span>
+                <StatusBadge status={employee.sentByEmployee?.attendanceLogs?.todayStatus || 'Working'} />
+              </div>
+              <div className="metric-box">
+                <span className="box-title">Check-In Time</span>
+                <span className="box-val" style={{ color: 'var(--success)' }}>{employee.sentByEmployee?.attendanceLogs?.checkIn || '09:15 AM'}</span>
+              </div>
+              <div className="metric-box">
+                <span className="box-title">Check-Out Time</span>
+                <span className="box-val" style={{ color: 'var(--info)' }}>{employee.sentByEmployee?.attendanceLogs?.checkOut || '--:--'}</span>
+              </div>
+              <div className="metric-box">
+                <span className="box-title">Work Time Logged</span>
+                <span className="box-val" style={{ color: 'var(--primary-light)' }}>{employee.sentByEmployee?.attendanceLogs?.workTime || '5h 15m'}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 7: MANAGEMENT, PAYROLL & SYSTEM CREDENTIALS */}
         {activeTab === 'management' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            
+            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+              Payroll & System Credentials for {employee.fullName}
+            </h3>
+
             <div className="detail-grid-2">
-              {/* Assign Tasks Card */}
-              <Card title={<><Briefcase size={16} style={{ marginRight: '0.5rem' }} /> Assign Tasks & Deliverables</>}>
-                {(!employee.assignedByAdmin?.tasks || employee.assignedByAdmin.tasks.length === 0) ? (
-                  <div className="empty-state" style={{ marginBottom: '1.5rem' }}>No tasks currently assigned to this employee.</div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                    {employee.assignedByAdmin.tasks.map(t => (
-                      <div key={t._id} className="item-row">
-                        <div>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{t.taskId}</span>
-                          <h4 style={{ margin: '0.2rem 0', fontSize: '0.95rem' }}>{t.title}</h4>
-                          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Due: {t.dueDate}</span>
-                        </div>
-                        <StatusBadge status={t.status} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Fixed Assign Task Form Layout */}
-                <div className="form-panel">
-                  <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: 'var(--primary-light)' }}>Assign New Task to {employee.fullName}</h4>
-                  <form onSubmit={handleAssignTask} className="task-assign-form">
-                    <div className="form-field">
-                      <label className="field-label">Task Title</label>
-                      <input type="text" placeholder="e.g. Develop Auth Component" className="input-box" value={taskTitle} onChange={e => setTaskTitle(e.target.value)} required />
-                    </div>
-                    <div className="form-field">
-                      <label className="field-label">Priority</label>
-                      <select className="input-box" value={taskPriority} onChange={e => setTaskPriority(e.target.value)}>
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                        <option value="Urgent">Urgent</option>
-                      </select>
-                    </div>
-                    <div className="form-field">
-                      <label className="field-label">Due Date</label>
-                      <input type="date" className="input-box" value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} />
-                    </div>
-                    <div className="form-field btn-container">
-                      <button type="submit" disabled={isTaskSubmitting} className="assign-btn">
-                        {isTaskSubmitting ? 'Assigning...' : 'Assign Task'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </Card>
-
               {/* Access Role & Credentials Card */}
-              <Card title={<><KeyRound size={16} style={{ marginRight: '0.5rem' }} /> System Role & Password Reset</>}>
+              <Card title={<><KeyRound size={16} style={{ marginRight: '0.5rem' }} /> Access Role & Account Status</>}>
                 <div className="form-grid-2">
                   <div className="form-field">
                     <label>System Access Role</label>
@@ -796,72 +835,39 @@ const EmployeeDetail = () => {
 
                 <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
                   <button className="btn btn-primary" onClick={handleSaveRoleStatus}>
-                    <Save size={15} /> Save Credentials & Role
+                    <Save size={15} /> Save Role & Credentials
                   </button>
                 </div>
               </Card>
-            </div>
 
-            {/* Salary Structure & Bank Card */}
-            <Card title={<><Banknote size={16} style={{ marginRight: '0.5rem' }} /> Monthly Salary Structure & Bank Account</>}>
-              <div className="form-grid-2">
-                <div className="form-field">
-                  <label>Monthly Base Salary (₹)</label>
-                  <input type="number" className="input-box" value={editSalary} onChange={e => setEditSalary(e.target.value)} />
-                </div>
-                <div className="form-field">
-                  <label>Bank Name</label>
-                  <input type="text" className="input-box" value={editBank} onChange={e => setEditBank(e.target.value)} placeholder="e.g. HDFC Bank" />
-                </div>
-                <div className="form-field">
-                  <label>Account Number</label>
-                  <input type="text" className="input-box" value={editAccNo} onChange={e => setEditAccNo(e.target.value)} placeholder="e.g. 501002345678" />
-                </div>
-                <div className="form-field">
-                  <label>IFSC Code</label>
-                  <input type="text" className="input-box" value={editIfsc} onChange={e => setEditIfsc(e.target.value)} placeholder="e.g. HDFC0001234" />
-                </div>
-              </div>
-
-              <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-                <button className="btn btn-primary" onClick={handleSaveSalary}>
-                  <Save size={15} /> Save Salary & Bank Details
-                </button>
-              </div>
-            </Card>
-
-            {/* Direct Push Notices & Deletion */}
-            <div className="detail-grid-2">
-              <Card title={<><Send size={16} style={{ marginRight: '0.5rem' }} /> Send Direct Push Announcement</>}>
-                <form onSubmit={handleSendAnnouncement} style={{ display: 'flex', gap: '0.75rem' }}>
-                  <input 
-                    type="text" 
-                    placeholder="Type message or push announcement..." 
-                    className="input-box" 
-                    style={{ flex: 1 }}
-                    value={announcementText}
-                    onChange={e => setAnnouncementText(e.target.value)}
-                    required
-                  />
-                  <button type="submit" className="btn btn-primary">
-                    <Send size={15} /> Send Notice
-                  </button>
-                </form>
-              </Card>
-
-              <Card title={<><ShieldAlert size={16} style={{ marginRight: '0.5rem' }} /> Permanent Account Deletion</>}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <strong style={{ color: '#ef4444', display: 'block' }}>Delete Account Record</strong>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Permanently remove this employee record</span>
+              {/* Salary & Bank Accounts Card */}
+              <Card title={<><Banknote size={16} style={{ marginRight: '0.5rem' }} /> Salary Structure & Bank Account</>}>
+                <div className="form-grid-2">
+                  <div className="form-field">
+                    <label>Monthly Salary (₹)</label>
+                    <input type="number" className="input-box" value={editSalary} onChange={e => setEditSalary(e.target.value)} />
                   </div>
-                  <button className="btn" style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#ef4444' }} onClick={handleDeleteAccount}>
-                    <Trash2 size={15} /> Delete Employee Account
+                  <div className="form-field">
+                    <label>Bank Name</label>
+                    <input type="text" className="input-box" value={editBank} onChange={e => setEditBank(e.target.value)} />
+                  </div>
+                  <div className="form-field">
+                    <label>Account Number</label>
+                    <input type="text" className="input-box" value={editAccNo} onChange={e => setEditAccNo(e.target.value)} />
+                  </div>
+                  <div className="form-field">
+                    <label>IFSC Code</label>
+                    <input type="text" className="input-box" value={editIfsc} onChange={e => setEditIfsc(e.target.value)} />
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button className="btn btn-primary" onClick={handleSaveSalary}>
+                    <Save size={15} /> Save Salary & Bank Info
                   </button>
                 </div>
               </Card>
             </div>
-
           </div>
         )}
 
