@@ -4,8 +4,8 @@ import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, Filter, CheckCircle, XCircle, Calendar, Clock, 
-  User, Eye, Check, X, Sparkles, AlertCircle, RefreshCw, FileText, Layers
+  Search, CheckCircle, XCircle, Calendar, Clock, 
+  Eye, Check, X, Sparkles, RefreshCw, FileText, Layers
 } from 'lucide-react';
 import './Modules.css';
 
@@ -299,62 +299,97 @@ const AdminLeave = () => {
         </motion.div>
       </div>
 
-      {/* Main Content Card */}
-      <Card style={{ background: 'rgba(15, 23, 42, 0.75)', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.5rem', backdropFilter: 'blur(16px)' }}>
+      {/* Main Content Card - High-Tech Glass Console */}
+      <Card style={{ 
+        background: 'linear-gradient(135deg, rgba(21, 32, 51, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%)', 
+        borderRadius: '24px', 
+        border: '1px solid rgba(255, 255, 255, 0.12)', 
+        padding: '1.75rem', 
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+      }}>
         
-        {/* Filter and Search Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+        {/* Filter and Search Control Bar Box */}
+        <div style={{ 
+          background: 'rgba(15, 23, 42, 0.65)', 
+          padding: '1rem 1.25rem', 
+          borderRadius: '18px', 
+          border: '1px solid rgba(255, 255, 255, 0.08)', 
+          backdropFilter: 'blur(12px)',
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          flexWrap: 'wrap', 
+          gap: '1rem', 
+          marginBottom: '1.75rem',
+          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+        }}>
           {/* Status Tabs */}
-          <div style={{ display: 'flex', background: 'rgba(0, 0, 0, 0.3)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', gap: '4px', overflowX: 'auto', maxWidth: '100%' }}>
+          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', maxWidth: '100%', padding: '2px' }}>
             {[
               { key: 'ALL', label: 'All Requests', count: stats.total },
               { key: 'Pending', label: 'Pending', count: stats.pending },
               { key: 'Approved', label: 'Approved', count: stats.approved },
               { key: 'Rejected', label: 'Rejected', count: stats.rejected }
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setStatusFilter(tab.key)}
-                style={{
-                  padding: '0.55rem 1.1rem',
-                  borderRadius: '9px',
-                  border: 'none',
-                  background: statusFilter === tab.key ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'transparent',
-                  color: statusFilter === tab.key ? '#fff' : 'var(--text-muted)',
-                  fontWeight: statusFilter === tab.key ? 700 : 500,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0
-                }}
-              >
-                <span>{tab.label}</span>
-                <span style={{
-                  background: statusFilter === tab.key ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.08)',
-                  padding: '2px 7px',
-                  borderRadius: '10px',
-                  fontSize: '0.75rem'
-                }}>
-                  {tab.count}
-                </span>
-              </button>
-            ))}
+            ].map(tab => {
+              const isActive = statusFilter === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setStatusFilter(tab.key)}
+                  style={{
+                    padding: '0.6rem 1.25rem',
+                    borderRadius: '12px',
+                    border: isActive ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    background: isActive 
+                      ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' 
+                      : 'rgba(255, 255, 255, 0.04)',
+                    color: isActive ? '#ffffff' : 'var(--text-muted)',
+                    fontWeight: isActive ? 700 : 600,
+                    fontSize: '0.86rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.55rem',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    boxShadow: isActive ? '0 6px 20px rgba(245, 158, 11, 0.4)' : 'none'
+                  }}
+                  onMouseOver={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.09)';
+                  }}
+                  onMouseOut={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  }}
+                >
+                  <span>{tab.label}</span>
+                  <span style={{
+                    background: isActive ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                    color: isActive ? '#ffffff' : '#cbd5e1',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800
+                  }}>
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Search Box */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            background: 'rgba(0, 0, 0, 0.35)',
+            background: 'rgba(0, 0, 0, 0.4)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '12px',
-            padding: '0 1rem',
+            borderRadius: '14px',
+            padding: '0 1.1rem',
             flex: 1,
-            minWidth: '240px'
+            minWidth: '260px',
+            transition: 'all 0.25s ease'
           }}>
             <Search size={18} color="var(--text-muted)" />
             <input 
@@ -366,26 +401,43 @@ const AdminLeave = () => {
                 background: 'transparent',
                 border: 'none',
                 color: '#fff',
-                padding: '0.65rem 0.75rem',
+                padding: '0.75rem 0.75rem',
                 outline: 'none',
                 width: '100%',
-                fontSize: '0.88rem'
+                fontSize: '0.9rem',
+                fontFamily: 'inherit'
               }}
             />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')} 
+                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px' }}
+                title="Clear Search"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Leave Table View */}
+        {/* Leave Table Container */}
         <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
-          <table className="data-table" style={{ width: '100%', minWidth: '780px', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+          <table className="data-table" style={{ width: '100%', minWidth: '780px', borderCollapse: 'separate', borderSpacing: '0 10px' }}>
             <thead>
-              <tr style={{ color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                <th style={{ padding: '0.8rem 1rem', textAlign: 'left' }}>Employee</th>
-                <th style={{ padding: '0.8rem 1rem', textAlign: 'left' }}>Leave Type</th>
-                <th style={{ padding: '0.8rem 1rem', textAlign: 'left' }}>Duration & Dates</th>
-                <th style={{ padding: '0.8rem 1rem', textAlign: 'left' }}>Reason Overview</th>
-                <th style={{ padding: '0.8rem 1rem', textAlign: 'center' }}>Status</th>
-                <th style={{ padding: '0.8rem 1rem', textAlign: 'right' }}>Actions</th>
+              <tr style={{ 
+                color: '#94a3b8', 
+                fontSize: '0.8rem', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.06em', 
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 700
+              }}>
+                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px 0 0 12px' }}>Employee</th>
+                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)' }}>Leave Type</th>
+                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)' }}>Duration & Dates</th>
+                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)' }}>Reason Overview</th>
+                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'center', background: 'rgba(30, 41, 59, 0.4)' }}>Status</th>
+                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'right', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '0 12px 12px 0' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -398,102 +450,103 @@ const AdminLeave = () => {
                     key={req._id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    transition={{ duration: 0.3, delay: index * 0.04 }}
                     style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      borderRadius: '12px',
-                      transition: 'all 0.2s ease',
-                      border: '1px solid rgba(255, 255, 255, 0.05)'
+                      background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%)',
+                      borderRadius: '16px',
+                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)'
                     }}
                     className="hover-lift"
                   >
                     {/* Employee info */}
-                    <td style={{ padding: '1rem', borderRadius: '12px 0 0 12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', minWidth: '150px' }}>
+                    <td style={{ padding: '1.1rem 1.25rem', borderRadius: '16px 0 0 16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: '160px' }}>
                         <div style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '10px',
-                          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                          width: '42px',
+                          height: '42px',
+                          borderRadius: '12px',
+                          background: 'linear-gradient(135deg, #6366f1, #3b82f6)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           color: '#fff',
-                          fontWeight: 700,
-                          fontSize: '0.9rem',
-                          boxShadow: '0 4px 10px rgba(99, 102, 241, 0.3)',
+                          fontWeight: 800,
+                          fontSize: '0.95rem',
+                          boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
                           flexShrink: 0
                         }}>
                           {empInitials}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem', whiteSpace: 'nowrap' }}>{req.employee?.fullName}</span>
-                          <span style={{ fontSize: '0.78rem', color: '#a5b4fc', whiteSpace: 'nowrap' }}>{req.employee?.employeeId || req.employeeId}</span>
+                          <span style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.95rem', whiteSpace: 'nowrap' }}>{req.employee?.fullName}</span>
+                          <span style={{ fontSize: '0.785rem', color: '#60a5fa', fontWeight: 600, whiteSpace: 'nowrap' }}>{req.employee?.employeeId || req.employeeId}</span>
                         </div>
                       </div>
                     </td>
 
                     {/* Leave Type */}
-                    <td style={{ padding: '1rem' }}>
+                    <td style={{ padding: '1.1rem 1.25rem' }}>
                       <span style={{
-                        padding: '0.4rem 0.8rem',
+                        padding: '0.4rem 0.85rem',
                         borderRadius: '20px',
                         fontSize: '0.8rem',
-                        fontWeight: 600,
+                        fontWeight: 700,
                         whiteSpace: 'nowrap',
                         display: 'inline-block',
-                        background: req.leaveType?.includes('Sick') ? 'rgba(239, 68, 68, 0.15)' :
-                                    req.leaveType?.includes('Casual') ? 'rgba(245, 158, 11, 0.15)' :
-                                    req.leaveType?.includes('Maternity') ? 'rgba(236, 72, 153, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                        background: req.leaveType?.includes('Sick') ? 'rgba(239, 68, 68, 0.18)' :
+                                    req.leaveType?.includes('Casual') ? 'rgba(245, 158, 11, 0.18)' :
+                                    req.leaveType?.includes('Maternity') ? 'rgba(236, 72, 153, 0.18)' : 'rgba(59, 130, 246, 0.18)',
                         color: req.leaveType?.includes('Sick') ? '#fca5a5' :
                                req.leaveType?.includes('Casual') ? '#fde68a' :
                                req.leaveType?.includes('Maternity') ? '#fbcfe8' : '#93c5fd',
-                        border: req.leaveType?.includes('Sick') ? '1px solid rgba(239, 68, 68, 0.3)' :
-                                req.leaveType?.includes('Casual') ? '1px solid rgba(245, 158, 11, 0.3)' :
-                                req.leaveType?.includes('Maternity') ? '1px solid rgba(236, 72, 153, 0.3)' : '1px solid rgba(59, 130, 246, 0.3)'
+                        border: req.leaveType?.includes('Sick') ? '1px solid rgba(239, 68, 68, 0.35)' :
+                                req.leaveType?.includes('Casual') ? '1px solid rgba(245, 158, 11, 0.35)' :
+                                req.leaveType?.includes('Maternity') ? '1px solid rgba(236, 72, 153, 0.35)' : '1px solid rgba(59, 130, 246, 0.35)'
                       }}>
                         {req.leaveType}
                       </span>
                     </td>
 
                     {/* Duration */}
-                    <td style={{ padding: '1rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: '145px' }}>
-                        <div style={{ fontSize: '0.88rem', color: '#e2e8f0', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '1.1rem 1.25rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '150px' }}>
+                        <div style={{ fontSize: '0.88rem', color: '#f1f5f9', fontWeight: 600, whiteSpace: 'nowrap' }}>
                           {req.startDate} to {req.endDate}
                         </div>
-                        <div style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: '0.785rem', color: '#fbbf24', fontWeight: 700, whiteSpace: 'nowrap' }}>
                           ⏱️ {days} {days === 1 ? 'Day' : 'Days'} Total
                         </div>
                       </div>
                     </td>
 
                     {/* Reason */}
-                    <td style={{ padding: '1rem', maxWidth: '240px' }}>
+                    <td style={{ padding: '1.1rem 1.25rem', maxWidth: '240px' }}>
                       <div style={{
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
-                        color: 'var(--text-muted)',
-                        fontSize: '0.85rem'
+                        color: '#cbd5e1',
+                        fontSize: '0.86rem'
                       }}>
                         {req.reason}
                       </div>
                     </td>
 
                     {/* Status */}
-                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    <td style={{ padding: '1.1rem 1.25rem', textAlign: 'center' }}>
                       <StatusBadge status={req.status} />
                     </td>
 
                     {/* Actions */}
-                    <td style={{ padding: '1rem', textAlign: 'right', borderRadius: '0 12px 12px 0' }}>
+                    <td style={{ padding: '1.1rem 1.25rem', textAlign: 'right', borderRadius: '0 16px 16px 0' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         <button
                           onClick={() => setSelectedLeave(req)}
                           style={{
-                            padding: '0.45rem 0.75rem',
-                            borderRadius: '8px',
+                            padding: '0.45rem 0.8rem',
+                            borderRadius: '10px',
                             background: 'rgba(255, 255, 255, 0.08)',
                             border: '1px solid rgba(255, 255, 255, 0.15)',
                             color: '#fff',
@@ -502,7 +555,7 @@ const AdminLeave = () => {
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.3rem',
+                            gap: '0.35rem',
                             transition: 'all 0.2s ease'
                           }}
                           title="View Full Application"
@@ -516,9 +569,9 @@ const AdminLeave = () => {
                             <button
                               onClick={() => handleStatusUpdate(req._id, 'Approved')}
                               style={{
-                                padding: '0.45rem 0.75rem',
-                                borderRadius: '8px',
-                                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9))',
+                                padding: '0.45rem 0.85rem',
+                                borderRadius: '10px',
+                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                                 border: 'none',
                                 color: '#fff',
                                 fontSize: '0.8rem',
@@ -526,8 +579,8 @@ const AdminLeave = () => {
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.3rem',
-                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                                gap: '0.35rem',
+                                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)'
                               }}
                             >
                               <Check size={15} />
@@ -536,9 +589,9 @@ const AdminLeave = () => {
                             <button
                               onClick={() => handleStatusUpdate(req._id, 'Rejected')}
                               style={{
-                                padding: '0.45rem 0.75rem',
-                                borderRadius: '8px',
-                                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(185, 28, 28, 0.9))',
+                                padding: '0.45rem 0.85rem',
+                                borderRadius: '10px',
+                                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                                 border: 'none',
                                 color: '#fff',
                                 fontSize: '0.8rem',
@@ -546,8 +599,8 @@ const AdminLeave = () => {
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.3rem',
-                                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                                gap: '0.35rem',
+                                boxShadow: '0 4px 14px rgba(239, 68, 68, 0.4)'
                               }}
                             >
                               <X size={15} />
@@ -555,7 +608,7 @@ const AdminLeave = () => {
                             </button>
                           </>
                         ) : (
-                          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', italic: 'true' }}>
+                          <span style={{ fontSize: '0.785rem', color: '#94a3b8', fontWeight: 600 }}>
                             {req.status === 'Approved' ? '✓ Authorized' : '✗ Declined'}
                           </span>
                         )}
@@ -565,16 +618,93 @@ const AdminLeave = () => {
                 );
               })}
 
+              {/* Masterpiece Animated Empty Console Card (When 0 Records) */}
               {filteredLeaves.length === 0 && (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '3.5rem 1rem' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem' }}>
-                      <AlertCircle size={40} color="var(--text-muted)" />
-                      <h4 style={{ margin: 0, color: '#fff' }}>No Leave Applications Found</h4>
-                      <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                        Try clearing search terms or changing selected status filters.
-                      </p>
-                    </div>
+                  <td colSpan="6" style={{ border: 'none', padding: '1.5rem 0' }}>
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.96 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.35 }}
+                      style={{
+                        background: 'radial-gradient(circle at 50% 30%, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                        border: '1px dashed rgba(245, 158, 11, 0.3)',
+                        borderRadius: '24px',
+                        padding: '3.5rem 2rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        gap: '1.25rem',
+                        boxShadow: 'inset 0 0 40px rgba(0, 0, 0, 0.4)'
+                      }}
+                    >
+                      {/* Multi-layer Glowing Icon Box */}
+                      <div style={{
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '24px',
+                        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%)',
+                        border: '1px solid rgba(245, 158, 11, 0.4)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 0 35px rgba(245, 158, 11, 0.3)',
+                        backdropFilter: 'blur(10px)'
+                      }}>
+                        <Calendar size={36} color="#fbbf24" />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', maxWidth: '540px' }}>
+                        <div style={{
+                          background: 'rgba(245, 158, 11, 0.15)',
+                          border: '1px solid rgba(245, 158, 11, 0.3)',
+                          color: '#fbbf24',
+                          padding: '0.35rem 0.95rem',
+                          borderRadius: '20px',
+                          fontSize: '0.785rem',
+                          fontWeight: 700,
+                          letterSpacing: '0.04em',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          marginBottom: '0.4rem'
+                        }}>
+                          <Sparkles size={13} /> 0 Active Leave Submissions
+                        </div>
+
+                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.02em' }}>
+                          No Leave Applications Found
+                        </h3>
+
+                        <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.925rem', lineHeight: 1.6 }}>
+                          All employee time-off requests, vacation applications, and authorization logs will appear here in real-time.
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginTop: '0.5rem' }}>
+                        {(searchTerm || statusFilter !== 'ALL') && (
+                          <button
+                            onClick={() => {
+                              setSearchTerm('');
+                              setStatusFilter('ALL');
+                            }}
+                            className="btn-outline-glass"
+                            style={{ fontSize: '0.85rem', padding: '0.55rem 1.1rem' }}
+                          >
+                            <X size={15} /> Clear Search & Filters
+                          </button>
+                        )}
+                        <button
+                          onClick={fetchLeaves}
+                          className="btn-primary-glow"
+                          style={{ fontSize: '0.85rem', padding: '0.55rem 1.2rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
+                        >
+                          <RefreshCw size={15} /> Refresh Consoles
+                        </button>
+                      </div>
+                    </motion.div>
                   </td>
                 </tr>
               )}
