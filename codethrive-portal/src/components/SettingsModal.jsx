@@ -31,8 +31,8 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
     setIsRefreshing(true);
     window.dispatchEvent(new CustomEvent('cti_global_refresh'));
     setTimeout(() => {
-      setIsRefreshing(false);
-    }, 800);
+      window.location.reload();
+    }, 250);
   };
 
   const handleLogout = async () => {

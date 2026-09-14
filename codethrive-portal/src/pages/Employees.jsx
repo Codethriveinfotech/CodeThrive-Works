@@ -106,6 +106,10 @@ const Employees = () => {
 
   useEffect(() => {
     fetchEmployees();
+
+    const handleRefreshEvent = () => fetchEmployees();
+    window.addEventListener('cti_global_refresh', handleRefreshEvent);
+    return () => window.removeEventListener('cti_global_refresh', handleRefreshEvent);
   }, []);
 
   const fetchEmployees = async () => {

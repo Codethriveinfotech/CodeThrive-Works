@@ -73,6 +73,10 @@ const Admin = () => {
 
   useEffect(() => {
     fetchStats();
+
+    const handleRefreshEvent = () => fetchStats();
+    window.addEventListener('cti_global_refresh', handleRefreshEvent);
+    return () => window.removeEventListener('cti_global_refresh', handleRefreshEvent);
   }, []);
 
   const handleRefresh = () => {

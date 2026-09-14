@@ -20,8 +20,8 @@ const Topbar = () => {
     setIsRefreshing(true);
     window.dispatchEvent(new CustomEvent('cti_global_refresh'));
     setTimeout(() => {
-      setIsRefreshing(false);
-    }, 800);
+      window.location.reload();
+    }, 250);
   };
 
   return (
