@@ -90,21 +90,21 @@ const MyProfile = () => {
       ]);
 
       let data = profileRes?.data?.data || profileRes?.data;
+      const isAdminUser = ['superadmin', 'admin', 'hr'].includes(user?.role?.toLowerCase() || '') || window.location.pathname.startsWith('/admin');
 
       // Fallback if profile data is empty
       if (!data || !data.fullName) {
-        const isAdmin = ['superadmin', 'admin', 'hr'].includes(user?.role?.toLowerCase());
         data = {
-          fullName: user?.fullName || user?.name || (user?.email ? user.email.split('@')[0].toUpperCase() : 'CodeThrive Employee'),
-          personalEmailAddress: user?.email || user?.personalEmailAddress || 'employee@codethrive.com',
+          fullName: user?.fullName || user?.name || (user?.email ? user.email.split('@')[0].toUpperCase() : 'CodeThrive Administrator'),
+          personalEmailAddress: user?.email || user?.personalEmailAddress || 'admin@codethrive.com',
           personalPhoneNumber: user?.phoneNumber || '9876543210',
-          employeeId: user?.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-002'),
-          designation: user?.designation || (isAdmin ? 'System Administrator' : 'Software Testing Specialist'),
-          department: user?.department || (isAdmin ? 'Management' : 'Quality Assurance & Software Testing'),
+          employeeId: user?.employeeId || (isAdminUser ? 'CTI-ADM-001' : 'CTI-EMP-002'),
+          designation: user?.designation || (isAdminUser ? 'Chief System Administrator' : 'Software Testing Specialist'),
+          department: user?.department || (isAdminUser ? 'Executive Management & System Control' : 'Quality Assurance & Software Testing'),
           employmentType: 'Full-Time',
           status: 'Active',
-          workLocation: 'Office',
-          skills: ['Software Testing', 'Quality Assurance', 'Automation Testing', 'React Control']
+          workLocation: isAdminUser ? 'Corporate HQ (Master Console)' : 'Office',
+          skills: isAdminUser ? ['System Governance', 'Enterprise Payroll Control', 'User Directory Access', 'Security Audit'] : ['Software Testing', 'Quality Assurance', 'Automation Testing', 'React Control']
         };
       }
 
@@ -309,6 +309,7 @@ const MyProfile = () => {
       setProfile(updated || { ...profile, ...updatePayload });
       setIsEditModalOpen(false);
     } catch (err) {
+      console.warn('Failed to update profile', err);
       setIsEditModalOpen(false);
     }
   };
@@ -383,6 +384,7 @@ const MyProfile = () => {
   if (!profile) return <div className="empty-state"><h3>Profile data unavailable</h3></div>;
 
   const profileStrength = calculateStrength();
+  const isAdmin = ['superadmin', 'admin', 'hr'].includes(user?.role?.toLowerCase() || '') || window.location.pathname.startsWith('/admin');
 
   return (
     <motion.div 
@@ -450,10 +452,18 @@ const MyProfile = () => {
                 <span className="pulse-dot"></span> Active
               </span>
               <span className="profile-badge-id">
-                <CreditCard size={13} /> {profile.employeeId || 'CTI-EMP-001'}
+                <CreditCard size={13} /> {profile.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-001')}
               </span>
-              <span className="profile-badge-role">
-                <ShieldCheck size={13} /> {user?.role ? user.role.toUpperCase() : 'MANAGEMENT'}
+              <span 
+                className="profile-badge-role"
+                style={isAdmin ? {
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.25))',
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  color: '#fbbf24',
+                  fontWeight: 700
+                } : {}}
+              >
+                <ShieldCheck size={13} /> {isAdmin ? 'EXECUTIVE SYSTEM ADMINISTRATOR' : (user?.role ? user.role.toUpperCase() : 'MANAGEMENT')}
               </span>
             </div>
 
@@ -569,6 +579,53 @@ const MyProfile = () => {
           4. FULL PAGE IT PROFILE DASHBOARD (NEAT, ORGANIZED CARDS)
          -------------------------------------------------------------------------- */}
       <div className="profile-main-grid">
+        {/* Admin Governance & Access Rights Card (For Admin Accounts) */}
+        {isAdmin && (
+          <Card title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <ShieldCheck size={22} color="#fbbf24" /> System Governance & SuperAdmin Privileges
+            </div>
+          }>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1.25rem' }}>
+              <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', padding: '1.1rem', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                  <Shield size={16} color="#fbbf24" />
+                  <span style={{ fontSize: '0.78rem', color: '#fde68a', textTransform: 'uppercase', fontWeight: 700 }}>User Management</span>
+                </div>
+                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.98rem' }}>Full Write & Approval</div>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Register, deactivate & manage organization staff</span>
+              </div>
+
+              <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '1.1rem', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                  <Zap size={16} color="#34d399" />
+                  <span style={{ fontSize: '0.78rem', color: '#a7f3d0', textTransform: 'uppercase', fontWeight: 700 }}>Payroll & Disbursement</span>
+                </div>
+                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.98rem' }}>Disbursement Authorized</div>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>1-Click bulk & single digital payslip generation</span>
+              </div>
+
+              <div style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '1.1rem', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                  <CheckCircle2 size={16} color="#60a5fa" />
+                  <span style={{ fontSize: '0.78rem', color: '#93c5fd', textTransform: 'uppercase', fontWeight: 700 }}>Leave & Attendance</span>
+                </div>
+                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.98rem' }}>Master Overrides Active</div>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Approve or reject organization leave applications</span>
+              </div>
+
+              <div style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.25)', padding: '1.1rem', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                  <Trophy size={16} color="#c084fc" />
+                  <span style={{ fontSize: '0.78rem', color: '#e9d5ff', textTransform: 'uppercase', fontWeight: 700 }}>Security Level</span>
+                </div>
+                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.98rem' }}>Tier-1 Root Clearance</div>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Master system audit logs & security control</span>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Card 1: Personal Details & Identity */}
         <Card title={
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
