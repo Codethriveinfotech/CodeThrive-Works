@@ -8,144 +8,15 @@ import api from '../utils/api';
 import StatusBadge from './common/StatusBadge';
 import Card from './common/Card';
 
-const DEFAULT_ONBOARDING_DATA = [
-  {
-    _id: 'emp_001',
-    employeeId: 'CTI-EMP-001',
-    fullName: 'Mahadevan',
-    personalEmailAddress: 'mahadevan@codethrive.com',
-    personalPhoneNumber: '9876543210',
-    department: 'Engineering',
-    designation: 'Senior Full Stack Developer',
-    status: 'Active',
-    dateOfJoining: '2025-01-15',
-    salaryAmount: 85000,
-    bankName: 'HDFC Bank',
-    accountNumber: '50100234567890',
-    ifscCode: 'HDFC0001234',
-    user: { role: 'employee', status: 'active' },
-    // Sent by Employee to Us
-    sentByEmployee: {
-      dailyReports: [],
-      leaveApplications: [],
-      uploadedDocs: [],
-      attendanceLogs: {
-        todayStatus: 'Working',
-        checkIn: '09:00 AM',
-        checkOut: '--:--',
-        workTime: '0h 0m',
-        breakTime: '0m'
-      },
-      supportTickets: []
-    },
-    // Given / Assigned by Admin to Employee
-    assignedByAdmin: {
-      tasks: [],
-      credentials: {
-        role: 'employee',
-        status: 'Active',
-        lastPasswordReset: '-'
-      },
-      payroll: {
-        salary: 85000,
-        bankName: 'HDFC Bank',
-        accNo: '50100234567890',
-        ifsc: 'HDFC0001234',
-        lastPayslipGenerated: '-'
-      },
-      notificationsSent: []
-    }
-  },
-  {
-    _id: 'emp_002',
-    employeeId: 'CTI-EMP-002',
-    fullName: 'Priya Sharma',
-    personalEmailAddress: 'priya@codethrive.com',
-    personalPhoneNumber: '9876543211',
-    department: 'UI/UX Design',
-    designation: 'Lead Product Designer',
-    status: 'Active',
-    dateOfJoining: '2025-03-01',
-    salaryAmount: 78000,
-    bankName: 'ICICI Bank',
-    accountNumber: '000401567891',
-    ifscCode: 'ICIC0000004',
-    user: { role: 'teamlead', status: 'active' },
-    sentByEmployee: {
-      dailyReports: [
-        { _id: 'dr3', date: '2026-09-09', title: 'Designed Figma Mockups for Mobile HRMS App', hoursLogged: '7.0h', status: 'Approved' }
-      ],
-      leaveApplications: [],
-      uploadedDocs: [
-        { name: 'Priya_Design_Portfolio.pdf', type: 'Resume', date: '2025-03-01', size: '4.5 MB' },
-        { name: 'Aadhaar_Priya.pdf', type: 'Identity Proof', date: '2025-03-01', size: '1.1 MB' }
-      ],
-      attendanceLogs: {
-        todayStatus: 'On Break',
-        checkIn: '09:30 AM',
-        checkOut: '--:--',
-        workTime: '4h 30m',
-        breakTime: '20m'
-      },
-      supportTickets: []
-    },
-    assignedByAdmin: {
-      tasks: [
-        { _id: 't3', taskId: 'TSK-103', title: 'Redesign Admin Employee Management UI', priority: 'Urgent', status: 'In Progress', dueDate: '2026-09-11' }
-      ],
-      credentials: { role: 'teamlead', status: 'Active', lastPasswordReset: '2026-07-15' },
-      payroll: { salary: 78000, bankName: 'ICICI Bank', accNo: '000401567891', ifsc: 'ICIC0000004', lastPayslipGenerated: 'August 2026' },
-      notificationsSent: [
-        { _id: 'n3', title: 'Design System Guidelines Updated', date: '2026-08-20' }
-      ]
-    }
-  },
-  {
-    _id: 'emp_003',
-    employeeId: 'CTI-EMP-003',
-    fullName: 'Rahul Verma',
-    personalEmailAddress: 'rahul@codethrive.com',
-    personalPhoneNumber: '9876543212',
-    department: 'Management',
-    designation: 'Senior Engineering Lead',
-    status: 'Active',
-    dateOfJoining: '2024-11-10',
-    salaryAmount: 110000,
-    bankName: 'Axis Bank',
-    accountNumber: '9180200345678',
-    ifscCode: 'UTIB0000180',
-    user: { role: 'admin', status: 'active' },
-    sentByEmployee: {
-      dailyReports: [
-        { _id: 'dr4', date: '2026-09-08', title: 'Sprint Review & Architecture Planning', hoursLogged: '8.0h', status: 'Approved' }
-      ],
-      leaveApplications: [],
-      uploadedDocs: [
-        { name: 'Rahul_ID_Proof.pdf', type: 'Identity Proof', date: '2024-11-10', size: '1.5 MB' }
-      ],
-      attendanceLogs: { todayStatus: 'Checked Out', checkIn: '08:45 AM', checkOut: '05:15 PM', workTime: '8h 00m', breakTime: '30m' },
-      supportTickets: []
-    },
-    assignedByAdmin: {
-      tasks: [
-        { _id: 't4', taskId: 'TSK-104', title: 'Q3 Product Deliverables Review', priority: 'High', status: 'Completed', dueDate: '2026-09-08' }
-      ],
-      credentials: { role: 'admin', status: 'Active', lastPasswordReset: '2026-06-01' },
-      payroll: { salary: 110000, bankName: 'Axis Bank', accNo: '9180200345678', ifsc: 'UTIB0000180', lastPayslipGenerated: 'August 2026' },
-      notificationsSent: []
-    }
-  }
-];
-
 const RegistrationHubModal = ({ isOpen, onClose }) => {
-  const [employees, setEmployees] = useState(DEFAULT_ONBOARDING_DATA);
-  const [selectedEmp, setSelectedEmp] = useState(DEFAULT_ONBOARDING_DATA[0]);
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmp, setSelectedEmp] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeSide, setActiveSide] = useState('received'); // 'received' (Sent by Employee) vs 'given' (Assigned by Admin)
+  const [activeSide, setActiveSide] = useState('received'); // 'received' vs 'given'
 
   // Sub-tabs
-  const [receivedSubTab, setReceivedSubTab] = useState('reports'); // reports, leaves, docs, attendance
-  const [givenSubTab, setGivenSubTab] = useState('tasks'); // tasks, credentials, payroll, notifications
+  const [receivedSubTab, setReceivedSubTab] = useState('reports');
+  const [givenSubTab, setGivenSubTab] = useState('tasks');
 
   // Forms
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -165,17 +36,33 @@ const RegistrationHubModal = ({ isOpen, onClose }) => {
   const fetchEmployees = async () => {
     try {
       const res = await api.get('/employees');
-      if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        // Merge with default bidirectional structure
-        const merged = res.data.data.map((emp, i) => ({
-          ...DEFAULT_ONBOARDING_DATA[i % DEFAULT_ONBOARDING_DATA.length],
-          ...emp
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const liveData = res.data.data.map(emp => ({
+          ...emp,
+          sentByEmployee: emp.sentByEmployee || {
+            dailyReports: [],
+            leaveApplications: [],
+            uploadedDocs: [],
+            attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '0h 0m', breakTime: '0m' },
+            supportTickets: []
+          },
+          assignedByAdmin: emp.assignedByAdmin || {
+            tasks: [],
+            credentials: { role: emp.user?.role || 'employee', status: emp.status || 'Active', lastPasswordReset: '-' },
+            payroll: { salary: emp.salaryAmount || 60000, bankName: emp.bankName || 'N/A', accNo: emp.accountNumber || 'N/A', ifsc: emp.ifscCode || 'N/A', lastPayslipGenerated: '-' },
+            notificationsSent: []
+          }
         }));
-        setEmployees(merged);
-        if (merged.length > 0) setSelectedEmp(merged[0]);
+        setEmployees(liveData);
+        if (liveData.length > 0) setSelectedEmp(liveData[0]);
+      } else {
+        setEmployees([]);
+        setSelectedEmp(null);
       }
     } catch (err) {
-      console.warn('Using default onboarding data');
+      console.warn('Failed to fetch employees for registration hub:', err);
+      setEmployees([]);
+      setSelectedEmp(null);
     }
   };
 

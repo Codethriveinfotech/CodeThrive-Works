@@ -1,16 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Settings, ChevronDown, UserCheck, ChevronRight, User, RefreshCw, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SettingsModal from './SettingsModal';
 import GlobalSearchBar from './GlobalSearchBar';
-
-const DEMO_ONBOARDING_STAFF = [
-  { _id: 'emp_001', name: 'Mahadhevan', id: 'CTI-EMP-001', role: 'Senior Developer', dept: 'Engineering' },
-  { _id: 'emp_002', name: 'Priya Sharma', id: 'CTI-EMP-002', role: 'Product Designer', dept: 'UI/UX Design' },
-  { _id: 'emp_003', name: 'Rahul Verma', id: 'CTI-EMP-003', role: 'Engineering Lead', dept: 'Management' },
-  { _id: 'emp_004', name: 'Ananya Roy', id: 'CTI-EMP-004', role: 'HR Manager', dept: 'HR' }
-];
+import api from '../utils/api';
 
 const AdminTopbar = () => {
   const { user } = useAuth();
@@ -18,6 +12,36 @@ const AdminTopbar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showRegDropdown, setShowRegDropdown] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [registeredStaff, setRegisteredStaff] = useState([]);
+
+  useEffect(() => {
+    fetchRegisteredStaff();
+
+    const handleRefreshEvent = () => fetchRegisteredStaff();
+    window.addEventListener('cti_global_refresh', handleRefreshEvent);
+    return () => window.removeEventListener('cti_global_refresh', handleRefreshEvent);
+  }, []);
+
+  const fetchRegisteredStaff = async () => {
+    try {
+      const res = await api.get('/employees');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const mapped = res.data.data.map(emp => ({
+          _id: emp._id,
+          name: emp.fullName || 'Employee',
+          id: emp.employeeId || 'CTI-EMP-001',
+          role: emp.designation || 'Software Engineer',
+          dept: emp.department || 'Engineering'
+        }));
+        setRegisteredStaff(mapped);
+      } else {
+        setRegisteredStaff([]);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch registered staff for topbar popover', err);
+      setRegisteredStaff([]);
+    }
+  };
 
   const getInitials = (name) => {
     if (!name) return 'A';
@@ -31,6 +55,7 @@ const AdminTopbar = () => {
 
   const handleGlobalRefresh = () => {
     setIsRefreshing(true);
+    fetchRegisteredStaff();
     window.dispatchEvent(new CustomEvent('cti_global_refresh'));
     setTimeout(() => {
       setIsRefreshing(false);
@@ -89,7 +114,7 @@ const AdminTopbar = () => {
                 background: '#ef4444', color: '#fff', fontSize: '0.7rem', fontWeight: 700, 
                 padding: '1px 6px', borderRadius: '10px' 
               }}>
-                4
+                {registeredStaff.length}
               </span>
             </button>
 
@@ -116,35 +141,41 @@ const AdminTopbar = () => {
                 </div>
 
                 <div style={{ maxHeight: '280px', overflowY: 'auto', padding: '0.35rem' }}>
-                  {DEMO_ONBOARDING_STAFF.map(staff => (
-                    <div 
-                      key={staff._id}
-                      onClick={() => handleSelectEmployee(staff._id)}
-                      style={{
-                        padding: '0.65rem 0.85rem',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        transition: 'background 0.2s',
-                        marginBottom: '2px'
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)'}
-                      onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.8rem' }}>
-                          {staff.name.charAt(0)}
-                        </div>
-                        <div>
-                          <strong style={{ fontSize: '0.85rem', color: '#fff', display: 'block' }}>{staff.name}</strong>
-                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{staff.dept} &bull; {staff.id}</span>
-                        </div>
-                      </div>
-                      <ChevronRight size={15} color="var(--text-muted)" />
+                  {registeredStaff.length === 0 ? (
+                    <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                      No registered employees found.
                     </div>
-                  ))}
+                  ) : (
+                    registeredStaff.map(staff => (
+                      <div 
+                        key={staff._id}
+                        onClick={() => handleSelectEmployee(staff._id)}
+                        style={{
+                          padding: '0.65rem 0.85rem',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          transition: 'background 0.2s',
+                          marginBottom: '2px'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)'}
+                        onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.8rem' }}>
+                            {staff.name.charAt(0)}
+                          </div>
+                          <div>
+                            <strong style={{ fontSize: '0.85rem', color: '#fff', display: 'block' }}>{staff.name}</strong>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{staff.dept} &bull; {staff.id}</span>
+                          </div>
+                        </div>
+                        <ChevronRight size={15} color="var(--text-muted)" />
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
