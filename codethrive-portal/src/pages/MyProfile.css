@@ -671,15 +671,129 @@
 }
 
 @media (max-width: 768px) {
-  .profile-cover-content {
-    flex-direction: column;
-    align-items: flex-start;
+  .profile-workspace-container {
+    gap: 1rem !important;
+    padding: 0 0 1.5rem 0 !important;
   }
+
+  .profile-executive-header {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+    gap: 1.25rem !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .profile-header-left {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 1rem !important;
+    min-width: unset !important;
+    width: 100% !important;
+  }
+
+  .profile-avatar-wrapper {
+    width: 90px !important;
+    height: 90px !important;
+  }
+
+  .profile-identity-info {
+    min-width: unset !important;
+    width: 100% !important;
+  }
+
+  .profile-user-name {
+    font-size: 1.4rem !important;
+  }
+
+  .profile-user-title {
+    justify-content: center !important;
+    font-size: 0.825rem !important;
+    gap: 0.4rem !important;
+  }
+
+  .profile-header-actions {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  .btn-outline-glass,
+  .btn-primary-glow {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 0.65rem 0.5rem !important;
+    font-size: 0.825rem !important;
+    border-radius: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  .btn-glass-icon {
+    width: 38px !important;
+    height: 38px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Fix 4 Stat Cards from squeezing vertically into 1 row on mobile */
+  .header-stats-strip {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .header-stat-box {
+    padding: 0.85rem 0.9rem !important;
+    gap: 0.65rem !important;
+    border-radius: 14px !important;
+  }
+
+  .quick-stat-icon {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .quick-stat-label {
+    font-size: 0.675rem !important;
+  }
+
+  .quick-stat-value {
+    font-size: 0.825rem !important;
+    word-break: break-all !important;
+    line-height: 1.25 !important;
+  }
+
   .profile-strength-bar-card {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.85rem !important;
+    padding: 1rem !important;
+    border-radius: 14px !important;
   }
+
+  .strength-track {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
   .avatar-preset-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-stats-strip {
+    grid-template-columns: 1fr !important;
+    gap: 0.65rem !important;
+  }
+
+  .header-stat-box {
+    padding: 0.85rem 1rem !important;
+  }
+
+  .quick-stat-value {
+    font-size: 0.88rem !important;
   }
 }
