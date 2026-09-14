@@ -376,7 +376,7 @@ const AdminLeave = () => {
         {/* Filter and Search Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
           {/* Status Tabs */}
-          <div style={{ display: 'flex', background: 'rgba(0, 0, 0, 0.3)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', gap: '4px' }}>
+          <div style={{ display: 'flex', background: 'rgba(0, 0, 0, 0.3)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)', gap: '4px', overflowX: 'auto', maxWidth: '100%' }}>
             {[
               { key: 'ALL', label: 'All Requests', count: stats.total },
               { key: 'Pending', label: 'Pending', count: stats.pending },
@@ -398,7 +398,9 @@ const AdminLeave = () => {
                   transition: 'all 0.2s ease',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.5rem',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
                 }}
               >
                 <span>{tab.label}</span>
@@ -422,7 +424,8 @@ const AdminLeave = () => {
             border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '12px',
             padding: '0 1rem',
-            width: '280px'
+            flex: 1,
+            minWidth: '240px'
           }}>
             <Search size={18} color="var(--text-muted)" />
             <input 
@@ -444,8 +447,8 @@ const AdminLeave = () => {
         </div>
 
         {/* Leave Table View */}
-        <div className="table-responsive" style={{ overflowX: 'auto' }}>
-          <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+        <div className="table-responsive" style={{ overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' }}>
+          <table className="data-table" style={{ width: '100%', minWidth: '780px', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
             <thead>
               <tr style={{ color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 <th style={{ padding: '0.8rem 1rem', textAlign: 'left' }}>Employee</th>
@@ -477,7 +480,7 @@ const AdminLeave = () => {
                   >
                     {/* Employee info */}
                     <td style={{ padding: '1rem', borderRadius: '12px 0 0 12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', minWidth: '150px' }}>
                         <div style={{
                           width: '40px',
                           height: '40px',
@@ -489,13 +492,14 @@ const AdminLeave = () => {
                           color: '#fff',
                           fontWeight: 700,
                           fontSize: '0.9rem',
-                          boxShadow: '0 4px 10px rgba(99, 102, 241, 0.3)'
+                          boxShadow: '0 4px 10px rgba(99, 102, 241, 0.3)',
+                          flexShrink: 0
                         }}>
                           {empInitials}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>{req.employee?.fullName}</span>
-                          <span style={{ fontSize: '0.78rem', color: '#a5b4fc' }}>{req.employee?.employeeId || req.employeeId}</span>
+                          <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem', whiteSpace: 'nowrap' }}>{req.employee?.fullName}</span>
+                          <span style={{ fontSize: '0.78rem', color: '#a5b4fc', whiteSpace: 'nowrap' }}>{req.employee?.employeeId || req.employeeId}</span>
                         </div>
                       </div>
                     </td>
@@ -507,6 +511,8 @@ const AdminLeave = () => {
                         borderRadius: '20px',
                         fontSize: '0.8rem',
                         fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        display: 'inline-block',
                         background: req.leaveType?.includes('Sick') ? 'rgba(239, 68, 68, 0.15)' :
                                     req.leaveType?.includes('Casual') ? 'rgba(245, 158, 11, 0.15)' :
                                     req.leaveType?.includes('Maternity') ? 'rgba(236, 72, 153, 0.15)' : 'rgba(59, 130, 246, 0.15)',
@@ -523,11 +529,11 @@ const AdminLeave = () => {
 
                     {/* Duration */}
                     <td style={{ padding: '1rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                        <div style={{ fontSize: '0.88rem', color: '#e2e8f0', fontWeight: 600 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: '145px' }}>
+                        <div style={{ fontSize: '0.88rem', color: '#e2e8f0', fontWeight: 600, whiteSpace: 'nowrap' }}>
                           {req.startDate} to {req.endDate}
                         </div>
-                        <div style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700 }}>
+                        <div style={{ fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700, whiteSpace: 'nowrap' }}>
                           ⏱️ {days} {days === 1 ? 'Day' : 'Days'} Total
                         </div>
                       </div>
