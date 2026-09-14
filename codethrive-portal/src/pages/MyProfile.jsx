@@ -280,9 +280,6 @@ const MyProfile = () => {
               <span>{profile.designation || 'Specialist'}</span>
               <span>•</span>
               <span>{profile.department || 'Quality Assurance'}</span>
-              <span className="profile-badge-status">
-                <ShieldCheck size={13} /> VERIFIED VAULT
-              </span>
             </div>
           </div>
         </div>

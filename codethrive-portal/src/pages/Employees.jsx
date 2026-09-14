@@ -363,8 +363,7 @@ const Employees = () => {
       {/* Header Banner */}
       <div className="page-header-hero">
         <div>
-          <span style={{ fontSize: '0.85rem', color: 'var(--primary-light)', fontWeight: 600, letterSpacing: '0.5px' }}>ADMINISTRATION CONSOLE</span>
-          <h1 style={{ fontSize: '1.8rem', margin: '0.25rem 0 0.4rem 0', fontWeight: 700 }}>Registered Employees Directory</h1>
+          <h1 style={{ fontSize: '1.8rem', margin: '0 0 0.4rem 0', fontWeight: 700 }}>Registered Employees Directory</h1>
           <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem' }}>
             Full Administrative Oversight of Registered Staff Profiles, Submissions, Tasks, Payroll & Account Access
           </p>

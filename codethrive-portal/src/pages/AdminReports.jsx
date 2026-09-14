@@ -193,10 +193,6 @@ const AdminReports = () => {
       <div className="ultra-premium-hero">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
           <div>
-            <div className="live-console-badge" style={{ marginBottom: '0.5rem' }}>
-              <Sparkles size={14} color="#34d399" />
-              <span>EOD Submissions Audit</span>
-            </div>
             <h1 className="welcome-title-glowing">Daily Work Reports Audit</h1>
             <p style={{ color: '#94a3b8', margin: '0.2rem 0 0 0', fontSize: '0.95rem' }}>
               Audit & Review End-of-Day Work Reports Submitted by Employees with One-Click Approvals

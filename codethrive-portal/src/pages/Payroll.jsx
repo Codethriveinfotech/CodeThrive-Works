@@ -290,10 +290,6 @@ const Payroll = () => {
          -------------------------------------------------------------------------- */}
       <div className="payroll-hero-banner">
         <div className="hero-left-content">
-          <div className="hero-badge-pill">
-            <Sparkles size={14} className="sparkle-icon" />
-            <span>SALARY & DISBURSEMENT INTELLIGENCE</span>
-          </div>
           <h1 className="hero-main-title">My Payslips & Compensation</h1>
           <p className="hero-subtext">
             Access monthly itemized salary statements, tax deduction breakdowns, and download official PDF payslips.

@@ -276,10 +276,6 @@ const Admin = () => {
       <div className="ultra-premium-hero">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
           <div>
-            <div className="live-console-badge" style={{ marginBottom: '0.6rem' }}>
-              <span className="live-beacon-dot"></span>
-              <span>Live Executive Control Center</span>
-            </div>
             <h1 className="welcome-title-glowing">Employee Attendance & Task Console</h1>
             <p style={{ color: '#94a3b8', margin: '0.2rem 0 0 0', fontSize: '0.95rem' }}>
               Real-Time Attendance Monitoring, Daily Reports Review & 360° Employee Workspace Control

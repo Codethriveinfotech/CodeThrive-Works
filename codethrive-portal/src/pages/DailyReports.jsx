@@ -248,10 +248,6 @@ const DailyReports = () => {
          -------------------------------------------------------------------------- */}
       <div className="reports-hero-banner">
         <div className="hero-left-content">
-          <div className="hero-badge-pill">
-            <Sparkles size={14} className="sparkle-icon" />
-            <span>DAILY WORKLOG INTELLIGENCE</span>
-          </div>
           <h1 className="hero-main-title">Today's Work & Daily Logs</h1>
           <p className="hero-subtext">
             Log project titles, tasks worked on, submitting dates, working hours, work summary, issues/blockers, and process status.

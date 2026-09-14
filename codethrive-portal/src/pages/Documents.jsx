@@ -241,10 +241,6 @@ const Documents = () => {
          -------------------------------------------------------------------------- */}
       <div className="documents-hero-banner">
         <div className="hero-left-content">
-          <div className="hero-badge-pill">
-            <Sparkles size={14} className="sparkle-icon" />
-            <span>SECURE ENCRYPTED VAULT</span>
-          </div>
           <h1 className="hero-main-title">Document & Credentials Hub</h1>
           <p className="hero-subtext">
             Upload, store, and organize your official identity proofs, educational certificates, employment contracts, tax filings, and company policies.

@@ -293,10 +293,6 @@ const AdminTasks = () => {
       <div className="ultra-premium-hero">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
           <div>
-            <div className="live-console-badge" style={{ marginBottom: '0.5rem' }}>
-              <Sparkles size={14} color="#34d399" />
-              <span>Deliverables Oversight</span>
-            </div>
             <h1 className="welcome-title-glowing">Task Management Console</h1>
             <p style={{ color: '#94a3b8', margin: '0.2rem 0 0 0', fontSize: '0.95rem' }}>
               Create, Assign & Audit Employee Tasks with Priority Status & Due Date Tracking

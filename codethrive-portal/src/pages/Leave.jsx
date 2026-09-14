@@ -245,10 +245,6 @@ _Submitted automatically via CodeThrive HR Portal_`;
          -------------------------------------------------------------------------- */}
       <div className="leave-hero-banner">
         <div className="hero-left-content">
-          <div className="hero-badge-pill">
-            <Sparkles size={14} className="sparkle-icon" />
-            <span>TIME-OFF & ATTENDANCE MANAGEMENT</span>
-          </div>
           <h1 className="hero-main-title">Leave & Attendance Hub</h1>
           <p className="hero-subtext">
             Track casual and sick balances, monitor unpaid leaves (when monthly limit exceeds 2 days), and submit time-off requests seamlessly.
