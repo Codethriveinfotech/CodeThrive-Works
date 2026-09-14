@@ -9,7 +9,7 @@ import {
   Briefcase, Shield, Camera, Edit3, GraduationCap,
   Sparkles, Trophy, CreditCard, Calendar,
   ShieldCheck, Zap, Landmark, CheckCircle2, Sliders,
-  RotateCw, ZoomIn
+  RotateCw, ZoomIn, Building2, Globe, Users
 } from 'lucide-react';
 import './MyProfile.css';
 
@@ -22,6 +22,50 @@ const MyProfile = () => {
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const isAdminPath = window.location.pathname.startsWith('/admin');
+  const [activeProfileTab, setActiveProfileTab] = useState(isAdminPath ? 'company' : 'personal');
+
+  const [companyProfile, setCompanyProfile] = useState(() => {
+    const saved = localStorage.getItem('cti_company_profile');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { console.warn(e); }
+    }
+    return {
+      companyName: 'CodeThrive Infotech Pvt Ltd',
+      tagline: 'Enterprise Digital Transformation & Software Solutions',
+      registrationNumber: 'CIN-U72900TN2024PTC168920',
+      gstin: '33AABCC1234D1Z5',
+      panNumber: 'AABCC1234D',
+      foundedYear: '2024',
+      employeeCount: '25+ Active Tech Specialists',
+      officialEmail: 'contact@codethrive.com',
+      supportEmail: 'support@codethrive.com',
+      officialPhone: '+91 98765 43210',
+      headquarters: 'CodeThrive Works Tower, Level 4, Tech Park, Chennai, TN, India - 600096',
+      website: 'https://codethrive.com',
+      bankName: 'HDFC Bank Ltd',
+      accountNumber: '50200088991122',
+      ifscCode: 'HDFC0001234',
+      branchName: 'IT Park Branch, Chennai',
+      leadershipMembers: [
+        { id: 1, name: 'Mahadevan', title: 'Chief Executive Officer (CEO)', email: 'mahadevan@codethrive.com', phone: '+91 98765 43210', role: 'SuperAdmin' },
+        { id: 2, name: 'Kirubakaran', title: 'Managing Director (MD)', email: 'kirubakaran@codethrive.com', phone: '+91 98765 43211', role: 'SuperAdmin' },
+        { id: 3, name: 'Sarah Jenkins', title: 'Lead Product & UI/UX Designer', email: 'sarah.j@codethrive.com', phone: '+91 98765 43212', role: 'Admin' },
+        { id: 4, name: 'Alex Rivera', title: 'Head of Engineering & QA', email: 'alex.r@codethrive.com', phone: '+91 98765 43213', role: 'Admin' }
+      ]
+    };
+  });
+
+  const [isCompanyEditModalOpen, setIsCompanyEditModalOpen] = useState(false);
+  const [companyFormData, setCompanyFormData] = useState(companyProfile);
+
+  const handleCompanySave = (e) => {
+    e.preventDefault();
+    setCompanyProfile(companyFormData);
+    localStorage.setItem('cti_company_profile', JSON.stringify(companyFormData));
+    setIsCompanyEditModalOpen(false);
+  };
+
   const [modalFormTab, setModalFormTab] = useState('personal');
 
   // Interactive Image Adjust / Crop Modal States
@@ -393,6 +437,258 @@ const MyProfile = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
     >
+      {/* Admin View Mode Switcher (Company Profile vs My Admin Profile) */}
+      {isAdmin && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '16px', padding: '0.6rem 0.8rem', backdropFilter: 'blur(16px)', flexWrap: 'wrap', gap: '0.75rem'
+        }}>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => setActiveProfileTab('company')}
+              style={{
+                padding: '0.65rem 1.25rem', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem',
+                border: activeProfileTab === 'company' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid transparent',
+                background: activeProfileTab === 'company' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.15))' : 'transparent',
+                color: activeProfileTab === 'company' ? '#34d399' : 'var(--text-muted)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
+              }}
+            >
+              <Building2 size={16} />
+              <span>Company Enterprise Profile</span>
+            </button>
+
+            <button
+              onClick={() => setActiveProfileTab('personal')}
+              style={{
+                padding: '0.65rem 1.25rem', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem',
+                border: activeProfileTab === 'personal' ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
+                background: activeProfileTab === 'personal' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(79, 70, 229, 0.15))' : 'transparent',
+                color: activeProfileTab === 'personal' ? '#818cf8' : 'var(--text-muted)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
+              }}
+            >
+              <UserCircle size={16} />
+              <span>My Admin Account</span>
+            </button>
+          </div>
+
+          <div style={{ fontSize: '0.8rem', color: '#a7f3d0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem', paddingRight: '0.5rem' }}>
+            <ShieldCheck size={15} color="#10b981" />
+            <span>Master Enterprise Directory Console</span>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------------------------------------------------------
+          COMPANY ENTERPRISE PROFILE VIEW (RENDERED WHEN ACTIVE TAB IS 'company')
+         -------------------------------------------------------------------------- */}
+      {activeProfileTab === 'company' && (
+        <>
+          {/* Company Hero Banner */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(59, 130, 246, 0.12), rgba(15, 23, 42, 0.85))',
+            borderRadius: '24px', padding: '2.2rem 2.5rem',
+            border: '1px solid rgba(16, 185, 129, 0.3)', backdropFilter: 'blur(20px)',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.35)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.4rem' }}>
+              <div style={{
+                width: '70px', height: '70px', borderRadius: '20px',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 0 30px rgba(16, 185, 129, 0.5)', border: '2px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <Building2 size={36} color="#fff" />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+                  <span style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399', padding: '3px 10px', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700 }}>
+                    VERIFIED ENTERPRISE HQ
+                  </span>
+                  <span style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#a7f3d0', padding: '3px 10px', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 600 }}>
+                    {companyProfile.registrationNumber}
+                  </span>
+                </div>
+                <h1 style={{ fontSize: '2.1rem', fontWeight: 800, margin: 0, background: 'linear-gradient(90deg, #fff, #a7f3d0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  {companyProfile.companyName}
+                </h1>
+                <p style={{ color: 'var(--text-muted)', margin: '0.3rem 0 0 0', fontSize: '0.95rem' }}>
+                  {companyProfile.tagline}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setCompanyFormData(companyProfile);
+                setIsCompanyEditModalOpen(true);
+              }}
+              style={{
+                padding: '0.75rem 1.4rem', borderRadius: '12px',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: '#fff', fontWeight: 700, border: 'none',
+                boxShadow: '0 4px 18px rgba(16, 185, 129, 0.4)',
+                display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer'
+              }}
+            >
+              <Edit3 size={17} />
+              <span>Edit Company Profile</span>
+            </button>
+          </div>
+
+          {/* Company Quick Stats Strip */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+            <div style={{ background: 'rgba(15, 23, 42, 0.65)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', gap: '1.1rem' }}>
+              <div style={{ padding: '10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}><Building2 size={22} /></div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase', fontWeight: 600 }}>Establishment</span>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginTop: '0.1rem' }}>Est. {companyProfile.foundedYear}</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(15, 23, 42, 0.65)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', gap: '1.1rem' }}>
+              <div style={{ padding: '10px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' }}><Users size={22} /></div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase', fontWeight: 600 }}>Total Workforce</span>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff', marginTop: '0.1rem' }}>{companyProfile.employeeCount}</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(15, 23, 42, 0.65)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', gap: '1.1rem' }}>
+              <div style={{ padding: '10px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}><Globe size={22} /></div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase', fontWeight: 600 }}>GSTIN Registration</span>
+                <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#fbbf24', marginTop: '0.1rem', fontFamily: 'monospace' }}>{companyProfile.gstin}</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(15, 23, 42, 0.65)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', gap: '1.1rem' }}>
+              <div style={{ padding: '10px', borderRadius: '12px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' }}><Landmark size={22} /></div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase', fontWeight: 600 }}>Corporate Bank</span>
+                <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#e9d5ff', marginTop: '0.1rem' }}>{companyProfile.bankName}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Executive Leadership & Director Board Card */}
+          <Card title={
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <Trophy size={22} color="#fbbf24" /> Executive Leadership & Board of Directors ({companyProfile.leadershipMembers.length})
+              </div>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Authorized Enterprise Directors</span>
+            </div>
+          }>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
+              {companyProfile.leadershipMembers.map(member => (
+                <div key={member.id} style={{
+                  background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px', padding: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem',
+                  position: 'relative'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{
+                      width: '48px', height: '48px', borderRadius: '14px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: '#fff', fontWeight: 800, fontSize: '1.2rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)'
+                    }}>
+                      {member.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, color: '#fff', fontSize: '1.05rem', fontWeight: 700 }}>{member.name}</h4>
+                      <span style={{ fontSize: '0.82rem', color: '#a7f3d0', fontWeight: 600, display: 'block', marginTop: '0.1rem' }}>{member.title}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: '1px dashed rgba(255, 255, 255, 0.08)', paddingTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.82rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
+                      <Mail size={13} color="#60a5fa" />
+                      <span>{member.email}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
+                      <Phone size={13} color="#fbbf24" />
+                      <span>{member.phone}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.2rem' }}>
+                    <span style={{ fontSize: '0.72rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#fbbf24', padding: '2px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                      <ShieldCheck size={11} style={{ display: 'inline', marginRight: '3px' }} /> {member.role}
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 600 }}>Active Board Member</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Corporate Headquarters & Statutory Financial Details */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            <Card title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <MapPin size={20} color="#60a5fa" /> Registered Headquarters & Contact
+              </div>
+            }>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Corporate HQ Address</span>
+                  <div style={{ fontWeight: 600, color: '#fff', marginTop: '0.2rem', lineHeight: '1.5' }}>
+                    {companyProfile.headquarters}
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.8rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Official Email</span>
+                    <div style={{ fontWeight: 600, color: '#60a5fa', marginTop: '0.2rem' }}>{companyProfile.officialEmail}</div>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Corporate Phone</span>
+                    <div style={{ fontWeight: 600, color: '#fff', marginTop: '0.2rem' }}>{companyProfile.officialPhone}</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            <Card title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <Landmark size={20} color="#34d399" /> Corporate Operating Bank Account
+              </div>
+            }>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', fontSize: '0.9rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Operating Bank</span>
+                  <div style={{ fontWeight: 700, color: '#fff', marginTop: '0.2rem' }}>{companyProfile.bankName}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>IFSC Code</span>
+                  <div style={{ fontWeight: 700, color: '#34d399', marginTop: '0.2rem', fontFamily: 'monospace' }}>{companyProfile.ifscCode}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Account Number</span>
+                  <div style={{ fontWeight: 700, color: '#60a5fa', marginTop: '0.2rem', fontFamily: 'monospace' }}>{companyProfile.accountNumber}</div>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Branch Name</span>
+                  <div style={{ fontWeight: 600, color: '#e2e8f0', marginTop: '0.2rem' }}>{companyProfile.branchName}</div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </>
+      )}
+
+      {/* --------------------------------------------------------------------------
+          MY ADMIN / PERSONAL ACCOUNT VIEW (RENDERED WHEN TAB IS 'personal')
+         -------------------------------------------------------------------------- */}
+      {activeProfileTab === 'personal' && (
+        <>
       {/* --------------------------------------------------------------------------
           1. SLEEK EXECUTIVE PROFILE HEADER (DARK GLASS)
          -------------------------------------------------------------------------- */}
@@ -999,9 +1295,124 @@ const MyProfile = () => {
           </div>
         </Card>
       </div>
+        </>
+      )}
 
       {/* --------------------------------------------------------------------------
-          5. INTERACTIVE IMAGE CROP & ADJUSTMENT MODAL
+          5. COMPANY PROFILE EDIT MODAL
+         -------------------------------------------------------------------------- */}
+      <Modal
+        isOpen={isCompanyEditModalOpen}
+        onClose={() => setIsCompanyEditModalOpen(false)}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <Building2 size={20} color="#10b981" />
+            <span>Edit Corporate Company Profile</span>
+          </div>
+        }
+      >
+        <form onSubmit={handleCompanySave} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '0.5rem' }}>
+          <div className="form-group">
+            <label className="field-label">Company Official Name *</label>
+            <input 
+              type="text" className="input-box" 
+              value={companyFormData.companyName}
+              onChange={(e) => setCompanyFormData({...companyFormData, companyName: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="field-label">Corporate Tagline / Mission</label>
+            <input 
+              type="text" className="input-box" 
+              value={companyFormData.tagline}
+              onChange={(e) => setCompanyFormData({...companyFormData, tagline: e.target.value})}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label className="field-label">Corporate CIN Number *</label>
+              <input 
+                type="text" className="input-box" 
+                value={companyFormData.registrationNumber}
+                onChange={(e) => setCompanyFormData({...companyFormData, registrationNumber: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="field-label">GSTIN Identification Number *</label>
+              <input 
+                type="text" className="input-box" 
+                value={companyFormData.gstin}
+                onChange={(e) => setCompanyFormData({...companyFormData, gstin: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label className="field-label">Official Support Email *</label>
+              <input 
+                type="email" className="input-box" 
+                value={companyFormData.officialEmail}
+                onChange={(e) => setCompanyFormData({...companyFormData, officialEmail: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="field-label">Official Corporate Phone *</label>
+              <input 
+                type="text" className="input-box" 
+                value={companyFormData.officialPhone}
+                onChange={(e) => setCompanyFormData({...companyFormData, officialPhone: e.target.value})}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="field-label">Corporate Registered Address *</label>
+            <textarea 
+              className="input-box" rows={2}
+              value={companyFormData.headquarters}
+              onChange={(e) => setCompanyFormData({...companyFormData, headquarters: e.target.value})}
+              required
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label className="field-label">Primary Corporate Bank</label>
+              <input 
+                type="text" className="input-box" 
+                value={companyFormData.bankName}
+                onChange={(e) => setCompanyFormData({...companyFormData, bankName: e.target.value})}
+              />
+            </div>
+            <div className="form-group">
+              <label className="field-label">Operating Account Number</label>
+              <input 
+                type="text" className="input-box" 
+                value={companyFormData.accountNumber}
+                onChange={(e) => setCompanyFormData({...companyFormData, accountNumber: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '1rem' }}>
+            <button type="button" className="btn btn-outline" onClick={() => setIsCompanyEditModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none' }}>
+              Save Corporate Profile
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* --------------------------------------------------------------------------
+          6. INTERACTIVE IMAGE CROP & ADJUSTMENT MODAL
          -------------------------------------------------------------------------- */}
       <Modal isOpen={isCropModalOpen} onClose={() => setIsCropModalOpen(false)} title="Adjust & Position Profile Photo">
         <div className="crop-modal-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
