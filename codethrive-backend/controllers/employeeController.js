@@ -215,11 +215,13 @@ exports.updateMe = async (req, res) => {
     }
 
     const updateFields = [
-      'fullName', 'profilePhoto', 'dateOfBirth', 'gender', 'bloodGroup',
+      'fullName', 'profilePhoto', 'dateOfBirth', 'gender', 'bloodGroup', 'maritalStatus', 'nationality',
       'personalPhoneNumber', 'personalEmailAddress', 'currentAddress', 'permanentAddress',
       'emergencyContact', 'department', 'designation', 'employmentType', 'dateOfJoining',
       'workLocation', 'reportingManager', 'qualification', 'collegeName', 'graduationYear',
-      'previousCompany', 'totalExperience', 'skills', 'technologyKnowledge'
+      'previousCompany', 'totalExperience', 'skills', 'technologyKnowledge',
+      'bankAccountHolderName', 'bankName', 'accountNumber', 'ifscCode', 'branchName',
+      'panNumber', 'aadhaarOrIdentityProofNumber', 'upiId'
     ];
 
     const updateData = {};

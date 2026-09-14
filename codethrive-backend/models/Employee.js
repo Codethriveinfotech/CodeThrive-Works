@@ -23,6 +23,8 @@ const employeeSchema = new mongoose.Schema({
   dateOfBirth: { type: Date },
   gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'] },
   bloodGroup: { type: String },
+  maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Prefer not to say'], default: 'Single' },
+  nationality: { type: String, default: 'Indian' },
   personalPhoneNumber: { type: String, required: true },
   personalEmailAddress: { type: String, required: true, unique: true },
   currentAddress: { type: String },
