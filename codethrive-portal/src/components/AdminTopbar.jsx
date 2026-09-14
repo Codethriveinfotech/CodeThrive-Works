@@ -224,7 +224,7 @@ const AdminTopbar = () => {
                 {user?.role || 'Admin'}
               </span>
             </div>
-            <ChevronDown size={16} color="var(--text-muted)" style={{ marginLeft: '0.5rem' }} />
+            <ChevronDown className="topbar-profile-chevron" size={16} color="var(--text-muted)" style={{ marginLeft: '0.5rem' }} />
           </div>
         </div>
       </header>

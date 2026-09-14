@@ -198,6 +198,10 @@
     width: 100% !important;
     box-sizing: border-box !important;
   }
+
+  .metric-action-arrow {
+    display: none !important;
+  }
 }
 
 /* -----------------------------

@@ -256,7 +256,8 @@
   }
 
   .profile-widget span,
-  .profile-widget .user-email {
+  .profile-widget .user-email,
+  .topbar-profile-chevron {
     display: none !important;
   }
 
