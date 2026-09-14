@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import { 
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
-  KeyRound, Plus, Download, Save, ArrowLeft, Mail, MapPin, Check, FileCheck
+  KeyRound, Plus, Download, Save, ArrowLeft, Mail, MapPin, Check, FileCheck, Filter, ShieldCheck
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
 import './EmployeeDetail.css';
+
+const AUDIT_MONTH_OPTIONS = [
+  { label: 'All-Time Continuous History', value: 'All' },
+  { label: 'September 2026', value: '2026-09', monthName: 'September' },
+  { label: 'August 2026', value: '2026-08', monthName: 'August' },
+  { label: 'July 2026', value: '2026-07', monthName: 'July' },
+  { label: 'June 2026', value: '2026-06', monthName: 'June' },
+  { label: 'May 2026', value: '2026-05', monthName: 'May' }
+];
 
 const DEFAULT_DEMO_EMPLOYEES = [
   {
@@ -34,11 +45,17 @@ const DEFAULT_DEMO_EMPLOYEES = [
     emergencyContact: { name: 'S. Ramanathan', phone: '9876500000', relationship: 'Father' },
     sentByEmployee: {
       dailyReports: [
-        { _id: 'dr1', date: '2026-09-09', title: 'Completed Admin Registered Employees Portal & Teams Call Widget', hoursLogged: '8.0h', status: 'Pending' },
-        { _id: 'dr2', date: '2026-09-08', title: 'Implemented Standalone Employee Control Page & Profile Settings', hoursLogged: '7.5h', status: 'Approved' }
+        { _id: 'dr1', date: '2026-09-09', title: 'Completed Admin Registered Employees Portal & Teams Call Widget', hoursLogged: '8.0h', status: 'Approved' },
+        { _id: 'dr2', date: '2026-09-08', title: 'Implemented Standalone Employee Control Page & Profile Settings', hoursLogged: '7.5h', status: 'Approved' },
+        { _id: 'dr_m1', date: '2026-08-28', title: 'Optimized Database Queries & API Endpoints for HRMS Dashboard', hoursLogged: '8.0h', status: 'Approved' },
+        { _id: 'dr_m2', date: '2026-08-15', title: 'Integrated Payroll & Payslip PDF Generation Module', hoursLogged: '8.5h', status: 'Approved' },
+        { _id: 'dr_m3', date: '2026-07-22', title: 'Refactored JWT Authentication & Role-Based Middleware', hoursLogged: '8.0h', status: 'Approved' },
+        { _id: 'dr_m4', date: '2026-06-18', title: 'Built Attendance Management & Leave Approval Engine', hoursLogged: '8.0h', status: 'Approved' }
       ],
       leaveApplications: [
-        { _id: 'l1', leaveType: 'Casual Leave', dates: '2026-08-10 to 2026-08-11', reason: 'Family event in hometown', status: 'Pending' }
+        { _id: 'l1', leaveType: 'Casual Leave', dates: '2026-08-10 to 2026-08-11', reason: 'Family event in hometown', status: 'Approved' },
+        { _id: 'l_m1', leaveType: 'Sick Leave', dates: '2026-07-14 to 2026-07-15', reason: 'Viral fever rest', status: 'Approved' },
+        { _id: 'l_m2', leaveType: 'Casual Leave', dates: '2026-06-02 to 2026-06-02', reason: 'Personal work at bank', status: 'Approved' }
       ],
       uploadedDocs: [
         { name: 'Aadhaar_Card_Mahadevan.pdf', type: 'Identity Proof', date: '2025-01-15', size: '1.2 MB' },
@@ -51,12 +68,22 @@ const DEFAULT_DEMO_EMPLOYEES = [
         checkOut: '--:--',
         workTime: '5h 15m',
         breakTime: '15m'
-      }
+      },
+      payslips: [
+        { _id: 'ps_1', month: 'September 2026', monthCode: '2026-09', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' },
+        { _id: 'ps_2', month: 'August 2026', monthCode: '2026-08', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' },
+        { _id: 'ps_3', month: 'July 2026', monthCode: '2026-07', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' },
+        { _id: 'ps_4', month: 'June 2026', monthCode: '2026-06', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' },
+        { _id: 'ps_5', month: 'May 2026', monthCode: '2026-05', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' }
+      ]
     },
     assignedByAdmin: {
       tasks: [
         { _id: 't1', taskId: 'TSK-101', title: 'Implement Real-Time Employee Audit Panel', priority: 'High', status: 'In Progress', dueDate: '2026-09-12' },
-        { _id: 't2', taskId: 'TSK-102', title: 'Fix Auth Token Expiry Bug', priority: 'Urgent', status: 'In Progress', dueDate: '2026-09-10' }
+        { _id: 't2', taskId: 'TSK-102', title: 'Fix Auth Token Expiry Bug', priority: 'Urgent', status: 'Completed', dueDate: '2026-09-10' },
+        { _id: 't_m1', taskId: 'TSK-088', title: 'Setup Redis Caching for Employee Records', priority: 'High', status: 'Completed', dueDate: '2026-08-25' },
+        { _id: 't_m2', taskId: 'TSK-075', title: 'Build Multi-Tenant Database Schemas', priority: 'Medium', status: 'Completed', dueDate: '2026-07-20' },
+        { _id: 't_m3', taskId: 'TSK-060', title: 'Initial Portal Architecture Setup', priority: 'Urgent', status: 'Completed', dueDate: '2026-06-15' }
       ],
       notificationsSent: [
         { _id: 'n1', title: 'Welcome to CodeThrive Engineering Team!', date: '2025-01-15' },
@@ -88,7 +115,9 @@ const DEFAULT_DEMO_EMPLOYEES = [
     emergencyContact: { name: 'R. Sharma', phone: '9876511111', relationship: 'Spouse' },
     sentByEmployee: {
       dailyReports: [
-        { _id: 'dr3', date: '2026-09-09', title: 'Designed Figma Mockups for Mobile HRMS App & Glassmorphic Themes', hoursLogged: '7.0h', status: 'Pending' }
+        { _id: 'dr3', date: '2026-09-09', title: 'Designed Figma Mockups for Mobile HRMS App & Glassmorphic Themes', hoursLogged: '7.0h', status: 'Approved' },
+        { _id: 'dr_p1', date: '2026-08-20', title: 'Created Interactive UI Components for Design System', hoursLogged: '8.0h', status: 'Approved' },
+        { _id: 'dr_p2', date: '2026-07-12', title: 'Conduct User Research & Usability Tests with Team Leads', hoursLogged: '7.5h', status: 'Approved' }
       ],
       leaveApplications: [
         { _id: 'l2', leaveType: 'Medical Leave', dates: '2026-07-05 to 2026-07-06', reason: 'Dental Checkup', status: 'Approved' }
@@ -97,11 +126,17 @@ const DEFAULT_DEMO_EMPLOYEES = [
         { name: 'Priya_Design_Portfolio.pdf', type: 'Resume', date: '2025-03-01', size: '4.5 MB' },
         { name: 'Aadhaar_Priya.pdf', type: 'Identity Proof', date: '2025-03-01', size: '1.1 MB' }
       ],
-      attendanceLogs: { todayStatus: 'On Break', checkIn: '09:30 AM', checkOut: '--:--', workTime: '4h 30m', breakTime: '20m' }
+      attendanceLogs: { todayStatus: 'On Break', checkIn: '09:30 AM', checkOut: '--:--', workTime: '4h 30m', breakTime: '20m' },
+      payslips: [
+        { _id: 'ps_p1', month: 'September 2026', monthCode: '2026-09', basicSalary: 60000, grossSalary: 78000, deductions: 5800, netPayable: 72200, status: 'Paid' },
+        { _id: 'ps_p2', month: 'August 2026', monthCode: '2026-08', basicSalary: 60000, grossSalary: 78000, deductions: 5800, netPayable: 72200, status: 'Paid' },
+        { _id: 'ps_p3', month: 'July 2026', monthCode: '2026-07', basicSalary: 60000, grossSalary: 78000, deductions: 5800, netPayable: 72200, status: 'Paid' }
+      ]
     },
     assignedByAdmin: {
       tasks: [
-        { _id: 't3', taskId: 'TSK-103', title: 'Redesign Admin Employee Management UI', priority: 'Urgent', status: 'In Progress', dueDate: '2026-09-11' }
+        { _id: 't3', taskId: 'TSK-103', title: 'Redesign Admin Employee Management UI', priority: 'Urgent', status: 'In Progress', dueDate: '2026-09-11' },
+        { _id: 't_p1', taskId: 'TSK-084', title: 'Design System Dark & Light Tokens', priority: 'High', status: 'Completed', dueDate: '2026-08-18' }
       ],
       notificationsSent: [
         { _id: 'n3', title: 'Design System Guidelines Updated', date: '2026-08-20' }
@@ -132,13 +167,18 @@ const DEFAULT_DEMO_EMPLOYEES = [
     emergencyContact: { name: 'S. Verma', phone: '9876522222', relationship: 'Wife' },
     sentByEmployee: {
       dailyReports: [
-        { _id: 'dr4', date: '2026-09-08', title: 'Reviewed Q3 Engineering Roadmap and Sprint Objectives', hoursLogged: '8.0h', status: 'Approved' }
+        { _id: 'dr4', date: '2026-09-08', title: 'Reviewed Q3 Engineering Roadmap and Sprint Objectives', hoursLogged: '8.0h', status: 'Approved' },
+        { _id: 'dr_r1', date: '2026-08-29', title: 'Conduct Technical Interviews and System Architecture Audits', hoursLogged: '8.5h', status: 'Approved' }
       ],
       leaveApplications: [],
       uploadedDocs: [
         { name: 'Rahul_Aadhaar.pdf', type: 'Identity Proof', date: '2024-11-10', size: '1.4 MB' }
       ],
-      attendanceLogs: { todayStatus: 'Checked Out', checkIn: '08:45 AM', checkOut: '05:15 PM', workTime: '8h 00m', breakTime: '30m' }
+      attendanceLogs: { todayStatus: 'Checked Out', checkIn: '08:45 AM', checkOut: '05:15 PM', workTime: '8h 00m', breakTime: '30m' },
+      payslips: [
+        { _id: 'ps_r1', month: 'September 2026', monthCode: '2026-09', basicSalary: 85000, grossSalary: 110000, deductions: 8500, netPayable: 101500, status: 'Paid' },
+        { _id: 'ps_r2', month: 'August 2026', monthCode: '2026-08', basicSalary: 85000, grossSalary: 110000, deductions: 8500, netPayable: 101500, status: 'Paid' }
+      ]
     },
     assignedByAdmin: {
       tasks: [
@@ -171,13 +211,18 @@ const DEFAULT_DEMO_EMPLOYEES = [
     emergencyContact: { name: 'K. Roy', phone: '9876533333', relationship: 'Mother' },
     sentByEmployee: {
       dailyReports: [
-        { _id: 'dr5', date: '2026-09-09', title: 'Processed Monthly Onboarding & Verification Files', hoursLogged: '8.0h', status: 'Approved' }
+        { _id: 'dr5', date: '2026-09-09', title: 'Processed Monthly Onboarding & Verification Files', hoursLogged: '8.0h', status: 'Approved' },
+        { _id: 'dr_a1', date: '2026-08-30', title: 'Prepared Monthly Payroll & Tax Deduction Audits', hoursLogged: '8.0h', status: 'Approved' }
       ],
       leaveApplications: [],
       uploadedDocs: [
         { name: 'Ananya_Aadhaar.pdf', type: 'Identity Proof', date: '2025-02-01', size: '1.0 MB' }
       ],
-      attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '6h 00m', breakTime: '20m' }
+      attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '6h 00m', breakTime: '20m' },
+      payslips: [
+        { _id: 'ps_a1', month: 'September 2026', monthCode: '2026-09', basicSalary: 55000, grossSalary: 72000, deductions: 5200, netPayable: 66800, status: 'Paid' },
+        { _id: 'ps_a2', month: 'August 2026', monthCode: '2026-08', basicSalary: 55000, grossSalary: 72000, deductions: 5200, netPayable: 66800, status: 'Paid' }
+      ]
     },
     assignedByAdmin: {
       tasks: [
@@ -195,6 +240,9 @@ const EmployeeDetail = () => {
   const [allEmployees, setAllEmployees] = useState(DEFAULT_DEMO_EMPLOYEES);
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Month Audit Filter State: Default 'All' (All-Time Continuous History)
+  const [selectedAuditMonth, setSelectedAuditMonth] = useState('All');
 
   // Dedicated Top-level Tabs:
   // 'profile', 'tasks', 'reports', 'leaves', 'documents', 'attendance', 'management'
@@ -331,6 +379,171 @@ const EmployeeDetail = () => {
     }
   };
 
+  const filterByMonth = (items, getDateStr) => {
+    if (!items || !Array.isArray(items)) return [];
+    if (selectedAuditMonth === 'All') return items;
+    const monthObj = AUDIT_MONTH_OPTIONS.find(m => m.value === selectedAuditMonth);
+    return items.filter(item => {
+      const val = getDateStr(item);
+      if (!val) return false;
+      return val.includes(selectedAuditMonth) || (monthObj?.monthName && val.toLowerCase().includes(monthObj.monthName.toLowerCase()));
+    });
+  };
+
+  const filteredTasks = filterByMonth(employee?.assignedByAdmin?.tasks, t => t.dueDate || t.month || '');
+  const filteredReports = filterByMonth(employee?.sentByEmployee?.dailyReports, r => r.date || r.month || '');
+  const filteredLeaves = filterByMonth(employee?.sentByEmployee?.leaveApplications, l => l.dates || l.month || '');
+  const filteredPayslips = filterByMonth(employee?.sentByEmployee?.payslips, p => p.monthCode || p.month || '');
+
+  const handleDownloadMonthlyAuditPDF = () => {
+    if (!employee) return;
+    try {
+      const doc = new jsPDF();
+      const monthObj = AUDIT_MONTH_OPTIONS.find(m => m.value === selectedAuditMonth);
+      const selectedLabel = monthObj ? monthObj.label : 'All-Time Continuous History';
+
+      // Header Banner
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 42, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 18);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(167, 243, 208);
+      doc.text(`CONFIDENTIAL EMPLOYEE AUDIT DOSSIER • ${selectedLabel.toUpperCase()}`, 14, 28);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`EMP ID: ${employee.employeeId}`, 196, 18, { align: 'right' });
+      doc.text(`DATE: ${new Date().toLocaleDateString()}`, 196, 28, { align: 'right' });
+
+      // Employee Information Block
+      const employeeData = [
+        ['Employee Name:', employee.fullName || 'N/A', 'Department:', employee.department || 'N/A'],
+        ['Designation:', employee.designation || 'N/A', 'Access Role:', (employee.user?.role || 'employee').toUpperCase()],
+        ['Email Address:', employee.personalEmailAddress || 'N/A', 'Date of Joining:', employee.dateOfJoining || '2025-01-15'],
+        ['Work Location:', employee.workLocation || 'Office', 'Monthly Salary:', `Rs. ${(employee.salaryAmount || 0).toLocaleString()}`]
+      ];
+
+      doc.autoTable({
+        startY: 48,
+        body: employeeData,
+        theme: 'plain',
+        styles: { fontSize: 8.5, cellPadding: 2, textColor: [30, 41, 59] },
+        columnStyles: {
+          0: { fontStyle: 'bold', width: 32 },
+          1: { width: 68 },
+          2: { fontStyle: 'bold', width: 32 },
+          3: { width: 58 }
+        }
+      });
+
+      let currentY = doc.lastAutoTable.finalY + 8;
+
+      // Section 1: Tasks
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42);
+      doc.text(`1. ASSIGNED TASKS & DELIVERABLES AUDIT (${filteredTasks.length})`, 14, currentY);
+
+      const taskRows = filteredTasks.map(t => [t.taskId || '-', t.title || '-', t.priority || 'Medium', t.status || 'Assigned', t.dueDate || '-']);
+      doc.autoTable({
+        startY: currentY + 3,
+        head: [['Task ID', 'Task Title / Deliverable', 'Priority', 'Status', 'Due Date']],
+        body: taskRows.length > 0 ? taskRows : [['-', 'No tasks logged for this audit period.', '-', '-', '-']],
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        columnStyles: { 0: { width: 25 }, 1: { width: 90 }, 2: { width: 22 }, 3: { width: 28 }, 4: { width: 25 } }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 8;
+      if (currentY > 240) { doc.addPage(); currentY = 20; }
+
+      // Section 2: Daily Reports
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42);
+      doc.text(`2. DAILY WORK REPORTS AUDIT (${filteredReports.length})`, 14, currentY);
+
+      const reportRows = filteredReports.map(r => [r.date || '-', r.title || '-', r.hoursLogged || '-', r.status || 'Approved']);
+      doc.autoTable({
+        startY: currentY + 3,
+        head: [['Date', 'Report Summary Title', 'Hours', 'Status']],
+        body: reportRows.length > 0 ? reportRows : [['-', 'No daily work reports submitted for this audit period.', '-', '-']],
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        columnStyles: { 0: { width: 30 }, 1: { width: 110 }, 2: { width: 25 }, 3: { width: 25 } }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 8;
+      if (currentY > 240) { doc.addPage(); currentY = 20; }
+
+      // Section 3: Leave Applications
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42);
+      doc.text(`3. LEAVE APPLICATIONS AUDIT (${filteredLeaves.length})`, 14, currentY);
+
+      const leaveRows = filteredLeaves.map(l => [l.leaveType || 'Leave', l.dates || '-', l.reason || '-', l.status || 'Approved']);
+      doc.autoTable({
+        startY: currentY + 3,
+        head: [['Leave Type', 'Duration / Dates', 'Reason / Purpose', 'Status']],
+        body: leaveRows.length > 0 ? leaveRows : [['-', 'No leave applications filed during this audit period.', '-', '-']],
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        columnStyles: { 0: { width: 35 }, 1: { width: 50 }, 2: { width: 80 }, 3: { width: 25 } }
+      });
+
+      currentY = doc.lastAutoTable.finalY + 8;
+      if (currentY > 240) { doc.addPage(); currentY = 20; }
+
+      // Section 4: Monthly Payslips
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(15, 23, 42);
+      doc.text(`4. PAYSLIP & SALARY FINANCIAL STATEMENT (${filteredPayslips.length})`, 14, currentY);
+
+      const payslipRows = filteredPayslips.map(p => [
+        p.month || '-',
+        `Rs. ${(p.basicSalary || 0).toLocaleString()}`,
+        `Rs. ${(p.grossSalary || 0).toLocaleString()}`,
+        `Rs. ${(p.deductions || 0).toLocaleString()}`,
+        `Rs. ${(p.netPayable || 0).toLocaleString()}`,
+        p.status || 'Paid'
+      ]);
+      doc.autoTable({
+        startY: currentY + 3,
+        head: [['Pay Month', 'Basic Salary', 'Gross Earnings', 'Deductions', 'Net Payable', 'Status']],
+        body: payslipRows.length > 0 ? payslipRows : [['-', '-', '-', '-', '-', 'No payslips recorded for period']],
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        columnStyles: { 0: { width: 35 }, 1: { width: 30 }, 2: { width: 32 }, 3: { width: 30 }, 4: { width: 33 }, 5: { width: 30 } }
+      });
+
+      // Page numbers footer
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(148, 163, 184);
+        doc.text(`CodeThrive InfoTech Internal Audit Report • Page ${i} of ${totalPages}`, 105, 290, { align: 'center' });
+      }
+
+      const fileName = `CodeThrive_Audit_${employee.employeeId}_${selectedAuditMonth}.pdf`;
+      doc.save(fileName);
+      alert(`Downloaded Confidential Monthly Audit Dossier PDF for ${employee.fullName} (${selectedLabel})!`);
+    } catch (err) {
+      console.error('Failed to generate PDF audit dossier', err);
+      alert('Error generating PDF dossier. Please try again.');
+    }
+  };
+
   const handleReportAction = (reportId, newStatus) => {
     if (!employee) return;
     const updatedReports = employee.sentByEmployee?.dailyReports?.map(r => 
@@ -412,29 +625,61 @@ const EmployeeDetail = () => {
   return (
     <div className="employee-detail-page">
       
-      {/* Top Breadcrumb & Quick Switcher */}
+      {/* Top Breadcrumb & Quick Switcher & PDF Export */}
       <div className="detail-top-nav">
         <button className="btn btn-outline" onClick={() => navigate('/admin/employees')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <ArrowLeft size={16} /> Back to Employees Directory
         </button>
 
-        {/* Quick Employee Switcher */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Viewing Employee:</span>
-          <select 
-            className="emp-switch-select"
-            value={employee._id}
-            onChange={(e) => {
-              const selected = allEmployees.find(item => item._id === e.target.value);
-              if (selected) {
-                navigate(`/admin/employees/${selected._id}`);
-              }
-            }}
+        {/* Quick Controls: Employee Switcher, Month Selector, PDF Export */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          
+          {/* Quick Employee Switcher */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>Employee:</span>
+            <select 
+              className="emp-switch-select"
+              value={employee._id}
+              onChange={(e) => {
+                const selected = allEmployees.find(item => item._id === e.target.value);
+                if (selected) {
+                  navigate(`/admin/employees/${selected._id}`);
+                }
+              }}
+            >
+              {allEmployees.map(emp => (
+                <option key={emp._id} value={emp._id}>{emp.fullName} ({emp.employeeId})</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Month Audit Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <Filter size={13} /> Month:
+            </span>
+            <select 
+              className="emp-switch-select"
+              value={selectedAuditMonth}
+              onChange={(e) => setSelectedAuditMonth(e.target.value)}
+              style={{ borderColor: 'var(--primary-light)' }}
+            >
+              {AUDIT_MONTH_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Export PDF Download Button */}
+          <button 
+            className="btn btn-primary" 
+            onClick={handleDownloadMonthlyAuditPDF}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none' }}
+            title="Download Monthly Employee Audit Dossier PDF"
           >
-            {allEmployees.map(emp => (
-              <option key={emp._id} value={emp._id}>{emp.fullName} ({emp.employeeId})</option>
-            ))}
-          </select>
+            <Download size={15} /> Download Audit Dossier (PDF)
+          </button>
+
         </div>
       </div>
 
@@ -444,7 +689,7 @@ const EmployeeDetail = () => {
           <div className="hero-avatar">
             {employee.fullName ? employee.fullName.charAt(0).toUpperCase() : 'E'}
           </div>
-          <div className="hero-info">
+          <div className="hero-info" style={{ flexGrow: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
               <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>{employee.fullName}</h1>
               <StatusBadge status={employee.status} />
@@ -457,6 +702,23 @@ const EmployeeDetail = () => {
               <span><Briefcase size={13} style={{ marginRight: '0.3rem' }} /> {employee.department} &bull; {employee.designation}</span>
               <span><Calendar size={13} style={{ marginRight: '0.3rem' }} /> ID: <strong style={{ color: 'var(--primary-light)' }}>{employee.employeeId}</strong></span>
             </div>
+          </div>
+
+          {/* Continuous Retention Notice */}
+          <div style={{ 
+            background: 'rgba(16, 185, 129, 0.1)', 
+            border: '1px solid rgba(16, 185, 129, 0.25)', 
+            borderRadius: '12px', 
+            padding: '0.6rem 1rem', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.6rem',
+            fontSize: '0.78rem',
+            color: '#34d399',
+            maxWidth: '300px'
+          }}>
+            <ShieldCheck size={18} style={{ flexShrink: 0 }} />
+            <span><strong>Continuous Data Retention:</strong> All monthly records for tasks, reports, leave & payslips are permanently saved.</span>
           </div>
         </div>
       </div>
@@ -474,21 +736,21 @@ const EmployeeDetail = () => {
           className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
           onClick={() => setActiveTab('tasks')}
         >
-          <Briefcase size={16} /> Tasks ({employee.assignedByAdmin?.tasks?.length || 0})
+          <Briefcase size={16} /> Tasks ({filteredTasks.length})
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
           onClick={() => setActiveTab('reports')}
         >
-          <FileText size={16} /> Daily Reports ({employee.sentByEmployee?.dailyReports?.length || 0})
+          <FileText size={16} /> Daily Reports ({filteredReports.length})
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'leaves' ? 'active' : ''}`}
           onClick={() => setActiveTab('leaves')}
         >
-          <Calendar size={16} /> Leave Applications ({employee.sentByEmployee?.leaveApplications?.length || 0})
+          <Calendar size={16} /> Leave Applications ({filteredLeaves.length})
         </button>
 
         <button 
@@ -509,7 +771,7 @@ const EmployeeDetail = () => {
           className={`tab-btn ${activeTab === 'management' ? 'active' : ''}`}
           onClick={() => setActiveTab('management')}
         >
-          <KeyRound size={16} /> Payroll & Access Roles
+          <KeyRound size={16} /> Payroll & Access Roles ({filteredPayslips.length})
         </button>
       </div>
 
@@ -605,16 +867,19 @@ const EmployeeDetail = () => {
         {/* TAB 2: TASKS & DELIVERABLES SPECIFIC TO THIS EMPLOYEE */}
         {activeTab === 'tasks' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
-              Tasks Assigned Specifically to {employee.fullName}
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+                Tasks Assigned to {employee.fullName} ({selectedAuditMonth === 'All' ? 'All-Time' : selectedAuditMonth})
+              </h3>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Showing {filteredTasks.length} tasks</span>
+            </div>
 
             {/* List of Tasks Assigned to this Employee */}
-            {(!employee.assignedByAdmin?.tasks || employee.assignedByAdmin.tasks.length === 0) ? (
-              <div className="empty-state">No tasks currently assigned to {employee.fullName}. Use the form below to assign a task.</div>
+            {filteredTasks.length === 0 ? (
+              <div className="empty-state">No tasks recorded for {employee.fullName} under selected audit period.</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {employee.assignedByAdmin.tasks.map(t => (
+                {filteredTasks.map(t => (
                   <div key={t._id} className="item-row">
                     <div>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{t.taskId}</span>
@@ -663,14 +928,17 @@ const EmployeeDetail = () => {
         {/* TAB 3: DAILY WORK REPORTS SUBMITTED BY THIS EMPLOYEE */}
         {activeTab === 'reports' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
-              Daily Work Reports Submitted by {employee.fullName}
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+                Daily Work Reports Submitted by {employee.fullName} ({selectedAuditMonth === 'All' ? 'All-Time' : selectedAuditMonth})
+              </h3>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Showing {filteredReports.length} reports</span>
+            </div>
 
-            {(!employee.sentByEmployee?.dailyReports || employee.sentByEmployee.dailyReports.length === 0) ? (
-              <div className="empty-state">No daily work reports submitted by {employee.fullName} yet.</div>
+            {filteredReports.length === 0 ? (
+              <div className="empty-state">No daily work reports submitted by {employee.fullName} for selected audit period.</div>
             ) : (
-              employee.sentByEmployee.dailyReports.map(r => (
+              filteredReports.map(r => (
                 <div key={r._id} className="item-row">
                   <div>
                     <strong style={{ fontSize: '0.95rem', color: '#fff' }}>{r.title}</strong>
@@ -700,14 +968,17 @@ const EmployeeDetail = () => {
         {/* TAB 4: LEAVE APPLICATIONS SUBMITTED BY THIS EMPLOYEE */}
         {activeTab === 'leaves' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
-              Leave Applications Submitted by {employee.fullName}
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+                Leave Applications Submitted by {employee.fullName} ({selectedAuditMonth === 'All' ? 'All-Time' : selectedAuditMonth})
+              </h3>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Showing {filteredLeaves.length} leaves</span>
+            </div>
 
-            {(!employee.sentByEmployee?.leaveApplications || employee.sentByEmployee.leaveApplications.length === 0) ? (
-              <div className="empty-state">No leave applications submitted by {employee.fullName} yet.</div>
+            {filteredLeaves.length === 0 ? (
+              <div className="empty-state">No leave applications submitted by {employee.fullName} for selected audit period.</div>
             ) : (
-              employee.sentByEmployee.leaveApplications.map(l => (
+              filteredLeaves.map(l => (
                 <div key={l._id} className="item-row">
                   <div>
                     <strong style={{ fontSize: '0.95rem', color: '#fff' }}>{l.leaveType} ({l.dates})</strong>
@@ -792,9 +1063,45 @@ const EmployeeDetail = () => {
         {/* TAB 7: MANAGEMENT, PAYROLL & SYSTEM CREDENTIALS */}
         {activeTab === 'management' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
-              Payroll & System Credentials for {employee.fullName}
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+                Payroll & System Credentials for {employee.fullName}
+              </h3>
+            </div>
+
+            {/* Monthly Payslips Log Table */}
+            <Card title={<><Banknote size={16} style={{ marginRight: '0.5rem' }} /> Monthly Payslip Financial Audit ({filteredPayslips.length} Months)</>}>
+              {filteredPayslips.length === 0 ? (
+                <div className="empty-state">No payslips generated for selected audit period.</div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr style={{ background: 'rgba(30, 41, 59, 0.6)', color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.75rem', textAlign: 'left' }}>
+                        <th style={{ padding: '0.75rem 1rem' }}>Pay Month</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Basic Salary</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Gross Salary</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Deductions</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Net Payable</th>
+                        <th style={{ padding: '0.75rem 1rem' }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPayslips.map((p, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: '#fff' }}>{p.month}</td>
+                          <td style={{ padding: '0.75rem 1rem' }}>₹{(p.basicSalary || 0).toLocaleString()}</td>
+                          <td style={{ padding: '0.75rem 1rem' }}>₹{(p.grossSalary || 0).toLocaleString()}</td>
+                          <td style={{ padding: '0.75rem 1rem', color: '#ef4444' }}>-₹{(p.deductions || 0).toLocaleString()}</td>
+                          <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: 'var(--success)' }}>₹{(p.netPayable || 0).toLocaleString()}</td>
+                          <td style={{ padding: '0.75rem 1rem' }}><StatusBadge status={p.status || 'Paid'} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
 
             <div className="detail-grid-2">
               {/* Access Role & Credentials Card */}

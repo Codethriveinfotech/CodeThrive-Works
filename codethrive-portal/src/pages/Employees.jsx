@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import { 
   Search, Filter, Plus, User, Briefcase, Banknote, Edit, Eye,
-  RefreshCw, Trash2, UserCheck
+  RefreshCw, Trash2, UserCheck, Download
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
@@ -206,6 +208,65 @@ const Employees = () => {
     return matchesSearch && matchesDept && matchesStatus && matchesRole;
   });
 
+  const handleExportMasterPDF = () => {
+    try {
+      const doc = new jsPDF();
+
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 40, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 18);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(167, 243, 208);
+      doc.text('MASTER REGISTERED EMPLOYEES DIRECTORY REPORT', 14, 28);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`TOTAL STAFF: ${filteredEmployees.length}`, 196, 22, { align: 'right' });
+
+      const tableData = filteredEmployees.map((e, index) => [
+        index + 1,
+        e.employeeId || `CTI-EMP-00${index + 1}`,
+        e.fullName || 'N/A',
+        e.department || 'N/A',
+        e.designation || 'N/A',
+        (e.user?.role || 'employee').toUpperCase(),
+        e.status || 'Active',
+        `Rs. ${(e.salaryAmount || 0).toLocaleString()}`
+      ]);
+
+      doc.autoTable({
+        startY: 46,
+        head: [['#', 'Emp ID', 'Full Name', 'Department', 'Designation', 'Access Role', 'Status', 'Monthly Salary']],
+        body: tableData,
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        columnStyles: {
+          0: { width: 10 },
+          1: { width: 25 },
+          2: { width: 38 },
+          3: { width: 28 },
+          4: { width: 35 },
+          5: { width: 22 },
+          6: { width: 18 },
+          7: { width: 22 }
+        }
+      });
+
+      doc.save(`CodeThrive_Master_Employees_Directory_${new Date().toISOString().slice(0, 10)}.pdf`);
+      alert(`Master Directory PDF Exported successfully for ${filteredEmployees.length} employees!`);
+    } catch (err) {
+      console.error('Failed to export master directory PDF', err);
+      alert('Error exporting PDF report.');
+    }
+  };
+
   const totalRegistered = employees.length;
   const activeWorking = employees.filter(e => e.status === 'Active').length;
   const totalMonthlyPayroll = employees.reduce((acc, e) => acc + (Number(e.salaryAmount) || 0), 0);
@@ -308,7 +369,10 @@ const Employees = () => {
             Full Administrative Oversight of Registered Staff Profiles, Submissions, Tasks, Payroll & Account Access
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <button className="btn btn-outline" onClick={handleExportMasterPDF} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#10b981', color: '#34d399' }}>
+            <Download size={15} /> Export Directory (PDF)
+          </button>
           <button className="btn btn-outline" onClick={fetchEmployees} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <RefreshCw size={15} /> Refresh
           </button>
