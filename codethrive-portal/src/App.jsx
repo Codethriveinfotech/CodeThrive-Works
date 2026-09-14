@@ -117,7 +117,7 @@ const ProtectedRoute = ({ allowedRoles, loginPath = '/employee/login' }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <SplashScreen isFading={false} />;
+    return <PageLoader />;
   }
 
   if (!user) {
@@ -226,13 +226,14 @@ const AuthLayout = () => {
   );
 };
 
-function App() {
-  const [loading, setLoading] = useState(true);
+function AppContent() {
+  const { loading: authLoading } = useAuth();
+  const [bootLoading, setBootLoading] = useState(true);
   const [isFading, setIsFading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
   const toastTimerRef = useRef(null);
 
-  const showToast = (msg) => {
+  const _showToast = (msg) => {
     setToast({ show: true, message: msg });
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => {
@@ -241,73 +242,79 @@ function App() {
   };
 
   useEffect(() => {
-    const fadeTimer = setTimeout(() => setIsFading(true), 1500);
-    const removeTimer = setTimeout(() => setLoading(false), 2000);
+    const fadeTimer = setTimeout(() => setIsFading(true), 1200);
+    const removeTimer = setTimeout(() => setBootLoading(false), 1600);
     return () => { clearTimeout(fadeTimer); clearTimeout(removeTimer); };
   }, []);
 
-  if (loading) {
+  if (bootLoading || authLoading) {
     return <SplashScreen isFading={isFading} />;
   }
 
   return (
-    <AuthProvider>
-      <Router>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Navigate to="/employee/login" replace />} />
+    <Router>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<Navigate to="/employee/login" replace />} />
 
-          <Route element={<AuthLayout />}>
-            <Route path="/employee/login" element={<Login />} />
-            <Route path="/employee/register" element={<Register />} />
-            <Route path="/employee/forgot-password" element={<ForgotPassword />} />
-            <Route path="/employee/create-credentials" element={<CreateCredentials />} />
-            
-            <Route path="/admin/login" element={<AdminLogin />} />
-          </Route>
-
-          {/* Protected Employee Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['employee', 'teamlead', 'intern']} loginPath="/employee/login" defaultRedirect="/employee/dashboard" />}>
-            <Route element={<EmployeeLayout />}>
-              <Route path="/employee/dashboard" element={<Dashboard />} />
-              <Route path="/employee/tasks" element={<MyTasks />} />
-              <Route path="/employee/reports" element={<DailyReports />} />
-              <Route path="/employee/payslips" element={<Payroll />} />
-              <Route path="/employee/documents" element={<Documents />} />
-              <Route path="/employee/profile" element={<MyProfile />} />
-              
-              {/* Other legacy Employee routes (optional but kept for existing components) */}
-              <Route path="/employee/attendance" element={<Attendance />} />
-              <Route path="/employee/timesheet" element={<Timesheet />} />
-              <Route path="/employee/team" element={<Team />} />
-              <Route path="/employee/projects" element={<Projects />} />
-              <Route path="/employee/performance" element={<Performance />} />
-              <Route path="/employee/meetings" element={<Meetings />} />
-              <Route path="/employee/leave" element={<Leave />} />
-            </Route>
-          </Route>
-
-          {/* Protected Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'hr']} loginPath="/admin/login" defaultRedirect="/admin/dashboard" />}>
-            <Route element={<AdminLayout />}>
-              <Route path="/admin/dashboard" element={<Admin />} />
-              <Route path="/admin/employees" element={<Employees />} />
-              <Route path="/admin/employees/:id" element={<EmployeeDetail />} />
-              <Route path="/admin/tasks" element={<AdminTasks />} />
-              <Route path="/admin/reports" element={<AdminReports />} />
-              <Route path="/admin/leave" element={<AdminLeave />} />
-              <Route path="/admin/payroll" element={<AdminPayroll />} />
-              <Route path="/admin/documents" element={<AdminDocuments />} />
-              <Route path="/admin/profile" element={<MyProfile />} />
-            </Route>
-          </Route>
+        <Route element={<AuthLayout />}>
+          <Route path="/employee/login" element={<Login />} />
+          <Route path="/employee/register" element={<Register />} />
+          <Route path="/employee/forgot-password" element={<ForgotPassword />} />
+          <Route path="/employee/create-credentials" element={<CreateCredentials />} />
           
-          {/* Fallback for unknown routes */}
-          <Route path="*" element={<Navigate to="/employee/login" replace />} />
-        </Routes>
-        <Toast message={toast.message} show={toast.show} />
-        <TeamsCallWidget />
-      </Router>
+          <Route path="/admin/login" element={<AdminLogin />} />
+        </Route>
+
+        {/* Protected Employee Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['employee', 'teamlead', 'intern']} loginPath="/employee/login" defaultRedirect="/employee/dashboard" />}>
+          <Route element={<EmployeeLayout />}>
+            <Route path="/employee/dashboard" element={<Dashboard />} />
+            <Route path="/employee/tasks" element={<MyTasks />} />
+            <Route path="/employee/reports" element={<DailyReports />} />
+            <Route path="/employee/payslips" element={<Payroll />} />
+            <Route path="/employee/documents" element={<Documents />} />
+            <Route path="/employee/profile" element={<MyProfile />} />
+            
+            {/* Other legacy Employee routes (optional but kept for existing components) */}
+            <Route path="/employee/attendance" element={<Attendance />} />
+            <Route path="/employee/timesheet" element={<Timesheet />} />
+            <Route path="/employee/team" element={<Team />} />
+            <Route path="/employee/projects" element={<Projects />} />
+            <Route path="/employee/performance" element={<Performance />} />
+            <Route path="/employee/meetings" element={<Meetings />} />
+            <Route path="/employee/leave" element={<Leave />} />
+          </Route>
+        </Route>
+
+        {/* Protected Admin Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'hr']} loginPath="/admin/login" defaultRedirect="/admin/dashboard" />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<Admin />} />
+            <Route path="/admin/employees" element={<Employees />} />
+            <Route path="/admin/employees/:id" element={<EmployeeDetail />} />
+            <Route path="/admin/tasks" element={<AdminTasks />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/leave" element={<AdminLeave />} />
+            <Route path="/admin/payroll" element={<AdminPayroll />} />
+            <Route path="/admin/documents" element={<AdminDocuments />} />
+            <Route path="/admin/profile" element={<MyProfile />} />
+          </Route>
+        </Route>
+        
+        {/* Fallback for unknown routes */}
+        <Route path="*" element={<Navigate to="/employee/login" replace />} />
+      </Routes>
+      <Toast message={toast.message} show={toast.show} />
+      <TeamsCallWidget />
+    </Router>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   );
 }
