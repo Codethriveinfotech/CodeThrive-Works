@@ -3,6 +3,7 @@ import { Search, Settings, ChevronDown, UserCheck, ChevronRight, User, RefreshCw
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SettingsModal from './SettingsModal';
+import GlobalSearchBar from './GlobalSearchBar';
 
 const DEMO_ONBOARDING_STAFF = [
   { _id: 'emp_001', name: 'Mahadhevan', id: 'CTI-EMP-001', role: 'Senior Developer', dept: 'Engineering' },
@@ -52,21 +53,11 @@ const AdminTopbar = () => {
             <Menu size={22} color="#ffffff" />
           </button>
 
-          <div className="topbar-search">
-            <Search size={18} color="var(--text-muted)" style={{ marginRight: '0.75rem' }} />
-            <input 
-              type="text" 
-              placeholder="Search Admin Portal..." 
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-main)',
-                width: '100%',
-                outline: 'none',
-                fontSize: '0.95rem'
-              }}
-            />
-          </div>
+          <GlobalSearchBar 
+            isAdmin={true} 
+            placeholder="Search Admin Portal (Employees, Reports, Tasks)..." 
+            onOpenSettings={() => setIsSettingsOpen(true)}
+          />
         </div>
         
         <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', position: 'relative' }}>

@@ -3,6 +3,7 @@ import { Search, Settings, ChevronDown, RefreshCw, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SettingsModal from './SettingsModal';
+import GlobalSearchBar from './GlobalSearchBar';
 
 const Topbar = () => {
   const { user } = useAuth();
@@ -39,21 +40,11 @@ const Topbar = () => {
             <Menu size={22} color="#ffffff" />
           </button>
 
-          <div className="topbar-search">
-            <Search size={18} color="var(--text-muted)" style={{ marginRight: '0.75rem' }} />
-            <input 
-              type="text" 
-              placeholder="Search Employee Portal..." 
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-main)',
-                width: '100%',
-                outline: 'none',
-                fontSize: '0.95rem'
-              }}
-            />
-          </div>
+          <GlobalSearchBar 
+            isAdmin={false} 
+            placeholder="Search Employee Portal (Tasks, Payslips, Profile)..." 
+            onOpenSettings={() => setIsSettingsOpen(true)}
+          />
         </div>
         
         <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
