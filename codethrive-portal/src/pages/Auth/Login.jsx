@@ -38,7 +38,14 @@ const Login = () => {
     if (result.success) {
       navigate('/employee/dashboard');
     } else {
-      setError(result.message || 'Login failed.');
+      if (result.notRegistered) {
+        setError('No registered account found! You need to register first. Redirecting to Registration page...');
+        setTimeout(() => {
+          navigate('/employee/register');
+        }, 1800);
+      } else {
+        setError(result.message || 'Login failed.');
+      }
     }
   };
 
@@ -56,19 +63,17 @@ const Login = () => {
         {error && (
           <div className="auth-error-msg" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <span>{error}</span>
-            {error.includes('No account found') && (
-              <button 
-                type="button"
-                className="btn btn-outline"
-                style={{ padding: '0.5rem', width: '100%', borderColor: 'rgba(255,255,255,0.3)', color: 'var(--text-main)' }}
-                onClick={() => navigate('/employee/register')}
-
-              >
-                Register Now
-              </button>
-            )}
+            <button 
+              type="button"
+              className="btn btn-outline"
+              style={{ padding: '0.5rem', width: '100%', borderColor: 'rgba(255,255,255,0.4)', color: 'var(--text-main)', fontWeight: '600' }}
+              onClick={() => navigate('/employee/register')}
+            >
+              Go to Registration Page
+            </button>
           </div>
         )}
+
 
         <form onSubmit={handleLogin} className="auth-form">
           <div className="form-group">

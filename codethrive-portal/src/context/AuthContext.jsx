@@ -68,24 +68,35 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: res.data.user };
     } catch (err) {
       if (isOfflineOrApiMissing(err)) {
-        // Local Fallback Login when backend is offline or static 405 on Vercel
+        // Local Fallback Login when backend is offline
         const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
         const match = localUsers.find(u => u.employeeId === identifier || u.email === identifier || u.emailId === identifier);
-        const loggedUser = match || {
-          _id: 'emp_' + Date.now(),
-          employeeId: identifier || 'CTI-EMP-001',
-          fullName: 'Employee User',
-          role: 'Software Engineer',
-          email: identifier.includes('@') ? identifier : `${identifier}@codethrive.com`,
-          status: 'active'
-        };
-        setUser(loggedUser);
-        localStorage.setItem('user', JSON.stringify(loggedUser));
-        return { success: true, user: loggedUser, isLocalMode: true };
+        
+        if (!match) {
+          return { 
+            success: false, 
+            notRegistered: true, 
+            message: 'Account not found! You need to register first.' 
+          };
+        }
+
+        setUser(match);
+        localStorage.setItem('user', JSON.stringify(match));
+        return { success: true, user: match, isLocalMode: true };
       }
-      return { success: false, message: extractErrorMessage(err, 'Login failed') };
+      
+      const isNotFound = err.response?.status === 404 || 
+                         extractErrorMessage(err, '').toLowerCase().includes('register') ||
+                         extractErrorMessage(err, '').toLowerCase().includes('no account');
+
+      return { 
+        success: false, 
+        notRegistered: isNotFound,
+        message: extractErrorMessage(err, 'No account found. You need to register first.') 
+      };
     }
   };
+
 
   const adminLogin = async (email, password) => {
     try {
