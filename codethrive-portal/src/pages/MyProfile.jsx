@@ -242,8 +242,10 @@ const MyProfile = () => {
           1. SLEEK EXECUTIVE PROFILE HEADER (DARK GLASS)
          -------------------------------------------------------------------------- */}
       <div className="profile-executive-header">
+        <div className="header-glow-bg"></div>
+
         <div className="profile-header-left">
-          {/* Avatar with Ring */}
+          {/* Avatar with Ring & Online Status */}
           <div className="profile-avatar-wrapper">
             <div className="profile-avatar-img-box">
               {profile.profilePhoto ? (
@@ -255,13 +257,15 @@ const MyProfile = () => {
               )}
             </div>
 
+            <span className="profile-online-indicator" title="Active Account"></span>
+
             <button
               type="button"
               className="profile-cam-btn"
               onClick={() => fileInputRef.current && fileInputRef.current.click()}
-              title="Upload New Profile Photo"
+              title="Upload Profile Photo"
             >
-              <Camera size={17} />
+              <Camera size={16} />
             </button>
 
             <input
@@ -275,11 +279,39 @@ const MyProfile = () => {
 
           {/* User Primary Identity Details */}
           <div className="profile-identity-info">
+            <div className="profile-badge-row">
+              <span className="profile-badge-status">
+                <span className="pulse-dot"></span> Active
+              </span>
+              <span className="profile-badge-id">
+                <CreditCard size={13} /> {profile.employeeId || 'CTI-EMP-001'}
+              </span>
+              <span className="profile-badge-role">
+                <ShieldCheck size={13} /> {user?.role ? user.role.toUpperCase() : 'MANAGEMENT'}
+              </span>
+            </div>
+
             <h1 className="profile-user-name">{profile.fullName}</h1>
+
             <div className="profile-user-title">
-              <span>{profile.designation || 'Specialist'}</span>
-              <span>•</span>
-              <span>{profile.department || 'Quality Assurance'}</span>
+              <span className="title-highlight">{profile.designation || 'Management Specialist'}</span>
+              <span className="bullet">•</span>
+              <span>{profile.department || 'Management'}</span>
+            </div>
+
+            <div className="profile-meta-tags">
+              <span className="profile-meta-tag">
+                <Mail size={13} /> {profile.personalEmailAddress || user?.email || 'N/A'}
+              </span>
+              <span className="profile-meta-tag">
+                <Phone size={13} /> {profile.personalPhoneNumber || '9876543210'}
+              </span>
+              <span className="profile-meta-tag">
+                <MapPin size={13} /> {profile.workLocation || 'Office'}
+              </span>
+              <span className="profile-meta-tag">
+                <Calendar size={13} /> Joined {profile.dateOfJoining ? new Date(profile.dateOfJoining).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Aug 2024'}
+              </span>
             </div>
           </div>
         </div>
