@@ -13,42 +13,8 @@ import {
 } from 'lucide-react';
 import './MyTasks.css';
 
-// Fallback Demo Tasks shown when no live backend tasks exist, giving user immediate visual feedback
-const DEMO_TASKS = [
-  {
-    _id: 'demo-1',
-    taskId: 'TASK-101',
-    title: 'Complete Portal UI Redesign & Micro-Animations',
-    description: 'Implement glassmorphic themes, responsive layout, motion transitions and clean user dashboard flows.',
-    status: 'In Progress',
-    priority: 'Urgent',
-    progressPercentage: 75,
-    createdAt: '2026-09-01T10:00:00.000Z',
-    dueDate: '2026-09-12T18:00:00.000Z'
-  },
-  {
-    _id: 'demo-2',
-    taskId: 'TASK-102',
-    title: 'API Authentication & Token Refresh Handler',
-    description: 'Review JWT cookie security, rate limiting middleware, and authorization state persistence.',
-    status: 'Assigned',
-    priority: 'High',
-    progressPercentage: 20,
-    createdAt: '2026-09-03T09:30:00.000Z',
-    dueDate: '2026-09-15T18:00:00.000Z'
-  },
-  {
-    _id: 'demo-3',
-    taskId: 'TASK-103',
-    title: 'Database Indexing & Query Optimization',
-    description: 'Optimize MongoDB collection indices for attendance records and automated daily work reports.',
-    status: 'Completed',
-    priority: 'Medium',
-    progressPercentage: 100,
-    createdAt: '2026-08-28T14:00:00.000Z',
-    dueDate: '2026-09-05T18:00:00.000Z'
-  }
-];
+const DEMO_TASKS = [];
+
 
 const MyTasks = () => {
   const { user } = useAuth();

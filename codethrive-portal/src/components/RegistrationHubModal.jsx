@@ -26,51 +26,34 @@ const DEFAULT_ONBOARDING_DATA = [
     user: { role: 'employee', status: 'active' },
     // Sent by Employee to Us
     sentByEmployee: {
-      dailyReports: [
-        { _id: 'dr1', date: '2026-09-09', title: 'Completed Admin Registered Employees Portal', hoursLogged: '8.0h', status: 'Approved' },
-        { _id: 'dr2', date: '2026-09-08', title: 'Implemented 360 Degree Employee Control Hub', hoursLogged: '7.5h', status: 'Approved' }
-      ],
-      leaveApplications: [
-        { _id: 'l1', leaveType: 'Casual Leave', dates: '2026-08-10 to 2026-08-11', reason: 'Family Function in native', status: 'Approved' }
-      ],
-      uploadedDocs: [
-        { name: 'Aadhaar_Card_Mahadevan.pdf', type: 'Identity Proof', date: '2025-01-15', size: '1.2 MB' },
-        { name: 'PAN_Card.pdf', type: 'Tax ID', date: '2025-01-15', size: '850 KB' },
-        { name: 'Degree_Certificate.pdf', type: 'Education', date: '2025-01-15', size: '2.4 MB' }
-      ],
+      dailyReports: [],
+      leaveApplications: [],
+      uploadedDocs: [],
       attendanceLogs: {
         todayStatus: 'Working',
-        checkIn: '09:15 AM',
+        checkIn: '09:00 AM',
         checkOut: '--:--',
-        workTime: '5h 15m',
-        breakTime: '15m'
+        workTime: '0h 0m',
+        breakTime: '0m'
       },
-      supportTickets: [
-        { _id: 'st1', subject: 'Need access to Staging AWS Cluster', date: '2026-09-05', status: 'Resolved' }
-      ]
+      supportTickets: []
     },
     // Given / Assigned by Admin to Employee
     assignedByAdmin: {
-      tasks: [
-        { _id: 't1', taskId: 'TSK-101', title: 'Implement Real-Time Employee Audit Panel', priority: 'High', status: 'In Progress', dueDate: '2026-09-12' },
-        { _id: 't2', taskId: 'TSK-102', title: 'Fix Auth Token Expiry Bug', priority: 'Urgent', status: 'In Progress', dueDate: '2026-09-10' }
-      ],
+      tasks: [],
       credentials: {
         role: 'employee',
         status: 'Active',
-        lastPasswordReset: '2026-08-01'
+        lastPasswordReset: '-'
       },
       payroll: {
         salary: 85000,
         bankName: 'HDFC Bank',
         accNo: '50100234567890',
         ifsc: 'HDFC0001234',
-        lastPayslipGenerated: 'August 2026'
+        lastPayslipGenerated: '-'
       },
-      notificationsSent: [
-        { _id: 'n1', title: 'Welcome to CodeThrive Engineering Team!', date: '2025-01-15' },
-        { _id: 'n2', title: 'Q3 Quarterly Appraisal Scheduled', date: '2026-09-01' }
-      ]
+      notificationsSent: []
     }
   },
   {

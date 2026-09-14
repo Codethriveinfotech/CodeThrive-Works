@@ -54,40 +54,8 @@ const Documents = () => {
     isPublic: false
   });
 
-  const DEMO_DOCUMENTS = [
-    {
-      _id: 'doc-demo-1',
-      title: 'Aadhaar Card Front & Back',
-      documentType: 'ID Proof',
-      isPublic: false,
-      createdAt: new Date().toISOString(),
-      owner: { fullName: user?.fullName || 'Employee User' }
-    },
-    {
-      _id: 'doc-demo-2',
-      title: 'PAN Card Official Copy',
-      documentType: 'ID Proof',
-      isPublic: false,
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      owner: { fullName: user?.fullName || 'Employee User' }
-    },
-    {
-      _id: 'doc-demo-3',
-      title: 'B.Tech Degree Certificate & Transcripts',
-      documentType: 'Certificate',
-      isPublic: false,
-      createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-      owner: { fullName: user?.fullName || 'Employee User' }
-    },
-    {
-      _id: 'doc-demo-4',
-      title: 'CodeThrive HR Policy & Conduct Handbook 2026',
-      documentType: 'Policy',
-      isPublic: true,
-      createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
-      owner: { fullName: 'CodeThrive Admin' }
-    }
-  ];
+  const DEMO_DOCUMENTS = [];
+
 
   useEffect(() => {
     fetchDocuments();

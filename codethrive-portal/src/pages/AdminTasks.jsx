@@ -10,52 +10,7 @@ import {
 } from 'lucide-react';
 import './Admin.css';
 
-const DEFAULT_DEMO_TASKS = [
-  {
-    _id: 't1',
-    taskId: 'TSK-101',
-    title: 'Implement Payment Gateway Integration & Webhooks',
-    description: 'Connect Razorpay & Stripe webhooks for automated invoice generation.',
-    assignedTo: { _id: 'emp_001', fullName: 'Mahadevan', employeeId: 'CTI-EMP-001' },
-    priority: 'High',
-    dueDate: '2026-09-15',
-    status: 'In Progress',
-    progressPercentage: 65
-  },
-  {
-    _id: 't2',
-    taskId: 'TSK-102',
-    title: 'Redesign Admin Employee Management UI & Glassmorphic Themes',
-    description: 'Create 360-degree employee detail page with dedicated tabs.',
-    assignedTo: { _id: 'emp_002', fullName: 'Priya Sharma', employeeId: 'CTI-EMP-002' },
-    priority: 'Urgent',
-    dueDate: '2026-09-12',
-    status: 'In Progress',
-    progressPercentage: 85
-  },
-  {
-    _id: 't3',
-    taskId: 'TSK-103',
-    title: 'Review Q3 Engineering Roadmap and Sprint Objectives',
-    description: 'Finalize quarterly deliverables and resource allocation.',
-    assignedTo: { _id: 'emp_003', fullName: 'Rahul Verma', employeeId: 'CTI-EMP-003' },
-    priority: 'Medium',
-    dueDate: '2026-09-08',
-    status: 'Completed',
-    progressPercentage: 100
-  },
-  {
-    _id: 't4',
-    taskId: 'TSK-104',
-    title: 'Process Monthly Onboarding & Verification Files',
-    description: 'Verify uploaded Aadhaar, PAN, and educational documents.',
-    assignedTo: { _id: 'emp_004', fullName: 'Ananya Roy', employeeId: 'CTI-EMP-004' },
-    priority: 'Medium',
-    dueDate: '2026-09-14',
-    status: 'Assigned',
-    progressPercentage: 20
-  }
-];
+const DEFAULT_DEMO_TASKS = [];
 
 const DEFAULT_DEMO_EMPLOYEES = [
   { _id: 'emp_001', fullName: 'Mahadevan', employeeId: 'CTI-EMP-001' },

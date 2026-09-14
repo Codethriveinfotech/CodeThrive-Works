@@ -12,54 +12,8 @@ import {
 } from 'lucide-react';
 import './DailyReports.css';
 
-// Fallback demo reports for high-end preview with clean field structures
-const DEMO_REPORTS = [
-  {
-    _id: 'rep-demo-1',
-    projectTitle: 'CodeThrive Enterprise SaaS Portal',
-    tasksWorked: 'TASK-101, TASK-104',
-    date: new Date().toISOString(),
-    hoursWorked: 8.5,
-    workSummary: 'Architected & engineered modern Daily Worklogs Workspace UI with responsive metric cards, view toggles (Cards, Data Grid, Timeline), and framer-motion micro-animations.',
-    completedWork: 'Dashboard metrics integration, glassmorphic layout styling, and task filter state management.',
-    pendingWork: 'Final regression testing across mobile viewports and edge-case browser validations.',
-    issuesFaced: 'None. All REST API endpoints responding well within 110ms threshold.',
-    productivityRating: 5,
-    progressStatus: 'Completed',
-    status: 'Reviewed',
-    teamLeadComments: 'Outstanding work! The UI animations and workspace layout are exceptionally clean and professional. Approved!'
-  },
-  {
-    _id: 'rep-demo-2',
-    projectTitle: 'MongoDB Backend Indexing & Auth API',
-    tasksWorked: 'TASK-102',
-    date: new Date(Date.now() - 86400000).toISOString(),
-    hoursWorked: 8.0,
-    workSummary: 'Optimized MongoDB database indexing strategies for employee daily report logs and attendance sessions.',
-    completedWork: 'Created compound index on employee ID and submission timestamp in AttendanceSession collection.',
-    pendingWork: 'Execute load test suite simulating 1,500 simultaneous user interactions.',
-    issuesFaced: 'Minor rate-limiting restriction encountered during local load testing; threshold recalculated.',
-    productivityRating: 4,
-    progressStatus: 'Pending',
-    status: 'Submitted',
-    teamLeadComments: null
-  },
-  {
-    _id: 'rep-demo-3',
-    projectTitle: 'Employee Profile & Credential Manager',
-    tasksWorked: 'TASK-098, TASK-099',
-    date: new Date(Date.now() - 86400000 * 2).toISOString(),
-    hoursWorked: 9.0,
-    workSummary: 'Designed and deployed employee profile credential setup module and interactive attendance logger.',
-    completedWork: 'Profile state synchronization, QR check-in utility, and JWT payload validation.',
-    pendingWork: 'Documentation update for REST API endpoints.',
-    issuesFaced: 'Third-party API gateway timeout during deployment testing.',
-    productivityRating: 5,
-    progressStatus: 'Not Completed',
-    status: 'Reviewed',
-    teamLeadComments: 'Great efficiency and code quality. Keep up the high standard!'
-  }
-];
+const DEMO_REPORTS = [];
+
 
 const DailyReports = () => {
   const { user } = useAuth();

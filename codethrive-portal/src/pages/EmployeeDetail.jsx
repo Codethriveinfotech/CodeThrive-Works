@@ -44,51 +44,15 @@ const DEFAULT_DEMO_EMPLOYEES = [
     permanentAddress: '45, Main Street, Coimbatore, Tamil Nadu',
     emergencyContact: { name: 'S. Ramanathan', phone: '9876500000', relationship: 'Father' },
     sentByEmployee: {
-      dailyReports: [
-        { _id: 'dr1', date: '2026-09-09', title: 'Completed Admin Registered Employees Portal & Teams Call Widget', hoursLogged: '8.0h', status: 'Approved' },
-        { _id: 'dr2', date: '2026-09-08', title: 'Implemented Standalone Employee Control Page & Profile Settings', hoursLogged: '7.5h', status: 'Approved' },
-        { _id: 'dr_m1', date: '2026-08-28', title: 'Optimized Database Queries & API Endpoints for HRMS Dashboard', hoursLogged: '8.0h', status: 'Approved' },
-        { _id: 'dr_m2', date: '2026-08-15', title: 'Integrated Payroll & Payslip PDF Generation Module', hoursLogged: '8.5h', status: 'Approved' },
-        { _id: 'dr_m3', date: '2026-07-22', title: 'Refactored JWT Authentication & Role-Based Middleware', hoursLogged: '8.0h', status: 'Approved' },
-        { _id: 'dr_m4', date: '2026-06-18', title: 'Built Attendance Management & Leave Approval Engine', hoursLogged: '8.0h', status: 'Approved' }
-      ],
-      leaveApplications: [
-        { _id: 'l1', leaveType: 'Casual Leave', dates: '2026-08-10 to 2026-08-11', reason: 'Family event in hometown', status: 'Approved' },
-        { _id: 'l_m1', leaveType: 'Sick Leave', dates: '2026-07-14 to 2026-07-15', reason: 'Viral fever rest', status: 'Approved' },
-        { _id: 'l_m2', leaveType: 'Casual Leave', dates: '2026-06-02 to 2026-06-02', reason: 'Personal work at bank', status: 'Approved' }
-      ],
-      uploadedDocs: [
-        { name: 'Aadhaar_Card_Mahadevan.pdf', type: 'Identity Proof', date: '2025-01-15', size: '1.2 MB' },
-        { name: 'PAN_Card.pdf', type: 'Tax Identification', date: '2025-01-15', size: '850 KB' },
-        { name: 'Degree_Certificate.pdf', type: 'Educational Proof', date: '2025-01-15', size: '2.4 MB' }
-      ],
-      attendanceLogs: {
-        todayStatus: 'Working',
-        checkIn: '09:15 AM',
-        checkOut: '--:--',
-        workTime: '5h 15m',
-        breakTime: '15m'
-      },
-      payslips: [
-        { _id: 'ps_1', month: 'September 2026', monthCode: '2026-09', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' },
-        { _id: 'ps_2', month: 'August 2026', monthCode: '2026-08', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' },
-        { _id: 'ps_3', month: 'July 2026', monthCode: '2026-07', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' },
-        { _id: 'ps_4', month: 'June 2026', monthCode: '2026-06', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' },
-        { _id: 'ps_5', month: 'May 2026', monthCode: '2026-05', basicSalary: 65000, grossSalary: 85000, deductions: 6200, netPayable: 78800, status: 'Paid' }
-      ]
+      dailyReports: [],
+      leaveApplications: [],
+      uploadedDocs: [],
+      attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '0h 0m', breakTime: '0m' },
+      payslips: []
     },
     assignedByAdmin: {
-      tasks: [
-        { _id: 't1', taskId: 'TSK-101', title: 'Implement Real-Time Employee Audit Panel', priority: 'High', status: 'In Progress', dueDate: '2026-09-12' },
-        { _id: 't2', taskId: 'TSK-102', title: 'Fix Auth Token Expiry Bug', priority: 'Urgent', status: 'Completed', dueDate: '2026-09-10' },
-        { _id: 't_m1', taskId: 'TSK-088', title: 'Setup Redis Caching for Employee Records', priority: 'High', status: 'Completed', dueDate: '2026-08-25' },
-        { _id: 't_m2', taskId: 'TSK-075', title: 'Build Multi-Tenant Database Schemas', priority: 'Medium', status: 'Completed', dueDate: '2026-07-20' },
-        { _id: 't_m3', taskId: 'TSK-060', title: 'Initial Portal Architecture Setup', priority: 'Urgent', status: 'Completed', dueDate: '2026-06-15' }
-      ],
-      notificationsSent: [
-        { _id: 'n1', title: 'Welcome to CodeThrive Engineering Team!', date: '2025-01-15' },
-        { _id: 'n2', title: 'Q3 Appraisal Schedule Finalized', date: '2026-09-01' }
-      ]
+      tasks: [],
+      notificationsSent: []
     }
   },
   {
@@ -114,33 +78,15 @@ const DEFAULT_DEMO_EMPLOYEES = [
     permanentAddress: '12, Garden Street, Mysuru, Karnataka',
     emergencyContact: { name: 'R. Sharma', phone: '9876511111', relationship: 'Spouse' },
     sentByEmployee: {
-      dailyReports: [
-        { _id: 'dr3', date: '2026-09-09', title: 'Designed Figma Mockups for Mobile HRMS App & Glassmorphic Themes', hoursLogged: '7.0h', status: 'Approved' },
-        { _id: 'dr_p1', date: '2026-08-20', title: 'Created Interactive UI Components for Design System', hoursLogged: '8.0h', status: 'Approved' },
-        { _id: 'dr_p2', date: '2026-07-12', title: 'Conduct User Research & Usability Tests with Team Leads', hoursLogged: '7.5h', status: 'Approved' }
-      ],
-      leaveApplications: [
-        { _id: 'l2', leaveType: 'Medical Leave', dates: '2026-07-05 to 2026-07-06', reason: 'Dental Checkup', status: 'Approved' }
-      ],
-      uploadedDocs: [
-        { name: 'Priya_Design_Portfolio.pdf', type: 'Resume', date: '2025-03-01', size: '4.5 MB' },
-        { name: 'Aadhaar_Priya.pdf', type: 'Identity Proof', date: '2025-03-01', size: '1.1 MB' }
-      ],
-      attendanceLogs: { todayStatus: 'On Break', checkIn: '09:30 AM', checkOut: '--:--', workTime: '4h 30m', breakTime: '20m' },
-      payslips: [
-        { _id: 'ps_p1', month: 'September 2026', monthCode: '2026-09', basicSalary: 60000, grossSalary: 78000, deductions: 5800, netPayable: 72200, status: 'Paid' },
-        { _id: 'ps_p2', month: 'August 2026', monthCode: '2026-08', basicSalary: 60000, grossSalary: 78000, deductions: 5800, netPayable: 72200, status: 'Paid' },
-        { _id: 'ps_p3', month: 'July 2026', monthCode: '2026-07', basicSalary: 60000, grossSalary: 78000, deductions: 5800, netPayable: 72200, status: 'Paid' }
-      ]
+      dailyReports: [],
+      leaveApplications: [],
+      uploadedDocs: [],
+      attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '0h 0m', breakTime: '0m' },
+      payslips: []
     },
     assignedByAdmin: {
-      tasks: [
-        { _id: 't3', taskId: 'TSK-103', title: 'Redesign Admin Employee Management UI', priority: 'Urgent', status: 'In Progress', dueDate: '2026-09-11' },
-        { _id: 't_p1', taskId: 'TSK-084', title: 'Design System Dark & Light Tokens', priority: 'High', status: 'Completed', dueDate: '2026-08-18' }
-      ],
-      notificationsSent: [
-        { _id: 'n3', title: 'Design System Guidelines Updated', date: '2026-08-20' }
-      ]
+      tasks: [],
+      notificationsSent: []
     }
   },
   {
@@ -166,24 +112,14 @@ const DEFAULT_DEMO_EMPLOYEES = [
     permanentAddress: '77, Civil Lines, Madurai, Tamil Nadu',
     emergencyContact: { name: 'S. Verma', phone: '9876522222', relationship: 'Wife' },
     sentByEmployee: {
-      dailyReports: [
-        { _id: 'dr4', date: '2026-09-08', title: 'Reviewed Q3 Engineering Roadmap and Sprint Objectives', hoursLogged: '8.0h', status: 'Approved' },
-        { _id: 'dr_r1', date: '2026-08-29', title: 'Conduct Technical Interviews and System Architecture Audits', hoursLogged: '8.5h', status: 'Approved' }
-      ],
+      dailyReports: [],
       leaveApplications: [],
-      uploadedDocs: [
-        { name: 'Rahul_Aadhaar.pdf', type: 'Identity Proof', date: '2024-11-10', size: '1.4 MB' }
-      ],
+      uploadedDocs: [],
       attendanceLogs: { todayStatus: 'Checked Out', checkIn: '08:45 AM', checkOut: '05:15 PM', workTime: '8h 00m', breakTime: '30m' },
-      payslips: [
-        { _id: 'ps_r1', month: 'September 2026', monthCode: '2026-09', basicSalary: 85000, grossSalary: 110000, deductions: 8500, netPayable: 101500, status: 'Paid' },
-        { _id: 'ps_r2', month: 'August 2026', monthCode: '2026-08', basicSalary: 85000, grossSalary: 110000, deductions: 8500, netPayable: 101500, status: 'Paid' }
-      ]
+      payslips: []
     },
     assignedByAdmin: {
-      tasks: [
-        { _id: 't4', taskId: 'TSK-104', title: 'Q3 Product Deliverables Review', priority: 'High', status: 'Completed', dueDate: '2026-09-08' }
-      ],
+      tasks: [],
       notificationsSent: []
     }
   },
@@ -210,24 +146,14 @@ const DEFAULT_DEMO_EMPLOYEES = [
     permanentAddress: '19, Lake View Road, Trichy, Tamil Nadu',
     emergencyContact: { name: 'K. Roy', phone: '9876533333', relationship: 'Mother' },
     sentByEmployee: {
-      dailyReports: [
-        { _id: 'dr5', date: '2026-09-09', title: 'Processed Monthly Onboarding & Verification Files', hoursLogged: '8.0h', status: 'Approved' },
-        { _id: 'dr_a1', date: '2026-08-30', title: 'Prepared Monthly Payroll & Tax Deduction Audits', hoursLogged: '8.0h', status: 'Approved' }
-      ],
+      dailyReports: [],
       leaveApplications: [],
-      uploadedDocs: [
-        { name: 'Ananya_Aadhaar.pdf', type: 'Identity Proof', date: '2025-02-01', size: '1.0 MB' }
-      ],
+      uploadedDocs: [],
       attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '6h 00m', breakTime: '20m' },
-      payslips: [
-        { _id: 'ps_a1', month: 'September 2026', monthCode: '2026-09', basicSalary: 55000, grossSalary: 72000, deductions: 5200, netPayable: 66800, status: 'Paid' },
-        { _id: 'ps_a2', month: 'August 2026', monthCode: '2026-08', basicSalary: 55000, grossSalary: 72000, deductions: 5200, netPayable: 66800, status: 'Paid' }
-      ]
+      payslips: []
     },
     assignedByAdmin: {
-      tasks: [
-        { _id: 't5', taskId: 'TSK-105', title: 'Finalize Q3 Performance Evaluation Sheets', priority: 'Medium', status: 'In Progress', dueDate: '2026-09-15' }
-      ],
+      tasks: [],
       notificationsSent: []
     }
   }

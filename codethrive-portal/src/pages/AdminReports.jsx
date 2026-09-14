@@ -10,44 +10,7 @@ import {
 } from 'lucide-react';
 import './Admin.css';
 
-const DEFAULT_DEMO_REPORTS = [
-  {
-    _id: 'dr1',
-    date: '2026-09-09',
-    employee: { fullName: 'Mahadevan', department: 'Engineering', employeeId: 'CTI-EMP-001' },
-    summary: 'Completed Admin Registered Employees Portal & Microsoft Teams Direct In-Portal Calling Widget',
-    completedTasks: '1. Implemented global refresh button next to settings in topbar.\n2. Built Teams Direct Calling widget with ringing animation & timer.\n3. Updated registered employees onboarding hub.',
-    hoursLogged: '8.0',
-    status: 'Pending'
-  },
-  {
-    _id: 'dr2',
-    date: '2026-09-09',
-    employee: { fullName: 'Priya Sharma', department: 'UI/UX Design', employeeId: 'CTI-EMP-002' },
-    summary: 'Designed Figma Mockups for Mobile HRMS App & Glassmorphic Dashboard Layouts',
-    completedTasks: '1. Finished low-fidelity wireframes.\n2. Built design tokens for dark mode theme.\n3. Exported asset SVG icons.',
-    hoursLogged: '7.0',
-    status: 'Pending'
-  },
-  {
-    _id: 'dr3',
-    date: '2026-09-08',
-    employee: { fullName: 'Rahul Verma', department: 'Management', employeeId: 'CTI-EMP-003' },
-    summary: 'Reviewed Q3 Engineering Roadmap and Sprint Objectives',
-    completedTasks: '1. Conducted sprint retrospective with tech leads.\n2. Finalized Q3 milestone targets.',
-    hoursLogged: '8.0',
-    status: 'Approved'
-  },
-  {
-    _id: 'dr4',
-    date: '2026-09-08',
-    employee: { fullName: 'Ananya Roy', department: 'HR', employeeId: 'CTI-EMP-004' },
-    summary: 'Processed Monthly Onboarding & Verification Files',
-    completedTasks: '1. Audited Aadhaar & PAN document submissions.\n2. Updated employee master database.',
-    hoursLogged: '8.0',
-    status: 'Approved'
-  }
-];
+const DEFAULT_DEMO_REPORTS = [];
 
 const AdminReports = () => {
   const [reports, setReports] = useState(DEFAULT_DEMO_REPORTS);

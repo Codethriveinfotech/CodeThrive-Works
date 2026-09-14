@@ -13,48 +13,8 @@ import {
 } from 'lucide-react';
 import './Payroll.css';
 
-// Fallback demo payslips for high-end preview if server is empty
-const DEMO_PAYSLIPS = [
-  {
-    _id: 'ps-demo-1',
-    payslipId: 'PAY-2026-08',
-    month: 'August 2026',
-    basicSalary: 65000,
-    grossSalary: 85000,
-    deductions: 6200,
-    netPayable: 78800,
-    status: 'Paid',
-    createdAt: new Date().toISOString(),
-    allowanceDetails: { hra: 12000, travel: 3500, medical: 2500, other: 2000 },
-    deductionDetails: { pf: 3200, esi: 0, professionalTax: 200, incomeTax: 2800 }
-  },
-  {
-    _id: 'ps-demo-2',
-    payslipId: 'PAY-2026-07',
-    month: 'July 2026',
-    basicSalary: 65000,
-    grossSalary: 85000,
-    deductions: 6200,
-    netPayable: 78800,
-    status: 'Paid',
-    createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
-    allowanceDetails: { hra: 12000, travel: 3500, medical: 2500, other: 2000 },
-    deductionDetails: { pf: 3200, esi: 0, professionalTax: 200, incomeTax: 2800 }
-  },
-  {
-    _id: 'ps-demo-3',
-    payslipId: 'PAY-2026-06',
-    month: 'June 2026',
-    basicSalary: 65000,
-    grossSalary: 85000,
-    deductions: 6200,
-    netPayable: 78800,
-    status: 'Paid',
-    createdAt: new Date(Date.now() - 86400000 * 60).toISOString(),
-    allowanceDetails: { hra: 12000, travel: 3500, medical: 2500, other: 2000 },
-    deductionDetails: { pf: 3200, esi: 0, professionalTax: 200, incomeTax: 2800 }
-  }
-];
+const DEMO_PAYSLIPS = [];
+
 
 const Payroll = () => {
   const { user } = useAuth();
