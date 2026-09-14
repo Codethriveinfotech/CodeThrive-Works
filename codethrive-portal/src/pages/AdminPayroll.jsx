@@ -5,9 +5,11 @@ import StatusBadge from '../components/common/StatusBadge';
 import DataTable from '../components/common/DataTable';
 import Modal from '../components/common/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import { 
   Banknote, Plus, Search, FileText, CheckCircle2, X, Zap, Eye, Printer, Users, 
-  Sparkles, RefreshCw, DollarSign, ArrowUpRight, TrendingUp, ShieldCheck
+  Sparkles, RefreshCw, DollarSign, ArrowUpRight, TrendingUp, ShieldCheck, Download
 } from 'lucide-react';
 import './Payroll.css';
 
@@ -154,7 +156,7 @@ const AdminPayroll = () => {
     }
   };
 
-  const handleEmployeeSelect = (e) => {
+  const _handleEmployeeSelect = (e) => {
     const empId = e.target.value;
     setSelectedEmployeeId(empId);
     if (empId) {
@@ -176,7 +178,7 @@ const AdminPayroll = () => {
     }
   };
 
-  const handleAllowanceChange = (e) => {
+  const _handleAllowanceChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -184,7 +186,7 @@ const AdminPayroll = () => {
     }));
   };
 
-  const handleDeductionChange = (e) => {
+  const _handleDeductionChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -192,7 +194,7 @@ const AdminPayroll = () => {
     }));
   };
 
-  const handleChange = (e) => {
+  const _handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ 
       ...prev, 
@@ -205,7 +207,7 @@ const AdminPayroll = () => {
   const totalEarnings = (formData.basicSalary || 0) + totalAllowances + (formData.bonus || 0);
   const netSalary = totalEarnings - totalDeductions;
 
-  const handleSingleSubmit = async (e) => {
+  const _handleSingleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedEmployeeId) {
       alert("Please select an employee.");
@@ -279,6 +281,140 @@ const AdminPayroll = () => {
       console.error('Failed bulk payroll generation', err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const downloadPayslipPDF = (payslip) => {
+    try {
+      const doc = new jsPDF();
+      
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 42, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 20);
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(167, 243, 208);
+      doc.text(`OFFICIAL SALARY STATEMENT • ${payslip.month}`, 14, 29);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`ID: ${payslip.payslipId || 'PAY-2026'}`, 196, 20, { align: 'right' });
+      doc.text(`STATUS: ${payslip.status || 'Paid'}`, 196, 29, { align: 'right' });
+      
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EMPLOYEE INFORMATION', 14, 52);
+      
+      const empName = payslip.employee?.fullName || 'Kirubakaran';
+      const empId = payslip.employee?.employeeId || 'CTI-EMP-001';
+      const empRole = payslip.employee?.designation || 'Software Engineer';
+      const empEmail = payslip.employee?.email || `${empId.toLowerCase()}@codethrive.com`;
+      
+      const employeeData = [
+        ['Employee Name:', empName, 'Employee ID:', empId],
+        ['Designation:', empRole, 'Pay Period:', payslip.month],
+        ['Email ID:', empEmail, 'Payment Status:', payslip.status || 'Paid']
+      ];
+      
+      doc.autoTable({
+        startY: 56,
+        body: employeeData,
+        theme: 'plain',
+        styles: { fontSize: 9, cellPadding: 2.5, textColor: [51, 65, 85] },
+        columnStyles: {
+          0: { fontStyle: 'bold', width: 35 },
+          1: { width: 65 },
+          2: { fontStyle: 'bold', width: 35 },
+          3: { width: 55 }
+        }
+      });
+
+      const currentY = doc.lastAutoTable.finalY + 8;
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 41, 59);
+      doc.text('EARNINGS & DEDUCTIONS BREAKDOWN', 14, currentY);
+
+      const hra = payslip.allowanceDetails?.hra || 18000;
+      const travel = payslip.allowanceDetails?.travel || 2500;
+      const medical = payslip.allowanceDetails?.medical || 1500;
+      const otherAllowance = payslip.allowanceDetails?.other || 1000;
+
+      const pf = payslip.deductionDetails?.pf || 5400;
+      const esi = payslip.deductionDetails?.esi || 0;
+      const profTax = payslip.deductionDetails?.professionalTax || 200;
+      const incomeTax = payslip.deductionDetails?.incomeTax || 1500;
+
+      const salaryTableBody = [
+        ['Basic Salary', `Rs. ${(payslip.basicSalary || 0).toLocaleString()}`, 'Provident Fund (PF)', `Rs. ${pf.toLocaleString()}`],
+        ['House Rent Allowance (HRA)', `Rs. ${hra.toLocaleString()}`, 'Professional Tax', `Rs. ${profTax.toLocaleString()}`],
+        ['Travel & Conveyance', `Rs. ${travel.toLocaleString()}`, 'Income Tax (TDS)', `Rs. ${incomeTax.toLocaleString()}`],
+        ['Medical Allowance', `Rs. ${medical.toLocaleString()}`, 'ESI Deduction', `Rs. ${esi.toLocaleString()}`],
+        ['Special Allowances', `Rs. ${otherAllowance.toLocaleString()}`, '', ''],
+        [
+          'GROSS EARNINGS', 
+          `Rs. ${(payslip.grossSalary || 0).toLocaleString()}`, 
+          'TOTAL DEDUCTIONS', 
+          `Rs. ${(payslip.deductions || 0).toLocaleString()}`
+        ]
+      ];
+
+      doc.autoTable({
+        startY: currentY + 4,
+        head: [['EARNINGS', 'AMOUNT', 'DEDUCTIONS', 'AMOUNT']],
+        body: salaryTableBody,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
+        styles: { fontSize: 8.5, cellPadding: 3.5, textColor: [30, 41, 59] },
+        columnStyles: {
+          0: { width: 55 },
+          1: { width: 40, halign: 'right' },
+          2: { width: 55 },
+          3: { width: 40, halign: 'right' }
+        },
+        didParseCell: function(data) {
+          if (data.row.index === 5) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [241, 245, 249];
+          }
+        }
+      });
+
+      const finalY = doc.lastAutoTable.finalY + 10;
+
+      doc.setFillColor(236, 253, 245);
+      doc.setDrawColor(16, 185, 129);
+      doc.roundedRect(14, finalY, 182, 20, 3, 3, 'FD');
+
+      doc.setTextColor(6, 78, 59);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('NET SALARY PAYABLE:', 22, finalY + 12);
+
+      doc.setTextColor(16, 185, 129);
+      doc.setFontSize(15);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 190, finalY + 13, { align: 'right' });
+
+      const footerY = finalY + 30;
+      doc.setTextColor(100, 116, 139);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text('This is an official computer-generated document issued by CodeThrive Infotech Pvt Ltd. No physical signature required.', 14, footerY);
+
+      const fileName = `Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.pdf`;
+      doc.save(fileName);
+    } catch (err) {
+      console.error('PDF Generation Failed', err);
+      alert('Could not generate PDF. Please try again.');
     }
   };
 
@@ -509,21 +645,36 @@ const AdminPayroll = () => {
                     </td>
 
                     <td style={{ padding: '1rem', textAlign: 'right', borderRadius: '0 12px 12px 0' }}>
-                      <button
-                        onClick={() => {
-                          setSelectedPayslip(ps);
-                          setIsPayslipModalOpen(true);
-                        }}
-                        style={{
-                          padding: '0.45rem 0.85rem', borderRadius: '8px',
-                          background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)',
-                          color: '#fff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
-                          display: 'inline-flex', alignItems: 'center', gap: '0.4rem'
-                        }}
-                      >
-                        <Eye size={14} />
-                        <span>View Payslip</span>
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={() => {
+                            setSelectedPayslip(ps);
+                            setIsPayslipModalOpen(true);
+                          }}
+                          style={{
+                            padding: '0.45rem 0.85rem', borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)',
+                            color: '#fff', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center', gap: '0.4rem'
+                          }}
+                        >
+                          <Eye size={14} />
+                          <span>View</span>
+                        </button>
+                        <button
+                          onClick={() => downloadPayslipPDF(ps)}
+                          title="Download Official PDF"
+                          style={{
+                            padding: '0.45rem 0.85rem', borderRadius: '8px',
+                            background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)',
+                            color: '#34d399', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center', gap: '0.4rem'
+                          }}
+                        >
+                          <Download size={14} />
+                          <span>PDF</span>
+                        </button>
+                      </div>
                     </td>
                   </motion.tr>
                 ))}
@@ -721,6 +872,9 @@ const AdminPayroll = () => {
 
             {/* Footer */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button type="button" className="btn btn-outline" onClick={() => downloadPayslipPDF(selectedPayslip)}>
+                <Download size={16} /> Download PDF
+              </button>
               <button type="button" className="btn btn-outline" onClick={() => window.print()}>
                 <Printer size={16} /> Print Voucher
               </button>

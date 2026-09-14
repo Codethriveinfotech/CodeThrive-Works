@@ -58,7 +58,7 @@ const AdminDocuments = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('ALL');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [_viewMode, _setViewMode] = useState('grid'); // 'grid' or 'list'
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -390,21 +390,38 @@ const AdminDocuments = () => {
                   <span style={{ fontSize: '0.82rem', color: '#e2e8f0', fontWeight: 600 }}>{doc.owner?.fullName || 'HR Admin'}</span>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
                   <a
-                    href={`http://localhost:5000/${doc.fileUrl}`}
+                    href={doc.fileUrl?.startsWith('http') ? doc.fileUrl : `http://localhost:5000/${doc.fileUrl}`}
                     target="_blank"
                     rel="noreferrer"
                     style={{
-                      padding: '0.45rem 0.75rem', borderRadius: '8px',
+                      padding: '0.45rem 0.65rem', borderRadius: '8px',
+                      background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#fff', fontSize: '0.8rem', fontWeight: 600,
+                      display: 'flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none'
+                    }}
+                    title="View Document in Browser"
+                  >
+                    <Eye size={14} />
+                    <span>View</span>
+                  </a>
+
+                  <a
+                    href={doc.fileUrl?.startsWith('http') ? doc.fileUrl : `http://localhost:5000/${doc.fileUrl}`}
+                    download={doc.title ? `${doc.title.replace(/\s+/g, '_')}.pdf` : 'document.pdf'}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: '0.45rem 0.65rem', borderRadius: '8px',
                       background: 'rgba(99, 102, 241, 0.2)', border: '1px solid rgba(99, 102, 241, 0.3)',
                       color: '#a5b4fc', fontSize: '0.8rem', fontWeight: 600,
                       display: 'flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none'
                     }}
-                    title="Download File"
+                    title="Download File to Computer"
                   >
                     <Download size={14} />
-                    <span>Get</span>
+                    <span>Download</span>
                   </a>
 
                   <button

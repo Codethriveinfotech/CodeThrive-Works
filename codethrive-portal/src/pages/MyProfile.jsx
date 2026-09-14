@@ -12,13 +12,6 @@ import {
 } from 'lucide-react';
 import './MyProfile.css';
 
-const WORK_STATUSES = [
-  { id: 'office', label: 'In Office', icon: '🟢' },
-  { id: 'remote', label: 'Remote / WFH', icon: '💻' },
-  { id: 'break', label: 'On Break', icon: '☕' },
-  { id: 'focus', label: 'In Focus Mode', icon: '🎯' }
-];
-
 const MyProfile = () => {
   const { user } = useAuth();
   const fileInputRef = useRef(null);
@@ -30,10 +23,6 @@ const MyProfile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [modalFormTab, setModalFormTab] = useState('personal');
-  
-  // Customization state
-  const [workStatus, setWorkStatus] = useState('office');
-  const [isIdFlipped, setIsIdFlipped] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -294,20 +283,6 @@ const MyProfile = () => {
               <span className="profile-badge-status">
                 <ShieldCheck size={13} /> VERIFIED VAULT
               </span>
-            </div>
-
-            {/* Live Work Status Selector */}
-            <div className="work-status-pills">
-              {WORK_STATUSES.map(s => (
-                <button
-                  key={s.id}
-                  className={`status-pill-btn ${workStatus === s.id ? 'active' : ''}`}
-                  onClick={() => setWorkStatus(s.id)}
-                >
-                  <span>{s.icon}</span>
-                  <span>{s.label}</span>
-                </button>
-              ))}
             </div>
           </div>
         </div>

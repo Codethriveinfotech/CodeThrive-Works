@@ -5,8 +5,8 @@ import StatusBadge from '../components/common/StatusBadge';
 import DataTable from '../components/common/DataTable';
 import Modal from '../components/common/Modal';
 import { 
-  FileText, Search, Calendar, Eye, Download, Check, X, 
-  Sparkles, Clock, CheckCircle2, AlertCircle, FileCheck 
+  FileText, Search, Calendar, Eye, Check, X, 
+  Sparkles, Clock, CheckCircle2, AlertCircle 
 } from 'lucide-react';
 import './Admin.css';
 

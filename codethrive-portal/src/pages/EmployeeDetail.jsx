@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { 
-  User, UserCheck, Search, X, Briefcase, FileText, Calendar, Clock, Banknote,
-  KeyRound, ShieldAlert, Plus, CheckCircle, AlertTriangle, ArrowDownLeft, ArrowUpRight,
-  Send, Trash2, Eye, Download, Save, RefreshCw, ArrowLeft, ChevronRight, Mail, Phone, MapPin,
-  Check, XCircle, FileCheck, Layers
+  User, X, Briefcase, FileText, Calendar, Clock, Banknote,
+  KeyRound, Plus, Download, Save, ArrowLeft, Mail, MapPin, Check, FileCheck
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';

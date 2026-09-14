@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Settings, ChevronDown, RefreshCw } from 'lucide-react';
+import { Search, Settings, ChevronDown, RefreshCw, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SettingsModal from './SettingsModal';
@@ -37,29 +37,43 @@ const Topbar = () => {
         top: 0,
         zIndex: 100
       }}>
-        <div className="topbar-search" style={{
-          display: 'flex',
-          alignItems: 'center',
-          background: 'rgba(0,0,0,0.2)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 'var(--radius-full)',
-          padding: '0.5rem 1.25rem',
-          width: '350px',
-          transition: 'all var(--transition-fast)'
-        }}>
-          <Search size={18} color="var(--text-muted)" style={{ marginRight: '0.75rem' }} />
-          <input 
-            type="text" 
-            placeholder="Search Employee Portal..." 
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-main)',
-              width: '100%',
-              outline: 'none',
-              fontSize: '0.95rem'
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <button 
+            className="mobile-menu-toggle-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              document.body.classList.toggle('mobile-sidebar-open');
             }}
-          />
+            title="Toggle Mobile Menu"
+            aria-label="Toggle Mobile Menu"
+          >
+            <Menu size={22} color="#ffffff" />
+          </button>
+
+          <div className="topbar-search" style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: 'rgba(0,0,0,0.2)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 'var(--radius-full)',
+            padding: '0.5rem 1.25rem',
+            width: '350px',
+            transition: 'all var(--transition-fast)'
+          }}>
+            <Search size={18} color="var(--text-muted)" style={{ marginRight: '0.75rem' }} />
+            <input 
+              type="text" 
+              placeholder="Search Employee Portal..." 
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-main)',
+                width: '100%',
+                outline: 'none',
+                fontSize: '0.95rem'
+              }}
+            />
+          </div>
         </div>
         
         <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

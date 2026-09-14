@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import { 
   Download, FileText, Search, CreditCard, ChevronRight, 
   Calendar, CheckCircle2, DollarSign, TrendingUp, ShieldCheck, 
@@ -102,7 +104,142 @@ const Payroll = () => {
   };
 
   const downloadPayslip = (payslip) => {
-    alert(`Downloading Official PDF Payslip for ${payslip.month}`);
+    try {
+      const doc = new jsPDF();
+      
+      // Dark Header Banner
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 42, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 20);
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(167, 243, 208);
+      doc.text(`OFFICIAL SALARY STATEMENT • ${payslip.month}`, 14, 29);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`ID: ${payslip.payslipId || 'PAY-2026'}`, 196, 20, { align: 'right' });
+      doc.text(`STATUS: ${payslip.status || 'Paid'}`, 196, 29, { align: 'right' });
+      
+      // Employee Details Table
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EMPLOYEE INFORMATION', 14, 52);
+      
+      const empName = user?.fullName || user?.name || payslip.employee?.fullName || 'Kirubakaran';
+      const empId = user?.employeeId || payslip.employee?.employeeId || 'CTI-EMP-001';
+      const empRole = user?.role || user?.designation || payslip.employee?.designation || 'Software Engineer';
+      const empEmail = user?.email || payslip.employee?.email || `${empId.toLowerCase()}@codethrive.com`;
+      
+      const employeeData = [
+        ['Employee Name:', empName, 'Employee ID:', empId],
+        ['Designation:', empRole, 'Pay Period:', payslip.month],
+        ['Email ID:', empEmail, 'Payment Status:', payslip.status || 'Paid']
+      ];
+      
+      doc.autoTable({
+        startY: 56,
+        body: employeeData,
+        theme: 'plain',
+        styles: { fontSize: 9, cellPadding: 2.5, textColor: [51, 65, 85] },
+        columnStyles: {
+          0: { fontStyle: 'bold', width: 35 },
+          1: { width: 65 },
+          2: { fontStyle: 'bold', width: 35 },
+          3: { width: 55 }
+        }
+      });
+
+      const currentY = doc.lastAutoTable.finalY + 8;
+      
+      // Salary Breakdown Header
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 41, 59);
+      doc.text('EARNINGS & DEDUCTIONS BREAKDOWN', 14, currentY);
+
+      const hra = payslip.allowanceDetails?.hra || 12000;
+      const travel = payslip.allowanceDetails?.travel || 3500;
+      const medical = payslip.allowanceDetails?.medical || 2500;
+      const otherAllowance = payslip.allowanceDetails?.other || 2000;
+
+      const pf = payslip.deductionDetails?.pf || 3200;
+      const esi = payslip.deductionDetails?.esi || 0;
+      const profTax = payslip.deductionDetails?.professionalTax || 200;
+      const incomeTax = payslip.deductionDetails?.incomeTax || 2800;
+
+      const salaryTableBody = [
+        ['Basic Salary', `Rs. ${(payslip.basicSalary || 0).toLocaleString()}`, 'Provident Fund (PF)', `Rs. ${pf.toLocaleString()}`],
+        ['House Rent Allowance (HRA)', `Rs. ${hra.toLocaleString()}`, 'Professional Tax', `Rs. ${profTax.toLocaleString()}`],
+        ['Travel & Conveyance', `Rs. ${travel.toLocaleString()}`, 'Income Tax (TDS)', `Rs. ${incomeTax.toLocaleString()}`],
+        ['Medical Allowance', `Rs. ${medical.toLocaleString()}`, 'ESI Deduction', `Rs. ${esi.toLocaleString()}`],
+        ['Special Allowances', `Rs. ${otherAllowance.toLocaleString()}`, '', ''],
+        [
+          'GROSS EARNINGS', 
+          `Rs. ${(payslip.grossSalary || 0).toLocaleString()}`, 
+          'TOTAL DEDUCTIONS', 
+          `Rs. ${(payslip.deductions || 0).toLocaleString()}`
+        ]
+      ];
+
+      doc.autoTable({
+        startY: currentY + 4,
+        head: [['EARNINGS', 'AMOUNT', 'DEDUCTIONS', 'AMOUNT']],
+        body: salaryTableBody,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
+        styles: { fontSize: 8.5, cellPadding: 3.5, textColor: [30, 41, 59] },
+        columnStyles: {
+          0: { width: 55 },
+          1: { width: 40, halign: 'right' },
+          2: { width: 55 },
+          3: { width: 40, halign: 'right' }
+        },
+        didParseCell: function(data) {
+          if (data.row.index === 5) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [241, 245, 249];
+          }
+        }
+      });
+
+      const finalY = doc.lastAutoTable.finalY + 10;
+
+      // Net Salary Callout Box
+      doc.setFillColor(236, 253, 245);
+      doc.setDrawColor(16, 185, 129);
+      doc.roundedRect(14, finalY, 182, 20, 3, 3, 'FD');
+
+      doc.setTextColor(6, 78, 59);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('NET SALARY PAYABLE:', 22, finalY + 12);
+
+      doc.setTextColor(16, 185, 129);
+      doc.setFontSize(15);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 190, finalY + 13, { align: 'right' });
+
+      // Footer
+      const footerY = finalY + 30;
+      doc.setTextColor(100, 116, 139);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text('This is an official computer-generated document issued by CodeThrive Infotech Pvt Ltd. No physical signature required.', 14, footerY);
+
+      const fileName = `Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.pdf`;
+      doc.save(fileName);
+    } catch (err) {
+      console.error('PDF Generation Failed', err);
+      alert('Could not generate PDF. Please try again.');
+    }
   };
 
   // Derived state for filters
@@ -130,9 +267,9 @@ const Payroll = () => {
   const latestPayslip = payslips && payslips.length > 0 ? payslips[0] : null;
 
   // Financial Stats
-  const totalYTDNet = payslips.reduce((acc, p) => acc + (parseFloat(p.netPayable) || 0), 0);
-  const totalYTDGross = payslips.reduce((acc, p) => acc + (parseFloat(p.grossSalary) || 0), 0);
-  const totalYTDDeductions = payslips.reduce((acc, p) => acc + (parseFloat(p.deductions) || 0), 0);
+  const _totalYTDNet = payslips.reduce((acc, p) => acc + (parseFloat(p.netPayable) || 0), 0);
+  const _totalYTDGross = payslips.reduce((acc, p) => acc + (parseFloat(p.grossSalary) || 0), 0);
+  const _totalYTDDeductions = payslips.reduce((acc, p) => acc + (parseFloat(p.deductions) || 0), 0);
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column', gap: '1rem' }}>

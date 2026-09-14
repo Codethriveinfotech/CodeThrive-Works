@@ -6,12 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Send, CheckCircle2, Clock, 
-  AlertCircle, Download, PlusCircle, Search, 
-  Calendar, Star, MapPin, ChevronRight, 
-  Sparkles, RefreshCw, CheckSquare, MessageSquare, Edit3,
-  ArrowRight, ArrowUpRight, Layers, FileCheck, ExternalLink,
-  Grid, List, TrendingUp, Award, Zap, Briefcase, Filter,
-  Eye, ShieldCheck, Activity, BarChart3, UserCheck, Flame
+  PlusCircle, Search, Calendar, Star, 
+  Sparkles, RefreshCw, MessageSquare, 
+  ArrowUpRight, Grid, List, Award, Eye, ShieldCheck, Activity
 } from 'lucide-react';
 import './DailyReports.css';
 

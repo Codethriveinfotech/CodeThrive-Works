@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
           setUser(res.data.user);
           localStorage.setItem('user', JSON.stringify(res.data.user));
         }
-      }).catch(err => {
+      }).catch(_err => {
         console.warn('Backend session refresh skipped (Offline/Local mode active)');
       }).finally(() => {
         setLoading(false);

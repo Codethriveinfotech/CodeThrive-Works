@@ -11,7 +11,6 @@ import {
   Clock, Coffee, Utensils, LogIn, Play, LogOut, CheckCircle, AlertTriangle, XCircle, 
   Download, Printer, Search, Filter, Calendar as CalIcon, MapPin, Globe, FileText, User 
 } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from 'date-fns';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
@@ -28,9 +27,9 @@ const Attendance = () => {
   const [history, setHistory] = useState([]);
   const [summary, setSummary] = useState(null);
   const [leaves, setLeaves] = useState(null);
-  const [employees, setEmployees] = useState([]); 
+  const [employees, _setEmployees] = useState([]); 
   
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [_currentTime, setCurrentTime] = useState(new Date());
   const [liveDuration, setLiveDuration] = useState(0);
 
   const [selectedEmp, setSelectedEmp] = useState('');

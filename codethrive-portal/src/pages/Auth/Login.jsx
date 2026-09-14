@@ -111,7 +111,7 @@ const Login = () => {
               <span className="checkmark"></span>
               Remember me
             </label>
-            <Link to="/forgot-password" className="forgot-link">Forgot Password?</Link>
+            <Link to="/employee/forgot-password" className="forgot-link">Forgot Password?</Link>
           </div>
           
           <button type="submit" className="btn btn-primary w-100" disabled={isLoading} style={{ padding: '0.85rem', marginTop: '1.5rem', fontSize: '1rem' }}>

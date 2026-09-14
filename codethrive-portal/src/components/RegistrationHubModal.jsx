@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  User, UserCheck, Search, X, Briefcase, FileText, Calendar, Clock, Banknote,
-  KeyRound, ShieldAlert, Plus, CheckCircle, AlertTriangle, ArrowDownLeft, ArrowUpRight,
-  Send, Trash2, Eye, Download, MessageSquare, Award, Save, RefreshCw
+  UserCheck, Search, X, Briefcase, FileText, Calendar, Clock, Banknote,
+  KeyRound, ShieldAlert, ArrowDownLeft, ArrowUpRight,
+  Send, Eye, Download, Save
 } from 'lucide-react';
 import api from '../utils/api';
 import StatusBadge from './common/StatusBadge';

@@ -17,8 +17,9 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 100;
+  z-index: 200;
   box-shadow: 1px 0 20px rgba(0, 0, 0, 0.5);
+  overflow: visible !important;
 }
 
 .brand {
@@ -200,4 +201,117 @@
   font-weight: 500;
   color: var(--text-main);
   font-size: 0.95rem;
+}
+
+/* Mobile Toggle Hamburger Button - hidden on desktop */
+.mobile-menu-toggle-btn {
+  display: none !important;
+}
+
+/* 📱 MOBILE RESPONSIVE STYLES (Strictly applied only below 768px - Desktop view remains 100% unchanged) */
+@media (max-width: 768px) {
+  .mobile-menu-toggle-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-menu-toggle-btn:active {
+    transform: scale(0.95);
+    background: var(--primary);
+  }
+
+  .topbar {
+    padding: 0.75rem 1rem !important;
+    height: 64px !important;
+  }
+
+  .topbar-search {
+    width: 160px !important;
+    padding: 0.4rem 0.75rem !important;
+  }
+
+  .topbar-search input {
+    font-size: 0.825rem !important;
+  }
+
+  .profile-widget span,
+  .profile-widget .user-email {
+    display: none !important;
+  }
+
+  /* Flexible 1-column layout for grid cards on mobile screens */
+  .dashboard-grid,
+  .stats-grid,
+  .cards-grid,
+  .grid-2-col,
+  .grid-3-col,
+  .grid-4-col,
+  .metrics-grid,
+  .reports-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Responsive Tables for mobile touch scrolling */
+  table, 
+  .table-container, 
+  .data-table,
+  .responsive-table {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Modals & Dialog Cards on Mobile */
+  .modal-content, 
+  .modal-card, 
+  .dialog-card,
+  .modal-box {
+    width: 94% !important;
+    max-width: 96vw !important;
+    margin: 0 auto !important;
+    padding: 1.25rem !important;
+    border-radius: 18px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Auth split view mobile layout */
+  .auth-split-container {
+    flex-direction: column !important;
+    min-height: 100vh !important;
+  }
+
+  .auth-split-image {
+    height: 160px !important;
+    width: 100% !important;
+  }
+
+  .auth-quote {
+    display: none !important;
+  }
+
+  .auth-split-content {
+    padding: 1.5rem 1.25rem !important;
+    width: 100% !important;
+  }
+
+  .page-header {
+    margin-bottom: 1.25rem !important;
+  }
+
+  .page-title {
+    font-size: 1.25rem !important;
+  }
 }

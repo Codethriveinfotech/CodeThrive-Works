@@ -21,6 +21,22 @@ const Sidebar = () => {
     return () => document.body.classList.remove('sidebar-collapsed');
   }, [collapsed]);
 
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (document.body.classList.contains('mobile-sidebar-open')) {
+        if (!e.target.closest('.sidebar') && !e.target.closest('.mobile-menu-toggle-btn')) {
+          document.body.classList.remove('mobile-sidebar-open');
+        }
+      }
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
+
+  const handleNavClick = () => {
+    document.body.classList.remove('mobile-sidebar-open');
+  };
+
   const navLinks = [
     { name: 'Dashboard', path: '/employee/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'My Tasks', path: '/employee/tasks', icon: <CheckSquare size={20} /> },
@@ -40,15 +56,23 @@ const Sidebar = () => {
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        {!collapsed && (
-          <div className="logo-container">
-            <img src="/logo.png" alt="CodeThrive Infotech Logo" className="sidebar-logo-img" style={{ width: '70px', height: '70px', objectFit: 'contain', marginLeft: '-8px', filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />
-            <span className="logo-text" style={{ fontSize: '1.15rem' }}>CodeThrive<br/><span style={{ opacity: 0.8, letterSpacing: '1px' }}>Infotech</span></span>
+        {!collapsed ? (
+          <div className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src="/logo.png" alt="CodeThrive Infotech Logo" className="sidebar-logo-img" style={{ width: '50px', height: '50px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />
+            <span className="logo-text" style={{ fontSize: '1.1rem', lineHeight: '1.2' }}>CodeThrive<br/><span style={{ opacity: 0.8, fontSize: '0.75rem', letterSpacing: '1px' }}>Infotech</span></span>
+          </div>
+        ) : (
+          <div className="logo-container collapsed-logo" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <img src="/logo.png" alt="Logo" className="sidebar-logo-img small" style={{ width: '46px', height: '46px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />
           </div>
         )}
-        {collapsed && <img src="/logo.png" alt="Logo" className="sidebar-logo-img small" style={{ width: '54px', height: '54px', objectFit: 'contain', margin: '0 auto', filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />}
-        <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+        <button 
+          className="collapse-btn" 
+          onClick={() => setCollapsed(!collapsed)}
+          title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          aria-label="Toggle Sidebar"
+        >
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
 
@@ -61,6 +85,7 @@ const Sidebar = () => {
               to={link.path} 
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               title={collapsed ? link.name : ''}
+              onClick={handleNavClick}
               style={{ position: 'relative' }}
             >
               {({ isActive }) => (

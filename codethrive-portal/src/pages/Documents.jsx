@@ -6,8 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Upload, Download, Trash2, 
   FolderLock, FolderOpen, ShieldCheck, Search, RefreshCw, Sparkles, 
-  UserCheck, GraduationCap, FileCheck, DollarSign, HeartPulse, 
-  CheckCircle2, Globe, Eye, Lock, Filter, FileSpreadsheet, AlertCircle
+  UserCheck, GraduationCap, Globe, Eye, Lock, AlertCircle
 } from 'lucide-react';
 import './Documents.css';
 
@@ -188,6 +187,28 @@ const Documents = () => {
 
   const isAdmin = ['admin', 'superadmin', 'hr'].includes(user?.role?.toLowerCase());
 
+  const [selectedViewDoc, setSelectedViewDoc] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  const handleViewDoc = (doc) => {
+    setSelectedViewDoc(doc);
+    setIsViewModalOpen(true);
+  };
+
+  const handleDownloadDoc = (doc) => {
+    const fileUrl = doc.fileUrl?.startsWith('http') || doc.fileUrl?.startsWith('blob:')
+      ? doc.fileUrl 
+      : `http://localhost:5000/${doc.fileUrl || ''}`;
+    
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = doc.fileName || `${doc.title.replace(/\s+/g, '_')}.pdf`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Filtered documents calculation
   const filteredDocs = documents.filter(doc => {
     const matchesSearch = doc.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -200,8 +221,6 @@ const Documents = () => {
     if (activeCategory === 'Private') return !doc.isPublic;
     return doc.documentType === activeCategory;
   });
-
-
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh', flexDirection: 'column', gap: '1rem' }}>
@@ -248,10 +267,8 @@ const Documents = () => {
         </div>
       </div>
 
-
-
       {/* --------------------------------------------------------------------------
-          3. SUPPORTED DOCUMENT CATEGORIES GUIDE (Answers "What can be added?")
+          3. SUPPORTED DOCUMENT CATEGORIES GUIDE
          -------------------------------------------------------------------------- */}
       <div className="doc-guide-card">
         <div className="doc-guide-header">
@@ -332,7 +349,6 @@ const Documents = () => {
               icon: FileText
             };
             const IconComponent = catObj.icon || FileText;
-            const fileUrl = doc.fileUrl?.startsWith('http') ? doc.fileUrl : `http://localhost:5000/${doc.fileUrl}`;
 
             return (
               <motion.div 
@@ -367,22 +383,33 @@ const Documents = () => {
                   )}
                 </div>
 
-                <div className="doc-actions-footer">
-                  <a 
-                    href={fileUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                {/* Separate View and Download Buttons */}
+                <div className="doc-actions-footer" style={{ display: 'flex', gap: '0.5rem', width: '100%', alignItems: 'center' }}>
+                  <button 
+                    type="button"
+                    onClick={() => handleViewDoc(doc)}
                     className="btn-outline-glass"
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.825rem', width: '100%', justifyContent: 'center' }}
+                    style={{ padding: '0.5rem 0.75rem', fontSize: '0.825rem', flex: 1, justifyContent: 'center', gap: '0.4rem', cursor: 'pointer' }}
+                    title="View Document"
                   >
-                    <Download size={15} /> Download / View File
-                  </a>
+                    <Eye size={15} /> View
+                  </button>
+
+                  <button 
+                    type="button"
+                    onClick={() => handleDownloadDoc(doc)}
+                    className="btn-outline-glass"
+                    style={{ padding: '0.5rem 0.75rem', fontSize: '0.825rem', flex: 1, justifyContent: 'center', gap: '0.4rem', background: 'rgba(59, 130, 246, 0.15)', borderColor: 'rgba(59, 130, 246, 0.35)', color: '#60a5fa', cursor: 'pointer' }}
+                    title="Download File to Device"
+                  >
+                    <Download size={15} /> Download
+                  </button>
 
                   {(doc.uploadedBy === user?._id || isAdmin) && (
                     <button 
                       onClick={() => handleDelete(doc._id)}
                       className="btn-glass-icon"
-                      style={{ width: '38px', height: '38px', marginLeft: '0.6rem', color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
+                      style={{ width: '36px', height: '36px', flexShrink: 0, color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
                       title="Delete Document"
                     >
                       <Trash2 size={16} />
@@ -536,6 +563,83 @@ const Documents = () => {
           </div>
         </form>
       </Modal>
+
+      {/* --------------------------------------------------------------------------
+          7. VIEW DOCUMENT PREVIEW MODAL
+         -------------------------------------------------------------------------- */}
+      {selectedViewDoc && (
+        <Modal 
+          isOpen={isViewModalOpen} 
+          onClose={() => setIsViewModalOpen(false)} 
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Eye size={20} color="#3b82f6" />
+              <span>Document Viewer • {selectedViewDoc.title}</span>
+            </div>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '1.2rem', borderRadius: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.15rem' }}>{selectedViewDoc.title}</h3>
+                <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginTop: '0.35rem', fontSize: '0.825rem', color: '#94a3b8' }}>
+                  <span style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', padding: '0.15rem 0.6rem', borderRadius: '6px', fontWeight: 600 }}>{selectedViewDoc.documentType}</span>
+                  <span>•</span>
+                  <span>{new Date(selectedViewDoc.createdAt).toLocaleDateString()}</span>
+                  <span>•</span>
+                  <span>Owner: {selectedViewDoc.owner?.fullName || 'Employee'}</span>
+                </div>
+              </div>
+              <span className={`doc-visibility-tag ${selectedViewDoc.isPublic ? 'public' : 'private'}`}>
+                {selectedViewDoc.isPublic ? <Globe size={13} /> : <Lock size={13} />}
+                {selectedViewDoc.isPublic ? 'Public File' : 'Encrypted Vault File'}
+              </span>
+            </div>
+
+            {/* Document Preview Box */}
+            <div style={{ background: '#020617', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '14px', height: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', padding: '1.5rem', textAlign: 'center' }}>
+              {selectedViewDoc.fileUrl && (selectedViewDoc.fileUrl.endsWith('.jpg') || selectedViewDoc.fileUrl.endsWith('.png') || selectedViewDoc.fileUrl.startsWith('blob:')) ? (
+                <img src={selectedViewDoc.fileUrl.startsWith('http') || selectedViewDoc.fileUrl.startsWith('blob:') ? selectedViewDoc.fileUrl : `http://localhost:5000/${selectedViewDoc.fileUrl}`} alt={selectedViewDoc.title} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem' }}>
+                  <FileText size={64} color="#60a5fa" style={{ filter: 'drop-shadow(0 0 12px rgba(96, 165, 250, 0.4))' }} />
+                  <div>
+                    <h4 style={{ color: '#f8fafc', margin: '0 0 0.25rem 0' }}>{selectedViewDoc.title}</h4>
+                    <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: 0 }}>Official Encrypted Document • Ready for Review</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.6rem', marginTop: '0.5rem' }}>
+                    <a 
+                      href={selectedViewDoc.fileUrl?.startsWith('http') || selectedViewDoc.fileUrl?.startsWith('blob:') ? selectedViewDoc.fileUrl : `http://localhost:5000/${selectedViewDoc.fileUrl || ''}`}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="btn-outline-glass"
+                      style={{ fontSize: '0.825rem', padding: '0.4rem 0.9rem' }}
+                    >
+                      Open Full Browser View ↗
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '0.5rem' }}>
+              <button type="button" className="btn-outline-glass" onClick={() => setIsViewModalOpen(false)}>
+                Close Preview
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary-glow" 
+                onClick={() => {
+                  handleDownloadDoc(selectedViewDoc);
+                  setIsViewModalOpen(false);
+                }}
+              >
+                <Download size={16} /> Download File
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
     </motion.div>
   );

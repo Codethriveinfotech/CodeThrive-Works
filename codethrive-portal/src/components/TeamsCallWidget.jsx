@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
   Phone, Video, Mic, MicOff, VideoOff, Monitor, PhoneOff, 
   Search, X, ShieldCheck, MessageCircle, BellRing, PhoneCall, Check,
-  Volume2, PhoneIncoming, AlertCircle
+  Volume2, PhoneIncoming, AlertCircle, MessageSquare, Smartphone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './TeamsCallWidget.css';
@@ -11,7 +12,7 @@ import './TeamsCallWidget.css';
 const MANAGEMENT_CONTACTS = [
   {
     _id: 'lead-1',
-    name: 'Mahadevan',
+    name: 'Mahadhevan',
     role: 'CEO',
     phone: '9787857769',
     formattedPhone: '+91 97878 57769',
@@ -83,6 +84,8 @@ const STAFF_EMPLOYEES = [
     _id: 'emp-1',
     name: 'Kirubakaran',
     role: 'Lead Architect & Core Developer',
+    phone: '7812864905',
+    formattedPhone: '+91 78128 64905',
     dept: 'Engineering',
     status: 'Online',
     statusColor: '#34d399',
@@ -90,8 +93,10 @@ const STAFF_EMPLOYEES = [
   },
   {
     _id: 'emp-2',
-    name: 'Mahadevan',
+    name: 'Mahadhevan',
     role: 'Senior Fullstack Engineer',
+    phone: '9787857769',
+    formattedPhone: '+91 97878 57769',
     dept: 'Engineering',
     status: 'Online',
     statusColor: '#34d399',
@@ -101,6 +106,8 @@ const STAFF_EMPLOYEES = [
     _id: 'emp-3',
     name: 'Priya Sharma',
     role: 'Product Designer & UI Specialist',
+    phone: '9489510499',
+    formattedPhone: '+91 94895 10499',
     dept: 'UI/UX Design',
     status: 'In a Meeting',
     statusColor: '#f59e0b',
@@ -110,6 +117,8 @@ const STAFF_EMPLOYEES = [
     _id: 'emp-4',
     name: 'Rahul Verma',
     role: 'Engineering Lead & Scrum Master',
+    phone: '9943223938',
+    formattedPhone: '+91 99432 23938',
     dept: 'Management',
     status: 'Online',
     statusColor: '#34d399',
@@ -119,6 +128,8 @@ const STAFF_EMPLOYEES = [
     _id: 'emp-5',
     name: 'Ananya Roy',
     role: 'HR Manager & Talent Partner',
+    phone: '8754720031',
+    formattedPhone: '+91 87547 20031',
     dept: 'Human Resources',
     status: 'Online',
     statusColor: '#34d399',
@@ -128,6 +139,8 @@ const STAFF_EMPLOYEES = [
     _id: 'emp-6',
     name: 'Quality Assurance Lead',
     role: 'QA Specialist',
+    phone: '7092729025',
+    formattedPhone: '+91 70927 29025',
     dept: 'Quality Assurance',
     status: 'Available',
     statusColor: '#34d399',
@@ -137,10 +150,11 @@ const STAFF_EMPLOYEES = [
 
 const TeamsCallWidget = () => {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin' || window.location.pathname.startsWith('/admin');
+  const location = useLocation();
+
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin' || location.pathname.startsWith('/admin');
 
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(isAdmin ? 'staff' : 'leads');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Call Overlay State
@@ -153,6 +167,66 @@ const TeamsCallWidget = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+
+  // Request browser Notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Web Audio Ringtone Generator for continuous alert sound when calling
+  useEffect(() => {
+    let audioCtx = null;
+    let ringInterval = null;
+
+    if (activeCall && activeCall.callStatus === 'Ringing...') {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+          const playTonePattern = () => {
+            if (!audioCtx || audioCtx.state === 'closed') return;
+            if (audioCtx.state === 'suspended') {
+              audioCtx.resume();
+            }
+            const osc1 = audioCtx.createOscillator();
+            const osc2 = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+            osc1.frequency.setValueAtTime(440, audioCtx.currentTime);
+            osc2.frequency.setValueAtTime(480, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.8);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc1.start();
+            osc2.start();
+            osc1.stop(audioCtx.currentTime + 1.8);
+            osc2.stop(audioCtx.currentTime + 1.8);
+          };
+
+          playTonePattern();
+          ringInterval = setInterval(playTonePattern, 2800);
+        }
+      } catch (e) {
+        console.warn('Audio ringtone synth error:', e);
+      }
+    }
+
+    return () => {
+      if (ringInterval) clearInterval(ringInterval);
+      if (audioCtx && audioCtx.state !== 'closed') {
+        try { audioCtx.close(); } catch (e) {}
+      }
+    };
+  }, [activeCall]);
 
   // Timer interval for connected call
   useEffect(() => {
@@ -177,29 +251,60 @@ const TeamsCallWidget = () => {
       }, 1800);
     }
     return () => { if (ringInterval) clearInterval(ringInterval); };
-  }, [activeCall?.callStatus]);
+  }, [activeCall]);
+
+  // Hide widget completely on unauthenticated / login / register pages or when not logged in
+  const isAuthPage = !user || (
+    location.pathname.includes('/login') ||
+    location.pathname.includes('/register') ||
+    location.pathname.includes('/forgot-password') ||
+    location.pathname.includes('/create-credentials') ||
+    location.pathname === '/'
+  );
+
+  if (isAuthPage) {
+    return null;
+  }
 
   const triggerMobileNotification = (contact) => {
-    const callerName = user?.fullName || user?.name || 'CodeThrive Employee';
+    const callerName = user?.fullName || user?.name || 'Employee User';
+    
+    // In-app toast banner
     setNotificationToast({
-      title: `📲 Dispatching to Official Number (+91 ${contact.phone})`,
-      message: `Sending real-time mobile push & WhatsApp call ping to ${contact.name}'s official phone (+91 ${contact.phone}).`
+      title: `📲 Dialing & Pinging Mobile (+91 ${contact.phone})`,
+      message: `Initiating continuous ring tone sound & direct SMS/call dispatch from ${callerName} to +91 ${contact.phone}.`
     });
+
+    // Browser Push Notification (visible even if tab is minimized)
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(`🔔 Urgent Portal Call from ${callerName}`, {
+          body: `Calling ${contact.name} (${contact.role}) on registered mobile line +91 ${contact.phone}.`,
+          icon: '/logo.png',
+          requireInteraction: true
+        });
+      } catch (e) {
+        console.log('System Notification error:', e);
+      }
+    }
   };
 
   const handleStartCall = (contact, type = 'audio') => {
     setIsOpen(true);
     triggerMobileNotification(contact);
     
-    // Trigger direct mobile phone dialer if on mobile or browser supports tel:
+    // Trigger direct device mobile phone dialer (tel:+91...) so call originates from user's SIM/Line
     if (contact.phone) {
       const telUrl = `tel:+91${contact.phone}`;
       try {
         const a = document.createElement('a');
         a.href = telUrl;
+        a.target = '_self';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
       } catch (e) {
-        console.log('Mobile dialer triggered:', telUrl);
+        window.location.href = telUrl;
       }
     }
 
@@ -227,8 +332,8 @@ const TeamsCallWidget = () => {
       setActiveCall(null);
       setCallTimer(0);
       setNotificationToast({
-        title: `🔴 Call Declined`,
-        message: `${name} rejected or missed the call. Line disconnected.`
+        title: `🔴 Call Ended`,
+        message: `Direct line call with ${name} disconnected.`
       });
       setTimeout(() => setNotificationToast(null), 3500);
     }
@@ -236,9 +341,34 @@ const TeamsCallWidget = () => {
 
   const handleWhatsAppCall = (contact) => {
     triggerMobileNotification(contact);
-    const callerName = encodeURIComponent(user?.fullName || user?.name || 'CodeThrive Employee');
-    const waUrl = `https://wa.me/91${contact.phone}?text=Hello%20${encodeURIComponent(contact.name)},%20this%20is%20${callerName}%20calling%20you%20from%20CodeThrive%20Works%20Portal.`;
+    const callerName = user?.fullName || user?.name || 'Employee User';
+    const callerPhone = user?.phone || user?.mobile || '';
+    const callerRole = user?.role === 'admin' ? 'Management' : (user?.designation || 'Team Member');
+    
+    // Check if recipient is Management/Lead or Peer
+    const isManagement = contact.role.includes('CEO') || contact.role.includes('MD') || contact.role.includes('HR') || contact.role.includes('Lead') || (contact.dept && contact.dept.includes('Executive'));
+    
+    const salutation = isManagement ? `Respected ${contact.name} Sir/Madam` : `Dear ${contact.name}`;
+    
+    const textMessage = `${salutation},\n\nGreetings from CodeThrive Works Portal!\n\nThis is ${callerName} (${callerRole}${callerPhone ? `, Mob: +91 ${callerPhone}` : ''}) reaching out to you regarding official work and discussion.\n\nKindly connect with me at your earliest convenience.\n\nThank you,\n${callerName}`;
+    
+    const waUrl = `https://wa.me/91${contact.phone}?text=${encodeURIComponent(textMessage)}`;
     window.open(waUrl, '_blank');
+  };
+
+  const handleSMSAlert = (contact) => {
+    triggerMobileNotification(contact);
+    const callerName = user?.fullName || user?.name || 'Employee User';
+    const callerPhone = user?.phone || user?.mobile || '';
+    const callerRole = user?.role === 'admin' ? 'Management' : (user?.designation || 'Team Member');
+    
+    const isManagement = contact.role.includes('CEO') || contact.role.includes('MD') || contact.role.includes('HR') || contact.role.includes('Lead') || (contact.dept && contact.dept.includes('Executive'));
+    const salutation = isManagement ? `Respected ${contact.name}` : `Dear ${contact.name}`;
+    
+    const textMsg = `[URGENT PORTAL CALL ALERT] ${salutation}, Employee ${callerName} (${callerRole}${callerPhone ? `, Mob: +91 ${callerPhone}` : ''}) is calling your mobile line +91 ${contact.phone}. Please connect or check portal.`;
+    
+    const smsUrl = `sms:+91${contact.phone}?body=${encodeURIComponent(textMsg)}`;
+    window.open(smsUrl, '_blank');
   };
 
   const formatTimer = (seconds) => {
@@ -247,7 +377,8 @@ const TeamsCallWidget = () => {
     return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  const listToFilter = activeTab === 'leads' ? MANAGEMENT_CONTACTS : STAFF_EMPLOYEES;
+  // Employees see Management Contacts ONLY; Management/Admins see Employee Contacts ONLY
+  const listToFilter = isAdmin ? STAFF_EMPLOYEES : MANAGEMENT_CONTACTS;
   const filteredList = listToFilter.filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -319,18 +450,16 @@ const TeamsCallWidget = () => {
         </div>
       )}
 
-      {/* Floating Trigger Button */}
+      {/* Floating Trigger Button - Icon Only FAB */}
       <button 
         className={`teams-trigger-btn ${isOpen ? 'active' : ''} ${activeCall && activeCall.callStatus === 'Ringing...' ? 'ringing-pulse-btn' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
-        title="Direct Call & Contact Hub"
+        title={activeCall ? (activeCall.callStatus === 'Ringing...' ? 'Ringing...' : 'In Call...') : 'CodeThrive Contact Hub'}
+        aria-label="Contact Hub"
       >
         <div className="teams-icon-badge">
-          <PhoneCall size={18} color="#fff" />
+          <PhoneCall size={20} color="#fff" />
         </div>
-        <span className="teams-btn-text">
-          {activeCall ? (activeCall.callStatus === 'Ringing...' ? 'Ringing...' : 'In Call...') : 'Contact Hub'}
-        </span>
         <span className="online-dot-pulse"></span>
       </button>
 
@@ -345,31 +474,15 @@ const TeamsCallWidget = () => {
               </div>
               <div>
                 <h4>CodeThrive Contact Hub</h4>
-                <span className="teams-status-subtext">Direct Call & WhatsApp Directory</span>
+                <span className="teams-status-subtext">
+                  {isAdmin ? 'Employee Contact Directory' : 'Management & HR Directory'}
+                </span>
               </div>
             </div>
             <button className="teams-close-btn" onClick={() => setIsOpen(false)}>
               <X size={18} />
             </button>
           </div>
-
-          {/* Directory Tabs Switcher */}
-          {!activeCall && (
-            <div className="teams-tab-bar">
-              <button 
-                className={`teams-tab-btn ${activeTab === 'leads' ? 'active' : ''}`}
-                onClick={() => setActiveTab('leads')}
-              >
-                Management & HR ({MANAGEMENT_CONTACTS.length})
-              </button>
-              <button 
-                className={`teams-tab-btn ${activeTab === 'staff' ? 'active' : ''}`}
-                onClick={() => setActiveTab('staff')}
-              >
-                Employees ({STAFF_EMPLOYEES.length})
-              </button>
-            </div>
-          )}
 
           {/* If Active Call Screen */}
           {activeCall ? (
@@ -481,7 +594,7 @@ const TeamsCallWidget = () => {
                 <Search size={16} className="search-ic" />
                 <input 
                   type="text" 
-                  placeholder={activeTab === 'leads' ? "Search CEO, MD, HR, Team Leads..." : "Search employee by name..."} 
+                  placeholder={isAdmin ? "Search employees by name, role..." : "Search CEO, MD, HR, Team Leads..."} 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                 />
@@ -506,8 +619,6 @@ const TeamsCallWidget = () => {
                           </span>
                         )}
                       </div>
-
-                      <span className="emp-status-text">{contact.dept} &bull; {contact.status}</span>
                     </div>
 
                     <div className="emp-call-actions">
@@ -516,9 +627,20 @@ const TeamsCallWidget = () => {
                         <button 
                           className="btn-call-action whatsapp"
                           onClick={() => handleWhatsAppCall(contact)}
-                          title={`WhatsApp Call & Chat with ${contact.name} (${contact.formattedPhone})`}
+                          title={`WhatsApp Message & Call with ${contact.name} (${contact.formattedPhone})`}
                         >
                           <MessageCircle size={15} />
+                        </button>
+                      )}
+
+                      {/* Direct Mobile SMS Alert Button */}
+                      {contact.phone && (
+                        <button 
+                          className="btn-call-action sms"
+                          onClick={() => handleSMSAlert(contact)}
+                          title={`Send Instant Mobile SMS Alert to ${contact.name} (${contact.formattedPhone})`}
+                        >
+                          <MessageSquare size={14} />
                         </button>
                       )}
 
@@ -526,7 +648,7 @@ const TeamsCallWidget = () => {
                       <button 
                         className="btn-call-action audio"
                         onClick={() => handleStartCall(contact, 'audio')}
-                        title={`Direct Portal Call ${contact.name}`}
+                        title={`Direct Mobile Phone SIM Call to ${contact.name}`}
                       >
                         <Phone size={14} />
                       </button>

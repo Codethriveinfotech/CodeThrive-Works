@@ -80,13 +80,13 @@ const Leave = () => {
   };
 
   const sendWhatsAppToHR = (leaveRecord) => {
-    const hrPhone = '917812864905';
+    const hrPhone = '919489510499';
 
     const empName = user?.fullName || user?.name || 'Employee User';
     const empId = user?.employeeId || 'CTI-EMP-001';
     const empRole = user?.role || user?.designation || 'Software Engineer';
     const empEmail = user?.email || user?.emailId || `${empId.toLowerCase()}@codethrive.com`;
-    const empPhone = user?.phoneNumber || user?.phone || user?.mobile || '7812864905';
+    const empPhone = user?.phoneNumber || user?.phone || user?.mobile || '9489510499';
 
     const categoryTitle = leaveRecord.leaveType === 'Others'
       ? `Others (${leaveRecord.customCategory || 'Custom Reason'})`
@@ -524,7 +524,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
 
           <div style={{ background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.25)', padding: '0.65rem 0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#4ade80', fontSize: '0.8rem' }}>
             <MessageSquare size={16} style={{ flexShrink: 0 }} />
-            <span>Submitting will dispatch leave details directly to HR WhatsApp (+91 7812864905) with your full employee profile.</span>
+            <span>Submitting will dispatch leave details directly to HR WhatsApp (+91 9489510499) with your full employee profile.</span>
           </div>
 
           <div className="form-row-2col">

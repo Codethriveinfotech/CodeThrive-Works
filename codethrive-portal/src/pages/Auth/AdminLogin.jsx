@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
@@ -101,7 +101,7 @@ const AdminLogin = () => {
         </form>
         
         <div className="auth-footer" style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Employees must use the <a href="/employee/login" style={{ color: 'var(--primary)' }}>Employee Portal</a>.</p>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Employees must use the <Link to="/employee/login" style={{ color: 'var(--primary)' }}>Employee Portal</Link>.</p>
         </div>
       </div>
     </div>
