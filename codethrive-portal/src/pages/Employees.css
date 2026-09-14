@@ -230,6 +230,26 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+}
+
+.workspace-360-header .close-btn {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.workspace-360-header .close-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
 }
 
 .workspace-header-user {
