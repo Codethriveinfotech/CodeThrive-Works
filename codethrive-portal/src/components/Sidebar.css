@@ -234,6 +234,10 @@ body.sidebar-collapsed .main-wrapper {
 
 /* 📱 MOBILE RESPONSIVE STYLES (Strictly applied only below 768px - Desktop view remains 100% unchanged) */
 @media (max-width: 768px) {
+  .collapse-btn {
+    display: none !important;
+  }
+
   .sidebar {
     transform: translateX(-100%) !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
