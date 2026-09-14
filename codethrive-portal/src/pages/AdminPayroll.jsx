@@ -2,18 +2,17 @@ import React, { useState, useEffect, useMemo } from 'react';
 import api from '../utils/api';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
-import DataTable from '../components/common/DataTable';
 import Modal from '../components/common/Modal';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { 
-  Banknote, Plus, Search, FileText, CheckCircle2, X, Zap, Eye, Printer, Users, 
-  Sparkles, RefreshCw, DollarSign, ArrowUpRight, TrendingUp, ShieldCheck, Download
+  Banknote, Plus, Search, CheckCircle2, X, Zap, Eye, Printer, Users, 
+  Sparkles, DollarSign, TrendingUp, ShieldCheck, Download
 } from 'lucide-react';
 import './Payroll.css';
 
-const DEFAULT_PAYROLLS = [
+const _DEFAULT_PAYROLLS = [
   {
     _id: 'ps-1',
     payslipId: 'PSL-2026-001',
@@ -157,7 +156,12 @@ const AdminPayroll = () => {
     const empId = e.target.value;
     setSelectedEmployeeId(empId);
     if (empId) {
-      const emp = employees.find(item => item._id === empId);
+      let emp = employees.find(item => item._id === empId);
+      if (!emp) {
+        if (empId === 'emp-fallback-1') emp = { fullName: 'Kirubakaran', employeeId: 'CTI-EMP-002', department: 'Executive Board', designation: 'Managing Director' };
+        else if (empId === 'emp-fallback-2') emp = { fullName: 'Mahadevan', employeeId: 'CTI-EMP-001', department: 'Executive Management', designation: 'Chief Executive Officer' };
+        else if (empId === 'emp-fallback-3') emp = { fullName: 'Sarah Jenkins', employeeId: 'CTI-EMP-004', department: 'UI/UX Design', designation: 'Lead Product Designer' };
+      }
       setSelectedEmployee(emp);
       
       const basic = emp?.salaryAmount || 45000;
@@ -751,6 +755,340 @@ const AdminPayroll = () => {
                 <span>{submitting ? 'Processing Batch...' : 'Generate All Employee Payslips'}</span>
               </button>
             </div>
+          </form>
+        </Card>
+      )}
+
+      {/* Individual Single Payslip Generator View */}
+      {viewMode === 'individual' && (
+        <Card style={{ background: 'rgba(15, 23, 42, 0.85)', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.35)', padding: '2rem', backdropFilter: 'blur(16px)', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '1.25rem', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '46px', height: '46px', borderRadius: '14px',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)'
+              }}>
+                <Plus size={24} color="#fff" />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, color: '#fff', fontSize: '1.45rem', fontWeight: 800 }}>Create Single Digital Payslip</h2>
+                <p style={{ margin: '0.2rem 0 0 0', color: '#a7f3d0', fontSize: '0.88rem' }}>
+                  Generate an itemized salary voucher with automated statutory allowances & deductions calculation.
+                </p>
+              </div>
+            </div>
+
+            <button 
+              type="button" 
+              onClick={() => setViewMode('list')}
+              style={{
+                padding: '0.55rem 1rem', borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.06)', border: '1px solid rgba(255, 255, 255, 0.15)',
+                color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '0.4rem'
+              }}
+            >
+              <X size={16} />
+              <span>Cancel & Close</span>
+            </button>
+          </div>
+
+          <form onSubmit={_handleSingleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+            
+            {/* 1. Employee Selection & Basic Period */}
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', padding: '1.4rem' }}>
+              <h3 style={{ margin: '0 0 1.2rem 0', color: '#fff', fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users size={18} color="#10b981" />
+                <span>1. Select Staff Member & Pay Period</span>
+              </h3>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+                
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <label className="field-label" style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '0.4rem', display: 'block', fontSize: '0.85rem' }}>
+                    Employee Target *
+                  </label>
+                  <select 
+                    className="input-box"
+                    value={selectedEmployeeId} 
+                    onChange={_handleEmployeeSelect}
+                    required
+                    style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#fff', padding: '0.75rem 1rem', borderRadius: '10px', outline: 'none' }}
+                  >
+                    <option value="">-- Choose Employee --</option>
+                    {employees.map(emp => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.fullName} ({emp.employeeId || 'ID N/A'}) - {emp.designation || 'Staff'} ({emp.department || 'General'})
+                      </option>
+                    ))}
+                    {employees.length === 0 && (
+                      <>
+                        <option value="emp-fallback-1">Kirubakaran (CTI-EMP-002) - Managing Director</option>
+                        <option value="emp-fallback-2">Mahadevan (CTI-EMP-001) - Chief Executive Officer</option>
+                        <option value="emp-fallback-3">Sarah Jenkins (CTI-EMP-004) - Lead Designer</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="field-label" style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '0.4rem', display: 'block', fontSize: '0.85rem' }}>Salary Month *</label>
+                  <select 
+                    className="input-box"
+                    name="month"
+                    value={formData.month} 
+                    onChange={_handleChange}
+                    required
+                    style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.75rem 1rem', borderRadius: '10px', outline: 'none' }}
+                  >
+                    {monthsList.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="field-label" style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '0.4rem', display: 'block', fontSize: '0.85rem' }}>Salary Year *</label>
+                  <input 
+                    type="number" 
+                    name="year"
+                    className="input-box" 
+                    value={formData.year} 
+                    onChange={_handleChange}
+                    required 
+                    style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.75rem 1rem', borderRadius: '10px', outline: 'none' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="field-label" style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '0.4rem', display: 'block', fontSize: '0.85rem' }}>Disbursement Date *</label>
+                  <input 
+                    type="date" 
+                    name="paymentDate"
+                    className="input-box" 
+                    value={formData.paymentDate} 
+                    onChange={_handleChange}
+                    required 
+                    style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.75rem 1rem', borderRadius: '10px', outline: 'none' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="field-label" style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '0.4rem', display: 'block', fontSize: '0.85rem' }}>Payment Status</label>
+                  <select 
+                    className="input-box" 
+                    name="status"
+                    value={formData.status} 
+                    onChange={_handleChange}
+                    style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.75rem 1rem', borderRadius: '10px', outline: 'none' }}
+                  >
+                    <option value="Paid">Paid</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Pending">Pending</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Earnings & Allowances Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+              
+              {/* Allowances Card */}
+              <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '16px', padding: '1.4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                  <h3 style={{ margin: 0, color: '#34d399', fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <DollarSign size={18} color="#34d399" />
+                    <span>Earnings & Allowances</span>
+                  </h3>
+                  <span style={{ fontSize: '0.8rem', color: '#a7f3d0', fontWeight: 700, background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>
+                    Gross: ₹{totalEarnings.toLocaleString()}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Basic Monthly Salary (₹) *</label>
+                    <input 
+                      type="number" 
+                      name="basicSalary"
+                      value={formData.basicSalary} 
+                      onChange={_handleChange}
+                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', fontWeight: 700, padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Performance Bonus (₹)</label>
+                    <input 
+                      type="number" 
+                      name="bonus"
+                      value={formData.bonus} 
+                      onChange={_handleChange}
+                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>House Rent Allowance (HRA ₹)</label>
+                    <input 
+                      type="number" 
+                      name="hra"
+                      value={formData.allowanceDetails.hra} 
+                      onChange={_handleAllowanceChange}
+                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                    <div className="form-group">
+                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Travel (₹)</label>
+                      <input 
+                        type="number" 
+                        name="travel"
+                        value={formData.allowanceDetails.travel} 
+                        onChange={_handleAllowanceChange}
+                        style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Medical (₹)</label>
+                      <input 
+                        type="number" 
+                        name="medical"
+                        value={formData.allowanceDetails.medical} 
+                        onChange={_handleAllowanceChange}
+                        style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Deductions Card */}
+              <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: '16px', padding: '1.4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+                  <h3 style={{ margin: 0, color: '#f87171', fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <ShieldCheck size={18} color="#f87171" />
+                    <span>Statutory Deductions & Taxes</span>
+                  </h3>
+                  <span style={{ fontSize: '0.8rem', color: '#fca5a5', fontWeight: 700, background: 'rgba(239, 68, 68, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>
+                    Total: -₹{totalDeductions.toLocaleString()}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Provident Fund (PF ₹)</label>
+                    <input 
+                      type="number" 
+                      name="pf"
+                      value={formData.deductionDetails.pf} 
+                      onChange={_handleDeductionChange}
+                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Income Tax (TDS ₹)</label>
+                    <input 
+                      type="number" 
+                      name="incomeTax"
+                      value={formData.deductionDetails.incomeTax} 
+                      onChange={_handleDeductionChange}
+                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
+                    <div className="form-group">
+                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Prof. Tax (₹)</label>
+                      <input 
+                        type="number" 
+                        name="professionalTax"
+                        value={formData.deductionDetails.professionalTax} 
+                        onChange={_handleDeductionChange}
+                        style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>ESI Tax (₹)</label>
+                      <input 
+                        type="number" 
+                        name="esi"
+                        value={formData.deductionDetails.esi} 
+                        onChange={_handleDeductionChange}
+                        style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Unpaid Leave Deductions (₹)</label>
+                    <input 
+                      type="number" 
+                      name="leaveDeduction"
+                      value={formData.deductionDetails.leaveDeduction} 
+                      onChange={_handleDeductionChange}
+                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* 3. Live Salary Calculation Callout Card */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(59, 130, 246, 0.15))',
+              border: '1px solid rgba(16, 185, 129, 0.4)', borderRadius: '16px', padding: '1.4rem 1.8rem',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem'
+            }}>
+              <div>
+                <span style={{ fontSize: '0.85rem', color: '#a7f3d0', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Calculated Net Payable Salary
+                </span>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                  Gross Earnings (₹{totalEarnings.toLocaleString()}) - Statutory Deductions (₹{totalDeductions.toLocaleString()})
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '2.2rem', fontWeight: 800, color: '#34d399', textShadow: '0 0 20px rgba(52, 211, 153, 0.4)' }}>
+                  ₹{netSalary.toLocaleString()}
+                </span>
+                <span style={{ display: 'block', fontSize: '0.78rem', color: '#a7f3d0' }}>Final Amount for Voucher</span>
+              </div>
+            </div>
+
+            {/* 4. Action Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '0.5rem' }}>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={() => setViewMode('list')}
+                style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', color: 'var(--text-muted)' }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={submitting} 
+                style={{
+                  padding: '0.75rem 1.8rem', borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#fff', fontWeight: 700, border: 'none',
+                  boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer'
+                }}
+              >
+                <Sparkles size={18} />
+                <span>{submitting ? 'Generating Payslip...' : 'Generate & Issue Payslip'}</span>
+              </button>
+            </div>
+
           </form>
         </Card>
       )}
