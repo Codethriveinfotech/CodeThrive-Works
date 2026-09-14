@@ -923,7 +923,8 @@
   .tasks-hero {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1.5rem;
+    gap: 1.25rem;
+    padding: 1.25rem 1rem !important;
   }
   .task-stats-grid {
     grid-template-columns: 1fr;
@@ -934,5 +935,15 @@
   .toolbar-top-row {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
+  }
+  .filter-chips-row {
+    overflow-x: auto !important;
+    padding-bottom: 6px !important;
+    max-width: 100% !important;
+  }
+  .filter-chip {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
   }
 }

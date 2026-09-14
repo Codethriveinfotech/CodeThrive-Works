@@ -371,3 +371,26 @@ input[type="date"].input-box {
   transform: scale(0.97);
 }
 
+@media (max-width: 768px) {
+  .ct-table-container {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .ct-table {
+    min-width: 760px !important;
+  }
+
+  .ct-table th {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+  }
+
+  .ct-table td {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.85rem !important;
+  }
+}
+

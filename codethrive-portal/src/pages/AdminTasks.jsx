@@ -203,13 +203,13 @@ const AdminTasks = () => {
     { 
       header: 'Task ID', 
       accessor: 'taskId', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>{row.taskId}</span> 
+      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', padding: '2px 8px', borderRadius: '6px', whiteSpace: 'nowrap' }}>{row.taskId}</span> 
     },
     { 
       header: 'Task Objective', 
       accessor: 'title', 
       render: (row) => (
-        <div>
+        <div style={{ minWidth: '220px' }}>
           <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.92rem', display: 'block' }}>{row.title}</span>
           {row.description && <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{row.description}</span>}
         </div>
@@ -219,13 +219,13 @@ const AdminTasks = () => {
       header: 'Assigned Employee', 
       accessor: 'assignedTo', 
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '150px' }}>
           <div className="emp-avatar-big" style={{ width: '32px', height: '32px', fontSize: '0.85rem' }}>
             {row.assignedTo?.fullName ? row.assignedTo.fullName.charAt(0).toUpperCase() : 'E'}
           </div>
           <div>
-            <span style={{ fontWeight: 600, color: '#ffffff', display: 'block', fontSize: '0.88rem' }}>{row.assignedTo?.fullName || 'Unassigned'}</span>
-            <span style={{ fontSize: '0.72rem', color: '#818cf8' }}>{row.assignedTo?.employeeId}</span>
+            <span style={{ fontWeight: 600, color: '#ffffff', display: 'block', fontSize: '0.88rem', whiteSpace: 'nowrap' }}>{row.assignedTo?.fullName || 'Unassigned'}</span>
+            <span style={{ fontSize: '0.72rem', color: '#818cf8', whiteSpace: 'nowrap' }}>{row.assignedTo?.employeeId}</span>
           </div>
         </div>
       )
@@ -355,18 +355,18 @@ const AdminTasks = () => {
       {/* 3. TASK TABLE WITH FILTERS */}
       <Card style={{ padding: 0 }}>
         <div className="admin-toolbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%' }}>
             <Search size={16} color="#64748b" />
             <input 
               type="text" 
               placeholder="Search tasks by title, ID or assignee..." 
-              style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', fontSize: '0.9rem', width: '280px' }}
+              style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', fontSize: '0.9rem', width: '100%' }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.4rem', background: 'rgba(15, 23, 42, 0.8)', padding: '3px', borderRadius: '10px' }}>
+          <div style={{ display: 'flex', gap: '0.4rem', background: 'rgba(15, 23, 42, 0.8)', padding: '4px', borderRadius: '10px', overflowX: 'auto', maxWidth: '100%' }}>
             {['ALL', 'Assigned', 'In Progress', 'Completed'].map(st => (
               <button
                 key={st}
@@ -375,7 +375,7 @@ const AdminTasks = () => {
                   background: statusFilter === st ? 'rgba(99, 102, 241, 0.25)' : 'transparent',
                   color: statusFilter === st ? '#818cf8' : '#94a3b8',
                   border: statusFilter === st ? '1px solid rgba(99, 102, 241, 0.4)' : 'none',
-                  padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer'
+                  padding: '5px 12px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap'
                 }}
               >
                 {st}
