@@ -32,62 +32,13 @@ const AdminLeave = () => {
         console.warn('Backend API offline or empty for admin leaves', err);
       }
 
-      const localShared = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
+      const rawShared = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
+      const localShared = rawShared.filter(l => l && !l._id?.toString().startsWith('l-shared-'));
+      localStorage.setItem('cti_shared_leaves', JSON.stringify(localShared));
       
-      let finalShared = localShared;
-      if (localShared.length === 0 && apiLeaves.length === 0) {
-        finalShared = [
-          {
-            _id: 'l-shared-1',
-            employee: { fullName: 'Sarah Jenkins', employeeId: 'CTI-EMP-004', department: 'UI/UX Design', avatar: 'SJ' },
-            employeeId: 'CTI-EMP-004',
-            leaveType: 'Casual Leave',
-            startDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-            endDate: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
-            reason: 'Attending family wedding event in hometown. Urgent personal work.',
-            status: 'Pending',
-            createdAt: new Date().toISOString()
-          },
-          {
-            _id: 'l-shared-2',
-            employee: { fullName: 'Alex Rivera', employeeId: 'CTI-EMP-007', department: 'Frontend Team', avatar: 'AR' },
-            employeeId: 'CTI-EMP-007',
-            leaveType: 'Sick Leave',
-            startDate: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
-            endDate: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-            reason: 'High viral fever and doctor recommended complete bed rest for 2 days.',
-            status: 'Approved',
-            createdAt: new Date(Date.now() - 86400000 * 3).toISOString()
-          },
-          {
-            _id: 'l-shared-3',
-            employee: { fullName: 'Michael Scott', employeeId: 'CTI-EMP-012', department: 'Operations', avatar: 'MS' },
-            employeeId: 'CTI-EMP-012',
-            leaveType: 'Vacation',
-            startDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
-            endDate: new Date(Date.now() + 86400000 * 10).toISOString().split('T')[0],
-            reason: 'Annual family vacation trip to Goa. Handed over pending tasks to Dwight.',
-            status: 'Pending',
-            createdAt: new Date(Date.now() - 86400000).toISOString()
-          },
-          {
-            _id: 'l-shared-4',
-            employee: { fullName: 'Pam Beesly', employeeId: 'CTI-EMP-015', department: 'Design Team', avatar: 'PB' },
-            employeeId: 'CTI-EMP-015',
-            leaveType: 'Maternity Leave',
-            startDate: new Date(Date.now() - 86400000 * 15).toISOString().split('T')[0],
-            endDate: new Date(Date.now() + 86400000 * 45).toISOString().split('T')[0],
-            reason: 'Maternity leave request for 60 days as per HR policy guidelines.',
-            status: 'Approved',
-            createdAt: new Date(Date.now() - 86400000 * 20).toISOString()
-          }
-        ];
-        localStorage.setItem('cti_shared_leaves', JSON.stringify(finalShared));
-      }
-
       const map = new Map();
       apiLeaves.forEach(l => map.set(l._id, l));
-      finalShared.forEach(l => map.set(l._id, l));
+      localShared.forEach(l => map.set(l._id, l));
 
       setLeaves(Array.from(map.values()));
     } catch (err) {

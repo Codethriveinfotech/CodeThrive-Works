@@ -50,11 +50,14 @@ const Leave = () => {
       }
 
       // Sync with cti_shared_leaves in localStorage
-      const localShared = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
-      const myEmpId = user?.employeeId || 'CTI-EMP-001';
-      const myLocal = localShared.filter(l => l.employeeId === myEmpId || l.employee?.employeeId === myEmpId);
+      const rawShared = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
+      const localShared = rawShared.filter(l => l && !l._id?.toString().startsWith('l-shared-'));
+      localStorage.setItem('cti_shared_leaves', JSON.stringify(localShared));
 
-      // Merge localShared and API requests (localShared status changes take priority)
+      const myEmpId = user?.employeeId;
+      const myLocal = myEmpId ? localShared.filter(l => l.employeeId === myEmpId || l.employee?.employeeId === myEmpId) : [];
+
+      // Merge localShared and API requests
       const mergedMap = new Map();
       apiRequests.forEach(r => mergedMap.set(r._id, r));
       myLocal.forEach(r => mergedMap.set(r._id, r));
@@ -64,7 +67,7 @@ const Leave = () => {
       setData(prev => ({
         ...prev,
         ...summaryData,
-        requests: mergedRequests.length > 0 ? mergedRequests : (prev.requests || [])
+        requests: mergedRequests
       }));
     } catch (err) {
       console.warn('Error fetching leaves', err);
