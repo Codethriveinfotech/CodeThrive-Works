@@ -242,6 +242,13 @@ function AppContent() {
   };
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem('cti_theme') || 'dark';
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
+    }
+
     const fadeTimer = setTimeout(() => setIsFading(true), 1200);
     const removeTimer = setTimeout(() => setBootLoading(false), 1600);
     return () => { clearTimeout(fadeTimer); clearTimeout(removeTimer); };

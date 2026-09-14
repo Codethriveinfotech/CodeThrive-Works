@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './common/Modal';
-import { Sun, Moon, Shield, User, RefreshCw, LogOut, Check, Save, Sparkles } from 'lucide-react';
+import { Sun, Moon, Shield, User, RefreshCw, LogOut, Check, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -13,13 +13,28 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    // Apply theme class to document body
+    if (isOpen) {
+      setTheme(localStorage.getItem('cti_theme') || 'dark');
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
     if (theme === 'light') {
       document.body.classList.add('light-mode');
     } else {
       document.body.classList.remove('light-mode');
     }
   }, [theme]);
+
+  const handleClose = () => {
+    const savedTheme = localStorage.getItem('cti_theme') || 'dark';
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
+    }
+    onClose();
+  };
 
   const handleSave = (e) => {
     e.preventDefault();
@@ -47,7 +62,7 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Portal Workspace Settings">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Portal Workspace Settings">
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         
         {savedSuccess && (
@@ -250,7 +265,7 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
 
         {/* Footer Buttons */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '1rem' }}>
-          <button type="button" className="btn-outline-glass" onClick={onClose}>
+          <button type="button" className="btn-outline-glass" onClick={handleClose}>
             Cancel
           </button>
           <button type="submit" className="btn-primary-glow" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>

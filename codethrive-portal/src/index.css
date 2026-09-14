@@ -461,3 +461,132 @@ button {
   font-weight: 500;
   color: var(--text-main);
 }
+
+/* ==========================================================================
+   LIGHT MODE ENTERPRISE THEME SYSTEM
+   ========================================================================== */
+body.light-mode {
+  --bg-main: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-modal: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.95);
+  
+  --bg-main-gradient: radial-gradient(circle at 100% 0%, rgba(79, 70, 229, 0.05) 0%, #f8fafc 60%);
+  
+  --text-main: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-dark: #94a3b8;
+
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-hover: rgba(0, 0, 0, 0.2);
+  --border-accent: rgba(79, 70, 229, 0.3);
+
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+body.light-mode .sidebar {
+  background: #ffffff !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.light-mode .sidebar .nav-item {
+  color: #475569 !important;
+}
+
+body.light-mode .sidebar .nav-item:hover,
+body.light-mode .sidebar .nav-item.active {
+  background: rgba(79, 70, 229, 0.1) !important;
+  color: #4f46e5 !important;
+}
+
+body.light-mode .topbar {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
+}
+
+body.light-mode .brand-name {
+  color: #0f172a !important;
+}
+
+body.light-mode .topbar-search {
+  background: #f1f5f9 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-mode .topbar-search input {
+  color: #0f172a !important;
+}
+
+body.light-mode .card,
+body.light-mode .dashboard-card,
+body.light-mode .stat-card,
+body.light-mode .module-card,
+body.light-mode .table-container,
+body.light-mode .modal-content,
+body.light-mode .profile-executive-header,
+body.light-mode .header-stat-box,
+body.light-mode .profile-strength-bar-card,
+body.light-mode .quick-stat-item,
+body.light-mode .achievement-badge-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  color: #0f172a !important;
+}
+
+body.light-mode .profile-user-name {
+  color: #0f172a !important;
+}
+
+body.light-mode .profile-user-title {
+  color: #475569 !important;
+}
+
+body.light-mode .profile-meta-tag {
+  background: #f1f5f9 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+body.light-mode .table th {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+body.light-mode .table td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  color: #1e293b !important;
+}
+
+body.light-mode input,
+body.light-mode select,
+body.light-mode textarea,
+body.light-mode .input-field {
+  background: #f8fafc !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  color: #0f172a !important;
+}
+
+body.light-mode .btn-outline-glass {
+  background: #f1f5f9 !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  color: #334155 !important;
+}
+
+body.light-mode .btn-outline-glass:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+body.light-mode .search-results-popover {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12) !important;
+}
