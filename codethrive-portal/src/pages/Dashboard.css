@@ -103,11 +103,18 @@
   z-index: 1;
 }
 
+.hero-greeting-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 900px) {
   .dashboard-hero {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
   .hero-actions {
     width: 100%;
@@ -115,6 +122,81 @@
   .hero-actions .btn {
     flex: 1;
     justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0.25rem 0 !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .dashboard-hero {
+    padding: 1rem 0.85rem !important;
+    gap: 1rem !important;
+    border-radius: 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .hero-title {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    font-size: 1.25rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .hero-greeting-text {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.1rem !important;
+  }
+
+  .hero-greeting-text span {
+    display: block !important;
+    word-break: break-word !important;
+  }
+
+  .hero-badges {
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+  }
+
+  .hero-badge {
+    padding: 0.25rem 0.6rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .hero-actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.6rem !important;
+    margin-top: 0.25rem !important;
+  }
+
+  .hero-actions .btn {
+    width: 100% !important;
+    padding: 0.7rem 0.4rem !important;
+    font-size: 0.825rem !important;
+    justify-content: center !important;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+  }
+
+  .metric-card {
+    padding: 1rem 1.1rem !important;
+    border-radius: 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 }
 

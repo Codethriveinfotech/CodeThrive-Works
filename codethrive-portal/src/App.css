@@ -231,17 +231,28 @@
   }
 
   .topbar {
-    padding: 0.75rem 1rem !important;
-    height: 64px !important;
+    padding: 0.5rem 0.85rem !important;
+    height: 60px !important;
+    gap: 0.5rem !important;
+  }
+
+  .topbar-actions {
+    gap: 0.6rem !important;
   }
 
   .topbar-search {
-    width: 160px !important;
-    padding: 0.4rem 0.75rem !important;
+    width: 140px !important;
+    padding: 0.35rem 0.6rem !important;
   }
 
   .topbar-search input {
-    font-size: 0.825rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .main-content {
+    padding: 0.75rem 0.6rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .profile-widget span,
@@ -313,5 +324,19 @@
 
   .page-title {
     font-size: 1.25rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-search {
+    display: none !important;
+  }
+  
+  .reg-btn-text {
+    display: none !important;
+  }
+  
+  .main-content {
+    padding: 0.5rem 0.4rem !important;
   }
 }

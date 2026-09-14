@@ -427,7 +427,9 @@ const Dashboard = () => {
           </div>
           <h1 className="hero-title">
             <GreetingIcon size={28} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
-            {greeting}, <span>{displayName}</span>
+            <div className="hero-greeting-text">
+              {greeting}, <span>{displayName}</span>
+            </div>
           </h1>
 
           <div className="hero-badges">

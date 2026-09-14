@@ -9,6 +9,26 @@
   animation: adminFadeIn 0.5s ease-out;
 }
 
+@media (max-width: 768px) {
+  .admin-dashboard {
+    padding: 0.5rem 0.25rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .ultra-premium-hero {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .welcome-title-glowing {
+    font-size: 1.4rem !important;
+    line-height: 1.25 !important;
+  }
+}
+
 @keyframes adminFadeIn {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }

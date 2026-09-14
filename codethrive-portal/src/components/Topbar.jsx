@@ -25,18 +25,7 @@ const Topbar = () => {
 
   return (
     <>
-      <header className="topbar" style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '1rem 2rem',
-        background: 'var(--glass-bg)',
-        backdropFilter: 'var(--glass-blur)',
-        borderBottom: '1px solid var(--glass-border)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100
-      }}>
+      <header className="topbar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <button 
             className="mobile-menu-toggle-btn"
@@ -50,16 +39,7 @@ const Topbar = () => {
             <Menu size={22} color="#ffffff" />
           </button>
 
-          <div className="topbar-search" style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'rgba(0,0,0,0.2)',
-            border: '1px solid var(--border-color)',
-            borderRadius: 'var(--radius-full)',
-            padding: '0.5rem 1.25rem',
-            width: '350px',
-            transition: 'all var(--transition-fast)'
-          }}>
+          <div className="topbar-search">
             <Search size={18} color="var(--text-muted)" style={{ marginRight: '0.75rem' }} />
             <input 
               type="text" 
