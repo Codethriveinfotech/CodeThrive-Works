@@ -831,13 +831,6 @@ const MyProfile = () => {
             </div>
 
             <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Previous Organization</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.previousCompany || 'Not Provided'}
-              </div>
-            </div>
-
-            <div>
               <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Total Experience</span>
               <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
                 {profile.totalExperience || '2+ Years'}
@@ -1266,11 +1259,6 @@ const MyProfile = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Previous Organization *</label>
-                  <input type="text" className="input-field" placeholder="e.g. Infosys, TCS" value={formData.previousCompany} onChange={e => setFormData({ ...formData, previousCompany: e.target.value })} required />
-                </div>
-
-                <div className="form-group" style={{ gridColumn: 'span 2' }}>
                   <label>Total Experience *</label>
                   <input type="text" className="input-field" placeholder="e.g. 2+ Years" value={formData.totalExperience} onChange={e => setFormData({ ...formData, totalExperience: e.target.value })} required />
                 </div>
