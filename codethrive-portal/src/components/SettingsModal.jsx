@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Modal from './common/Modal';
-import { Sun, Moon, Shield, User, RefreshCw, LogOut, Check, Save } from 'lucide-react';
+import { Shield, User, RefreshCw, LogOut, Check, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,38 +8,11 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   
-  const [theme, setTheme] = useState(localStorage.getItem('cti_theme') || 'dark');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      setTheme(localStorage.getItem('cti_theme') || 'dark');
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (theme === 'light') {
-      document.body.classList.add('light-mode');
-    } else {
-      document.body.classList.remove('light-mode');
-    }
-  }, [theme]);
-
-  const handleClose = () => {
-    const savedTheme = localStorage.getItem('cti_theme') || 'dark';
-    if (savedTheme === 'light') {
-      document.body.classList.add('light-mode');
-    } else {
-      document.body.classList.remove('light-mode');
-    }
-    onClose();
-  };
-
   const handleSave = (e) => {
     e.preventDefault();
-    localStorage.setItem('cti_theme', theme);
-    
     setSavedSuccess(true);
     setTimeout(() => {
       setSavedSuccess(false);
@@ -62,7 +35,7 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Portal Workspace Settings">
+    <Modal isOpen={isOpen} onClose={onClose} title="Portal Workspace Settings">
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         
         {savedSuccess && (
@@ -134,56 +107,6 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
           >
             <User size={15} /> My Profile
           </button>
-        </div>
-
-        {/* 2. Theme & Appearance */}
-        <div>
-          <h4 style={{ margin: '0 0 0.6rem 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#60a5fa', fontWeight: 700 }}>
-            <Sun size={16} /> Theme & Display Mode
-          </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
-            <button
-              type="button"
-              onClick={() => setTheme('dark')}
-              style={{
-                padding: '0.75rem',
-                borderRadius: '12px',
-                border: theme === 'dark' ? '2px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.1)',
-                background: theme === 'dark' ? 'rgba(59, 130, 246, 0.18)' : 'rgba(15, 23, 42, 0.5)',
-                color: theme === 'dark' ? '#60a5fa' : '#94a3b8',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                fontWeight: theme === 'dark' ? '700' : '500',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <Moon size={16} /> Dark Theme
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setTheme('light')}
-              style={{
-                padding: '0.75rem',
-                borderRadius: '12px',
-                border: theme === 'light' ? '2px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.1)',
-                background: theme === 'light' ? 'rgba(59, 130, 246, 0.18)' : 'rgba(15, 23, 42, 0.5)',
-                color: theme === 'light' ? '#60a5fa' : '#94a3b8',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                fontWeight: theme === 'light' ? '700' : '500',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <Sun size={16} /> Light Theme
-            </button>
-          </div>
         </div>
 
         {/* 3. Workspace Data Sync */}
@@ -265,7 +188,7 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
 
         {/* Footer Buttons */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '1rem' }}>
-          <button type="button" className="btn-outline-glass" onClick={handleClose}>
+          <button type="button" className="btn-outline-glass" onClick={onClose}>
             Cancel
           </button>
           <button type="submit" className="btn-primary-glow" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>

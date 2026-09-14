@@ -7,9 +7,9 @@ import { motion } from 'framer-motion';
 import { 
   UserCircle, Mail, Phone, MapPin,
   Briefcase, Shield, Camera, Edit3, GraduationCap,
-  Sparkles, Trophy, CreditCard, RefreshCw, Calendar,
+  Sparkles, Trophy, CreditCard, Calendar,
   ShieldCheck, Zap, Landmark, CheckCircle2, Sliders,
-  RotateCw, ZoomIn, ZoomOut, Move
+  RotateCw, ZoomIn
 } from 'lucide-react';
 import './MyProfile.css';
 
@@ -20,7 +20,6 @@ const MyProfile = () => {
   const [profile, setProfile] = useState(null);
   const [attendanceSummary, setAttendanceSummary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [modalFormTab, setModalFormTab] = useState('personal');
@@ -155,12 +154,6 @@ const MyProfile = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await fetchProfile();
-    setTimeout(() => setIsRefreshing(false), 500);
   };
 
   // Image select handler -> opens interactive adjust/crop modal
@@ -491,22 +484,6 @@ const MyProfile = () => {
 
         {/* Header Action Buttons */}
         <div className="profile-header-actions">
-          {profile?.profilePhoto && (
-            <button className="btn-outline-glass" onClick={handleAdjustCurrentPhoto} title="Adjust Photo Position">
-              <Sliders size={16} />
-              <span>Adjust Photo</span>
-            </button>
-          )}
-
-          <button className="btn-glass-icon" onClick={handleRefresh} title="Refresh Profile">
-            <RefreshCw size={17} className={isRefreshing ? 'spin' : ''} />
-          </button>
-
-          <button className="btn-outline-glass" onClick={() => setIsPasswordModalOpen(true)}>
-            <Shield size={16} />
-            <span>Security</span>
-          </button>
-
           <button className="btn-primary-glow" onClick={() => setIsEditModalOpen(true)}>
             <Edit3 size={16} />
             <span>Edit Profile</span>
