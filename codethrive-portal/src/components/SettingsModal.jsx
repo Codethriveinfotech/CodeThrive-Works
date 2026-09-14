@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './common/Modal';
-import { Settings, Sun, Moon, Bell, Shield, User, Globe, Check, Save } from 'lucide-react';
+import { Sun, Moon, Shield, User, RefreshCw, LogOut, Check, Save, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   
   const [theme, setTheme] = useState(localStorage.getItem('cti_theme') || 'dark');
-  const [emailAlerts, setEmailAlerts] = useState(localStorage.getItem('cti_email_alerts') !== 'false');
-  const [taskAlerts, setTaskAlerts] = useState(localStorage.getItem('cti_task_alerts') !== 'false');
-  const [language, setLanguage] = useState(localStorage.getItem('cti_lang') || 'en');
-  const [dateFormat, setDateFormat] = useState(localStorage.getItem('cti_date_format') || 'DD/MM/YYYY');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    // Apply theme class to document elem
+    // Apply theme class to document body
     if (theme === 'light') {
       document.body.classList.add('light-mode');
     } else {
@@ -25,162 +24,236 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
   const handleSave = (e) => {
     e.preventDefault();
     localStorage.setItem('cti_theme', theme);
-    localStorage.setItem('cti_email_alerts', emailAlerts);
-    localStorage.setItem('cti_task_alerts', taskAlerts);
-    localStorage.setItem('cti_lang', language);
-    localStorage.setItem('cti_date_format', dateFormat);
     
     setSavedSuccess(true);
     setTimeout(() => {
       setSavedSuccess(false);
       onClose();
-    }, 1200);
+    }, 900);
+  };
+
+  const handleRefreshWorkspace = () => {
+    setIsRefreshing(true);
+    window.dispatchEvent(new CustomEvent('cti_global_refresh'));
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 800);
+  };
+
+  const handleLogout = async () => {
+    onClose();
+    await logout();
+    navigate(isAdmin ? '/admin/login' : '/employee/login', { replace: true });
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Portal Settings">
-      <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Portal Workspace Settings">
+      <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         
         {savedSuccess && (
           <div style={{
             padding: '0.75rem 1rem',
             background: 'rgba(16, 185, 129, 0.15)',
-            border: '1px solid var(--success)',
-            borderRadius: '8px',
-            color: 'var(--success)',
+            border: '1px solid #10b981',
+            borderRadius: '12px',
+            color: '#34d399',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            fontWeight: '500'
+            fontWeight: '600',
+            fontSize: '0.9rem'
           }}>
-            <Check size={18} /> Settings saved successfully!
+            <Check size={18} /> Settings applied successfully!
           </div>
         )}
 
-        {/* 1. Theme Selection */}
+        {/* 1. Account Summary Card */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '16px',
+          padding: '1.1rem 1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+              color: '#ffffff',
+              fontWeight: 800,
+              fontSize: '1.1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {user?.fullName ? user.fullName.charAt(0).toUpperCase() : (user?.name ? user.name.charAt(0).toUpperCase() : 'U')}
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#f8fafc' }}>
+                {user?.fullName || user?.name || 'CodeThrive User'}
+              </div>
+              <div style={{ fontSize: '0.785rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.1rem' }}>
+                <span>{user?.email || 'user@codethrive.com'}</span>
+                <span>&bull;</span>
+                <span style={{ color: '#60a5fa', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.7rem' }}>
+                  {user?.role || (isAdmin ? 'ADMIN' : 'EMPLOYEE')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="btn-outline-glass"
+            onClick={() => {
+              onClose();
+              navigate(isAdmin ? '/admin/profile' : '/employee/profile');
+            }}
+            style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}
+          >
+            <User size={15} /> My Profile
+          </button>
+        </div>
+
+        {/* 2. Theme & Appearance */}
         <div>
-          <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
-            <Sun size={16} /> Appearance & Theme
+          <h4 style={{ margin: '0 0 0.6rem 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#60a5fa', fontWeight: 700 }}>
+            <Sun size={16} /> Theme & Display Mode
           </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
             <button
               type="button"
               onClick={() => setTheme('dark')}
               style={{
-                padding: '0.8rem',
-                borderRadius: '8px',
-                border: theme === 'dark' ? '2px solid var(--primary)' : '1px solid var(--border-color)',
-                background: theme === 'dark' ? 'rgba(79, 70, 229, 0.15)' : 'var(--glass-bg)',
-                color: 'var(--text-main)',
+                padding: '0.75rem',
+                borderRadius: '12px',
+                border: theme === 'dark' ? '2px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.1)',
+                background: theme === 'dark' ? 'rgba(59, 130, 246, 0.18)' : 'rgba(15, 23, 42, 0.5)',
+                color: theme === 'dark' ? '#60a5fa' : '#94a3b8',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
-                fontWeight: theme === 'dark' ? 'bold' : 'normal'
+                fontWeight: theme === 'dark' ? '700' : '500',
+                transition: 'all 0.2s ease'
               }}
             >
-              <Moon size={16} /> Dark Mode
+              <Moon size={16} /> Dark Theme
             </button>
+
             <button
               type="button"
               onClick={() => setTheme('light')}
               style={{
-                padding: '0.8rem',
-                borderRadius: '8px',
-                border: theme === 'light' ? '2px solid var(--primary)' : '1px solid var(--border-color)',
-                background: theme === 'light' ? 'rgba(79, 70, 229, 0.15)' : 'var(--glass-bg)',
-                color: 'var(--text-main)',
+                padding: '0.75rem',
+                borderRadius: '12px',
+                border: theme === 'light' ? '2px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.1)',
+                background: theme === 'light' ? 'rgba(59, 130, 246, 0.18)' : 'rgba(15, 23, 42, 0.5)',
+                color: theme === 'light' ? '#60a5fa' : '#94a3b8',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
-                fontWeight: theme === 'light' ? 'bold' : 'normal'
+                fontWeight: theme === 'light' ? '700' : '500',
+                transition: 'all 0.2s ease'
               }}
             >
-              <Sun size={16} /> Light Mode
+              <Sun size={16} /> Light Theme
             </button>
           </div>
         </div>
 
-        {/* 2. Notifications Preferences */}
+        {/* 3. Workspace Data Sync */}
         <div>
-          <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
-            <Bell size={16} /> Notification Preferences
+          <h4 style={{ margin: '0 0 0.6rem 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#34d399', fontWeight: 700 }}>
+            <RefreshCw size={16} /> Workspace Data Sync
           </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', background: 'var(--glass-bg)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              <span style={{ fontSize: '0.9rem' }}>Email Notifications & Summaries</span>
-              <input type="checkbox" checked={emailAlerts} onChange={(e) => setEmailAlerts(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', background: 'var(--glass-bg)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              <span style={{ fontSize: '0.9rem' }}>Task & Attendance Push Alerts</span>
-              <input type="checkbox" checked={taskAlerts} onChange={(e) => setTaskAlerts(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
-            </label>
-          </div>
-        </div>
-
-        {/* 3. System Preferences */}
-        <div>
-          <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
-            <Globe size={16} /> Language & Regional
-          </h4>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label style={{ fontSize: '0.85rem' }}>Portal Language</label>
-              <select 
-                value={language} 
-                onChange={(e) => setLanguage(e.target.value)} 
-                className="input-field"
-                style={{ width: '100%' }}
-              >
-                <option value="en">English (US)</option>
-                <option value="ta">Tamil (தமிழ்)</option>
-              </select>
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '12px',
+            padding: '0.85rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc' }}>
+                Re-sync Local Workspace
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                Force refresh tasks, attendance, and payroll records
+              </div>
             </div>
-            <div className="form-group">
-              <label style={{ fontSize: '0.85rem' }}>Date Format</label>
-              <select 
-                value={dateFormat} 
-                onChange={(e) => setDateFormat(e.target.value)} 
-                className="input-field"
-                style={{ width: '100%' }}
-              >
-                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-              </select>
-            </div>
-          </div>
-        </div>
 
-        {/* 4. Quick Account Actions */}
-        <div>
-          <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
-            <Shield size={16} /> Account Quick Actions
-          </h4>
-          <div style={{ display: 'flex', gap: '1rem' }}>
             <button
               type="button"
-              className="btn btn-outline"
+              className="btn-outline-glass"
+              onClick={handleRefreshWorkspace}
+              style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}
+            >
+              <RefreshCw size={15} className={isRefreshing ? 'spin' : ''} /> Sync Now
+            </button>
+          </div>
+        </div>
+
+        {/* 4. Session & Security */}
+        <div>
+          <h4 style={{ margin: '0 0 0.6rem 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', fontWeight: 700 }}>
+            <Shield size={16} /> Account Security & Session
+          </h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+            <button
+              type="button"
+              className="btn-outline-glass"
               onClick={() => {
                 onClose();
                 navigate(isAdmin ? '/admin/profile' : '/employee/profile');
               }}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              style={{ padding: '0.75rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
             >
-              <User size={16} /> View Profile
+              <Shield size={16} /> Change Password
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{
+                padding: '0.75rem',
+                borderRadius: '12px',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                background: 'rgba(239, 68, 68, 0.12)',
+                color: '#f87171',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <LogOut size={16} /> Sign Out
             </button>
           </div>
         </div>
 
         {/* Footer Buttons */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-          <button type="button" className="btn btn-outline" onClick={onClose}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '1rem' }}>
+          <button type="button" className="btn-outline-glass" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button type="submit" className="btn-primary-glow" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Save size={16} /> Save Settings
           </button>
         </div>
