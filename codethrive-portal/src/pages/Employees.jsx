@@ -112,14 +112,14 @@ const Employees = () => {
     try {
       setLoading(true);
       const res = await api.get('/employees');
-      if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+      if (res.data.success && Array.isArray(res.data.data)) {
         setEmployees(res.data.data);
       } else {
-        setEmployees(DEFAULT_DEMO_EMPLOYEES);
+        setEmployees([]);
       }
     } catch (err) {
-      console.warn('API offline. Loading demo employees directory.', err);
-      setEmployees(DEFAULT_DEMO_EMPLOYEES);
+      console.warn('API error fetching employees:', err);
+      setEmployees([]);
     } finally {
       setLoading(false);
     }

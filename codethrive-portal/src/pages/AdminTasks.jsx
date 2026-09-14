@@ -53,12 +53,15 @@ const AdminTasks = () => {
         api.get('/tasks'),
         api.get('/employees')
       ]);
-      if (taskRes.data && taskRes.data.length > 0) setTasks(taskRes.data);
-      if (empRes.data && empRes.data.length > 0) setEmployees(empRes.data);
+      const tasksData = Array.isArray(taskRes.data?.data) ? taskRes.data.data : (Array.isArray(taskRes.data) ? taskRes.data : []);
+      const empsData = Array.isArray(empRes.data?.data) ? empRes.data.data : (Array.isArray(empRes.data) ? empRes.data : []);
+
+      setTasks(tasksData);
+      setEmployees(empsData);
     } catch (err) {
-      console.warn('API offline. Using demo tasks data.', err);
-      setTasks(DEFAULT_DEMO_TASKS);
-      setEmployees(DEFAULT_DEMO_EMPLOYEES);
+      console.warn('API error fetching tasks:', err);
+      setTasks([]);
+      setEmployees([]);
     } finally {
       setLoading(false);
     }

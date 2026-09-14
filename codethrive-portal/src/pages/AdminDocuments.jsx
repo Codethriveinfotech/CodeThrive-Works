@@ -88,19 +88,16 @@ const AdminDocuments = () => {
       }
 
       const localDocs = JSON.parse(localStorage.getItem('cti_shared_documents') || '[]');
-      const combined = [...localDocs, ...apiDocs];
-      
-      if (combined.length === 0) {
-        localStorage.setItem('cti_shared_documents', JSON.stringify(DEFAULT_DOCUMENTS));
-        setDocuments(DEFAULT_DOCUMENTS);
-      } else {
-        const map = new Map();
-        combined.forEach(d => map.set(d._id, d));
-        setDocuments(Array.from(map.values()));
-      }
+      const cleanLocalDocs = localDocs.filter(d => d && !String(d._id).startsWith('doc-'));
+      localStorage.setItem('cti_shared_documents', JSON.stringify(cleanLocalDocs));
+
+      const combined = [...cleanLocalDocs, ...apiDocs];
+      const map = new Map();
+      combined.forEach(d => map.set(d._id, d));
+      setDocuments(Array.from(map.values()));
     } catch (err) {
       console.error('Failed to fetch documents', err);
-      setDocuments(DEFAULT_DOCUMENTS);
+      setDocuments([]);
     } finally {
       setLoading(false);
     }

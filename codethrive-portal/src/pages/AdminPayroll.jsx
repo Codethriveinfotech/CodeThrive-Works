@@ -138,19 +138,16 @@ const AdminPayroll = () => {
       setEmployees(apiEmps);
 
       const localPayrolls = JSON.parse(localStorage.getItem('cti_shared_payrolls') || '[]');
-      const combined = [...localPayrolls, ...apiPayrolls];
+      const cleanLocalPayrolls = localPayrolls.filter(p => p && !String(p._id).startsWith('ps-'));
+      localStorage.setItem('cti_shared_payrolls', JSON.stringify(cleanLocalPayrolls));
       
-      if (combined.length === 0) {
-        localStorage.setItem('cti_shared_payrolls', JSON.stringify(DEFAULT_PAYROLLS));
-        setPayrolls(DEFAULT_PAYROLLS);
-      } else {
-        const map = new Map();
-        combined.forEach(p => map.set(p._id, p));
-        setPayrolls(Array.from(map.values()));
-      }
+      const combined = [...cleanLocalPayrolls, ...apiPayrolls];
+      const map = new Map();
+      combined.forEach(p => map.set(p._id, p));
+      setPayrolls(Array.from(map.values()));
     } catch (err) {
       console.error('Failed to fetch payroll data', err);
-      setPayrolls(DEFAULT_PAYROLLS);
+      setPayrolls([]);
     } finally {
       setLoading(false);
     }

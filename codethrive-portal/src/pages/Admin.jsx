@@ -20,26 +20,22 @@ const Admin = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [stats, setStats] = useState({
-    totalEmployees: 4,
-    working: 2,
-    onBreak: 1,
+    totalEmployees: 0,
+    working: 0,
+    onBreak: 0,
     onLunch: 0,
-    checkedOut: 1,
+    checkedOut: 0,
     absent: 0,
     pendingRegistrations: 0,
-    pendingTaskReviews: 2
+    pendingTaskReviews: 0
   });
 
   const [liveMonitoring, setLiveMonitoring] = useState([]);
   const [selectedEmpId, setSelectedEmpId] = useState('ALL');
-  const [activeFilter, setActiveFilter] = useState('ALL'); // 'ALL', 'Working', 'On Break', 'Checked Out'
+  const [activeFilter, setActiveFilter] = useState('ALL');
 
-  // Recent Submitted Reports for Quick Approval
-  const [recentReports, setRecentReports] = useState([
-    { _id: 'dr1', empName: 'Mahadevan', empId: 'CTI-EMP-001', date: '2026-09-09', title: 'Completed Admin Registered Employees Portal & Teams Call Widget', hours: '8.0h', status: 'Pending' },
-    { _id: 'dr2', empName: 'Priya Sharma', empId: 'CTI-EMP-002', date: '2026-09-09', title: 'Designed Figma Mockups for Mobile HRMS App', hours: '7.0h', status: 'Pending' },
-    { _id: 'dr3', empName: 'Rahul Verma', empId: 'CTI-EMP-003', date: '2026-09-08', title: 'Reviewed Q3 Engineering Roadmap and Sprint Objectives', hours: '8.0h', status: 'Approved' }
-  ]);
+  // Recent Submitted Reports
+  const [recentReports, setRecentReports] = useState([]);
 
   // Quick Task Assign State
   const [quickTaskTitle, setQuickTaskTitle] = useState('');
@@ -51,97 +47,26 @@ const Admin = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/dashboard/admin-stats');
+      const [res, reportsRes] = await Promise.all([
+        api.get('/dashboard/admin-stats'),
+        api.get('/daily-reports').catch(() => ({ data: { success: false, data: [] } }))
+      ]);
+
       if (res.data.success) {
-        setStats(res.data.stats);
-        if (res.data.liveMonitoring && res.data.liveMonitoring.length > 0) {
-          setLiveMonitoring(res.data.liveMonitoring);
-        }
+        setStats(res.data.stats || {
+          totalEmployees: 0, working: 0, onBreak: 0, onLunch: 0, checkedOut: 0, absent: 0, pendingRegistrations: 0, pendingTaskReviews: 0
+        });
+        setLiveMonitoring(res.data.liveMonitoring || []);
+      }
+
+      if (reportsRes.data && reportsRes.data.success && Array.isArray(reportsRes.data.data)) {
+        setRecentReports(reportsRes.data.data.slice(0, 5));
+      } else {
+        setRecentReports([]);
       }
     } catch (err) {
-      console.warn('Backend API offline. Loading ultra-neat admin demo stats...', err);
-      setStats({
-        totalEmployees: 4,
-        working: 2,
-        onBreak: 1,
-        onLunch: 0,
-        checkedOut: 1,
-        absent: 0,
-        pendingRegistrations: 0,
-        pendingTaskReviews: 2
-      });
+      console.warn('Error fetching admin dashboard stats from backend:', err);
     } finally {
-      // Default demo live monitoring
-      setLiveMonitoring([
-        { 
-          _id: 'emp_001',
-          id: 'CTI-EMP-001', 
-          name: 'Mahadevan', 
-          email: 'mahadevan@codethrive.com',
-          dept: 'Engineering', 
-          designation: 'Senior Developer',
-          joiningDate: '2025-01-15',
-          status: 'Working',
-          firstLoginTime: '2026-09-13T09:15:00.000Z',
-          lastLogoutTime: null,
-          workSec: 14400,
-          breakSec: 900,
-          lunchSec: 1800,
-          duration: '4h 00m',
-          assignedTasksCount: 2
-        },
-        { 
-          _id: 'emp_002',
-          id: 'CTI-EMP-002', 
-          name: 'Priya Sharma', 
-          email: 'priya@codethrive.com',
-          dept: 'UI/UX Design', 
-          designation: 'Product Designer',
-          joiningDate: '2025-03-01',
-          status: 'On Break',
-          firstLoginTime: '2026-09-13T09:30:00.000Z',
-          lastLogoutTime: null,
-          workSec: 12600,
-          breakSec: 1200,
-          lunchSec: 0,
-          duration: '3h 30m',
-          assignedTasksCount: 1
-        },
-        { 
-          _id: 'emp_003',
-          id: 'CTI-EMP-003', 
-          name: 'Rahul Verma', 
-          email: 'rahul@codethrive.com',
-          dept: 'Management', 
-          designation: 'Project Lead',
-          joiningDate: '2024-11-10',
-          status: 'Checked Out',
-          firstLoginTime: '2026-09-13T08:45:00.000Z',
-          lastLogoutTime: '2026-09-13T17:15:00.000Z',
-          workSec: 28800,
-          breakSec: 1800,
-          lunchSec: 2700,
-          duration: '8h 00m',
-          assignedTasksCount: 3
-        },
-        { 
-          _id: 'emp_004',
-          id: 'CTI-EMP-004', 
-          name: 'Ananya Roy', 
-          email: 'ananya@codethrive.com',
-          dept: 'HR', 
-          designation: 'HR Manager',
-          joiningDate: '2025-02-01',
-          status: 'Working',
-          firstLoginTime: '2026-09-13T09:00:00.000Z',
-          lastLogoutTime: null,
-          workSec: 18000,
-          breakSec: 600,
-          lunchSec: 1200,
-          duration: '5h 00m',
-          assignedTasksCount: 1
-        }
-      ]);
       setLoading(false);
     }
   };

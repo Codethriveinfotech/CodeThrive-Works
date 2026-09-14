@@ -30,12 +30,14 @@ const AdminReports = () => {
     try {
       setLoading(true);
       const res = await api.get('/daily-reports');
-      if (res.data.success && res.data.data.length > 0) {
+      if (res.data?.success && Array.isArray(res.data.data)) {
         setReports(res.data.data);
+      } else {
+        setReports([]);
       }
     } catch (err) {
-      console.warn('Backend API offline. Using demo daily reports data.', err);
-      setReports(DEFAULT_DEMO_REPORTS);
+      console.warn('API error fetching reports:', err);
+      setReports([]);
     } finally {
       setLoading(false);
     }
