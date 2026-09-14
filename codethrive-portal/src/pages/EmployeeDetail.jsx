@@ -248,10 +248,6 @@ const EmployeeDetail = () => {
   // 'profile', 'tasks', 'reports', 'leaves', 'documents', 'attendance', 'management'
   const [activeTab, setActiveTab] = useState('profile');
 
-  // Edit Profile State
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({});
-
   // Management State
   const [editRole, setEditRole] = useState('employee');
   const [editStatus, setEditStatus] = useState('Active');
@@ -301,20 +297,6 @@ const EmployeeDetail = () => {
 
   const initFormState = (emp) => {
     if (!emp) return;
-    setEditForm({
-      fullName: emp.fullName || '',
-      personalEmailAddress: emp.personalEmailAddress || '',
-      personalPhoneNumber: emp.personalPhoneNumber || '',
-      department: emp.department || '',
-      designation: emp.designation || '',
-      employmentType: emp.employmentType || 'Full-Time',
-      workLocation: emp.workLocation || 'Office',
-      currentAddress: emp.currentAddress || '',
-      permanentAddress: emp.permanentAddress || '',
-      skills: emp.skills ? emp.skills.join(', ') : '',
-      bloodGroup: emp.bloodGroup || '',
-      gender: emp.gender || ''
-    });
     setEditRole(emp.user?.role || 'employee');
     setEditStatus(emp.status || 'Active');
     setEditSalary(emp.salaryAmount || '');
@@ -323,25 +305,6 @@ const EmployeeDetail = () => {
     setEditIfsc(emp.ifscCode || '');
   };
 
-  const handleSaveProfile = async () => {
-    if (!employee) return;
-    try {
-      const payload = {
-        ...editForm,
-        skills: typeof editForm.skills === 'string' ? editForm.skills.split(',').map(s => s.trim()).filter(Boolean) : editForm.skills
-      };
-      await api.put(`/employees/${employee._id}`, payload);
-      const updated = { ...employee, ...payload };
-      setEmployee(updated);
-      setIsEditing(false);
-      alert('Employee profile details updated successfully!');
-    } catch (err) {
-      const updated = { ...employee, ...editForm, skills: typeof editForm.skills === 'string' ? editForm.skills.split(',').map(s => s.trim()) : editForm.skills };
-      setEmployee(updated);
-      setIsEditing(false);
-      alert('Employee profile details updated successfully!');
-    }
-  };
 
   const handleAssignTask = async (e) => {
     e.preventDefault();
@@ -785,81 +748,34 @@ const EmployeeDetail = () => {
               <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
                 Personal & Employment Details for {employee.fullName}
               </h3>
-              {isEditing ? (
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <button className="btn btn-outline" onClick={() => setIsEditing(false)}><X size={15} /> Cancel</button>
-                  <button className="btn btn-primary" onClick={handleSaveProfile}><Save size={15} /> Save Changes</button>
-                </div>
-              ) : (
-                <button className="btn btn-outline" onClick={() => setIsEditing(true)}><User size={15} /> Edit Info</button>
-              )}
             </div>
 
             <div className="detail-grid-2">
               <Card title={<><User size={16} style={{ marginRight: '0.5rem' }} /> Personal Information</>}>
-                {isEditing ? (
-                  <div className="form-grid-2">
-                    <div className="form-field"><label>Full Name</label><input type="text" className="input-box" value={editForm.fullName} onChange={e => setEditForm({...editForm, fullName: e.target.value})} /></div>
-                    <div className="form-field"><label>Personal Email</label><input type="email" className="input-box" value={editForm.personalEmailAddress} onChange={e => setEditForm({...editForm, personalEmailAddress: e.target.value})} /></div>
-                    <div className="form-field"><label>Phone Number</label><input type="text" className="input-box" value={editForm.personalPhoneNumber} onChange={e => setEditForm({...editForm, personalPhoneNumber: e.target.value})} /></div>
-                    <div className="form-field"><label>Blood Group</label><input type="text" className="input-box" value={editForm.bloodGroup} onChange={e => setEditForm({...editForm, bloodGroup: e.target.value})} /></div>
-                  </div>
-                ) : (
-                  <div className="info-list">
-                    <div className="info-item"><span>Full Name:</span> <strong>{employee.fullName}</strong></div>
-                    <div className="info-item"><span>Email Address:</span> <strong>{employee.personalEmailAddress}</strong></div>
-                    <div className="info-item"><span>Phone Number:</span> <strong>{employee.personalPhoneNumber || 'N/A'}</strong></div>
-                    <div className="info-item"><span>Gender / Blood:</span> <strong>{employee.gender || 'Male'} ({employee.bloodGroup || 'O+'})</strong></div>
-                  </div>
-                )}
+                <div className="info-list">
+                  <div className="info-item"><span>Full Name:</span> <strong>{employee.fullName}</strong></div>
+                  <div className="info-item"><span>Email Address:</span> <strong>{employee.personalEmailAddress}</strong></div>
+                  <div className="info-item"><span>Phone Number:</span> <strong>{employee.personalPhoneNumber || 'N/A'}</strong></div>
+                  <div className="info-item"><span>Gender / Blood:</span> <strong>{employee.gender || 'Male'} ({employee.bloodGroup || 'O+'})</strong></div>
+                </div>
               </Card>
 
               <Card title={<><Briefcase size={16} style={{ marginRight: '0.5rem' }} /> Employment & Department</>}>
-                {isEditing ? (
-                  <div className="form-grid-2">
-                    <div className="form-field"><label>Department</label><input type="text" className="input-box" value={editForm.department} onChange={e => setEditForm({...editForm, department: e.target.value})} /></div>
-                    <div className="form-field"><label>Designation</label><input type="text" className="input-box" value={editForm.designation} onChange={e => setEditForm({...editForm, designation: e.target.value})} /></div>
-                    <div className="form-field">
-                      <label>Employment Type</label>
-                      <select className="input-box" value={editForm.employmentType} onChange={e => setEditForm({...editForm, employmentType: e.target.value})}>
-                        <option value="Full-Time">Full-Time</option>
-                        <option value="Part-Time">Part-Time</option>
-                        <option value="Contract">Contract</option>
-                      </select>
-                    </div>
-                    <div className="form-field">
-                      <label>Work Location</label>
-                      <select className="input-box" value={editForm.workLocation} onChange={e => setEditForm({...editForm, workLocation: e.target.value})}>
-                        <option value="Office">Office</option>
-                        <option value="Remote">Remote</option>
-                        <option value="Hybrid">Hybrid</option>
-                      </select>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="info-list">
-                    <div className="info-item"><span>Department:</span> <strong>{employee.department}</strong></div>
-                    <div className="info-item"><span>Designation:</span> <strong>{employee.designation}</strong></div>
-                    <div className="info-item"><span>Employment Type:</span> <strong>{employee.employmentType || 'Full-Time'}</strong></div>
-                    <div className="info-item"><span>Date of Joining:</span> <strong>{employee.dateOfJoining || '2025-01-15'}</strong></div>
-                  </div>
-                )}
+                <div className="info-list">
+                  <div className="info-item"><span>Department:</span> <strong>{employee.department}</strong></div>
+                  <div className="info-item"><span>Designation:</span> <strong>{employee.designation}</strong></div>
+                  <div className="info-item"><span>Employment Type:</span> <strong>{employee.employmentType || 'Full-Time'}</strong></div>
+                  <div className="info-item"><span>Date of Joining:</span> <strong>{employee.dateOfJoining || '2025-01-15'}</strong></div>
+                </div>
               </Card>
             </div>
 
             <Card title={<><MapPin size={16} style={{ marginRight: '0.5rem' }} /> Address & Skills</>}>
-              {isEditing ? (
-                <div className="form-grid-2">
-                  <div className="form-field" style={{ gridColumn: 'span 2' }}><label>Current Address</label><textarea rows={2} className="input-box" value={editForm.currentAddress} onChange={e => setEditForm({...editForm, currentAddress: e.target.value})} /></div>
-                  <div className="form-field" style={{ gridColumn: 'span 2' }}><label>Skills (Comma Separated)</label><input type="text" className="input-box" value={editForm.skills} onChange={e => setEditForm({...editForm, skills: e.target.value})} /></div>
-                </div>
-              ) : (
-                <div className="info-list">
-                  <div className="info-item"><span>Current Address:</span> <span>{employee.currentAddress || '12, Tech Park Avenue, Chennai, Tamil Nadu'}</span></div>
-                  <div className="info-item"><span>Emergency Contact:</span> <span>{employee.emergencyContact?.name || 'S. Ramanathan'} ({employee.emergencyContact?.phone || '9876500000'})</span></div>
-                  <div className="info-item"><span>Skills:</span> <span style={{ color: 'var(--primary-light)', fontWeight: 600 }}>{employee.skills?.join(', ') || 'React, Node.js, Express, MongoDB'}</span></div>
-                </div>
-              )}
+              <div className="info-list">
+                <div className="info-item"><span>Current Address:</span> <span>{employee.currentAddress || '12, Tech Park Avenue, Chennai, Tamil Nadu'}</span></div>
+                <div className="info-item"><span>Emergency Contact:</span> <span>{employee.emergencyContact?.name || 'S. Ramanathan'} ({employee.emergencyContact?.phone || '9876500000'})</span></div>
+                <div className="info-item"><span>Skills:</span> <span style={{ color: 'var(--primary-light)', fontWeight: 600 }}>{employee.skills?.join(', ') || 'React, Node.js, Express, MongoDB'}</span></div>
+              </div>
             </Card>
           </div>
         )}
