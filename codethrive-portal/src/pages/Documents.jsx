@@ -216,14 +216,6 @@ const Documents = () => {
         </div>
 
         <div className="hero-right-actions">
-          <button 
-            onClick={handleRefresh} 
-            className="btn-glass-icon"
-            title="Refresh Vault Data"
-          >
-            <RefreshCw size={17} className={isRefreshing ? 'spin' : ''} />
-          </button>
-
           <button className="btn-primary-glow" onClick={() => setIsUploadModalOpen(true)}>
             <Upload size={18} />
             <span>Upload Document</span>

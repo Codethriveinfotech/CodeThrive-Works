@@ -224,14 +224,6 @@ const DailyReports = () => {
 
         <div className="hero-right-actions">
           <button 
-            onClick={handleRefresh} 
-            className="btn-glass-icon"
-            title="Refresh workspace logs"
-          >
-            <RefreshCw size={17} className={isRefreshing ? 'spin' : ''} />
-          </button>
-
-          <button 
             className="btn-primary-glow"
             onClick={() => { resetForm(); setIsSubmitModalOpen(true); }}
           >

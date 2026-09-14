@@ -247,28 +247,6 @@ const AdminLeave = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-          <button 
-            onClick={fetchLeaves}
-            className="btn-glow-secondary"
-            style={{
-              padding: '0.7rem 1.2rem',
-              borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              background: 'rgba(255, 255, 255, 0.05)',
-              color: '#fff',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            <RefreshCw size={16} />
-            <span>Sync Requests</span>
-          </button>
-        </div>
       </div>
 
       {/* KPI Stats Grid */}

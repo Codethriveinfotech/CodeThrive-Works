@@ -257,14 +257,6 @@ const Payroll = () => {
         </div>
 
         <div className="hero-right-actions">
-          <button 
-            onClick={handleRefresh} 
-            className="btn-glass-icon"
-            title="Refresh Payslips"
-          >
-            <RefreshCw size={17} className={isRefreshing ? 'spin' : ''} />
-          </button>
-
           {latestPayslip && (
             <button className="btn-primary-glow" onClick={() => downloadPayslip(latestPayslip)}>
               <Download size={18} />

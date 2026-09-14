@@ -283,9 +283,6 @@ const Admin = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <button className="btn btn-outline" onClick={handleRefresh} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <RefreshCw size={16} className={isRefreshing ? 'spin' : ''} /> Refresh Live Audit
-            </button>
             <button className="btn btn-primary" onClick={() => navigate('/admin/employees')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Plus size={16} /> Register Employee
             </button>

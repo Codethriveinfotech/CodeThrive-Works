@@ -372,9 +372,6 @@ const Employees = () => {
           <button className="btn btn-outline" onClick={handleExportMasterPDF} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#10b981', color: '#34d399' }}>
             <Download size={15} /> Export Directory (PDF)
           </button>
-          <button className="btn btn-outline" onClick={fetchEmployees} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <RefreshCw size={15} /> Refresh
-          </button>
           <button className="btn btn-primary" onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Plus size={16} /> Register New Employee
           </button>

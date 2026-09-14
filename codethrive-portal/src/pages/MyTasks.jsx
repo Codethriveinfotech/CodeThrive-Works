@@ -249,16 +249,6 @@ const MyTasks = () => {
               <span className="user-pill-name">{userNameDisplay}</span>
             </div>
           </div>
-
-          <button 
-            onClick={handleRefresh} 
-            className="btn btn-outline" 
-            style={{ borderRadius: '14px', padding: '0.65rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.04)' }}
-            title="Refresh Task List"
-          >
-            <RefreshCw size={16} className={isRefreshing ? 'spin' : ''} />
-            <span>Refresh</span>
-          </button>
         </div>
       </div>
 
