@@ -7,8 +7,8 @@ import { motion } from 'framer-motion';
 import { 
   UserCircle, Mail, Phone, MapPin,
   Briefcase, Shield, Camera, Edit3, GraduationCap,
-  Sparkles, Trophy, QrCode, CreditCard, RefreshCw, Calendar,
-  ShieldCheck, RotateCw, Zap
+  Sparkles, Trophy, CreditCard, RefreshCw, Calendar,
+  ShieldCheck, Zap, Landmark, CheckCircle2
 } from 'lucide-react';
 import './MyProfile.css';
 
@@ -30,12 +30,23 @@ const MyProfile = () => {
     dateOfBirth: '',
     gender: 'Prefer not to say',
     bloodGroup: '',
+    maritalStatus: 'Single',
+    nationality: 'Indian',
     personalPhoneNumber: '',
     personalEmailAddress: '',
     department: '',
     designation: '',
+    employmentType: 'Full-Time',
     dateOfJoining: '',
     workLocation: 'Office',
+    bankAccountHolderName: '',
+    bankName: '',
+    accountNumber: '',
+    ifscCode: '',
+    branchName: '',
+    panNumber: '',
+    aadhaarOrIdentityProofNumber: '',
+    upiId: '',
     currentAddress: '',
     permanentAddress: '',
     emergencyContactName: '',
@@ -77,11 +88,12 @@ const MyProfile = () => {
           personalEmailAddress: user?.email || user?.personalEmailAddress || 'employee@codethrive.com',
           personalPhoneNumber: user?.phoneNumber || '9876543210',
           employeeId: user?.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-002'),
-          designation: user?.designation || (isAdmin ? 'System Administrator' : 'Quality Assurance Specialist'),
+          designation: user?.designation || (isAdmin ? 'System Administrator' : 'Software Testing Specialist'),
           department: user?.department || (isAdmin ? 'Management' : 'Quality Assurance & Software Testing'),
+          employmentType: 'Full-Time',
           status: 'Active',
           workLocation: 'Office',
-          skills: ['Software Testing', 'Quality Assurance', 'Automation Testing', 'React Portal Control']
+          skills: ['Software Testing', 'Quality Assurance', 'Automation Testing', 'React Control']
         };
       }
 
@@ -97,12 +109,23 @@ const MyProfile = () => {
         dateOfBirth: safeSubstring(data.dateOfBirth),
         gender: data.gender || 'Prefer not to say',
         bloodGroup: data.bloodGroup || '',
+        maritalStatus: data.maritalStatus || 'Single',
+        nationality: data.nationality || 'Indian',
         personalPhoneNumber: data.personalPhoneNumber || '',
         personalEmailAddress: data.personalEmailAddress || '',
         department: data.department || '',
         designation: data.designation || '',
+        employmentType: data.employmentType || 'Full-Time',
         dateOfJoining: safeSubstring(data.dateOfJoining),
         workLocation: data.workLocation || 'Office',
+        bankAccountHolderName: data.bankAccountHolderName || '',
+        bankName: data.bankName || '',
+        accountNumber: data.accountNumber || '',
+        ifscCode: data.ifscCode || '',
+        branchName: data.branchName || '',
+        panNumber: data.panNumber || '',
+        aadhaarOrIdentityProofNumber: data.aadhaarOrIdentityProofNumber || '',
+        upiId: data.upiId || '',
         currentAddress: data.currentAddress || '',
         permanentAddress: data.permanentAddress || '',
         emergencyContactName: data.emergencyContact?.name || '',
@@ -158,12 +181,23 @@ const MyProfile = () => {
         dateOfBirth: formData.dateOfBirth || null,
         gender: formData.gender,
         bloodGroup: formData.bloodGroup,
+        maritalStatus: formData.maritalStatus,
+        nationality: formData.nationality,
         personalPhoneNumber: formData.personalPhoneNumber,
         personalEmailAddress: formData.personalEmailAddress,
         department: formData.department,
         designation: formData.designation,
+        employmentType: formData.employmentType,
         dateOfJoining: formData.dateOfJoining || null,
         workLocation: formData.workLocation,
+        bankAccountHolderName: formData.bankAccountHolderName,
+        bankName: formData.bankName,
+        accountNumber: formData.accountNumber,
+        ifscCode: formData.ifscCode,
+        branchName: formData.branchName,
+        panNumber: formData.panNumber,
+        aadhaarOrIdentityProofNumber: formData.aadhaarOrIdentityProofNumber,
+        upiId: formData.upiId,
         currentAddress: formData.currentAddress,
         permanentAddress: formData.permanentAddress,
         emergencyContact: {
@@ -206,17 +240,45 @@ const MyProfile = () => {
     }
   };
 
-  // Calculate Profile Strength percentage
+  // Calculate Profile Strength percentage out of 28 IT standard employee fields
   const calculateStrength = () => {
-    if (!profile) return 60;
+    if (!profile) return 0;
     let count = 0;
     const fields = [
-      profile.fullName, profile.profilePhoto, profile.personalEmailAddress,
-      profile.personalPhoneNumber, profile.department, profile.designation,
-      profile.dateOfJoining, profile.workLocation, profile.currentAddress,
-      profile.emergencyContact?.name, profile.qualification, profile.skills?.length
+      profile.fullName,
+      profile.profilePhoto,
+      profile.dateOfBirth,
+      profile.gender,
+      profile.bloodGroup,
+      profile.maritalStatus,
+      profile.nationality,
+      profile.personalPhoneNumber,
+      profile.personalEmailAddress,
+      profile.department,
+      profile.designation,
+      profile.employmentType,
+      profile.dateOfJoining,
+      profile.workLocation,
+      profile.bankAccountHolderName || profile.bankName,
+      profile.accountNumber,
+      profile.ifscCode,
+      profile.panNumber,
+      profile.aadhaarOrIdentityProofNumber,
+      profile.currentAddress,
+      profile.permanentAddress,
+      profile.emergencyContact?.name,
+      profile.emergencyContact?.phone,
+      profile.qualification,
+      profile.collegeName,
+      profile.graduationYear,
+      profile.totalExperience,
+      profile.skills?.length
     ];
-    fields.forEach(f => { if (f) count++; });
+    fields.forEach(f => {
+      if (f !== undefined && f !== null && String(f).trim().length > 0 && String(f) !== '0') {
+        count++;
+      }
+    });
     return Math.min(100, Math.round((count / fields.length) * 100));
   };
 
@@ -294,9 +356,9 @@ const MyProfile = () => {
             <h1 className="profile-user-name">{profile.fullName}</h1>
 
             <div className="profile-user-title">
-              <span className="title-highlight">{profile.designation || 'Management Specialist'}</span>
+              <span className="title-highlight">{profile.designation || 'Specialist'}</span>
               <span className="bullet">•</span>
-              <span>{profile.department || 'Management'}</span>
+              <span>{profile.department || 'Quality Assurance'}</span>
             </div>
 
             <div className="profile-meta-tags">
@@ -382,7 +444,7 @@ const MyProfile = () => {
       </div>
 
       {/* --------------------------------------------------------------------------
-          3. PROFILE COMPLETION STRENGTH BAR
+          3. PROFILE COMPLETION STRENGTH BAR (100% FILL TARGET)
          -------------------------------------------------------------------------- */}
       <div className="profile-strength-bar-card">
         <div className="strength-info">
@@ -392,7 +454,9 @@ const MyProfile = () => {
               Profile Vault Completeness
             </span>
             <span style={{ fontSize: '0.775rem', color: '#94a3b8', display: 'block' }}>
-              Your profile is {profileStrength}% complete with verified credentials
+              {profileStrength === 100 
+                ? '🎉 Excellent! Your IT Employee profile is 100% complete and fully verified.' 
+                : `Your profile is ${profileStrength}% complete. Fill all details in "Edit Profile" to reach 100%.`}
             </span>
           </div>
         </div>
@@ -401,307 +465,407 @@ const MyProfile = () => {
           <div className="strength-fill" style={{ width: `${profileStrength}%` }}></div>
         </div>
 
-        <span style={{ fontWeight: 800, color: '#34d399', fontSize: '0.95rem' }}>
+        <span style={{ fontWeight: 800, color: profileStrength === 100 ? '#34d399' : '#60a5fa', fontSize: '0.95rem' }}>
           {profileStrength}%
         </span>
       </div>
 
       {/* --------------------------------------------------------------------------
-          4. FULL PAGE PROFILE DASHBOARD (NO BLANK SPACES, FULL WIDTH)
+          4. FULL PAGE IT PROFILE DASHBOARD (NEAT, ORGANIZED CARDS)
          -------------------------------------------------------------------------- */}
       <div className="profile-main-grid">
-        {/* Card 1: Personal Information */}
-          <Card title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <UserCircle size={22} color="#60a5fa" /> Personal Information
-            </div>
-          }>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem' }}>
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Full Legal Name</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.fullName || 'N/A'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Date of Birth</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : 'Not Provided'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Gender</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.gender || 'Prefer not to say'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Blood Group</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#ef4444' }}>
-                  {profile.bloodGroup || 'O+ Positive'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Personal Email</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1rem', color: '#60a5fa' }}>
-                  {profile.personalEmailAddress || user?.email || 'N/A'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Phone Number</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.personalPhoneNumber || 'N/A'}
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Card 2: Work & Office Details (NO Reporting Manager / NO Employee Type) */}
-          <Card title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Briefcase size={22} color="#818cf8" /> Work & Office Details
-            </div>
-          }>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem' }}>
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Department</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.department || 'Quality Assurance'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Designation</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.designation || 'Software Testing Specialist'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Date of Joining</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.dateOfJoining ? new Date(profile.dateOfJoining).toLocaleDateString() : 'August 1, 2024'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Work Location</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399' }}>
-                  {profile.workLocation || 'Corporate Headquarters (Office)'}
-                </div>
+        {/* Card 1: Personal Details & Identity */}
+        <Card title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <UserCircle size={22} color="#60a5fa" /> Personal & Identity Details
+          </div>
+        }>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem' }}>
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Full Legal Name</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.fullName || 'N/A'}
               </div>
             </div>
 
-            {/* Attendance Summary */}
-            {attendanceSummary && (
-              <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.2rem' }}>
-                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Calendar size={17} color="#60a5fa" /> Monthly Attendance Summary
-                </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
-                  <div className="quick-stat-item">
-                    <div>
-                      <div className="quick-stat-label">Total Days</div>
-                      <div className="quick-stat-value" style={{ fontSize: '1.3rem' }}>{attendanceSummary.totalWorkingDays || 22}</div>
-                    </div>
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Date of Birth</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : 'Not Provided'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Gender</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.gender || 'Prefer not to say'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Blood Group</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#ef4444' }}>
+                {profile.bloodGroup || 'Not Provided'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Marital Status</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.maritalStatus || 'Single'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Nationality</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.nationality || 'Indian'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Personal Email</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1rem', color: '#60a5fa', wordBreak: 'break-all' }}>
+                {profile.personalEmailAddress || user?.email || 'N/A'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Phone Number</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.personalPhoneNumber || 'N/A'}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Card 2: Work & Corporate Details */}
+        <Card title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <Briefcase size={22} color="#818cf8" /> Work & Corporate Employment
+          </div>
+        }>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem' }}>
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Department</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.department || 'Quality Assurance'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Designation</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.designation || 'Software Testing Specialist'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Employment Type</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399' }}>
+                {profile.employmentType || 'Full-Time'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Date of Joining</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.dateOfJoining ? new Date(profile.dateOfJoining).toLocaleDateString() : 'August 1, 2024'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Work Location</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#60a5fa' }}>
+                {profile.workLocation || 'Office'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Account Status</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <CheckCircle2 size={16} /> Active Verified
+              </div>
+            </div>
+          </div>
+
+          {/* Attendance Summary */}
+          {attendanceSummary && (
+            <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.2rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Calendar size={17} color="#60a5fa" /> Monthly Attendance Summary
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
+                <div className="quick-stat-item">
+                  <div>
+                    <div className="quick-stat-label">Total Days</div>
+                    <div className="quick-stat-value" style={{ fontSize: '1.3rem' }}>{attendanceSummary.totalWorkingDays || 22}</div>
                   </div>
-                  <div className="quick-stat-item">
-                    <div>
-                      <div className="quick-stat-label">Days Present</div>
-                      <div className="quick-stat-value" style={{ fontSize: '1.3rem', color: '#34d399' }}>{attendanceSummary.presentDays || 20}</div>
-                    </div>
-                  </div>
-                  <div className="quick-stat-item">
-                    <div>
-                      <div className="quick-stat-label">Avg Hours / Day</div>
-                      <div className="quick-stat-value" style={{ fontSize: '1.3rem', color: '#60a5fa' }}>{attendanceSummary.averageWorkingHours || 8.5}h</div>
-                    </div>
+                </div>
+                <div className="quick-stat-item">
+                  <div>
+                    <div className="quick-stat-label">Days Present</div>
+                    <div className="quick-stat-value" style={{ fontSize: '1.3rem', color: '#34d399' }}>{attendanceSummary.presentDays || 20}</div>
                   </div>
                 </div>
-              </div>
-            )}
-          </Card>
-
-          {/* Card 3: Education & Experience */}
-          <Card title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <GraduationCap size={22} color="#fbbf24" /> Education & Technical Skills
-            </div>
-          }>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem', marginBottom: '1.5rem' }}>
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Highest Qualification</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.qualification || 'Bachelor of Engineering (B.E.)'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>College / University</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.collegeName || 'Anna University'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Graduation Year</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.graduationYear || '2024'}
-                </div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Total Experience</span>
-                <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                  {profile.totalExperience || '2+ Years'}
+                <div className="quick-stat-item">
+                  <div>
+                    <div className="quick-stat-label">Avg Hours / Day</div>
+                    <div className="quick-stat-value" style={{ fontSize: '1.3rem', color: '#60a5fa' }}>{attendanceSummary.averageWorkingHours || 8.5}h</div>
+                  </div>
                 </div>
               </div>
             </div>
+          )}
+        </Card>
 
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.8rem' }}>
-              Verified Skills & Technical Competencies
-            </h4>
+        {/* Card 3: Bank Account & Payroll Tax Credentials (IT Standard) */}
+        <Card title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <Landmark size={22} color="#34d399" /> Bank Account & Tax Credentials
+          </div>
+        }>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem' }}>
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Bank Account Holder</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.bankAccountHolderName || profile.fullName || 'Not Provided'}
+              </div>
+            </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
-              {profile.skills?.length > 0 ? (
-                profile.skills.map((skill, i) => (
-                  <span key={i} style={{ 
-                    padding: '0.5rem 1rem', 
-                    background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.06) 100%)', 
-                    border: '1px solid rgba(59, 130, 246, 0.3)', 
-                    borderRadius: '20px', 
-                    fontSize: '0.85rem',
-                    color: '#f8fafc',
-                    fontWeight: '600'
-                  }}>
-                    ✨ {skill}
-                  </span>
-                ))
-              ) : (
-                <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>
-                  No skills added yet. Click "Edit Profile" to list your technical skills.
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Bank Name</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.bankName || 'Not Provided'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Account Number</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#60a5fa', fontFamily: 'monospace' }}>
+                {profile.accountNumber ? profile.accountNumber : 'Not Provided'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>IFSC Code</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc', fontFamily: 'monospace' }}>
+                {profile.ifscCode || 'Not Provided'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Branch Name</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.branchName || 'Not Provided'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>PAN Card Number</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#fbbf24', fontFamily: 'monospace' }}>
+                {profile.panNumber || 'Not Provided'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Aadhaar / National ID</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc', fontFamily: 'monospace' }}>
+                {profile.aadhaarOrIdentityProofNumber || 'Not Provided'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>UPI ID (Optional)</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399' }}>
+                {profile.upiId || 'Not Provided'}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Card 4: Education & Technical Skills */}
+        <Card title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <GraduationCap size={22} color="#fbbf24" /> Education & Technical Skills
+          </div>
+        }>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem', marginBottom: '1.5rem' }}>
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Highest Qualification</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.qualification || 'Bachelor of Engineering (B.E.)'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>College / University</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.collegeName || 'Anna University'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Graduation Year</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.graduationYear || '2024'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Previous Organization</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.previousCompany || 'Not Provided'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Total Experience</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
+                {profile.totalExperience || '2+ Years'}
+              </div>
+            </div>
+          </div>
+
+          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.8rem' }}>
+            Verified Technical Skills & Competencies
+          </h4>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+            {profile.skills?.length > 0 ? (
+              profile.skills.map((skill, i) => (
+                <span key={i} style={{ 
+                  padding: '0.5rem 1rem', 
+                  background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.06) 100%)', 
+                  border: '1px solid rgba(59, 130, 246, 0.3)', 
+                  borderRadius: '20px', 
+                  fontSize: '0.85rem',
+                  color: '#f8fafc',
+                  fontWeight: '600'
+                }}>
+                  ✨ {skill}
                 </span>
-              )}
-            </div>
-          </Card>
+              ))
+            ) : (
+              <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>
+                No skills listed yet. Click "Edit Profile" to add technical skills.
+              </span>
+            )}
+          </div>
+        </Card>
 
-          {/* Card 4: Career Journey & Achievement Badges */}
-          <Card title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Trophy size={22} color="#fbbf24" /> Career Journey & Achievements
-            </div>
-          }>
-            <div className="achievements-grid" style={{ marginBottom: '1.5rem' }}>
-              <div className="achievement-badge-card">
-                <div className="badge-icon-box">
-                  <Trophy size={22} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#f8fafc' }}>Quality Champion</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>QA Excellence</div>
-                </div>
+        {/* Card 5: Career Journey & Achievements */}
+        <Card title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <Trophy size={22} color="#fbbf24" /> Career Achievements & Milestones
+          </div>
+        }>
+          <div className="achievements-grid" style={{ marginBottom: '1.5rem' }}>
+            <div className="achievement-badge-card">
+              <div className="badge-icon-box">
+                <Trophy size={22} />
               </div>
-
-              <div className="achievement-badge-card">
-                <div className="badge-icon-box" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>
-                  <Zap size={22} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#f8fafc' }}>Fast Performer</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Top Attendance</div>
-                </div>
-              </div>
-
-              <div className="achievement-badge-card">
-                <div className="badge-icon-box" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
-                  <ShieldCheck size={22} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#f8fafc' }}>Vault Verified</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Verified Identity</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="career-timeline">
-              <div className="timeline-item emerald">
-                <span className="timeline-date">August 2024 - Present</span>
-                <span className="timeline-title">Assigned as Quality Assurance Specialist</span>
-                <span className="timeline-desc">Joined CodeThrive Works and established software testing workflows.</span>
-              </div>
-            </div>
-          </Card>
-
-          {/* Card 5: Addresses & Emergency Contact */}
-          <Card title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Shield size={22} color="#34d399" /> Addresses & Emergency Contacts
-            </div>
-          }>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.75rem' }}>
               <div>
-                <h4 style={{ margin: '0 0 0.8rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
-                  <MapPin size={16} /> Addresses
-                </h4>
-                <div style={{ marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Current Residential Address</span>
-                  <div style={{ fontWeight: '600', marginTop: '0.2rem', color: '#f8fafc', lineHeight: 1.4 }}>
-                    {profile.currentAddress || 'Not Provided'}
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#f8fafc' }}>Quality Champion</div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>QA Excellence</div>
+              </div>
+            </div>
+
+            <div className="achievement-badge-card">
+              <div className="badge-icon-box" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>
+                <Zap size={22} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#f8fafc' }}>Fast Performer</div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Top Attendance</div>
+              </div>
+            </div>
+
+            <div className="achievement-badge-card">
+              <div className="badge-icon-box" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
+                <ShieldCheck size={22} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#f8fafc' }}>Vault Verified</div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Verified Identity</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="career-timeline">
+            <div className="timeline-item emerald">
+              <span className="timeline-date">August 2024 - Present</span>
+              <span className="timeline-title">Assigned as Quality Assurance Specialist</span>
+              <span className="timeline-desc">Joined CodeThrive Works and established software testing workflows.</span>
+            </div>
+          </div>
+        </Card>
+
+        {/* Card 6: Addresses & Emergency Contacts */}
+        <Card title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <Shield size={22} color="#34d399" /> Addresses & Emergency Contact
+          </div>
+        }>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.75rem' }}>
+            <div>
+              <h4 style={{ margin: '0 0 0.8rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
+                <MapPin size={16} /> Addresses
+              </h4>
+              <div style={{ marginBottom: '1rem' }}>
+                <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Current Residential Address</span>
+                <div style={{ fontWeight: '600', marginTop: '0.2rem', color: '#f8fafc', lineHeight: 1.4 }}>
+                  {profile.currentAddress || 'Not Provided'}
+                </div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Permanent Address</span>
+                <div style={{ fontWeight: '600', marginTop: '0.2rem', color: '#f8fafc', lineHeight: 1.4 }}>
+                  {profile.permanentAddress || 'Not Provided'}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 style={{ margin: '0 0 0.8rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
+                <UserCircle size={16} /> Emergency Contact
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <div>
+                  <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Contact Person Name</span>
+                  <div style={{ fontWeight: '700', marginTop: '0.2rem', color: '#f8fafc' }}>
+                    {profile.emergencyContact?.name || 'Not Provided'}
                   </div>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Permanent Address</span>
-                  <div style={{ fontWeight: '600', marginTop: '0.2rem', color: '#f8fafc', lineHeight: 1.4 }}>
-                    {profile.permanentAddress || 'Not Provided'}
+                  <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Phone Number</span>
+                  <div style={{ fontWeight: '700', marginTop: '0.2rem', color: '#60a5fa' }}>
+                    {profile.emergencyContact?.phone || 'Not Provided'}
                   </div>
                 </div>
-              </div>
-
-              <div>
-                <h4 style={{ margin: '0 0 0.8rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
-                  <UserCircle size={16} /> Emergency Contact
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                  <div>
-                    <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Contact Person Name</span>
-                    <div style={{ fontWeight: '700', marginTop: '0.2rem', color: '#f8fafc' }}>
-                      {profile.emergencyContact?.name || 'Not Provided'}
-                    </div>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Phone Number</span>
-                    <div style={{ fontWeight: '700', marginTop: '0.2rem', color: '#60a5fa' }}>
-                      {profile.emergencyContact?.phone || 'Not Provided'}
-                    </div>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Relationship</span>
-                    <div style={{ fontWeight: '700', marginTop: '0.2rem', color: '#f8fafc' }}>
-                      {profile.emergencyContact?.relationship || 'Not Provided'}
-                    </div>
+                <div>
+                  <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Relationship</span>
+                  <div style={{ fontWeight: '700', marginTop: '0.2rem', color: '#f8fafc' }}>
+                    {profile.emergencyContact?.relationship || 'Not Provided'}
                   </div>
                 </div>
               </div>
             </div>
-          </Card>
-
+          </div>
+        </Card>
       </div>
 
       {/* --------------------------------------------------------------------------
-          4. EDIT PROFILE MODAL
+          5. EDIT PROFILE MODAL (5 COMPREHENSIVE TABS FOR 100% COMPLETION)
          -------------------------------------------------------------------------- */}
-      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Profile Details">
+      <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Employee Profile">
         <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '1.25rem', gap: '0.4rem', overflowX: 'auto' }}>
           {[
-            { id: 'personal', label: 'Personal Details' },
-            { id: 'work', label: 'Work Details' },
-            { id: 'contact', label: 'Address & Emergency' },
-            { id: 'education', label: 'Education & Skills' }
+            { id: 'personal', label: '1. Personal & Identity' },
+            { id: 'work', label: '2. Work & Corporate' },
+            { id: 'payroll', label: '3. Bank & Tax' },
+            { id: 'education', label: '4. Education & Skills' },
+            { id: 'contact', label: '5. Address & Emergency' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -725,10 +889,11 @@ const MyProfile = () => {
 
         <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           
+          {/* TAB 1: Personal & Identity */}
           {modalFormTab === 'personal' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                <label>Full Name *</label>
+                <label>Full Legal Name *</label>
                 <input type="text" className="input-field" value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} required />
               </div>
 
@@ -738,12 +903,12 @@ const MyProfile = () => {
               </div>
 
               <div className="form-group">
-                <label>Phone Number *</label>
+                <label>Personal Phone Number *</label>
                 <input type="tel" className="input-field" value={formData.personalPhoneNumber} onChange={e => setFormData({ ...formData, personalPhoneNumber: e.target.value })} required />
               </div>
 
               <div className="form-group">
-                <label>Personal Email *</label>
+                <label>Personal Email Address *</label>
                 <input type="email" className="input-field" value={formData.personalEmailAddress} onChange={e => setFormData({ ...formData, personalEmailAddress: e.target.value })} required />
               </div>
 
@@ -761,20 +926,51 @@ const MyProfile = () => {
                   <option value="Prefer not to say">Prefer not to say</option>
                 </select>
               </div>
+
+              <div className="form-group">
+                <label>Blood Group</label>
+                <input type="text" className="input-field" placeholder="e.g. O+, A+, B+" value={formData.bloodGroup} onChange={e => setFormData({ ...formData, bloodGroup: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label>Marital Status</label>
+                <select className="input-field" value={formData.maritalStatus} onChange={e => setFormData({ ...formData, maritalStatus: e.target.value })} style={{ background: '#0f172a', color: '#fff' }}>
+                  <option value="Single">Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Divorced">Divorced</option>
+                  <option value="Widowed">Widowed</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>Nationality</label>
+                <input type="text" className="input-field" placeholder="e.g. Indian" value={formData.nationality} onChange={e => setFormData({ ...formData, nationality: e.target.value })} />
+              </div>
             </div>
           )}
 
-          {/* TAB: Work Details (No Reporting Manager / No Employee Type) */}
+          {/* TAB 2: Work Details */}
           {modalFormTab === 'work' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group">
                 <label>Department</label>
-                <input type="text" className="input-field" placeholder="e.g. Quality Assurance, Engineering" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} />
+                <input type="text" className="input-field" placeholder="e.g. Quality Assurance, Software Engineering" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} />
               </div>
 
               <div className="form-group">
                 <label>Designation</label>
                 <input type="text" className="input-field" placeholder="e.g. Software Testing Specialist" value={formData.designation} onChange={e => setFormData({ ...formData, designation: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label>Employment Type</label>
+                <select className="input-field" value={formData.employmentType} onChange={e => setFormData({ ...formData, employmentType: e.target.value })} style={{ background: '#0f172a', color: '#fff' }}>
+                  <option value="Full-Time">Full-Time</option>
+                  <option value="Part-Time">Part-Time</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Internship">Internship</option>
+                </select>
               </div>
 
               <div className="form-group">
@@ -786,43 +982,59 @@ const MyProfile = () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label>Date of Joining</label>
                 <input type="date" className="input-field" value={formData.dateOfJoining} onChange={e => setFormData({ ...formData, dateOfJoining: e.target.value })} />
               </div>
             </div>
           )}
 
-          {modalFormTab === 'contact' && (
-            <>
-              <div className="form-group">
-                <label>Current Address</label>
-                <textarea className="input-field" rows="2" value={formData.currentAddress} onChange={e => setFormData({ ...formData, currentAddress: e.target.value })}></textarea>
+          {/* TAB 3: Bank & Tax Details */}
+          {modalFormTab === 'payroll' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>Account Holder Name</label>
+                <input type="text" className="input-field" placeholder="Full name as in bank account" value={formData.bankAccountHolderName} onChange={e => setFormData({ ...formData, bankAccountHolderName: e.target.value })} />
               </div>
 
               <div className="form-group">
-                <label>Permanent Address</label>
-                <textarea className="input-field" rows="2" value={formData.permanentAddress} onChange={e => setFormData({ ...formData, permanentAddress: e.target.value })}></textarea>
+                <label>Bank Name</label>
+                <input type="text" className="input-field" placeholder="e.g. HDFC Bank, ICICI Bank, SBI" value={formData.bankName} onChange={e => setFormData({ ...formData, bankName: e.target.value })} />
               </div>
-              
-              <h4 style={{ margin: '0.5rem 0 0 0', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', color: '#60a5fa' }}>Emergency Contact</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label>Contact Name</label>
-                  <input type="text" className="input-field" value={formData.emergencyContactName} onChange={e => setFormData({ ...formData, emergencyContactName: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label>Contact Phone</label>
-                  <input type="tel" className="input-field" value={formData.emergencyContactPhone} onChange={e => setFormData({ ...formData, emergencyContactPhone: e.target.value })} />
-                </div>
-                <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>Relationship</label>
-                  <input type="text" className="input-field" placeholder="e.g. Spouse, Parent, Brother" value={formData.emergencyContactRelation} onChange={e => setFormData({ ...formData, emergencyContactRelation: e.target.value })} />
-                </div>
+
+              <div className="form-group">
+                <label>Bank Account Number</label>
+                <input type="text" className="input-field" placeholder="e.g. 50100234567890" value={formData.accountNumber} onChange={e => setFormData({ ...formData, accountNumber: e.target.value })} />
               </div>
-            </>
+
+              <div className="form-group">
+                <label>IFSC Code</label>
+                <input type="text" className="input-field" placeholder="e.g. HDFC0001234" value={formData.ifscCode} onChange={e => setFormData({ ...formData, ifscCode: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label>Branch Name</label>
+                <input type="text" className="input-field" placeholder="e.g. Main Branch, Chennai" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label>PAN Card Number</label>
+                <input type="text" className="input-field" placeholder="e.g. ABCDE1234F" value={formData.panNumber} onChange={e => setFormData({ ...formData, panNumber: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label>Aadhaar / National Identity Number</label>
+                <input type="text" className="input-field" placeholder="e.g. 1234 5678 9012" value={formData.aadhaarOrIdentityProofNumber} onChange={e => setFormData({ ...formData, aadhaarOrIdentityProofNumber: e.target.value })} />
+              </div>
+
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>UPI ID (Optional)</label>
+                <input type="text" className="input-field" placeholder="e.g. user@upi" value={formData.upiId} onChange={e => setFormData({ ...formData, upiId: e.target.value })} />
+              </div>
+            </div>
           )}
 
+          {/* TAB 4: Education & Skills */}
           {modalFormTab === 'education' && (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -842,21 +1054,57 @@ const MyProfile = () => {
                 </div>
 
                 <div className="form-group">
+                  <label>Previous Organization</label>
+                  <input type="text" className="input-field" placeholder="e.g. Infosys, TCS" value={formData.previousCompany} onChange={e => setFormData({ ...formData, previousCompany: e.target.value })} />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
                   <label>Total Experience</label>
                   <input type="text" className="input-field" placeholder="e.g. 2+ Years" value={formData.totalExperience} onChange={e => setFormData({ ...formData, totalExperience: e.target.value })} />
                 </div>
               </div>
 
               <div className="form-group">
-                <label>Skills & Expertise (comma separated)</label>
-                <textarea className="input-field" rows="2" placeholder="e.g. React, Node.js, Python, MongoDB, Automation" value={formData.skills} onChange={e => setFormData({ ...formData, skills: e.target.value })}></textarea>
+                <label>Technical Skills & Tools (comma separated)</label>
+                <textarea className="input-field" rows="2" placeholder="e.g. React, Node.js, Python, Automation Testing, JIRA, Cypress" value={formData.skills} onChange={e => setFormData({ ...formData, skills: e.target.value })}></textarea>
+              </div>
+            </>
+          )}
+
+          {/* TAB 5: Address & Emergency Contact */}
+          {modalFormTab === 'contact' && (
+            <>
+              <div className="form-group">
+                <label>Current Residential Address</label>
+                <textarea className="input-field" rows="2" placeholder="House/Flat No, Street, City, State, Pincode" value={formData.currentAddress} onChange={e => setFormData({ ...formData, currentAddress: e.target.value })}></textarea>
+              </div>
+
+              <div className="form-group">
+                <label>Permanent Address</label>
+                <textarea className="input-field" rows="2" placeholder="House/Flat No, Street, City, State, Pincode" value={formData.permanentAddress} onChange={e => setFormData({ ...formData, permanentAddress: e.target.value })}></textarea>
+              </div>
+              
+              <h4 style={{ margin: '0.5rem 0 0 0', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', color: '#60a5fa' }}>Emergency Contact</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label>Emergency Contact Name</label>
+                  <input type="text" className="input-field" placeholder="Contact Person Name" value={formData.emergencyContactName} onChange={e => setFormData({ ...formData, emergencyContactName: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>Emergency Contact Phone</label>
+                  <input type="tel" className="input-field" placeholder="Emergency Phone" value={formData.emergencyContactPhone} onChange={e => setFormData({ ...formData, emergencyContactPhone: e.target.value })} />
+                </div>
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <label>Relationship</label>
+                  <input type="text" className="input-field" placeholder="e.g. Spouse, Parent, Sibling" value={formData.emergencyContactRelation} onChange={e => setFormData({ ...formData, emergencyContactRelation: e.target.value })} />
+                </div>
               </div>
             </>
           )}
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1rem' }}>
             <button type="button" className="btn-outline-glass" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
-            <button type="submit" className="btn-primary-glow">Save Profile Changes</button>
+            <button type="submit" className="btn-primary-glow">Save Profile Details</button>
           </div>
         </form>
       </Modal>
