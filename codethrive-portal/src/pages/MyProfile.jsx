@@ -8,7 +8,8 @@ import {
   UserCircle, Mail, Phone, MapPin,
   Briefcase, Shield, Camera, Edit3, GraduationCap,
   Sparkles, Trophy, CreditCard, RefreshCw, Calendar,
-  ShieldCheck, Zap, Landmark, CheckCircle2
+  ShieldCheck, Zap, Landmark, CheckCircle2, Sliders,
+  RotateCw, ZoomIn, ZoomOut, Move
 } from 'lucide-react';
 import './MyProfile.css';
 
@@ -23,6 +24,17 @@ const MyProfile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [modalFormTab, setModalFormTab] = useState('personal');
+
+  // Interactive Image Adjust / Crop Modal States
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [tempImageForCrop, setTempImageForCrop] = useState('');
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [positionX, setPositionX] = useState(0);
+  const [positionY, setPositionY] = useState(0);
+  const [rotation, setRotation] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isSavingCrop, setIsSavingCrop] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -151,25 +163,111 @@ const MyProfile = () => {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // Direct image upload from avatar camera click
+  // Image select handler -> opens interactive adjust/crop modal
   const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64Photo = reader.result;
-      try {
-        const res = await api.put('/employees/me', { profilePhoto: base64Photo });
-        const updated = res.data?.data || res.data;
-        setProfile(updated || { ...profile, profilePhoto: base64Photo });
-        setFormData(prev => ({ ...prev, profilePhoto: base64Photo }));
-      } catch (err) {
-        setProfile(prev => ({ ...prev, profilePhoto: base64Photo }));
-        setFormData(prev => ({ ...prev, profilePhoto: base64Photo }));
-      }
+    reader.onloadend = () => {
+      setTempImageForCrop(reader.result);
+      setZoomLevel(1);
+      setPositionX(0);
+      setPositionY(0);
+      setRotation(0);
+      setIsCropModalOpen(true);
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  // Open crop modal with current profile photo
+  const handleAdjustCurrentPhoto = () => {
+    if (profile?.profilePhoto) {
+      setTempImageForCrop(profile.profilePhoto);
+      setZoomLevel(1);
+      setPositionX(0);
+      setPositionY(0);
+      setRotation(0);
+      setIsCropModalOpen(true);
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
+  // Mouse & Touch Drag Pan Handlers
+  const handleDragStart = (clientX, clientY) => {
+    setIsDragging(true);
+    setDragStart({ x: clientX - positionX, y: clientY - positionY });
+  };
+
+  const handleDragMove = (clientX, clientY) => {
+    if (!isDragging) return;
+    setPositionX(clientX - dragStart.x);
+    setPositionY(clientY - dragStart.y);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Export cropped canvas & save to profile
+  const handleSaveCroppedPhoto = async () => {
+    if (!tempImageForCrop) return;
+    try {
+      setIsSavingCrop(true);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = tempImageForCrop;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+
+      const canvas = document.createElement('canvas');
+      const canvasSize = 400; // Resolution for profile avatar
+      canvas.width = canvasSize;
+      canvas.height = canvasSize;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) throw new Error('Failed to get canvas context');
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+      ctx.save();
+      ctx.translate(canvasSize / 2, canvasSize / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.scale(zoomLevel, zoomLevel);
+
+      const scaleFactor = canvasSize / 220; // 220px is crop-viewport size
+      ctx.translate((positionX * scaleFactor) / zoomLevel, (positionY * scaleFactor) / zoomLevel);
+
+      const aspect = img.width / img.height;
+      let drawWidth = canvasSize;
+      let drawHeight = canvasSize;
+      if (aspect > 1) {
+        drawWidth = canvasSize * aspect;
+      } else {
+        drawHeight = canvasSize / aspect;
+      }
+
+      ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+      ctx.restore();
+
+      const croppedBase64 = canvas.toDataURL('image/jpeg', 0.92);
+
+      const res = await api.put('/employees/me', { profilePhoto: croppedBase64 });
+      const updated = res.data?.data || res.data;
+      setProfile(updated || { ...profile, profilePhoto: croppedBase64 });
+      setFormData(prev => ({ ...prev, profilePhoto: croppedBase64 }));
+      setIsCropModalOpen(false);
+    } catch (err) {
+      console.error('Failed to crop photo', err);
+      alert('Could not save photo adjustment. Please try again.');
+    } finally {
+      setIsSavingCrop(false);
+    }
   };
 
   const handleUpdateProfile = async (e) => {
@@ -321,14 +419,27 @@ const MyProfile = () => {
 
             <span className="profile-online-indicator" title="Active Account"></span>
 
-            <button
-              type="button"
-              className="profile-cam-btn"
-              onClick={() => fileInputRef.current && fileInputRef.current.click()}
-              title="Upload Profile Photo"
-            >
-              <Camera size={16} />
-            </button>
+            <div className="avatar-action-buttons">
+              <button
+                type="button"
+                className="profile-cam-btn"
+                onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                title="Upload & Adjust New Photo"
+              >
+                <Camera size={16} />
+              </button>
+
+              {profile.profilePhoto && (
+                <button
+                  type="button"
+                  className="profile-adjust-btn"
+                  onClick={handleAdjustCurrentPhoto}
+                  title="Adjust & Position Current Photo"
+                >
+                  <Sliders size={14} />
+                </button>
+              )}
+            </div>
 
             <input
               type="file"
@@ -380,6 +491,13 @@ const MyProfile = () => {
 
         {/* Header Action Buttons */}
         <div className="profile-header-actions">
+          {profile?.profilePhoto && (
+            <button className="btn-outline-glass" onClick={handleAdjustCurrentPhoto} title="Adjust Photo Position">
+              <Sliders size={16} />
+              <span>Adjust Photo</span>
+            </button>
+          )}
+
           <button className="btn-glass-icon" onClick={handleRefresh} title="Refresh Profile">
             <RefreshCw size={17} className={isRefreshing ? 'spin' : ''} />
           </button>
@@ -856,7 +974,82 @@ const MyProfile = () => {
       </div>
 
       {/* --------------------------------------------------------------------------
-          5. EDIT PROFILE MODAL (5 COMPREHENSIVE TABS FOR 100% COMPLETION)
+          5. INTERACTIVE IMAGE CROP & ADJUSTMENT MODAL
+         -------------------------------------------------------------------------- */}
+      <Modal isOpen={isCropModalOpen} onClose={() => setIsCropModalOpen(false)} title="Adjust & Position Profile Photo">
+        <div className="crop-modal-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
+          <p style={{ fontSize: '0.825rem', color: '#94a3b8', textAlign: 'center', margin: 0 }}>
+            🖱️ <strong>Drag image</strong> to pan/position. Use zoom & rotate controls to fit inside circle avatar.
+          </p>
+
+          {/* Crop Viewport with Mouse & Touch Event Handlers */}
+          <div 
+            className="crop-viewport"
+            onMouseDown={e => handleDragStart(e.clientX, e.clientY)}
+            onMouseMove={e => handleDragMove(e.clientX, e.clientY)}
+            onMouseUp={handleDragEnd}
+            onMouseLeave={handleDragEnd}
+            onTouchStart={e => e.touches[0] && handleDragStart(e.touches[0].clientX, e.touches[0].clientY)}
+            onTouchMove={e => e.touches[0] && handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
+            onTouchEnd={handleDragEnd}
+          >
+            <img 
+              src={tempImageForCrop} 
+              alt="Crop target" 
+              style={{
+                transform: `translate(${positionX}px, ${positionY}px) scale(${zoomLevel}) rotate(${rotation}deg)`,
+                cursor: isDragging ? 'grabbing' : 'grab'
+              }}
+              draggable={false}
+            />
+          </div>
+
+          {/* Controls Bar */}
+          <div className="crop-controls-box" style={{ width: '100%', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Zoom Slider */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', color: '#cbd5e1', fontWeight: 600 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><ZoomIn size={15} color="#60a5fa" /> Zoom Level</span>
+                <span style={{ color: '#60a5fa', fontWeight: 700 }}>{Math.round(zoomLevel * 100)}%</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <button type="button" className="btn-crop-small" onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.15))}>-</button>
+                <input 
+                  type="range" 
+                  min="0.5" 
+                  max="3" 
+                  step="0.05" 
+                  value={zoomLevel} 
+                  onChange={e => setZoomLevel(parseFloat(e.target.value))}
+                  className="crop-slider" 
+                />
+                <button type="button" className="btn-crop-small" onClick={() => setZoomLevel(prev => Math.min(3, prev + 0.15))}>+</button>
+              </div>
+            </div>
+
+            {/* Quick Action Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap', paddingTop: '0.4rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <button type="button" className="btn-outline-glass" onClick={() => setRotation(prev => (prev + 90) % 360)} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <RotateCw size={14} /> Rotate 90°
+              </button>
+
+              <button type="button" className="btn-outline-glass" onClick={() => { setZoomLevel(1); setPositionX(0); setPositionY(0); setRotation(0); }} style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>
+                ↩️ Reset Position
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', gap: '0.8rem', marginTop: '0.5rem' }}>
+            <button type="button" className="btn-outline-glass" onClick={() => setIsCropModalOpen(false)}>Cancel</button>
+            <button type="button" className="btn-primary-glow" onClick={handleSaveCroppedPhoto} disabled={isSavingCrop}>
+              {isSavingCrop ? 'Applying Photo...' : 'Apply & Save Profile Photo'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* --------------------------------------------------------------------------
+          6. EDIT PROFILE MODAL (5 COMPREHENSIVE TABS FOR 100% COMPLETION)
          -------------------------------------------------------------------------- */}
       <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Edit Employee Profile">
         <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: '1.25rem', gap: '0.4rem', overflowX: 'auto' }}>
@@ -899,7 +1092,26 @@ const MyProfile = () => {
 
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label>Profile Photo URL</label>
-                <input type="text" className="input-field" placeholder="https://example.com/photo.jpg" value={formData.profilePhoto} onChange={e => setFormData({ ...formData, profilePhoto: e.target.value })} />
+                <div style={{ display: 'flex', gap: '0.6rem' }}>
+                  <input type="text" className="input-field" placeholder="https://example.com/photo.jpg" value={formData.profilePhoto} onChange={e => setFormData({ ...formData, profilePhoto: e.target.value })} style={{ flex: 1 }} />
+                  {formData.profilePhoto && (
+                    <button 
+                      type="button" 
+                      className="btn-outline-glass" 
+                      onClick={() => {
+                        setTempImageForCrop(formData.profilePhoto);
+                        setZoomLevel(1);
+                        setPositionX(0);
+                        setPositionY(0);
+                        setRotation(0);
+                        setIsCropModalOpen(true);
+                      }}
+                      style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 0.9rem' }}
+                    >
+                      <Sliders size={15} /> Adjust Photo
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="form-group">
