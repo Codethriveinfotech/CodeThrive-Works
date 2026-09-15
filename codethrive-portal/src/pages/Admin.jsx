@@ -179,16 +179,17 @@ const Admin = () => {
     { 
       header: 'EMPLOYEE DETAILS', 
       accessor: 'name',
+      width: '21%',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
-          <div className="emp-avatar-big" style={{ width: '38px', height: '38px', fontSize: '0.95rem', flexShrink: 0, cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', overflow: 'hidden' }}>
+          <div className="emp-avatar-big" style={{ width: '36px', height: '36px', fontSize: '0.9rem', flexShrink: 0, cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
             {row.name ? row.name.charAt(0).toUpperCase() : 'E'}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.9rem', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
+            <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
               {row.name}
             </span>
-            <span style={{ fontSize: '0.76rem', color: '#94a3b8' }} title={row.email}>
+            <span style={{ fontSize: '0.74rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={row.email}>
               {row.email} &bull; <strong style={{ color: '#818cf8' }}>{row.id}</strong>
             </span>
           </div>
@@ -197,34 +198,39 @@ const Admin = () => {
     },
     { 
       header: 'DEPARTMENT / ROLE', 
+      width: '14%',
       render: (row) => (
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 600 }}>{row.dept}</span>
-          <span style={{ fontSize: '0.76rem', color: '#94a3b8' }} title={row.designation}>{row.designation}</span>
+          <span style={{ fontSize: '0.85rem', color: '#ffffff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.dept}</span>
+          <span style={{ fontSize: '0.75rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={row.designation}>{row.designation}</span>
         </div>
       )
     },
     { 
       header: 'STATUS', 
       accessor: 'status',
+      width: '15%',
       render: (row) => <StatusBadge status={row.status} />
     },
     { 
       header: 'CHECK IN', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#34d399', fontSize: '0.85rem' }}>{formatTimeOnly(row.firstLoginTime)}</span>
+      width: '10%',
+      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#34d399', fontSize: '0.82rem' }}>{formatTimeOnly(row.firstLoginTime)}</span>
     },
     { 
       header: 'CHECK OUT', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: row.lastLogoutTime ? '#60a5fa' : '#64748b', fontSize: '0.85rem' }}>{formatTimeOnly(row.lastLogoutTime)}</span>
+      width: '10%',
+      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: row.lastLogoutTime ? '#60a5fa' : '#64748b', fontSize: '0.82rem' }}>{formatTimeOnly(row.lastLogoutTime)}</span>
     },
     { 
       header: 'WORK / BREAK', 
+      width: '12%',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
-          <span style={{ color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', padding: '4px 8px', borderRadius: '6px', fontWeight: 600 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.74rem', fontFamily: 'monospace' }}>
+          <span style={{ color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', padding: '2px 6px', borderRadius: '5px', fontWeight: 600, width: 'fit-content' }}>
             W: {formatDurationStr(row.workSec)}
           </span>
-          <span style={{ color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '4px 8px', borderRadius: '6px', fontWeight: 600 }}>
+          <span style={{ color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', padding: '2px 6px', borderRadius: '5px', fontWeight: 600, width: 'fit-content' }}>
             B: {formatDurationStr(row.breakSec)}
           </span>
         </div>
@@ -232,24 +238,26 @@ const Admin = () => {
     },
     {
       header: '360° ACTIONS',
+      width: '18%',
       render: (row) => (
         <button 
           onClick={() => handleOpenEmployeePage(row._id)} 
           className="btn btn-primary" 
           style={{ 
-            padding: '0.45rem 0.95rem', 
-            fontSize: '0.8rem', 
+            padding: '0.4rem 0.75rem', 
+            fontSize: '0.78rem', 
             fontWeight: 600,
             display: 'inline-flex', 
             alignItems: 'center', 
-            gap: '0.4rem', 
+            justifyContent: 'center',
+            gap: '0.35rem', 
             whiteSpace: 'nowrap', 
             borderRadius: '8px',
             boxShadow: '0 0 12px rgba(99, 102, 241, 0.25)',
             cursor: 'pointer'
           }}
         >
-          <Eye size={14} /> Open 360° Workspace
+          <Eye size={13} /> Open 360° Workspace
         </button>
       )
     }
@@ -449,7 +457,7 @@ const Admin = () => {
           searchable={true} 
           itemsPerPage={10} 
           className="admin-audit-table"
-          tableLayout="auto"
+          tableLayout="fixed"
         />
       </Card>
 
