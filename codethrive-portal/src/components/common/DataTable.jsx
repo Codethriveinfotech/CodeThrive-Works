@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import './common.css';
 
-const DataTable = ({ columns, data, searchable = true, itemsPerPage = 10 }) => {
+const DataTable = ({ columns, data, searchable = true, itemsPerPage = 10, className = '', tableLayout = 'auto' }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -27,11 +27,11 @@ const DataTable = ({ columns, data, searchable = true, itemsPerPage = 10 }) => {
   };
 
   return (
-    <div className="ct-table-wrapper">
+    <div className={`ct-table-wrapper ${className}`}>
       {searchable && (
-        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ position: 'relative', width: '250px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+        <div style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', background: 'rgba(15, 23, 42, 0.3)' }}>
+          <div style={{ position: 'relative', width: '240px' }}>
+            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               type="text" 
               className="input-field" 
@@ -41,18 +41,18 @@ const DataTable = ({ columns, data, searchable = true, itemsPerPage = 10 }) => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              style={{ paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.6rem', paddingBottom: '0.6rem', width: '100%' }}
+              style={{ paddingLeft: '2.4rem', paddingRight: '1rem', paddingTop: '0.45rem', paddingBottom: '0.45rem', width: '100%', fontSize: '0.82rem', borderRadius: '8px' }}
             />
           </div>
         </div>
       )}
       
       <div className="ct-table-container">
-        <table className="ct-table">
+        <table className="ct-table" style={{ tableLayout: tableLayout }}>
           <thead>
             <tr>
               {columns.map((col, index) => (
-                <th key={index}>{col.header}</th>
+                <th key={index} style={col.width ? { width: col.width } : {}}>{col.header}</th>
               ))}
             </tr>
           </thead>
@@ -60,7 +60,7 @@ const DataTable = ({ columns, data, searchable = true, itemsPerPage = 10 }) => {
             {currentData.length > 0 ? currentData.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 {columns.map((col, colIndex) => (
-                  <td key={colIndex}>
+                  <td key={colIndex} style={col.width ? { width: col.width } : {}}>
                     {col.render ? col.render(row) : row[col.accessor]}
                   </td>
                 ))}
