@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, UserCheck, Coffee, CheckCircle2, Eye, 
   Clock, Plus, X, ListTodo, Briefcase, Mail, Calendar,
-  FileText, Check, ArrowRight, RefreshCw, ShieldCheck, Sparkles, TrendingUp
+  FileText, Check, ArrowRight, RefreshCw, ShieldCheck, Sparkles, TrendingUp, Search
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
@@ -33,6 +33,7 @@ const Admin = () => {
   const [liveMonitoring, setLiveMonitoring] = useState([]);
   const [selectedEmpId, setSelectedEmpId] = useState('ALL');
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [auditSearchTerm, setAuditSearchTerm] = useState('');
 
   // Recent Submitted Reports
   const [recentReports, setRecentReports] = useState([]);
@@ -172,65 +173,85 @@ const Admin = () => {
       (activeFilter === 'Working' && e.status === 'Working') ||
       (activeFilter === 'On Break' && (e.status === 'On Break' || e.status === 'On Lunch')) ||
       (activeFilter === 'Checked Out' && e.status === 'Checked Out');
-    return matchesEmp && matchesFilter;
+    const matchesSearch = !auditSearchTerm.trim() || 
+      (e.name && e.name.toLowerCase().includes(auditSearchTerm.toLowerCase())) ||
+      (e.email && e.email.toLowerCase().includes(auditSearchTerm.toLowerCase())) ||
+      (e.id && e.id.toLowerCase().includes(auditSearchTerm.toLowerCase())) ||
+      (e.dept && e.dept.toLowerCase().includes(auditSearchTerm.toLowerCase())) ||
+      (e.designation && e.designation.toLowerCase().includes(auditSearchTerm.toLowerCase()));
+    return matchesEmp && matchesFilter && matchesSearch;
   });
 
   const columns = [
     { 
-      header: 'Employee Details', 
+      header: 'EMPLOYEE', 
       accessor: 'name',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
-          <div className="emp-avatar-big" style={{ width: '40px', height: '40px', fontSize: '1rem' }}>
+        <div className="emp-audit-user-cell" onClick={() => handleOpenEmployeePage(row._id)}>
+          <div className="emp-avatar-circle">
             {row.name ? row.name.charAt(0).toUpperCase() : 'E'}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.92rem' }}>{row.name}</span>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{row.email} | <strong style={{ color: '#818cf8' }}>{row.id}</strong></span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <span className="emp-audit-name">{row.name}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <span className="emp-audit-email">{row.email}</span>
+              <span className="emp-id-badge">{row.id}</span>
+            </div>
           </div>
         </div>
       )
     },
     { 
-      header: 'Department / Designation', 
+      header: 'DEPARTMENT & ROLE', 
       render: (row) => (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 600 }}>{row.dept}</span>
-          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{row.designation}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span className="emp-dept-tag">{row.dept || 'Engineering'}</span>
+          <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 500 }}>{row.designation}</span>
         </div>
       )
     },
     { 
-      header: 'Status', 
+      header: 'STATUS', 
       accessor: 'status',
       render: (row) => <StatusBadge status={row.status} />
     },
     { 
-      header: 'Check In', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#34d399' }}>{formatTimeOnly(row.firstLoginTime)}</span>
-    },
-    { 
-      header: 'Check Out', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: row.lastLogoutTime ? '#60a5fa' : '#64748b' }}>{formatTimeOnly(row.lastLogoutTime)}</span>
-    },
-    { 
-      header: 'Work / Break / Lunch', 
+      header: 'CHECK IN', 
       render: (row) => (
-        <div style={{ display: 'flex', gap: '0.4rem', fontSize: '0.78rem', fontFamily: 'monospace' }}>
-          <span style={{ color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}>W: {formatDurationStr(row.workSec)}</span>
-          <span style={{ color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}>B: {formatDurationStr(row.breakSec)}</span>
+        <span className={`time-digital-clock ${row.firstLoginTime ? 'in-active' : 'inactive'}`}>
+          {formatTimeOnly(row.firstLoginTime)}
+        </span>
+      )
+    },
+    { 
+      header: 'CHECK OUT', 
+      render: (row) => (
+        <span className={`time-digital-clock ${row.lastLogoutTime ? 'out-active' : 'inactive'}`}>
+          {formatTimeOnly(row.lastLogoutTime)}
+        </span>
+      )
+    },
+    { 
+      header: 'WORK / BREAK DURATION', 
+      render: (row) => (
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <span className="duration-pill duration-work">
+            <span className="dur-label">W:</span> {formatDurationStr(row.workSec)}
+          </span>
+          <span className="duration-pill duration-break">
+            <span className="dur-label">B:</span> {formatDurationStr(row.breakSec)}
+          </span>
         </div>
       )
     },
     {
-      header: '360° Actions',
+      header: '360° ACTIONS',
       render: (row) => (
         <button 
           onClick={() => handleOpenEmployeePage(row._id)} 
-          className="btn btn-primary" 
-          style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+          className="btn-workspace-action"
         >
-          <Eye size={14} /> Open 360° Workspace
+          <Eye size={14} /> View 360° Dossier
         </button>
       )
     }
@@ -361,17 +382,37 @@ const Admin = () => {
       <Card style={{ padding: 0 }}>
         <div className="admin-toolbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Users size={20} color="#818cf8" />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff' }}>Live Check In / Check Out Audit</h3>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#ffffff', fontWeight: 700 }}>Live Check In / Check Out Audit</h3>
               <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Real-time employee activity, work duration & session logs</span>
             </div>
           </div>
 
-          {/* Filter Pills & Employee Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          {/* Filter Pills, Search Bar & Employee Selector */}
+          <div className="admin-toolbar-controls">
+            {/* Direct Search Bar */}
+            <div className="admin-search-wrapper">
+              <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <input 
+                type="text" 
+                className="admin-search-input" 
+                placeholder="Search employee..." 
+                value={auditSearchTerm}
+                onChange={(e) => setAuditSearchTerm(e.target.value)}
+              />
+              {auditSearchTerm && (
+                <button 
+                  onClick={() => setAuditSearchTerm('')} 
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0, display: 'flex' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
             <div style={{ display: 'flex', gap: '0.35rem', background: 'rgba(15, 23, 42, 0.8)', padding: '3px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
               <button 
                 onClick={() => setActiveFilter('ALL')}
@@ -379,7 +420,7 @@ const Admin = () => {
                   background: activeFilter === 'ALL' ? 'rgba(99, 102, 241, 0.25)' : 'transparent',
                   color: activeFilter === 'ALL' ? '#818cf8' : '#94a3b8',
                   border: activeFilter === 'ALL' ? '1px solid rgba(99, 102, 241, 0.4)' : 'none',
-                  padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer'
+                  padding: '5px 12px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease'
                 }}
               >
                 All ({liveMonitoring.length})
@@ -390,7 +431,7 @@ const Admin = () => {
                   background: activeFilter === 'Working' ? 'rgba(16, 185, 129, 0.25)' : 'transparent',
                   color: activeFilter === 'Working' ? '#34d399' : '#94a3b8',
                   border: activeFilter === 'Working' ? '1px solid rgba(16, 185, 129, 0.4)' : 'none',
-                  padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer'
+                  padding: '5px 12px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease'
                 }}
               >
                 Working ({liveMonitoring.filter(e => e.status === 'Working').length})
@@ -401,7 +442,7 @@ const Admin = () => {
                   background: activeFilter === 'On Break' ? 'rgba(245, 158, 11, 0.25)' : 'transparent',
                   color: activeFilter === 'On Break' ? '#fbbf24' : '#94a3b8',
                   border: activeFilter === 'On Break' ? '1px solid rgba(245, 158, 11, 0.4)' : 'none',
-                  padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer'
+                  padding: '5px 12px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease'
                 }}
               >
                 On Break ({liveMonitoring.filter(e => e.status === 'On Break' || e.status === 'On Lunch').length})
@@ -426,7 +467,7 @@ const Admin = () => {
         <DataTable 
           columns={columns} 
           data={filteredMonitoring} 
-          searchable={true} 
+          searchable={false} 
           itemsPerPage={10} 
         />
       </Card>
