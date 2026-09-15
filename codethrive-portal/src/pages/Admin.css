@@ -158,14 +158,11 @@
 }
 
 /* --------------------------------------------------------------------------
-   METRIC STATS CARDS WITH ANIMATED BORDERS & LIFT
-   -------------------------------------------------------------------------- */
-/* --------------------------------------------------------------------------
-   ULTRA-STUNNING EXECUTIVE METRIC CARDS
+   REDEFINED METRIC STATS CARDS WITH GLASSMORPHISM & NEON GLOW
    -------------------------------------------------------------------------- */
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.25rem;
   width: 100%;
   box-sizing: border-box;
@@ -173,17 +170,18 @@
 
 .metric-card {
   position: relative;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.85) 100%);
-  backdrop-filter: blur(14px);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  border-radius: 18px;
   padding: 1.35rem 1.4rem;
   display: flex;
   align-items: center;
-  gap: 1.15rem;
+  gap: 1.1rem;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
+  cursor: pointer;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
 }
 
 .metric-card::before {
@@ -193,128 +191,133 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--card-accent, #6366f1), var(--card-accent-end, #3b82f6));
-  opacity: 0.6;
-  transition: opacity 0.3s ease;
+  background: transparent;
+  transition: all 0.3s ease;
 }
+
+.metric-card.card-total::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.metric-card.card-working::before { background: linear-gradient(90deg, #10b981, #34d399); }
+.metric-card.card-break::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.metric-card.card-checkout::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
 
 .metric-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
-  border-color: var(--card-accent-border, rgba(99, 102, 241, 0.4));
-  box-shadow: 0 16px 35px -8px rgba(0, 0, 0, 0.6), 0 0 20px var(--card-accent-glow, rgba(99, 102, 241, 0.25));
-}
-
-.metric-card:hover::before {
-  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
 }
 
 .metric-card.active-filter {
-  border-color: var(--card-accent, #6366f1);
-  box-shadow: 0 0 25px var(--card-accent-glow, rgba(99, 102, 241, 0.35)), inset 0 0 15px rgba(99, 102, 241, 0.1);
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.25), inset 0 0 12px rgba(99, 102, 241, 0.1);
 }
 
-.metric-card.active-filter::before {
-  opacity: 1;
-  height: 4px;
+.metric-card.card-working.active-filter {
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.25), inset 0 0 12px rgba(16, 185, 129, 0.1);
+}
+
+.metric-card.card-break.active-filter {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.25), inset 0 0 12px rgba(245, 158, 11, 0.1);
+}
+
+.metric-card.card-checkout.active-filter {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.25), inset 0 0 12px rgba(56, 189, 248, 0.1);
 }
 
 .metric-icon {
   width: 52px;
   height: 52px;
-  border-radius: 16px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition: transform 0.3s ease;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .metric-card:hover .metric-icon {
-  transform: scale(1.1) rotate(3deg);
+  transform: scale(1.08);
 }
 
-.bg-primary-card {
-  --card-accent: #6366f1;
-  --card-accent-end: #818cf8;
-  --card-accent-border: rgba(99, 102, 241, 0.4);
-  --card-accent-glow: rgba(99, 102, 241, 0.3);
-}
-
-.bg-success-card {
-  --card-accent: #10b981;
-  --card-accent-end: #34d399;
-  --card-accent-border: rgba(16, 185, 129, 0.4);
-  --card-accent-glow: rgba(16, 185, 129, 0.3);
-}
-
-.bg-warning-card {
-  --card-accent: #f59e0b;
-  --card-accent-end: #fbbf24;
-  --card-accent-border: rgba(245, 158, 11, 0.4);
-  --card-accent-glow: rgba(245, 158, 11, 0.3);
-}
-
-.bg-info-card {
-  --card-accent: #0284c7;
-  --card-accent-end: #38bdf8;
-  --card-accent-border: rgba(2, 132, 199, 0.4);
-  --card-accent-glow: rgba(2, 132, 199, 0.3);
-}
-
-.bg-primary-light { background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); }
+.bg-primary-light { background: rgba(79, 70, 229, 0.15); border: 1px solid rgba(79, 70, 229, 0.3); }
 .bg-success-light { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
 .bg-warning-light { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); }
 .bg-info-light { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); }
 
 .metric-data {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  width: 100%;
 }
 
 .metric-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.35rem;
   width: 100%;
 }
 
-.metric-title {
+.metric-label {
   color: #94a3b8;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.82rem;
   margin: 0;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.metric-pill {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 2px 7px;
+.metric-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
   border-radius: 20px;
-  white-space: nowrap;
-  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   letter-spacing: 0.02em;
 }
 
-.metric-pill.indigo { color: #818cf8; background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(99, 102, 241, 0.3); }
-.metric-pill.emerald { color: #34d399; background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.3); }
-.metric-pill.amber { color: #fbbf24; background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.3); }
-.metric-pill.cyan { color: #38bdf8; background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.3); }
+.badge-primary {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
 
-.metric-val-row {
+.badge-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-info {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.pulse-green-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+  animation: beaconPulse 1.5s infinite ease-in-out;
+}
+
+.metric-value-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  margin-top: 0.1rem;
 }
 
 .metric-val {
@@ -322,17 +325,24 @@
   color: #ffffff;
   font-weight: 800;
   margin: 0;
-  line-height: 1.1;
+  line-height: 1;
   letter-spacing: -0.03em;
 }
 
-.metric-filter-active-tag {
+.active-dot-indicator {
   font-size: 0.68rem;
-  color: #a5b4fc;
   font-weight: 700;
   text-transform: uppercase;
+  color: #818cf8;
   letter-spacing: 0.04em;
+  background: rgba(99, 102, 241, 0.15);
+  padding: 2px 7px;
+  border-radius: 6px;
 }
+
+.active-dot-indicator.green { color: #34d399; background: rgba(16, 185, 129, 0.15); }
+.active-dot-indicator.amber { color: #fbbf24; background: rgba(245, 158, 11, 0.15); }
+.active-dot-indicator.cyan { color: #38bdf8; background: rgba(56, 189, 248, 0.15); }
 
 /* --------------------------------------------------------------------------
    ENTERPRISE TABLES & TOOLBAR

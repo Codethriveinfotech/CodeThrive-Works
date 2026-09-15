@@ -177,58 +177,58 @@ const Admin = () => {
 
   const columns = [
     { 
-      header: 'EMPLOYEE DETAILS', 
+      header: 'Employee Details', 
       accessor: 'name',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: '220px', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
-          <div className="emp-avatar-big" style={{ width: '38px', height: '38px', fontSize: '0.95rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
+          <div className="emp-avatar-big" style={{ width: '40px', height: '40px', fontSize: '1rem' }}>
             {row.name ? row.name.charAt(0).toUpperCase() : 'E'}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{row.name}</span>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>{row.email} | <strong style={{ color: '#818cf8' }}>{row.id}</strong></span>
+            <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.92rem' }}>{row.name}</span>
+            <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{row.email} | <strong style={{ color: '#818cf8' }}>{row.id}</strong></span>
           </div>
         </div>
       )
     },
     { 
-      header: 'DEPARTMENT / DESIGNATION', 
+      header: 'Department / Designation', 
       render: (row) => (
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '180px' }}>
-          <span style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 600, whiteSpace: 'nowrap' }}>{row.dept}</span>
-          <span style={{ fontSize: '0.78rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>{row.designation}</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 600 }}>{row.dept}</span>
+          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{row.designation}</span>
         </div>
       )
     },
     { 
-      header: 'STATUS', 
+      header: 'Status', 
       accessor: 'status',
       render: (row) => <StatusBadge status={row.status} />
     },
     { 
-      header: 'CHECK IN', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#34d399', whiteSpace: 'nowrap', fontSize: '0.88rem' }}>{formatTimeOnly(row.firstLoginTime)}</span>
+      header: 'Check In', 
+      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#34d399' }}>{formatTimeOnly(row.firstLoginTime)}</span>
     },
     { 
-      header: 'CHECK OUT', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: row.lastLogoutTime ? '#60a5fa' : '#64748b', whiteSpace: 'nowrap', fontSize: '0.88rem' }}>{formatTimeOnly(row.lastLogoutTime)}</span>
+      header: 'Check Out', 
+      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: row.lastLogoutTime ? '#60a5fa' : '#64748b' }}>{formatTimeOnly(row.lastLogoutTime)}</span>
     },
     { 
-      header: 'WORK / BREAK / LUNCH', 
+      header: 'Work / Break / Lunch', 
       render: (row) => (
-        <div style={{ display: 'flex', gap: '0.4rem', fontSize: '0.78rem', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
-          <span style={{ color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', padding: '2px 7px', borderRadius: '6px', fontWeight: 700 }}>W: {formatDurationStr(row.workSec)}</span>
-          <span style={{ color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 7px', borderRadius: '6px', fontWeight: 700 }}>B: {formatDurationStr(row.breakSec)}</span>
+        <div style={{ display: 'flex', gap: '0.4rem', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+          <span style={{ color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}>W: {formatDurationStr(row.workSec)}</span>
+          <span style={{ color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}>B: {formatDurationStr(row.breakSec)}</span>
         </div>
       )
     },
     {
-      header: '360° ACTIONS',
+      header: '360° Actions',
       render: (row) => (
         <button 
           onClick={() => handleOpenEmployeePage(row._id)} 
           className="btn btn-primary" 
-          style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', borderRadius: '8px' }}
+          style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
         >
           <Eye size={14} /> Open 360° Workspace
         </button>
@@ -264,12 +264,10 @@ const Admin = () => {
         </div>
       </div>
 
-      {/* 2. ULTRA-SLEEK METRIC CARDS WITH ANIMATED GLOW & HOVER LIFT */}
+      {/* 2. EXECUTIVE LIVE MONITORING METRIC CARDS */}
       <div className="metrics-grid">
-        {/* CARD 1: Total Registered Staff */}
         <div 
-          className={`metric-card bg-primary-card ${activeFilter === 'ALL' ? 'active-filter' : ''}`}
-          style={{ cursor: 'pointer' }} 
+          className={`metric-card card-total ${activeFilter === 'ALL' ? 'active-filter' : ''}`}
           onClick={() => { setSelectedEmpId('ALL'); setActiveFilter('ALL'); }}
         >
           <div className="metric-icon bg-primary-light">
@@ -277,75 +275,77 @@ const Admin = () => {
           </div>
           <div className="metric-data">
             <div className="metric-header-row">
-              <span className="metric-title">Total Staff</span>
-              <span className="metric-pill indigo">Directory</span>
+              <p className="metric-label">Total Registered Staff</p>
+              <span className="metric-badge badge-primary">
+                System Staff
+              </span>
             </div>
-            <div className="metric-val-row">
+            <div className="metric-value-row">
               <h3 className="metric-val">{stats.totalEmployees}</h3>
-              {activeFilter === 'ALL' && <span className="metric-filter-active-tag">Active</span>}
+              {activeFilter === 'ALL' && <span className="active-dot-indicator">Active Filter</span>}
             </div>
           </div>
         </div>
         
-        {/* CARD 2: Working Right Now */}
         <div 
-          className={`metric-card bg-success-card ${activeFilter === 'Working' ? 'active-filter' : ''}`}
-          style={{ cursor: 'pointer' }} 
-          onClick={() => { setActiveFilter('Working'); }}
+          className={`metric-card card-working ${activeFilter === 'Working' ? 'active-filter' : ''}`}
+          onClick={() => setActiveFilter('Working')}
         >
           <div className="metric-icon bg-success-light">
             <UserCheck size={24} color="#34d399" />
           </div>
           <div className="metric-data">
             <div className="metric-header-row">
-              <span className="metric-title">Working Now</span>
-              <span className="metric-pill emerald">🟢 Active</span>
+              <p className="metric-label">Working Right Now</p>
+              <span className="metric-badge badge-success">
+                <span className="pulse-green-dot"></span> Live Active
+              </span>
             </div>
-            <div className="metric-val-row">
+            <div className="metric-value-row">
               <h3 className="metric-val">{stats.working}</h3>
-              {activeFilter === 'Working' && <span className="metric-filter-active-tag">Active</span>}
+              {activeFilter === 'Working' && <span className="active-dot-indicator green">Active Filter</span>}
             </div>
           </div>
         </div>
         
-        {/* CARD 3: On Break / Lunch */}
         <div 
-          className={`metric-card bg-warning-card ${activeFilter === 'On Break' ? 'active-filter' : ''}`}
-          style={{ cursor: 'pointer' }} 
-          onClick={() => { setActiveFilter('On Break'); }}
+          className={`metric-card card-break ${activeFilter === 'On Break' ? 'active-filter' : ''}`}
+          onClick={() => setActiveFilter('On Break')}
         >
           <div className="metric-icon bg-warning-light">
             <Coffee size={24} color="#fbbf24" />
           </div>
           <div className="metric-data">
             <div className="metric-header-row">
-              <span className="metric-title">On Break</span>
-              <span className="metric-pill amber">☕ Resting</span>
+              <p className="metric-label">On Break / Lunch</p>
+              <span className="metric-badge badge-warning">
+                Break Mode
+              </span>
             </div>
-            <div className="metric-val-row">
+            <div className="metric-value-row">
               <h3 className="metric-val">{(stats.onBreak || 0) + (stats.onLunch || 0)}</h3>
-              {activeFilter === 'On Break' && <span className="metric-filter-active-tag">Active</span>}
+              {activeFilter === 'On Break' && <span className="active-dot-indicator amber">Active Filter</span>}
             </div>
           </div>
         </div>
 
-        {/* CARD 4: Checked Out Today */}
         <div 
-          className={`metric-card bg-info-card ${activeFilter === 'Checked Out' ? 'active-filter' : ''}`}
-          style={{ cursor: 'pointer' }} 
-          onClick={() => { setActiveFilter('Checked Out'); }}
+          className={`metric-card card-checkout ${activeFilter === 'Checked Out' ? 'active-filter' : ''}`}
+          onClick={() => setActiveFilter('Checked Out')}
         >
           <div className="metric-icon bg-info-light">
             <CheckCircle2 size={24} color="#38bdf8" />
           </div>
           <div className="metric-data">
             <div className="metric-header-row">
-              <span className="metric-title">Checked Out</span>
-              <span className="metric-pill cyan">⏹️ Shift Ended</span>
+              <p className="metric-label">Checked Out Today</p>
+              <span className="metric-badge badge-info">
+                Shift Ended
+              </span>
             </div>
-            <div className="metric-val-row">
+            <div className="metric-value-row">
               <h3 className="metric-val">{stats.checkedOut || 0}</h3>
-              {activeFilter === 'Checked Out' && <span className="metric-filter-active-tag">Active</span>}
+              {activeFilter === 'Checked Out' && <span className="active-dot-indicator cyan">Active Filter</span>}
             </div>
           </div>
         </div>
