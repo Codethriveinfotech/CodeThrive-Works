@@ -266,87 +266,93 @@ const Admin = () => {
 
       {/* 2. EXECUTIVE LIVE MONITORING METRIC CARDS */}
       <div className="metrics-grid">
+        {/* Card 1: Total Registered Staff */}
         <div 
-          className={`metric-card card-total ${activeFilter === 'ALL' ? 'active-filter' : ''}`}
+          className={`stat-card stat-card-indigo ${activeFilter === 'ALL' ? 'selected' : ''}`}
           onClick={() => { setSelectedEmpId('ALL'); setActiveFilter('ALL'); }}
         >
-          <div className="metric-icon bg-primary-light">
-            <Users size={24} color="#818cf8" />
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-indigo">
+              <Users size={22} />
+            </div>
+            <span className="stat-tag tag-indigo">REGISTERED</span>
           </div>
-          <div className="metric-data">
-            <div className="metric-header-row">
-              <p className="metric-label">Total Registered Staff</p>
-              <span className="metric-badge badge-primary">
-                System Staff
-              </span>
-            </div>
-            <div className="metric-value-row">
-              <h3 className="metric-val">{stats.totalEmployees}</h3>
-              {activeFilter === 'ALL' && <span className="active-dot-indicator">Active Filter</span>}
-            </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{stats.totalEmployees}</h3>
+            <p className="stat-title">Total Staff Members</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Click to view all employees</span>
+            {activeFilter === 'ALL' && <span className="stat-active-pill pill-indigo">Active Filter</span>}
           </div>
         </div>
         
+        {/* Card 2: Working Right Now */}
         <div 
-          className={`metric-card card-working ${activeFilter === 'Working' ? 'active-filter' : ''}`}
+          className={`stat-card stat-card-emerald ${activeFilter === 'Working' ? 'selected' : ''}`}
           onClick={() => setActiveFilter('Working')}
         >
-          <div className="metric-icon bg-success-light">
-            <UserCheck size={24} color="#34d399" />
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-emerald">
+              <UserCheck size={22} />
+            </div>
+            <span className="stat-tag tag-emerald">
+              <span className="beacon-dot"></span> WORKING NOW
+            </span>
           </div>
-          <div className="metric-data">
-            <div className="metric-header-row">
-              <p className="metric-label">Working Right Now</p>
-              <span className="metric-badge badge-success">
-                <span className="pulse-green-dot"></span> Live Active
-              </span>
-            </div>
-            <div className="metric-value-row">
-              <h3 className="metric-val">{stats.working}</h3>
-              {activeFilter === 'Working' && <span className="active-dot-indicator green">Active Filter</span>}
-            </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{stats.working}</h3>
+            <p className="stat-title">Active Employees</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Logged in & working</span>
+            {activeFilter === 'Working' && <span className="stat-active-pill pill-emerald">Active Filter</span>}
           </div>
         </div>
         
+        {/* Card 3: On Break / Lunch */}
         <div 
-          className={`metric-card card-break ${activeFilter === 'On Break' ? 'active-filter' : ''}`}
+          className={`stat-card stat-card-amber ${activeFilter === 'On Break' ? 'selected' : ''}`}
           onClick={() => setActiveFilter('On Break')}
         >
-          <div className="metric-icon bg-warning-light">
-            <Coffee size={24} color="#fbbf24" />
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-amber">
+              <Coffee size={22} />
+            </div>
+            <span className="stat-tag tag-amber">ON BREAK</span>
           </div>
-          <div className="metric-data">
-            <div className="metric-header-row">
-              <p className="metric-label">On Break / Lunch</p>
-              <span className="metric-badge badge-warning">
-                Break Mode
-              </span>
-            </div>
-            <div className="metric-value-row">
-              <h3 className="metric-val">{(stats.onBreak || 0) + (stats.onLunch || 0)}</h3>
-              {activeFilter === 'On Break' && <span className="active-dot-indicator amber">Active Filter</span>}
-            </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{(stats.onBreak || 0) + (stats.onLunch || 0)}</h3>
+            <p className="stat-title">Break / Lunch</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Tea or lunch break</span>
+            {activeFilter === 'On Break' && <span className="stat-active-pill pill-amber">Active Filter</span>}
           </div>
         </div>
 
+        {/* Card 4: Checked Out Today */}
         <div 
-          className={`metric-card card-checkout ${activeFilter === 'Checked Out' ? 'active-filter' : ''}`}
+          className={`stat-card stat-card-cyan ${activeFilter === 'Checked Out' ? 'selected' : ''}`}
           onClick={() => setActiveFilter('Checked Out')}
         >
-          <div className="metric-icon bg-info-light">
-            <CheckCircle2 size={24} color="#38bdf8" />
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-cyan">
+              <CheckCircle2 size={22} />
+            </div>
+            <span className="stat-tag tag-cyan">COMPLETED</span>
           </div>
-          <div className="metric-data">
-            <div className="metric-header-row">
-              <p className="metric-label">Checked Out Today</p>
-              <span className="metric-badge badge-info">
-                Shift Ended
-              </span>
-            </div>
-            <div className="metric-value-row">
-              <h3 className="metric-val">{stats.checkedOut || 0}</h3>
-              {activeFilter === 'Checked Out' && <span className="active-dot-indicator cyan">Active Filter</span>}
-            </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{stats.checkedOut || 0}</h3>
+            <p className="stat-title">Checked Out Today</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Shift ended successfully</span>
+            {activeFilter === 'Checked Out' && <span className="stat-active-pill pill-cyan">Active Filter</span>}
           </div>
         </div>
       </div>
