@@ -85,29 +85,32 @@
 /* Data Table */
 .ct-table-container {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .ct-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  table-layout: auto;
 }
 
 .ct-table th {
-  padding: 1rem 1.5rem;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 0.85rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   border-bottom: 1px solid var(--border-color);
   background: rgba(255, 255, 255, 0.02);
+  white-space: nowrap;
 }
 
 .ct-table td {
-  padding: 1rem 1.5rem;
-  font-size: 0.95rem;
+  padding: 0.85rem 0.75rem;
+  font-size: 0.88rem;
   color: var(--text-main);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
