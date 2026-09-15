@@ -1,5 +1,9 @@
 const express = require('express');
-const { startWorkSession, startBreak, startLunch, resumeWork, checkout, getTodayAttendance, getAttendanceHistory, getAttendanceSummary, requestCorrection, getLeaveSummary, applyLeave } = require('../controllers/attendanceController');
+const { 
+  startWorkSession, startBreak, startLunch, resumeWork, checkout, 
+  getTodayAttendance, getAttendanceHistory, getAttendanceSummary, 
+  submitRegularization, getLeaveBalances, applyLeave 
+} = require('../controllers/attendanceController');
 const { protect } = require('../middleware/authMiddleware');
 const { upload } = require('../utils/upload');
 
@@ -17,9 +21,10 @@ router.post('/checkout', checkout);
 
 router.get('/history', getAttendanceHistory);
 router.get('/summary', getAttendanceSummary);
-router.post('/correction', upload.single('attachment'), requestCorrection);
+router.post('/regularize', upload.single('attachment'), submitRegularization);
+router.post('/correction', upload.single('attachment'), submitRegularization);
 router.route('/leaves')
-  .get(getLeaveSummary)
+  .get(getLeaveBalances)
   .post(applyLeave);
 
 module.exports = router;

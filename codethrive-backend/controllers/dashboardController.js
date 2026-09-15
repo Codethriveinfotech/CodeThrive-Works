@@ -117,12 +117,36 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
+// Helper to get or create an Employee linked to the user
+const getOrCreateEmployee = async (user) => {
+  if (!user) return null;
+  let employee = await Employee.findOne({ user: user._id });
+  if (!employee && user.email) {
+    employee = await Employee.findOne({ companyEmailAddress: user.email });
+    if (employee && !employee.user) {
+      employee.user = user._id;
+      await employee.save();
+    }
+  }
+  if (!employee) {
+    employee = await Employee.create({
+      user: user._id,
+      fullName: user.fullName || user.email?.split('@')[0] || 'CodeThrive User',
+      companyEmailAddress: user.email || 'user@codethrive.com',
+      employeeId: user.employeeId || `CTI-${Date.now().toString().slice(-4)}`,
+      department: 'Software Engineering',
+      jobTitle: user.designation || 'Software Engineer'
+    });
+  }
+  return employee;
+};
+
 // @desc    Get employee dashboard stats (Today's Work)
 // @route   GET /api/v1/dashboard/employee
 // @access  Private
 exports.getEmployeeDashboard = async (req, res) => {
   try {
-    const employee = await Employee.findOne({ user: req.user._id });
+    const employee = await getOrCreateEmployee(req.user);
     if (!employee) {
       return res.status(404).json({ success: false, message: 'Employee profile not found' });
     }

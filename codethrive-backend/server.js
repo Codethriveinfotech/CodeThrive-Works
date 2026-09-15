@@ -48,10 +48,10 @@ app.use(cors({
 // Serve static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Rate limiting
+// Rate limiting (set high limit for development & internal workspace portal)
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 mins
-  max: 100 // 100 requests per windowMs
+  max: 100000 // 100,000 requests per windowMs (prevents false rate limiting during active sessions)
 });
 app.use(limiter);
 

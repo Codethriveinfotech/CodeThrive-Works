@@ -33,7 +33,14 @@ const AdminLeave = () => {
       }
 
       const rawShared = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
-      const localShared = rawShared.filter(l => l && !l._id?.toString().startsWith('l-shared-'));
+      const localShared = rawShared.filter(l => {
+        if (!l || !l._id) return false;
+        const idStr = l._id.toString();
+        if (idStr.startsWith('l-shared-') || idStr.startsWith('l-demo-') || idStr.startsWith('l-mock-')) return false;
+        if (l.reason?.toLowerCase().includes('personal family commitments')) return false;
+        if (l.startDate === '9/10/2026' || l.startDate === '2026-09-10') return false;
+        return true;
+      });
       localStorage.setItem('cti_shared_leaves', JSON.stringify(localShared));
       
       const map = new Map();

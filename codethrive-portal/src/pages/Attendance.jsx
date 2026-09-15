@@ -75,10 +75,15 @@ const Attendance = () => {
         api.get('/attendance/leaves')
       ]);
       
-      let todayData = todayRes.status === 'fulfilled' ? todayRes.data?.data?.attendance : null;
-      let historyData = historyRes.status === 'fulfilled' ? historyRes.data?.data : [];
-      let summaryData = summaryRes.status === 'fulfilled' ? summaryRes.data?.data : null;
-      let leaveData = leaveRes.status === 'fulfilled' ? leaveRes.data?.data : null;
+      let todayVal = todayRes.status === 'fulfilled' ? todayRes.value : null;
+      let historyVal = historyRes.status === 'fulfilled' ? historyRes.value : null;
+      let summaryVal = summaryRes.status === 'fulfilled' ? summaryRes.value : null;
+      let leaveVal = leaveRes.status === 'fulfilled' ? leaveRes.value : null;
+
+      let todayData = todayVal?.data?.attendance || todayVal?.attendance || null;
+      let historyData = historyVal?.data || historyVal || [];
+      let summaryData = summaryVal?.data || summaryVal || null;
+      let leaveData = leaveVal?.data || leaveVal || null;
 
       if (todayData) {
         setTodayAttendance(todayData);
@@ -117,9 +122,10 @@ const Attendance = () => {
 
     try {
       const res = await api.post(endpoint);
-      if (res.data?.success && res.data?.data?.attendance) {
-        setTodayAttendance(res.data.data.attendance);
-        setLiveDuration(res.data.data.attendance.totalWorkDurationInSeconds || 0);
+      const attData = res?.data?.attendance || res?.attendance;
+      if (attData) {
+        setTodayAttendance(attData);
+        setLiveDuration(attData.totalWorkDurationInSeconds || 0);
         return;
       }
     } catch (err) {
@@ -284,7 +290,7 @@ const Attendance = () => {
                 </button>
               )}
 
-              {todayAttendance?.status === 'Working' && (
+              {(todayAttendance?.status === 'Working' || todayAttendance?.status === 'Present') && (
                 <>
                   <button className="btn btn-outline" style={{ color: 'var(--warning)', borderColor: 'rgba(245, 158, 11, 0.4)' }} onClick={() => handleAction('start-break')}>
                     <Coffee size={16} /> Break

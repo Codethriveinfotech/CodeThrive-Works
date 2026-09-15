@@ -3,9 +3,10 @@ import { useLocation } from 'react-router-dom';
 import { 
   Phone, Video, Mic, MicOff, VideoOff, Monitor, PhoneOff, 
   Search, X, ShieldCheck, MessageCircle, BellRing, PhoneCall, Check,
-  Volume2, PhoneIncoming, AlertCircle, MessageSquare, Smartphone
+  Volume2, PhoneIncoming, AlertCircle, MessageSquare, Smartphone, Users
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 import './TeamsCallWidget.css';
 
 // 1. Leadership & Management Contact Directory (For Employees to Contact Management)
@@ -35,7 +36,7 @@ const MANAGEMENT_CONTACTS = [
   {
     _id: 'lead-3',
     name: 'Priyavadhana',
-    role: 'HR Manager',
+    role: 'HR Operations Manager',
     phone: '9489510499',
     formattedPhone: '+91 94895 10499',
     dept: 'Human Resources',
@@ -78,76 +79,6 @@ const MANAGEMENT_CONTACTS = [
   }
 ];
 
-// 2. Staff & Employee Directory (For Admin to Call Employees)
-const STAFF_EMPLOYEES = [
-  {
-    _id: 'emp-1',
-    name: 'Kirubakaran',
-    role: 'Lead Architect & Core Developer',
-    phone: '7812864905',
-    formattedPhone: '+91 78128 64905',
-    dept: 'Engineering',
-    status: 'Online',
-    statusColor: '#34d399',
-    avatarBg: 'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)'
-  },
-  {
-    _id: 'emp-2',
-    name: 'Mahadhevan',
-    role: 'Senior Fullstack Engineer',
-    phone: '9787857769',
-    formattedPhone: '+91 97878 57769',
-    dept: 'Engineering',
-    status: 'Online',
-    statusColor: '#34d399',
-    avatarBg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-  },
-  {
-    _id: 'emp-3',
-    name: 'Priya Sharma',
-    role: 'Product Designer & UI Specialist',
-    phone: '9489510499',
-    formattedPhone: '+91 94895 10499',
-    dept: 'UI/UX Design',
-    status: 'In a Meeting',
-    statusColor: '#f59e0b',
-    avatarBg: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)'
-  },
-  {
-    _id: 'emp-4',
-    name: 'Rahul Verma',
-    role: 'Engineering Lead & Scrum Master',
-    phone: '9943223938',
-    formattedPhone: '+91 99432 23938',
-    dept: 'Management',
-    status: 'Online',
-    statusColor: '#34d399',
-    avatarBg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-  },
-  {
-    _id: 'emp-5',
-    name: 'Ananya Roy',
-    role: 'HR Manager & Talent Partner',
-    phone: '8754720031',
-    formattedPhone: '+91 87547 20031',
-    dept: 'Human Resources',
-    status: 'Online',
-    statusColor: '#34d399',
-    avatarBg: 'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)'
-  },
-  {
-    _id: 'emp-6',
-    name: 'Quality Assurance Lead',
-    role: 'QA Specialist',
-    phone: '7092729025',
-    formattedPhone: '+91 70927 29025',
-    dept: 'Quality Assurance',
-    status: 'Available',
-    statusColor: '#34d399',
-    avatarBg: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)'
-  }
-];
-
 const TeamsCallWidget = () => {
   const { user } = useAuth();
   const location = useLocation();
@@ -156,9 +87,10 @@ const TeamsCallWidget = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [registeredEmployees, setRegisteredEmployees] = useState([]);
   
   // Call Overlay State
-  const [activeCall, setActiveCall] = useState(null); // { contact, callType: 'audio'|'video', callStatus: 'Ringing...'|'Connected' }
+  const [activeCall, setActiveCall] = useState(null);
   const [callTimer, setCallTimer] = useState(0);
   const [ringCount, setRingCount] = useState(1);
   const [notificationToast, setNotificationToast] = useState(null);
@@ -167,6 +99,70 @@ const TeamsCallWidget = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+
+  // Fetch real registered employees dynamically from DB & localStorage
+  const fetchRegisteredContacts = async () => {
+    try {
+      const res = await api.get('/employees').catch(() => ({ data: { success: false, data: [] } }));
+      let dbEmps = res.data && res.data.success && Array.isArray(res.data.data) ? res.data.data : [];
+      
+      // Also get local users if registered in browser session
+      const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
+      
+      // Combine & format
+      const combined = [...dbEmps];
+      localUsers.forEach(lu => {
+        const exists = combined.some(e => e.personalEmailAddress === lu.email || e.employeeId === lu.employeeId);
+        if (!exists) {
+          combined.push({
+            _id: lu._id || 'local_' + Date.now(),
+            fullName: lu.fullName || lu.name,
+            employeeId: lu.employeeId,
+            personalEmailAddress: lu.email,
+            personalPhoneNumber: lu.phoneNumber || '9876543210',
+            designation: lu.role || 'Software Engineer',
+            department: lu.department || 'Engineering',
+            status: 'Active'
+          });
+        }
+      });
+
+      // Filter out admin account itself so only staff/employees show
+      const formattedList = combined
+        .filter(emp => emp.personalEmailAddress !== 'admin@codethrive.com' && emp.employeeId !== 'CTI-ADM-001')
+        .map((emp, idx) => {
+          const rawPhone = emp.personalPhoneNumber || '9876543210';
+          const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+          const colors = [
+            'linear-gradient(135deg, #6366f1 0%, #3b82f6 100%)',
+            'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+            'linear-gradient(135deg, #06b6d4 0%, #0284c7 100%)'
+          ];
+          return {
+            _id: emp._id || `emp-${idx}`,
+            name: emp.fullName || 'Registered Employee',
+            role: emp.designation || 'Team Member',
+            phone: cleanPhone,
+            formattedPhone: cleanPhone.length === 10 ? `+91 ${cleanPhone.slice(0,5)} ${cleanPhone.slice(5)}` : cleanPhone,
+            dept: emp.department || 'Engineering',
+            status: 'Online',
+            statusColor: '#34d399',
+            avatarBg: colors[idx % colors.length]
+          };
+        });
+
+      setRegisteredEmployees(formattedList);
+    } catch (err) {
+      console.warn('Failed to load registered contacts for Contact Hub:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchRegisteredContacts();
+    }
+  }, [isAdmin, isOpen]);
 
   // Request browser Notification permission on mount
   useEffect(() => {
@@ -199,8 +195,8 @@ const TeamsCallWidget = () => {
             osc1.frequency.setValueAtTime(440, audioCtx.currentTime);
             osc2.frequency.setValueAtTime(480, audioCtx.currentTime);
 
-            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.8);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
 
             osc1.connect(gain);
             osc2.connect(gain);
@@ -208,44 +204,46 @@ const TeamsCallWidget = () => {
 
             osc1.start();
             osc2.start();
-            osc1.stop(audioCtx.currentTime + 1.8);
-            osc2.stop(audioCtx.currentTime + 1.8);
+            osc1.stop(audioCtx.currentTime + 1.2);
+            osc2.stop(audioCtx.currentTime + 1.2);
           };
 
           playTonePattern();
-          ringInterval = setInterval(playTonePattern, 2800);
+          ringInterval = setInterval(() => {
+            playTonePattern();
+            setRingCount(prev => prev + 1);
+          }, 1800);
         }
       } catch (e) {
-        console.warn('Audio ringtone synth error:', e);
+        console.log('Web Audio tone error:', e);
       }
     }
 
     return () => {
       if (ringInterval) clearInterval(ringInterval);
       if (audioCtx && audioCtx.state !== 'closed') {
-        try { audioCtx.close(); } catch (e) {}
+        audioCtx.close().catch(() => {});
       }
     };
   }, [activeCall]);
 
-  // Timer interval for connected call
+  // Call timer counter when call connected
   useEffect(() => {
-    let interval = null;
+    let timerInterval = null;
     if (activeCall && activeCall.callStatus === 'Connected') {
-      interval = setInterval(() => {
+      timerInterval = setInterval(() => {
         setCallTimer(prev => prev + 1);
       }, 1000);
     } else {
       setCallTimer(0);
     }
-    return () => { if (interval) clearInterval(interval); };
+    return () => { if (timerInterval) clearInterval(timerInterval); };
   }, [activeCall]);
 
-  // Repeated ringing pulse counter when call is Ringing
+  // Ring timer auto-accept / auto-advance simulation
   useEffect(() => {
     let ringInterval = null;
     if (activeCall && activeCall.callStatus === 'Ringing...') {
-      setRingCount(1);
       ringInterval = setInterval(() => {
         setRingCount(prev => prev + 1);
       }, 1800);
@@ -293,7 +291,6 @@ const TeamsCallWidget = () => {
     setIsOpen(true);
     triggerMobileNotification(contact);
     
-    // Trigger direct device mobile phone dialer (tel:+91...) so call originates from user's SIM/Line
     if (contact.phone) {
       const telUrl = `tel:+91${contact.phone}`;
       try {
@@ -345,14 +342,12 @@ const TeamsCallWidget = () => {
     const callerPhone = user?.phone || user?.mobile || '';
     const callerRole = user?.role === 'admin' ? 'Management' : (user?.designation || 'Team Member');
     
-    // Check if recipient is Management/Lead or Peer
     const isManagement = contact.role.includes('CEO') || contact.role.includes('MD') || contact.role.includes('HR') || contact.role.includes('Lead') || (contact.dept && contact.dept.includes('Executive'));
+    const salutation = isManagement ? `Respected ${contact.name}` : `Dear ${contact.name}`;
     
-    const salutation = isManagement ? `Respected ${contact.name} Sir/Madam` : `Dear ${contact.name}`;
+    const msg = `Hello ${salutation},\n\nI am contacting you from the CodeThrive Infotech Portal.\n\n👤 Sender: ${callerName} (${callerRole})\n📱 Mobile: +91 ${callerPhone || 'Contact'}\n\nPlease join the live portal session or return my call.\nThank you!`;
     
-    const textMessage = `${salutation},\n\nGreetings from CodeThrive Works Portal!\n\nThis is ${callerName} (${callerRole}${callerPhone ? `, Mob: +91 ${callerPhone}` : ''}) reaching out to you regarding official work and discussion.\n\nKindly connect with me at your earliest convenience.\n\nThank you,\n${callerName}`;
-    
-    const waUrl = `https://wa.me/91${contact.phone}?text=${encodeURIComponent(textMessage)}`;
+    const waUrl = `https://wa.me/91${contact.phone}?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank');
   };
 
@@ -377,8 +372,8 @@ const TeamsCallWidget = () => {
     return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // Employees see Management Contacts ONLY; Management/Admins see Employee Contacts ONLY
-  const listToFilter = isAdmin ? STAFF_EMPLOYEES : MANAGEMENT_CONTACTS;
+  // Employees see Management Contacts ONLY; Management/Admins see REAL Registered Employees
+  const listToFilter = isAdmin ? registeredEmployees : MANAGEMENT_CONTACTS;
   const filteredList = listToFilter.filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -475,7 +470,7 @@ const TeamsCallWidget = () => {
               <div>
                 <h4>CodeThrive Contact Hub</h4>
                 <span className="teams-status-subtext">
-                  {isAdmin ? 'Employee Contact Directory' : 'Management & HR Directory'}
+                  {isAdmin ? 'Registered Employees Directory' : 'Management & HR Directory'}
                 </span>
               </div>
             </div>
@@ -594,80 +589,84 @@ const TeamsCallWidget = () => {
                 <Search size={16} className="search-ic" />
                 <input 
                   type="text" 
-                  placeholder={isAdmin ? "Search employees by name, role..." : "Search CEO, MD, HR, Team Leads..."} 
+                  placeholder={isAdmin ? "Search registered employees by name, role..." : "Search CEO, MD, HR, Team Leads..."} 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                 />
               </div>
 
               <div className="teams-employee-list">
-                {filteredList.map(contact => (
-                  <div key={contact._id} className="teams-emp-row">
-                    <div className="emp-avatar-box" style={{ background: contact.avatarBg }}>
-                      {contact.name.charAt(0)}
-                      <span className="emp-status-dot" style={{ background: contact.statusColor }}></span>
-                    </div>
+                {filteredList.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'rgba(255,255,255,0.6)' }}>
+                    <Users size={32} style={{ marginBottom: '0.75rem', opacity: 0.5, color: '#60a5fa' }} />
+                    <h5 style={{ margin: '0 0 0.4rem 0', color: '#fff', fontSize: '0.95rem' }}>
+                      {isAdmin ? 'No Registered Employees Found' : 'No Contacts Match Search'}
+                    </h5>
+                    <p style={{ fontSize: '0.8rem', margin: 0, lineHeight: '1.4' }}>
+                      {isAdmin 
+                        ? 'As new employees register on the portal, their details and phone numbers will appear here automatically.' 
+                        : 'Try searching for Mahadhevan, Kirubakaran, or HR.'}
+                    </p>
+                  </div>
+                ) : (
+                  filteredList.map(contact => (
+                    <div key={contact._id} className="teams-emp-row">
+                      <div className="emp-avatar-box" style={{ background: contact.avatarBg }}>
+                        {contact.name.charAt(0)}
+                        <span className="emp-status-dot" style={{ background: contact.statusColor }}></span>
+                      </div>
 
-                    <div className="emp-info-col">
-                      <h5 className="emp-name" title={contact.name}>{contact.name}</h5>
-                      
-                      <div className="emp-meta-row">
-                        <span className="emp-role-text">{contact.role}</span>
-                        {contact.formattedPhone && (
-                          <span className="emp-phone-badge">
-                            {contact.formattedPhone}
-                          </span>
+                      <div className="emp-info-col">
+                        <h5 className="emp-name" title={contact.name}>{contact.name}</h5>
+                        
+                        <div className="emp-meta-row">
+                          <span className="emp-role-text">{contact.role}</span>
+                          {contact.formattedPhone && (
+                            <span className="emp-phone-badge">
+                              {contact.formattedPhone}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="emp-call-actions">
+                        {/* Official WhatsApp Call / Chat Button */}
+                        {contact.phone && (
+                          <button 
+                            className="btn-call-action whatsapp"
+                            onClick={() => handleWhatsAppCall(contact)}
+                            title={`WhatsApp Message & Call with ${contact.name} (${contact.formattedPhone})`}
+                          >
+                            <MessageCircle size={15} />
+                          </button>
                         )}
+
+                        {/* Direct Mobile SMS Alert Button */}
+                        {contact.phone && (
+                          <button 
+                            className="btn-call-action sms"
+                            onClick={() => handleSMSAlert(contact)}
+                            title={`Send Instant Mobile SMS Alert to ${contact.name} (${contact.formattedPhone})`}
+                          >
+                            <MessageSquare size={14} />
+                          </button>
+                        )}
+
+                        {/* Direct Audio Call */}
+                        <button 
+                          className="btn-call-action audio"
+                          onClick={() => handleStartCall(contact, 'audio')}
+                          title={`Direct Line Call to ${contact.name} (${contact.formattedPhone})`}
+                        >
+                          <Phone size={15} />
+                        </button>
                       </div>
                     </div>
-
-                    <div className="emp-call-actions">
-                      {/* Official WhatsApp Call / Chat Button */}
-                      {contact.phone && (
-                        <button 
-                          className="btn-call-action whatsapp"
-                          onClick={() => handleWhatsAppCall(contact)}
-                          title={`WhatsApp Message & Call with ${contact.name} (${contact.formattedPhone})`}
-                        >
-                          <MessageCircle size={15} />
-                        </button>
-                      )}
-
-                      {/* Direct Mobile SMS Alert Button */}
-                      {contact.phone && (
-                        <button 
-                          className="btn-call-action sms"
-                          onClick={() => handleSMSAlert(contact)}
-                          title={`Send Instant Mobile SMS Alert to ${contact.name} (${contact.formattedPhone})`}
-                        >
-                          <MessageSquare size={14} />
-                        </button>
-                      )}
-
-                      {/* Direct Audio Call */}
-                      <button 
-                        className="btn-call-action audio"
-                        onClick={() => handleStartCall(contact, 'audio')}
-                        title={`Direct Mobile Phone SIM Call to ${contact.name}`}
-                      >
-                        <Phone size={14} />
-                      </button>
-
-                      {/* HD Video Call */}
-                      <button 
-                        className="btn-call-action video"
-                        onClick={() => handleStartCall(contact, 'video')}
-                        title={`Portal HD Video Call ${contact.name}`}
-                      >
-                        <Video size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
-
         </div>
       )}
     </div>

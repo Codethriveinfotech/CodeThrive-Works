@@ -44,7 +44,7 @@ api.interceptors.request.use(
 // Add a response interceptor
 api.interceptors.response.use(
   (response) => {
-    return response.data;
+    return response;
   },
   (error) => {
     // Handle global errors here (e.g., 401 Unauthorized -> redirect to login)

@@ -13,68 +13,7 @@ import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
 import './Employees.css';
 
-const DEFAULT_DEMO_EMPLOYEES = [
-  {
-    _id: 'emp_001',
-    employeeId: 'CTI-EMP-001',
-    fullName: 'Mahadevan',
-    personalEmailAddress: 'mahadevan@codethrive.com',
-    personalPhoneNumber: '9876543210',
-    department: 'Engineering',
-    designation: 'Senior Full Stack Developer',
-    employmentType: 'Full-Time',
-    status: 'Active',
-    dateOfJoining: '2025-01-15',
-    workLocation: 'Office',
-    salaryAmount: 85000,
-    user: { role: 'employee', status: 'active' }
-  },
-  {
-    _id: 'emp_002',
-    employeeId: 'CTI-EMP-002',
-    fullName: 'Priya Sharma',
-    personalEmailAddress: 'priya@codethrive.com',
-    personalPhoneNumber: '9876543211',
-    department: 'UI/UX Design',
-    designation: 'Lead Product Designer',
-    employmentType: 'Full-Time',
-    status: 'Active',
-    dateOfJoining: '2025-03-01',
-    workLocation: 'Hybrid',
-    salaryAmount: 78000,
-    user: { role: 'teamlead', status: 'active' }
-  },
-  {
-    _id: 'emp_003',
-    employeeId: 'CTI-EMP-003',
-    fullName: 'Rahul Verma',
-    personalEmailAddress: 'rahul@codethrive.com',
-    personalPhoneNumber: '9876543212',
-    department: 'Management',
-    designation: 'Senior Engineering Lead',
-    employmentType: 'Full-Time',
-    status: 'Active',
-    dateOfJoining: '2024-11-10',
-    workLocation: 'Office',
-    salaryAmount: 110000,
-    user: { role: 'admin', status: 'active' }
-  },
-  {
-    _id: 'emp_004',
-    employeeId: 'CTI-EMP-004',
-    fullName: 'Ananya Roy',
-    personalEmailAddress: 'ananya@codethrive.com',
-    personalPhoneNumber: '9876543213',
-    department: 'HR',
-    designation: 'HR Operations Manager',
-    employmentType: 'Full-Time',
-    status: 'Active',
-    dateOfJoining: '2025-02-01',
-    workLocation: 'Office',
-    salaryAmount: 72000,
-    user: { role: 'hr', status: 'active' }
-  }
-];
+const DEFAULT_DEMO_EMPLOYEES = [];
 
 const Employees = () => {
   const { user } = useAuth();
@@ -115,12 +54,36 @@ const Employees = () => {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/employees');
-      if (res.data.success && Array.isArray(res.data.data)) {
-        setEmployees(res.data.data);
-      } else {
-        setEmployees([]);
-      }
+      const res = await api.get('/employees').catch(() => ({ data: { success: false, data: [] } }));
+      let dbEmps = res.data && res.data.success && Array.isArray(res.data.data) ? res.data.data : [];
+
+      // Combine with local storage registered users if any exist
+      const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
+      const combined = [...dbEmps];
+      localUsers.forEach(lu => {
+        const exists = combined.some(e => e.personalEmailAddress === lu.email || e.employeeId === lu.employeeId);
+        if (!exists) {
+          combined.push({
+            _id: lu._id || 'local_' + Date.now(),
+            employeeId: lu.employeeId || 'CTI-EMP-NEW',
+            fullName: lu.fullName || lu.name,
+            personalEmailAddress: lu.email,
+            personalPhoneNumber: lu.phoneNumber || '9876543210',
+            department: lu.department || 'Engineering',
+            designation: lu.role || 'Software Engineer',
+            employmentType: 'Full-Time',
+            status: lu.status || 'Active',
+            dateOfJoining: new Date().toISOString().split('T')[0],
+            workLocation: 'Office',
+            salaryAmount: 65000,
+            user: { role: lu.role || 'employee', status: 'active' }
+          });
+        }
+      });
+
+      // Filter out admin user from employee directory so only real staff show up
+      const filtered = combined.filter(e => e.personalEmailAddress !== 'admin@codethrive.com' && e.employeeId !== 'CTI-ADM-001');
+      setEmployees(filtered);
     } catch (err) {
       console.warn('API error fetching employees:', err);
       setEmployees([]);

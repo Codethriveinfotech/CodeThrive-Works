@@ -516,15 +516,15 @@ const EmployeeDetail = () => {
       
       {/* Top Breadcrumb & Quick Switcher & PDF Export */}
       <div className="detail-top-nav">
-        <button className="btn btn-outline" onClick={() => navigate('/admin/employees')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <ArrowLeft size={16} /> Back to Employees Directory
+        <button className="btn btn-outline" onClick={() => navigate('/admin/employees')} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+          <ArrowLeft size={16} /> Back to Directory
         </button>
 
-        {/* Quick Controls: Employee Switcher, Month Selector, PDF Export */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+        {/* Quick Controls Group */}
+        <div className="quick-controls-group">
           
           {/* Quick Employee Switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>Employee:</span>
             <select 
               className="emp-switch-select"
@@ -543,8 +543,8 @@ const EmployeeDetail = () => {
           </div>
 
           {/* Month Audit Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
               <Filter size={13} /> Month:
             </span>
             <select 
@@ -561,12 +561,11 @@ const EmployeeDetail = () => {
 
           {/* Export PDF Download Button */}
           <button 
-            className="btn btn-primary" 
+            className="btn-export-dossier" 
             onClick={handleDownloadMonthlyAuditPDF}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none' }}
             title="Download Monthly Employee Audit Dossier PDF"
           >
-            <Download size={15} /> Download Audit Dossier (PDF)
+            <Download size={15} /> Export Audit (PDF)
           </button>
 
         </div>
@@ -578,41 +577,24 @@ const EmployeeDetail = () => {
           <div className="hero-avatar">
             {employee.fullName ? employee.fullName.charAt(0).toUpperCase() : 'E'}
           </div>
-          <div className="hero-info" style={{ flexGrow: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-              <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>{employee.fullName}</h1>
+          <div className="hero-info">
+            <div className="hero-title-row">
+              <h1 className="hero-name">{employee.fullName}</h1>
               <StatusBadge status={employee.status} />
               <span className={`role-badge ${employee.user?.role || 'employee'}`}>
                 {employee.user?.role || 'employee'}
               </span>
             </div>
-            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '0.4rem' }}>
-              <span><Mail size={13} style={{ marginRight: '0.3rem' }} /> {employee.personalEmailAddress}</span>
-              <span><Briefcase size={13} style={{ marginRight: '0.3rem' }} /> {employee.department} &bull; {employee.designation}</span>
-              <span><Calendar size={13} style={{ marginRight: '0.3rem' }} /> ID: <strong style={{ color: 'var(--primary-light)' }}>{employee.employeeId}</strong></span>
+            <div className="hero-meta-tags">
+              <span className="hero-meta-item"><Mail size={13} /> {employee.personalEmailAddress}</span>
+              <span className="hero-meta-item"><Briefcase size={13} /> {employee.department} &bull; {employee.designation}</span>
+              <span className="hero-meta-item"><Calendar size={13} /> ID: <strong style={{ color: 'var(--primary-light)' }}>{employee.employeeId}</strong></span>
             </div>
-          </div>
-
-          {/* Continuous Retention Notice */}
-          <div style={{ 
-            background: 'rgba(16, 185, 129, 0.1)', 
-            border: '1px solid rgba(16, 185, 129, 0.25)', 
-            borderRadius: '12px', 
-            padding: '0.6rem 1rem', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.6rem',
-            fontSize: '0.78rem',
-            color: '#34d399',
-            maxWidth: '300px'
-          }}>
-            <ShieldCheck size={18} style={{ flexShrink: 0 }} />
-            <span><strong>Continuous Data Retention:</strong> All monthly records for tasks, reports, leave & payslips are permanently saved.</span>
           </div>
         </div>
       </div>
 
-      {/* Explicit Dedicated Section Tabs for Selected Employee */}
+      {/* Dedicated Section Tabs for Selected Employee */}
       <div className="detail-tabs-nav">
         <button 
           className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
@@ -625,28 +607,28 @@ const EmployeeDetail = () => {
           className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
           onClick={() => setActiveTab('tasks')}
         >
-          <Briefcase size={16} /> Tasks ({filteredTasks.length})
+          <Briefcase size={16} /> Tasks <span className="tab-count-badge">{filteredTasks.length}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
           onClick={() => setActiveTab('reports')}
         >
-          <FileText size={16} /> Daily Reports ({filteredReports.length})
+          <FileText size={16} /> Daily Reports <span className="tab-count-badge">{filteredReports.length}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'leaves' ? 'active' : ''}`}
           onClick={() => setActiveTab('leaves')}
         >
-          <Calendar size={16} /> Leave Applications ({filteredLeaves.length})
+          <Calendar size={16} /> Leave Applications <span className="tab-count-badge">{filteredLeaves.length}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'documents' ? 'active' : ''}`}
           onClick={() => setActiveTab('documents')}
         >
-          <FileCheck size={16} /> Documents ({employee.sentByEmployee?.uploadedDocs?.length || 0})
+          <FileCheck size={16} /> Documents <span className="tab-count-badge">{employee.sentByEmployee?.uploadedDocs?.length || 0}</span>
         </button>
 
         <button 
@@ -660,7 +642,7 @@ const EmployeeDetail = () => {
           className={`tab-btn ${activeTab === 'management' ? 'active' : ''}`}
           onClick={() => setActiveTab('management')}
         >
-          <KeyRound size={16} /> Payroll & Access Roles ({filteredPayslips.length})
+          <KeyRound size={16} /> Payroll & Access <span className="tab-count-badge">{filteredPayslips.length}</span>
         </button>
       </div>
 
@@ -759,7 +741,7 @@ const EmployeeDetail = () => {
                 </div>
                 <div className="form-field btn-container">
                   <button type="submit" disabled={isTaskSubmitting} className="assign-btn">
-                    {isTaskSubmitting ? 'Assigning...' : `Assign to ${employee.fullName}`}
+                    {isTaskSubmitting ? 'Assigning...' : 'Assign Task'}
                   </button>
                 </div>
               </form>

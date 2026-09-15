@@ -75,13 +75,20 @@ const Dashboard = () => {
           api.get('/tasks/my-tasks')
         ]);
         
-        const dashData = dashRes.data?.data || {};
-        setAttendance(dashData.attendance);
-        setActiveSession(dashData.activeSession);
+        const dashData = dashRes?.data?.data || dashRes?.data || {};
+        if (dashData.attendance) {
+          setAttendance(dashData.attendance);
+        }
+        if (dashData.activeSession !== undefined) {
+          setActiveSession(dashData.activeSession);
+        }
         
-        const tasks = tasksRes.data?.data || [];
+        const tasksPayload = tasksRes?.data?.data || tasksRes?.data || [];
+        const tasks = Array.isArray(tasksPayload) ? tasksPayload : [];
         setTasksData(tasks);
-        setNotifications(notifRes.data?.data || []);
+        
+        const notifPayload = notifRes?.data?.data || notifRes?.data || [];
+        setNotifications(Array.isArray(notifPayload) ? notifPayload : []);
         
         // Calculate Task Stats
         let pending = 0;
@@ -204,13 +211,16 @@ const Dashboard = () => {
     setIsActionLoading(true);
     try {
       const res = await api.post('/attendance/start-work');
-      await new Promise(resolve => setTimeout(resolve, 600));
-      if (res.data.success) {
-        setAttendance(res.data.data.attendance);
-        setActiveSession(res.data.data.activeSession);
+      const attData = res?.data?.data?.attendance || res?.data?.attendance || res?.attendance;
+      const sessData = res?.data?.data?.activeSession || res?.data?.activeSession || res?.activeSession;
+      if (attData) {
+        setAttendance(attData);
+        setActiveSession(sessData || { startTime: new Date().toISOString(), sessionType: 'Work' });
+      } else {
+        throw new Error('No attendance object in response');
       }
     } catch (error) {
-      // Local fallback check-in
+      console.warn('Backend check-in API failed, using fallback:', error);
       const now = new Date();
       const newAttendance = { 
         status: 'Working', 
@@ -230,13 +240,16 @@ const Dashboard = () => {
     setIsActionLoading(true);
     try {
       const res = await api.post('/attendance/start-break');
-      await new Promise(resolve => setTimeout(resolve, 600));
-      if (res.data.success) {
-        setAttendance(res.data.data.attendance);
-        setActiveSession(res.data.data.activeSession);
+      const attData = res?.data?.data?.attendance || res?.data?.attendance || res?.attendance;
+      const sessData = res?.data?.data?.activeSession || res?.data?.activeSession || res?.activeSession;
+      if (attData) {
+        setAttendance(attData);
+        setActiveSession(sessData || { startTime: new Date().toISOString(), sessionType: 'Break' });
+      } else {
+        throw new Error('No attendance object in response');
       }
     } catch (error) {
-      // Local fallback start break
+      console.warn('Backend start-break API failed, using fallback:', error);
       const now = new Date();
       setAttendance(prev => ({
         ...prev,
@@ -253,13 +266,16 @@ const Dashboard = () => {
     setIsActionLoading(true);
     try {
       const res = await api.post('/attendance/start-lunch');
-      await new Promise(resolve => setTimeout(resolve, 600));
-      if (res.data.success) {
-        setAttendance(res.data.data.attendance);
-        setActiveSession(res.data.data.activeSession);
+      const attData = res?.data?.data?.attendance || res?.data?.attendance || res?.attendance;
+      const sessData = res?.data?.data?.activeSession || res?.data?.activeSession || res?.activeSession;
+      if (attData) {
+        setAttendance(attData);
+        setActiveSession(sessData || { startTime: new Date().toISOString(), sessionType: 'Lunch' });
+      } else {
+        throw new Error('No attendance object in response');
       }
     } catch (error) {
-      // Local fallback start lunch
+      console.warn('Backend start-lunch API failed, using fallback:', error);
       const now = new Date();
       setAttendance(prev => ({
         ...prev,
@@ -276,13 +292,16 @@ const Dashboard = () => {
     setIsActionLoading(true);
     try {
       const res = await api.post('/attendance/resume-work');
-      await new Promise(resolve => setTimeout(resolve, 600));
-      if (res.data.success) {
-        setAttendance(res.data.data.attendance);
-        setActiveSession(res.data.data.activeSession);
+      const attData = res?.data?.data?.attendance || res?.data?.attendance || res?.attendance;
+      const sessData = res?.data?.data?.activeSession || res?.data?.activeSession || res?.activeSession;
+      if (attData) {
+        setAttendance(attData);
+        setActiveSession(sessData || { startTime: new Date().toISOString(), sessionType: 'Work' });
+      } else {
+        throw new Error('No attendance object in response');
       }
     } catch (error) {
-      // Local fallback resume work
+      console.warn('Backend resume-work API failed, using fallback:', error);
       const now = new Date();
       const currentType = activeSession?.sessionType;
       setAttendance(prev => ({
@@ -301,13 +320,15 @@ const Dashboard = () => {
     setIsActionLoading(true);
     try {
       const res = await api.post('/attendance/checkout');
-      await new Promise(resolve => setTimeout(resolve, 600));
-      if (res.data.success) {
-        setAttendance(res.data.data.attendance);
-        setActiveSession(res.data.data.activeSession);
+      const attData = res?.data?.data?.attendance || res?.data?.attendance || res?.attendance;
+      if (attData) {
+        setAttendance(attData);
+        setActiveSession(null);
+      } else {
+        throw new Error('No attendance object in response');
       }
     } catch (error) {
-      // Local fallback checkout
+      console.warn('Backend checkout API failed, using fallback:', error);
       const now = new Date();
       setActiveSession(null);
       setAttendance(prev => ({

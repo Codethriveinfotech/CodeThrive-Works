@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, Users, CheckSquare, 
-  FileText, Banknote, FolderOpen, UserCircle, 
+  FileText, Banknote, FolderOpen, UserCircle, Building2,
   CalendarOff, LogOut, ChevronLeft, ChevronRight 
 } from 'lucide-react';
 import './Sidebar.css';
@@ -46,7 +46,7 @@ const AdminSidebar = () => {
     { name: 'Leave', path: '/admin/leave', icon: <CalendarOff size={20} /> },
     { name: 'Payroll', path: '/admin/payroll', icon: <Banknote size={20} /> },
     { name: 'Documents', path: '/admin/documents', icon: <FolderOpen size={20} /> },
-    { name: 'Profile', path: '/admin/profile', icon: <UserCircle size={20} /> }
+    { name: 'Company Profile', path: '/admin/profile', icon: <Building2 size={20} /> }
   ];
 
   const handleLogout = () => {

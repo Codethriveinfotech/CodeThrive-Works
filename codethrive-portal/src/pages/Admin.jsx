@@ -48,16 +48,61 @@ const Admin = () => {
     try {
       setLoading(true);
       const [res, reportsRes] = await Promise.all([
-        api.get('/dashboard/admin-stats'),
+        api.get('/dashboard/admin-stats').catch(() => ({ data: { success: false } })),
         api.get('/daily-reports').catch(() => ({ data: { success: false, data: [] } }))
       ]);
 
-      if (res.data.success) {
-        setStats(res.data.stats || {
-          totalEmployees: 0, working: 0, onBreak: 0, onLunch: 0, checkedOut: 0, absent: 0, pendingRegistrations: 0, pendingTaskReviews: 0
-        });
-        setLiveMonitoring(res.data.liveMonitoring || []);
+      let liveList = [];
+      if (res.data && res.data.success) {
+        liveList = res.data.liveMonitoring || [];
       }
+
+      // Check local storage registered users
+      const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
+      localUsers.forEach(lu => {
+        const exists = liveList.some(e => e.email === lu.email || e.id === lu.employeeId);
+        if (!exists && lu.email !== 'admin@codethrive.com') {
+          liveList.push({
+            _id: lu._id || 'local_' + Date.now(),
+            id: lu.employeeId || 'CTI-EMP-NEW',
+            name: lu.fullName || lu.name,
+            email: lu.email,
+            dept: lu.department || 'Engineering',
+            designation: lu.role || 'Software Engineer',
+            joiningDate: new Date().toLocaleDateString(),
+            status: 'Not Checked In',
+            firstLoginTime: null,
+            lastLogoutTime: null,
+            workSec: 0,
+            breakSec: 0,
+            lunchSec: 0,
+            duration: '00h 00m',
+            assignedTasksCount: 0,
+            tasks: []
+          });
+        }
+      });
+
+      // Filter out system administrator from monitoring
+      const filteredLive = liveList.filter(e => e.email !== 'admin@codethrive.com' && e.id !== 'CTI-ADM-001');
+      setLiveMonitoring(filteredLive);
+
+      const working = filteredLive.filter(e => e.status === 'Working').length;
+      const onBreak = filteredLive.filter(e => e.status === 'On Break').length;
+      const onLunch = filteredLive.filter(e => e.status === 'On Lunch').length;
+      const checkedOut = filteredLive.filter(e => e.status === 'Checked Out').length;
+      const absent = filteredLive.length - working - onBreak - onLunch - checkedOut;
+
+      setStats({
+        totalEmployees: filteredLive.length,
+        working,
+        onBreak,
+        onLunch,
+        checkedOut,
+        absent: Math.max(0, absent),
+        pendingRegistrations: 0,
+        pendingTaskReviews: 0
+      });
 
       if (reportsRes.data && reportsRes.data.success && Array.isArray(reportsRes.data.data)) {
         setRecentReports(reportsRes.data.data.slice(0, 5));

@@ -12,12 +12,7 @@ import './Admin.css';
 
 const DEFAULT_DEMO_TASKS = [];
 
-const DEFAULT_DEMO_EMPLOYEES = [
-  { _id: 'emp_001', fullName: 'Mahadevan', employeeId: 'CTI-EMP-001' },
-  { _id: 'emp_002', fullName: 'Priya Sharma', employeeId: 'CTI-EMP-002' },
-  { _id: 'emp_003', fullName: 'Rahul Verma', employeeId: 'CTI-EMP-003' },
-  { _id: 'emp_004', fullName: 'Ananya Roy', employeeId: 'CTI-EMP-004' }
-];
+const DEFAULT_DEMO_EMPLOYEES = [];
 
 const AdminTasks = () => {
   const [tasks, setTasks] = useState(DEFAULT_DEMO_TASKS);

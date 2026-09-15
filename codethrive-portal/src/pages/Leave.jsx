@@ -49,9 +49,16 @@ const Leave = () => {
         console.warn('Backend API offline or empty, using fallback leave data', err);
       }
 
-      // Sync with cti_shared_leaves in localStorage
+      // Sync with cti_shared_leaves in localStorage (cleaning legacy demo items)
       const rawShared = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
-      const localShared = rawShared.filter(l => l && !l._id?.toString().startsWith('l-shared-'));
+      const localShared = rawShared.filter(l => {
+        if (!l || !l._id) return false;
+        const idStr = l._id.toString();
+        if (idStr.startsWith('l-shared-') || idStr.startsWith('l-demo-') || idStr.startsWith('l-mock-')) return false;
+        if (l.reason?.toLowerCase().includes('personal family commitments')) return false;
+        if (l.startDate === '9/10/2026' || l.startDate === '2026-09-10') return false;
+        return true;
+      });
       localStorage.setItem('cti_shared_leaves', JSON.stringify(localShared));
 
       const myEmpId = user?.employeeId;
@@ -173,19 +180,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
     }
   };
 
-  const safeRequests = Array.isArray(data.requests) && data.requests.length > 0 
-    ? data.requests 
-    : [
-        {
-          _id: 'l-demo-1',
-          leaveType: 'Casual',
-          startDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString().split('T')[0],
-          endDate: new Date(new Date().setDate(new Date().getDate() - 3)).toISOString().split('T')[0],
-          reason: 'Personal family commitments and home maintenance',
-          status: 'Approved',
-          createdAt: new Date(new Date().setDate(new Date().getDate() - 6)).toISOString()
-        }
-      ];
+  const safeRequests = Array.isArray(data.requests) ? data.requests : [];
 
   const filteredRequests = safeRequests.filter(req => {
     const matchesTab = activeTab === 'All' || req.status === activeTab || req.leaveType === activeTab;
