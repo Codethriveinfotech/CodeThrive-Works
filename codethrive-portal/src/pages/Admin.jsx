@@ -264,7 +264,7 @@ const Admin = () => {
         </div>
       </div>
 
-      {/* 2. EXECUTIVE LIVE MONITORING METRIC CARDS */}
+      {/* 2. EXECUTIVE LIVE MONITORING METRIC CARDS - MEDIUM COMPACT SIZE */}
       <div className="metrics-grid">
         {/* Card 1: Total Registered Staff */}
         <div 
@@ -274,7 +274,7 @@ const Admin = () => {
           <div className="stat-card-glow"></div>
           <div className="stat-card-top">
             <div className="stat-icon-wrapper icon-indigo">
-              <Users size={22} />
+              <Users size={18} />
             </div>
             <span className="stat-tag tag-indigo">REGISTERED</span>
           </div>
@@ -283,8 +283,8 @@ const Admin = () => {
             <p className="stat-title">Total Staff Members</p>
           </div>
           <div className="stat-card-footer">
-            <span className="stat-subtext">Click to view all employees</span>
-            {activeFilter === 'ALL' && <span className="stat-active-pill pill-indigo">Active Filter</span>}
+            <span className="stat-subtext">Click to view all</span>
+            {activeFilter === 'ALL' && <span className="stat-active-pill pill-indigo">Active</span>}
           </div>
         </div>
         
@@ -296,7 +296,7 @@ const Admin = () => {
           <div className="stat-card-glow"></div>
           <div className="stat-card-top">
             <div className="stat-icon-wrapper icon-emerald">
-              <UserCheck size={22} />
+              <UserCheck size={18} />
             </div>
             <span className="stat-tag tag-emerald">
               <span className="beacon-dot"></span> WORKING NOW
@@ -308,7 +308,7 @@ const Admin = () => {
           </div>
           <div className="stat-card-footer">
             <span className="stat-subtext">Logged in & working</span>
-            {activeFilter === 'Working' && <span className="stat-active-pill pill-emerald">Active Filter</span>}
+            {activeFilter === 'Working' && <span className="stat-active-pill pill-emerald">Active</span>}
           </div>
         </div>
         
@@ -320,7 +320,7 @@ const Admin = () => {
           <div className="stat-card-glow"></div>
           <div className="stat-card-top">
             <div className="stat-icon-wrapper icon-amber">
-              <Coffee size={22} />
+              <Coffee size={18} />
             </div>
             <span className="stat-tag tag-amber">ON BREAK</span>
           </div>
@@ -330,7 +330,7 @@ const Admin = () => {
           </div>
           <div className="stat-card-footer">
             <span className="stat-subtext">Tea or lunch break</span>
-            {activeFilter === 'On Break' && <span className="stat-active-pill pill-amber">Active Filter</span>}
+            {activeFilter === 'On Break' && <span className="stat-active-pill pill-amber">Active</span>}
           </div>
         </div>
 
@@ -342,7 +342,7 @@ const Admin = () => {
           <div className="stat-card-glow"></div>
           <div className="stat-card-top">
             <div className="stat-icon-wrapper icon-cyan">
-              <CheckCircle2 size={22} />
+              <CheckCircle2 size={18} />
             </div>
             <span className="stat-tag tag-cyan">COMPLETED</span>
           </div>
@@ -351,8 +351,8 @@ const Admin = () => {
             <p className="stat-title">Checked Out Today</p>
           </div>
           <div className="stat-card-footer">
-            <span className="stat-subtext">Shift ended successfully</span>
-            {activeFilter === 'Checked Out' && <span className="stat-active-pill pill-cyan">Active Filter</span>}
+            <span className="stat-subtext">Shift ended</span>
+            {activeFilter === 'Checked Out' && <span className="stat-active-pill pill-cyan">Active</span>}
           </div>
         </div>
       </div>
