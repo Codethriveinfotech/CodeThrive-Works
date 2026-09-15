@@ -177,58 +177,58 @@ const Admin = () => {
 
   const columns = [
     { 
-      header: 'Employee Details', 
+      header: 'EMPLOYEE DETAILS', 
       accessor: 'name',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
-          <div className="emp-avatar-big" style={{ width: '40px', height: '40px', fontSize: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: '220px', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
+          <div className="emp-avatar-big" style={{ width: '38px', height: '38px', fontSize: '0.95rem', flexShrink: 0 }}>
             {row.name ? row.name.charAt(0).toUpperCase() : 'E'}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.92rem' }}>{row.name}</span>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{row.email} | <strong style={{ color: '#818cf8' }}>{row.id}</strong></span>
+            <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>{row.name}</span>
+            <span style={{ fontSize: '0.78rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>{row.email} | <strong style={{ color: '#818cf8' }}>{row.id}</strong></span>
           </div>
         </div>
       )
     },
     { 
-      header: 'Department / Designation', 
+      header: 'DEPARTMENT / DESIGNATION', 
       render: (row) => (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 600 }}>{row.dept}</span>
-          <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{row.designation}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: '180px' }}>
+          <span style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 600, whiteSpace: 'nowrap' }}>{row.dept}</span>
+          <span style={{ fontSize: '0.78rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>{row.designation}</span>
         </div>
       )
     },
     { 
-      header: 'Status', 
+      header: 'STATUS', 
       accessor: 'status',
       render: (row) => <StatusBadge status={row.status} />
     },
     { 
-      header: 'Check In', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#34d399' }}>{formatTimeOnly(row.firstLoginTime)}</span>
+      header: 'CHECK IN', 
+      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: '#34d399', whiteSpace: 'nowrap', fontSize: '0.88rem' }}>{formatTimeOnly(row.firstLoginTime)}</span>
     },
     { 
-      header: 'Check Out', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: row.lastLogoutTime ? '#60a5fa' : '#64748b' }}>{formatTimeOnly(row.lastLogoutTime)}</span>
+      header: 'CHECK OUT', 
+      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: row.lastLogoutTime ? '#60a5fa' : '#64748b', whiteSpace: 'nowrap', fontSize: '0.88rem' }}>{formatTimeOnly(row.lastLogoutTime)}</span>
     },
     { 
-      header: 'Work / Break / Lunch', 
+      header: 'WORK / BREAK / LUNCH', 
       render: (row) => (
-        <div style={{ display: 'flex', gap: '0.4rem', fontSize: '0.78rem', fontFamily: 'monospace' }}>
-          <span style={{ color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}>W: {formatDurationStr(row.workSec)}</span>
-          <span style={{ color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}>B: {formatDurationStr(row.breakSec)}</span>
+        <div style={{ display: 'flex', gap: '0.4rem', fontSize: '0.78rem', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+          <span style={{ color: '#818cf8', background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)', padding: '2px 7px', borderRadius: '6px', fontWeight: 700 }}>W: {formatDurationStr(row.workSec)}</span>
+          <span style={{ color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '2px 7px', borderRadius: '6px', fontWeight: 700 }}>B: {formatDurationStr(row.breakSec)}</span>
         </div>
       )
     },
     {
-      header: '360° Actions',
+      header: '360° ACTIONS',
       render: (row) => (
         <button 
           onClick={() => handleOpenEmployeePage(row._id)} 
           className="btn btn-primary" 
-          style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+          style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap', borderRadius: '8px' }}
         >
           <Eye size={14} /> Open 360° Workspace
         </button>
@@ -319,7 +319,7 @@ const Admin = () => {
           </div>
           <div className="metric-data">
             <div className="metric-header-row">
-              <span className="metric-title">On Break / Lunch</span>
+              <span className="metric-title">On Break</span>
               <span className="metric-pill amber">☕ Resting</span>
             </div>
             <div className="metric-val-row">
