@@ -266,55 +266,87 @@ const Admin = () => {
 
       {/* 2. ULTRA-SLEEK METRIC CARDS WITH ANIMATED GLOW & HOVER LIFT */}
       <div className="metrics-grid">
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => { setSelectedEmpId('ALL'); setActiveFilter('ALL'); }}>
+        <div 
+          className={`metric-card ${activeFilter === 'ALL' ? 'active-metric-card' : ''}`} 
+          onClick={() => { setSelectedEmpId('ALL'); setActiveFilter('ALL'); }}
+        >
           <div className="metric-icon bg-primary-light">
             <Users size={26} color="#818cf8" />
           </div>
           <div className="metric-data" style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="metric-card-header">
               <p>Total Registered Staff</p>
-              <span style={{ fontSize: '0.72rem', color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>+100% Active</span>
+              <span className="metric-badge badge-primary">
+                Master Directory
+              </span>
             </div>
-            <h3>{stats.totalEmployees}</h3>
+            <div className="metric-card-value-row">
+              <h3>{stats.totalEmployees}</h3>
+              {activeFilter === 'ALL' && <span className="active-indicator-pill">Active View</span>}
+            </div>
           </div>
         </div>
         
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => { setActiveFilter('Working'); }}>
+        <div 
+          className={`metric-card ${activeFilter === 'Working' ? 'active-metric-card' : ''}`} 
+          onClick={() => { setActiveFilter('Working'); }}
+        >
           <div className="metric-icon bg-success-light">
             <UserCheck size={26} color="#34d399" />
           </div>
           <div className="metric-data" style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="metric-card-header">
               <p>Working Right Now</p>
-              <span style={{ fontSize: '0.72rem', color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>🟢 50% Active</span>
+              <span className="metric-badge badge-success">
+                🟢 {stats.working > 0 ? `${stats.working} On Duty` : 'Active'}
+              </span>
             </div>
-            <h3>{stats.working}</h3>
+            <div className="metric-card-value-row">
+              <h3>{stats.working}</h3>
+              {activeFilter === 'Working' && <span className="active-indicator-pill">Active View</span>}
+            </div>
           </div>
         </div>
         
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => { setActiveFilter('On Break'); }}>
+        <div 
+          className={`metric-card ${activeFilter === 'On Break' ? 'active-metric-card' : ''}`} 
+          onClick={() => { setActiveFilter('On Break'); }}
+        >
           <div className="metric-icon bg-warning-light">
             <Coffee size={26} color="#fbbf24" />
           </div>
           <div className="metric-data" style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="metric-card-header">
               <p>On Break / Lunch</p>
-              <span style={{ fontSize: '0.72rem', color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>☕ 25% Break</span>
+              <span className="metric-badge badge-warning">
+                ☕ {(stats.onBreak || 0) + (stats.onLunch || 0) > 0 ? 'In Break' : 'Resting'}
+              </span>
             </div>
-            <h3>{(stats.onBreak || 0) + (stats.onLunch || 0)}</h3>
+            <div className="metric-card-value-row">
+              <h3>{(stats.onBreak || 0) + (stats.onLunch || 0)}</h3>
+              {activeFilter === 'On Break' && <span className="active-indicator-pill">Active View</span>}
+            </div>
           </div>
         </div>
 
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => { setActiveFilter('Checked Out'); }}>
+        <div 
+          className={`metric-card ${activeFilter === 'Checked Out' ? 'active-metric-card' : ''}`} 
+          onClick={() => { setActiveFilter('Checked Out'); }}
+        >
           <div className="metric-icon bg-info-light">
             <CheckCircle2 size={26} color="#38bdf8" />
           </div>
           <div className="metric-data" style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="metric-card-header">
               <p>Checked Out Today</p>
-              <span style={{ fontSize: '0.72rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.15)', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>⏹️ Shift Ended</span>
+              <span className="metric-badge badge-info">
+                ⏹️ Shift Ended
+              </span>
             </div>
-            <h3>{stats.checkedOut || 0}</h3>
+            <div className="metric-card-value-row">
+              <h3>{stats.checkedOut || 0}</h3>
+              {activeFilter === 'Checked Out' && <span className="active-indicator-pill">Active View</span>}
+            </div>
           </div>
         </div>
       </div>

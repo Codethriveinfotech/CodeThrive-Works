@@ -160,6 +160,9 @@
 /* --------------------------------------------------------------------------
    METRIC STATS CARDS WITH ANIMATED BORDERS & LIFT
    -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+   METRIC STATS CARDS WITH ANIMATED BORDERS & LIFT
+   -------------------------------------------------------------------------- */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -168,15 +171,18 @@
 
 .metric-card {
   position: relative;
-  background: rgba(21, 32, 51, 0.7);
+  background: linear-gradient(135deg, rgba(21, 32, 51, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 1.5rem;
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  cursor: pointer;
+  user-select: none;
 }
 
 .metric-card::before {
@@ -192,13 +198,23 @@
 }
 
 .metric-card:hover {
-  transform: translateY(-6px) scale(1.02);
-  background: rgba(30, 41, 59, 0.95);
+  transform: translateY(-5px) scale(1.015);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
   border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 25px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45), 0 0 20px rgba(99, 102, 241, 0.2);
 }
 
 .metric-card:hover::before {
+  opacity: 1;
+}
+
+.metric-card.active-metric-card {
+  border-color: rgba(99, 102, 241, 0.7);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+  box-shadow: 0 0 25px rgba(99, 102, 241, 0.3), inset 0 0 15px rgba(99, 102, 241, 0.12);
+}
+
+.metric-card.active-metric-card::before {
   opacity: 1;
 }
 
@@ -214,27 +230,66 @@
 }
 
 .metric-card:hover .metric-icon {
-  transform: scale(1.1) rotate(4deg);
+  transform: scale(1.08) rotate(3deg);
 }
 
-.bg-primary-light { background: rgba(79, 70, 229, 0.15); border: 1px solid rgba(79, 70, 229, 0.3); }
-.bg-success-light { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
-.bg-warning-light { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); }
-.bg-info-light { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); }
+.bg-primary-light { background: rgba(79, 70, 229, 0.18); border: 1px solid rgba(79, 70, 229, 0.35); box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2); }
+.bg-success-light { background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.35); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); }
+.bg-warning-light { background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.35); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2); }
+.bg-info-light { background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.35); box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2); }
 
-.metric-data p {
+.metric-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.metric-card-header p {
   color: #94a3b8;
   font-size: 0.85rem;
-  margin: 0 0 0.25rem 0;
-  font-weight: 500;
+  margin: 0;
+  font-weight: 600;
 }
 
-.metric-data h3 {
-  font-size: 1.9rem;
+.metric-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.badge-primary { color: #818cf8; background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(99, 102, 241, 0.3); }
+.badge-success { color: #34d399; background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-warning { color: #fbbf24; background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-info { color: #38bdf8; background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.3); }
+
+.metric-card-value-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 0.4rem;
+}
+
+.metric-card-value-row h3 {
+  font-size: 2rem;
   color: #ffffff;
   font-weight: 800;
   margin: 0;
   line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.active-indicator-pill {
+  font-size: 0.7rem;
+  color: var(--primary-light);
+  background: rgba(99, 102, 241, 0.25);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
 }
 
 /* --------------------------------------------------------------------------
