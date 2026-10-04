@@ -252,33 +252,87 @@ const AdminDocuments = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-        <motion.div whileHover={{ y: -4 }} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Total Vault Files</span>
-            <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' }}><FileText size={18} /></div>
+      {/* KPI Cards (Attractive Medium Compact Grid) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.9rem' }}>
+        {/* Card 1: Total Vault Files */}
+        <motion.div 
+          whileHover={{ y: -3, scale: 1.01 }} 
+          style={{ 
+            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(15, 23, 42, 0.75))', 
+            border: '1px solid rgba(99, 102, 241, 0.3)', 
+            padding: '0.9rem 1.15rem', 
+            borderRadius: '14px', 
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 4px 20px rgba(99, 102, 241, 0.15)',
+            display: 'flex',
+            flexDirection: 'column',
+            justify: 'space-between'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <span style={{ color: '#a5b4fc', fontSize: '0.74rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Vault Files</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'rgba(99, 102, 241, 0.25)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px rgba(99, 102, 241, 0.3)' }}>
+              <FileText size={16} />
+            </div>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#fff' }}>{stats.total}</div>
-          <div style={{ fontSize: '0.8rem', color: '#a5b4fc', marginTop: '0.3rem' }}>All active records</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', marginTop: '0.2rem' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>{stats.total}</div>
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>All active records</span>
+          </div>
         </motion.div>
 
-        <motion.div whileHover={{ y: -4 }} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Public Company Policies</span>
-            <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}><Globe size={18} /></div>
+        {/* Card 2: Public Company Policies */}
+        <motion.div 
+          whileHover={{ y: -3, scale: 1.01 }} 
+          style={{ 
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.75))', 
+            border: '1px solid rgba(16, 185, 129, 0.3)', 
+            padding: '0.9rem 1.15rem', 
+            borderRadius: '14px', 
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 4px 20px rgba(16, 185, 129, 0.15)',
+            display: 'flex',
+            flexDirection: 'column',
+            justify: 'space-between'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <span style={{ color: '#6ee7b7', fontSize: '0.74rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Public Company Policies</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'rgba(16, 185, 129, 0.25)', color: '#34d399', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px rgba(16, 185, 129, 0.3)' }}>
+              <Globe size={16} />
+            </div>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#34d399' }}>{stats.publicCount}</div>
-          <div style={{ fontSize: '0.8rem', color: '#a7f3d0', marginTop: '0.3rem' }}>Visible to all staff</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', marginTop: '0.2rem' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#34d399', lineHeight: 1 }}>{stats.publicCount}</div>
+            <span style={{ fontSize: '0.75rem', color: '#a7f3d0', fontWeight: 500 }}>Visible to all staff</span>
+          </div>
         </motion.div>
 
-        <motion.div whileHover={{ y: -4 }} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Private Staff Contracts</span>
-            <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}><Lock size={18} /></div>
+        {/* Card 3: Private Staff Contracts */}
+        <motion.div 
+          whileHover={{ y: -3, scale: 1.01 }} 
+          style={{ 
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.75))', 
+            border: '1px solid rgba(245, 158, 11, 0.3)', 
+            padding: '0.9rem 1.15rem', 
+            borderRadius: '14px', 
+            backdropFilter: 'blur(12px)',
+            boxShadow: '0 4px 20px rgba(245, 158, 11, 0.15)',
+            display: 'flex',
+            flexDirection: 'column',
+            justify: 'space-between'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+            <span style={{ color: '#fcd34d', fontSize: '0.74rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Private Staff Contracts</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'rgba(245, 158, 11, 0.25)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px rgba(245, 158, 11, 0.3)' }}>
+              <Lock size={16} />
+            </div>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#fbbf24' }}>{stats.privateCount}</div>
-          <div style={{ fontSize: '0.8rem', color: '#fde68a', marginTop: '0.3rem' }}>Confidential access only</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', marginTop: '0.2rem' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fbbf24', lineHeight: 1 }}>{stats.privateCount}</div>
+            <span style={{ fontSize: '0.75rem', color: '#fde68a', fontWeight: 500 }}>Confidential access only</span>
+          </div>
         </motion.div>
       </div>
 

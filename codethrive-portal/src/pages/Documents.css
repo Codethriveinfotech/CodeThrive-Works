@@ -97,25 +97,26 @@
    3. SUPPORTED DOCUMENT TYPES GUIDE (WHAT CAN BE ADDED)
    -------------------------------------------------------------------------- */
 .doc-guide-card {
-  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.75) 100%);
-  backdrop-filter: blur(16px);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 22px;
-  padding: 1.6rem 2rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  border-radius: 24px;
+  padding: 1.75rem 2rem;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.25);
 }
 
 .doc-guide-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.35rem;
 }
 
 .doc-guide-title {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.65rem;
   font-size: 1.15rem;
   font-weight: 700;
   color: #f8fafc;
@@ -123,6 +124,7 @@
 
 .doc-guide-title svg {
   color: #818cf8;
+  filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.5));
 }
 
 .doc-types-grid {
@@ -132,81 +134,130 @@
 }
 
 .doc-type-chip {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 1rem 0.9rem;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  padding: 1.25rem 1.2rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.6rem;
-  transition: all 0.25s ease;
+  gap: 0.85rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
+  overflow: hidden;
 }
 
-.doc-type-chip:hover {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(99, 102, 241, 0.4);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+.doc-type-chip.identity {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border-color: rgba(16, 185, 129, 0.25);
 }
 
-.doc-type-chip.active {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.12);
-  box-shadow: 0 0 16px rgba(99, 102, 241, 0.25);
+.doc-type-chip.identity:hover {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.18) 0%, rgba(15, 23, 42, 0.9) 100%);
+  box-shadow: 0 10px 24px -4px rgba(16, 185, 129, 0.25);
+  transform: translateY(-4px);
+}
+
+.doc-type-chip.education {
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.doc-type-chip.education:hover {
+  border-color: rgba(59, 130, 246, 0.55);
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.18) 0%, rgba(15, 23, 42, 0.9) 100%);
+  box-shadow: 0 10px 24px -4px rgba(59, 130, 246, 0.25);
+  transform: translateY(-4px);
+}
+
+.doc-type-chip.policy {
+  background: linear-gradient(145deg, rgba(6, 182, 212, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border-color: rgba(6, 182, 212, 0.25);
+}
+
+.doc-type-chip.policy:hover {
+  border-color: rgba(6, 182, 212, 0.55);
+  background: linear-gradient(145deg, rgba(6, 182, 212, 0.18) 0%, rgba(15, 23, 42, 0.9) 100%);
+  box-shadow: 0 10px 24px -4px rgba(6, 182, 212, 0.25);
+  transform: translateY(-4px);
+}
+
+.chip-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.chip-upload-btn {
+  font-size: 0.725rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.doc-type-chip:hover .chip-upload-btn {
+  background: #ffffff;
+  color: #0f172a;
+  transform: scale(1.05);
 }
 
 .type-chip-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.doc-type-chip:hover .type-chip-icon {
+  transform: scale(1.1);
 }
 
 .type-chip-icon.identity {
-  background: rgba(16, 185, 129, 0.15);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.12) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
   color: #34d399;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .type-chip-icon.education {
-  background: rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.12) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.35);
   color: #60a5fa;
-}
-
-.type-chip-icon.contract {
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-}
-
-.type-chip-icon.financial {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-}
-
-.type-chip-icon.health {
-  background: rgba(244, 63, 94, 0.15);
-  color: #fb7185;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
 .type-chip-icon.policy {
-  background: rgba(6, 182, 212, 0.15);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(8, 145, 178, 0.12) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.35);
   color: #22d3ee;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
 }
 
 .type-chip-name {
-  font-size: 0.875rem;
+  font-size: 0.975rem;
   font-weight: 700;
-  color: #f8fafc;
+  color: #ffffff;
+  display: block;
+  margin-bottom: 0.2rem;
 }
 
 .type-chip-examples {
-  font-size: 0.75rem;
+  font-size: 0.775rem;
   color: #94a3b8;
-  line-height: 1.35;
+  line-height: 1.4;
+  display: block;
 }
 
 /* --------------------------------------------------------------------------
@@ -258,12 +309,51 @@
 
 .doc-filter-pills {
   display: flex;
-  gap: 0.4rem;
-  background: rgba(15, 23, 42, 0.5);
-  padding: 0.3rem;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(15, 23, 42, 0.65);
+  padding: 0.35rem;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   flex-wrap: wrap;
+}
+
+.doc-filter-pills .tab-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  user-select: none;
+}
+
+.doc-filter-pills .tab-pill:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.doc-filter-pills .tab-pill.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.doc-filter-pills .tab-pill svg {
+  transition: transform 0.2s ease;
+}
+
+.doc-filter-pills .tab-pill:hover svg {
+  transform: scale(1.1);
 }
 
 /* --------------------------------------------------------------------------
@@ -271,30 +361,195 @@
    -------------------------------------------------------------------------- */
 .doc-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.35rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 380px));
+  gap: 1.5rem;
 }
 
 .document-item-card {
-  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
-  backdrop-filter: blur(16px);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 20px;
-  padding: 1.4rem;
+  padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 1.2rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
 .document-item-card:hover {
-  border-color: rgba(99, 102, 241, 0.35);
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px -6px rgba(0, 0, 0, 0.4);
+  border-color: rgba(99, 102, 241, 0.45);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.45), 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+.doc-card-header-compact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.4rem 0.5rem 1.4rem;
+}
+
+/* Image Thumbnail Container inside Document Cards */
+.doc-card-image-preview {
+  width: 100%;
+  height: 160px;
+  background: rgba(2, 6, 23, 0.7);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.doc-card-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.doc-card-image-preview:hover img {
+  transform: scale(1.08);
+}
+
+.doc-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: #ffffff;
+  font-size: 0.825rem;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.doc-card-image-preview:hover .doc-image-overlay {
+  opacity: 1;
+}
+
+.doc-img-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #818cf8;
+  font-size: 0.675rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+}
+
+/* Header bar for Non-Image Files */
+.doc-card-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.4rem 0.5rem 1.4rem;
+}
+
+.doc-type-pill-top {
+  font-size: 0.725rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+}
+
+.doc-card-body {
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.doc-actions-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.4rem 1.25rem 1.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.btn-card-action {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-primary-gradient {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary-gradient:hover {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-glass-danger-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-glass-danger-icon:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  transform: scale(1.05);
+}
+
+.btn-danger-glass {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.btn-danger-glass:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
 }
 
 .doc-item-header {

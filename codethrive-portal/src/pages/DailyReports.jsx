@@ -4,12 +4,15 @@ import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { 
   FileText, Send, CheckCircle2, Clock, 
   PlusCircle, Search, Calendar, Star, 
   Sparkles, RefreshCw, MessageSquare, 
-  ArrowUpRight, Grid, List, Award, Eye, ShieldCheck, Activity
+  ArrowUpRight, Grid, List, Award, Eye, ShieldCheck, Activity, Download
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import './DailyReports.css';
 
 const DEMO_REPORTS = [];
@@ -93,6 +96,98 @@ const DailyReports = () => {
     setFormData(initialFormState);
   };
 
+  const handleExportCSV = () => {
+    const listToExport = safeReports.length > 0 ? safeReports : reports;
+    if (listToExport.length === 0) {
+      alert('No daily reports available to export.');
+      return;
+    }
+
+    const headers = ['Date', 'Project Title', 'Tasks Worked On', 'Hours Logged', 'Status', 'Productivity', 'Work Summary', 'Issues Faced'];
+    const rows = listToExport.map(r => [
+      `"${r.date ? r.date.split('T')[0] : ''}"`,
+      `"${(r.projectTitle || '').replace(/"/g, '""')}"`,
+      `"${(r.tasksWorked || r.taskTitle || '').replace(/"/g, '""')}"`,
+      `"${r.hoursWorked || 0}"`,
+      `"${r.progressStatus || r.status || 'Submitted'}"`,
+      `"${r.productivityRating || 5}/5"`,
+      `"${(r.workSummary || '').replace(/"/g, '""')}"`,
+      `"${(r.issuesFaced || 'None').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Daily_Worklogs_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportPDF = () => {
+    const listToExport = safeReports.length > 0 ? safeReports : reports;
+    if (listToExport.length === 0) {
+      alert('No daily reports available to export.');
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 40, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 18);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(167, 243, 208);
+      doc.text('DAILY WORKLOGS & PERFORMANCE REPORT', 14, 28);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`TOTAL LOGS: ${listToExport.length}`, 196, 22, { align: 'right' });
+
+      const tableData = listToExport.map((r, index) => [
+        index + 1,
+        r.date ? r.date.split('T')[0] : 'N/A',
+        r.projectTitle || 'General Project',
+        r.tasksWorked || r.taskTitle || 'Tasks Logged',
+        `${r.hoursWorked || 0} hrs`,
+        r.progressStatus || r.status || 'Completed',
+        `${r.productivityRating || 5} ★`
+      ]);
+
+      const autoTableFn = autoTable || doc.autoTable;
+      if (typeof autoTableFn === 'function') {
+        autoTableFn(doc, {
+          startY: 46,
+          head: [['#', 'Date', 'Project Title', 'Tasks Worked On', 'Hours', 'Status', 'Rating']],
+          body: tableData,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 2.5 }
+        });
+      } else if (typeof doc.autoTable === 'function') {
+        doc.autoTable({
+          startY: 46,
+          head: [['#', 'Date', 'Project Title', 'Tasks Worked On', 'Hours', 'Status', 'Rating']],
+          body: tableData,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 2.5 }
+        });
+      }
+
+      doc.save(`Daily_Worklogs_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (err) {
+      console.error('Failed to export PDF:', err);
+      handleExportCSV();
+    }
+  };
+
   const handleSubmitReport = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -156,7 +251,7 @@ const DailyReports = () => {
     const summary = rep?.workSummary || '';
     const project = rep?.projectTitle || '';
     const tasks = rep?.tasksWorked || '';
-    const dateStr = rep?.date ? new Date(rep.date).toLocaleDateString() : '';
+    const dateStr = rep?.date ? formatDate(rep.date) : '';
 
     const matchesSearch = summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           project.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -181,7 +276,7 @@ const DailyReports = () => {
   const todayStr = new Date().toDateString();
   const todayReport = safeReports.find(r => r.date && new Date(r.date).toDateString() === todayStr);
 
-  const currentDateDisplay = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const currentDateDisplay = formatDate(new Date());
 
   if (loading) return (
     <div className="reports-loader-screen">
@@ -222,7 +317,27 @@ const DailyReports = () => {
           </div>
         </div>
 
-        <div className="hero-right-actions">
+        <div className="hero-right-actions" style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <button 
+            type="button"
+            className="btn-outline-glass"
+            onClick={handleExportPDF}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', fontSize: '0.85rem' }}
+            title="Download PDF Report"
+          >
+            <Download size={16} color="#34d399" />
+            <span>Export PDF</span>
+          </button>
+          <button 
+            type="button"
+            className="btn-outline-glass"
+            onClick={handleExportCSV}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.6rem 1rem', fontSize: '0.85rem' }}
+            title="Export CSV Data"
+          >
+            <FileText size={16} color="#60a5fa" />
+            <span>Export CSV</span>
+          </button>
           <button 
             className="btn-primary-glow"
             onClick={() => { resetForm(); setIsSubmitModalOpen(true); }}
@@ -333,34 +448,6 @@ const DailyReports = () => {
             Reviewed ({reviewedCount})
           </button>
         </div>
-
-        {/* Presentation View Switcher (Cards | Grid Table | Timeline) */}
-        <div className="view-mode-switcher">
-          <button 
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Executive Cards View"
-          >
-            <Grid size={16} />
-            <span>Cards</span>
-          </button>
-          <button 
-            className={`view-btn ${viewMode === 'table' ? 'active' : ''}`}
-            onClick={() => setViewMode('table')}
-            title="Data Table View"
-          >
-            <List size={16} />
-            <span>Table</span>
-          </button>
-          <button 
-            className={`view-btn ${viewMode === 'timeline' ? 'active' : ''}`}
-            onClick={() => setViewMode('timeline')}
-            title="Activity Timeline View"
-          >
-            <Activity size={16} />
-            <span>Timeline</span>
-          </button>
-        </div>
       </div>
 
       {/* --------------------------------------------------------------------------
@@ -409,7 +496,7 @@ const DailyReports = () => {
               <AnimatePresence>
                 {filteredReports.map(rep => {
                   const repDateStr = rep.date 
-                    ? new Date(rep.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+                    ? formatDate(rep.date)
                     : 'Today';
 
                   return (
@@ -547,7 +634,7 @@ const DailyReports = () => {
                 <tbody>
                   {filteredReports.map(rep => {
                     const repDateStr = rep.date 
-                      ? new Date(rep.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                      ? formatDate(rep.date)
                       : 'Today';
 
                     return (

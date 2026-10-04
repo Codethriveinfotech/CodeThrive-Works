@@ -3,17 +3,16 @@ import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+import { formatDate } from '../utils/dateUtils';
 import { 
   Search, Filter, Plus, User, Briefcase, Banknote, Edit, Eye,
-  RefreshCw, Trash2, UserCheck, Download
+  RefreshCw, Trash2, UserCheck, Download, X
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
 import './Employees.css';
-
-const DEFAULT_DEMO_EMPLOYEES = [];
 
 const Employees = () => {
   const { user } = useAuth();
@@ -135,7 +134,7 @@ const Employees = () => {
         ...newEmpData,
         employeeId: empId
       });
-      if (res.data.success) {
+      if (res.data?.success) {
         setEmployees(prev => [res.data.data, ...prev]);
       } else {
         setEmployees(prev => [newDoc, ...prev]);
@@ -178,6 +177,7 @@ const Employees = () => {
   const handleExportMasterPDF = () => {
     try {
       const doc = new jsPDF();
+      const listToExport = filteredEmployees.length > 0 ? filteredEmployees : employees;
 
       doc.setFillColor(15, 23, 42);
       doc.rect(0, 0, 210, 40, 'F');
@@ -195,42 +195,44 @@ const Employees = () => {
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
-      doc.text(`TOTAL STAFF: ${filteredEmployees.length}`, 196, 22, { align: 'right' });
+      doc.text(`TOTAL STAFF: ${listToExport.length}`, 196, 22, { align: 'right' });
 
-      const tableData = filteredEmployees.map((e, index) => [
+      const tableData = listToExport.map((e, index) => [
         index + 1,
         e.employeeId || `CTI-EMP-00${index + 1}`,
         e.fullName || 'N/A',
         e.department || 'N/A',
         e.designation || 'N/A',
-        (e.user?.role || 'employee').toUpperCase(),
+        (e.user?.role || e.role || 'employee').toUpperCase(),
         e.status || 'Active',
-        `Rs. ${(e.salaryAmount || 0).toLocaleString()}`
+        `Rs. ${Number(e.salaryAmount || 65000).toLocaleString('en-IN')}`
       ]);
 
-      doc.autoTable({
-        startY: 46,
-        head: [['#', 'Emp ID', 'Full Name', 'Department', 'Designation', 'Access Role', 'Status', 'Monthly Salary']],
-        body: tableData,
-        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-        styles: { fontSize: 8, cellPadding: 2.5 },
-        columnStyles: {
-          0: { width: 10 },
-          1: { width: 25 },
-          2: { width: 38 },
-          3: { width: 28 },
-          4: { width: 35 },
-          5: { width: 22 },
-          6: { width: 18 },
-          7: { width: 22 }
-        }
-      });
+      const autoTableFn = autoTable || doc.autoTable;
+      if (typeof autoTableFn === 'function') {
+        autoTableFn(doc, {
+          startY: 46,
+          head: [['#', 'Emp ID', 'Full Name', 'Department', 'Designation', 'Access Role', 'Status', 'Monthly Salary']],
+          body: tableData,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 2.5 }
+        });
+      } else if (typeof doc.autoTable === 'function') {
+        doc.autoTable({
+          startY: 46,
+          head: [['#', 'Emp ID', 'Full Name', 'Department', 'Designation', 'Access Role', 'Status', 'Monthly Salary']],
+          body: tableData,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 2.5 }
+        });
+      }
 
-      doc.save(`CodeThrive_Master_Employees_Directory_${new Date().toISOString().slice(0, 10)}.pdf`);
-      alert(`Master Directory PDF Exported successfully for ${filteredEmployees.length} employees!`);
+      const dateString = formatDate(new Date()).replace(/\//g, '-');
+      doc.save(`CodeThrive_Master_Employees_Directory_${dateString}.pdf`);
+      alert(`Master Directory PDF Exported successfully for ${listToExport.length} employees!`);
     } catch (err) {
       console.error('Failed to export master directory PDF', err);
-      alert('Error exporting PDF report.');
+      alert('Error exporting PDF report: ' + (err?.message || 'Check console logs'));
     }
   };
 
@@ -266,7 +268,7 @@ const Employees = () => {
     {
       header: 'Access Role',
       render: (row) => {
-        const role = row.user?.role || 'employee';
+        const role = row.user?.role || row.role || 'employee';
         const roleColors = {
           admin: { bg: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: 'rgba(239, 68, 68, 0.3)' },
           hr: { bg: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: 'rgba(168, 85, 247, 0.3)' },
@@ -292,7 +294,7 @@ const Employees = () => {
     },
     {
       header: 'Monthly Salary',
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--success)' }}>₹{row.salaryAmount ? Number(row.salaryAmount).toLocaleString() : '60,000'}</span>
+      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--success)' }}>₹{row.salaryAmount ? Number(row.salaryAmount).toLocaleString('en-IN') : '60,000'}</span>
     },
     {
       header: 'Actions',
@@ -383,7 +385,7 @@ const Employees = () => {
           </div>
           <div>
             <span className="metric-label">Total Monthly Payroll</span>
-            <h3 className="metric-val">₹{totalMonthlyPayroll.toLocaleString()}</h3>
+            <h3 className="metric-val">₹{totalMonthlyPayroll.toLocaleString('en-IN')}</h3>
           </div>
         </div>
       </div>

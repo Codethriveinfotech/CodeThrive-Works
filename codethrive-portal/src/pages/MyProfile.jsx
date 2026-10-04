@@ -11,6 +11,7 @@ import {
   ShieldCheck, Zap, Landmark, CheckCircle2, Sliders,
   RotateCw, ZoomIn, Building2, Globe, Users
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import './MyProfile.css';
 
 const MyProfile = () => {
@@ -57,7 +58,7 @@ const MyProfile = () => {
       try { 
         const parsed = JSON.parse(saved);
         // Force update leadership & headquarters if old dummy data, Chennai address, or old CTO/SuperAdmin roles exist
-        if (!parsed.leadershipMembers || (parsed.headquarters && parsed.headquarters.includes('Chennai')) || parsed.leadershipMembers.some(m => m.role === 'SuperAdmin' || m.name.includes('Sarah') || m.email.includes('@codethrive.com') || (m.title && m.title.includes('CTO')))) {
+        if (!parsed.leadershipMembers || !Array.isArray(parsed.leadershipMembers) || (parsed.headquarters && parsed.headquarters.includes('Chennai')) || parsed.leadershipMembers.some(m => m?.role === 'SuperAdmin' || m?.name?.includes('Sarah') || m?.email?.includes('@codethrive.com') || (m?.title && m.title.includes('CTO')))) {
           parsed.headquarters = defaultData.headquarters;
           parsed.branchName = defaultData.branchName;
           parsed.leadershipMembers = defaultData.leadershipMembers;
@@ -71,12 +72,33 @@ const MyProfile = () => {
 
   const [isCompanyEditModalOpen, setIsCompanyEditModalOpen] = useState(false);
   const [companyFormData, setCompanyFormData] = useState(companyProfile);
+  const [companyEditModalTab, setCompanyEditModalTab] = useState('general');
+  const [editingDirector, setEditingDirector] = useState(null);
 
   const handleCompanySave = (e) => {
     e.preventDefault();
-    setCompanyProfile(companyFormData);
-    localStorage.setItem('cti_company_profile', JSON.stringify(companyFormData));
+    const updated = {
+      ...companyProfile,
+      ...companyFormData,
+      leadershipMembers: companyProfile.leadershipMembers || []
+    };
+    setCompanyProfile(updated);
+    setCompanyFormData(updated);
+    localStorage.setItem('cti_company_profile', JSON.stringify(updated));
     setIsCompanyEditModalOpen(false);
+  };
+
+  const handleSaveSingleDirector = (e) => {
+    e.preventDefault();
+    if (!editingDirector) return;
+    const updatedMembers = (companyProfile.leadershipMembers || []).map(m => 
+      (m.id === editingDirector.id || m.name === editingDirector.name) ? editingDirector : m
+    );
+    const updatedCompany = { ...companyProfile, leadershipMembers: updatedMembers };
+    setCompanyProfile(updatedCompany);
+    setCompanyFormData(updatedCompany);
+    localStorage.setItem('cti_company_profile', JSON.stringify(updatedCompany));
+    setEditingDirector(null);
   };
 
   const [modalFormTab, setModalFormTab] = useState('personal');
@@ -122,9 +144,10 @@ const MyProfile = () => {
     emergencyContactRelation: '',
     qualification: '',
     collegeName: '',
+    universityName: '',
     graduationYear: '',
+    cgpaOrPercentage: '',
     previousCompany: '',
-    totalExperience: '',
     skills: ''
   });
   
@@ -201,9 +224,10 @@ const MyProfile = () => {
         emergencyContactRelation: data.emergencyContact?.relationship || '',
         qualification: data.qualification || '',
         collegeName: data.collegeName || '',
+        universityName: data.universityName || '',
         graduationYear: data.graduationYear || '',
+        cgpaOrPercentage: data.cgpaOrPercentage || '',
         previousCompany: data.previousCompany || '',
-        totalExperience: data.totalExperience || '',
         skills: safeSkills(data.skills)
       });
     } catch (err) {
@@ -355,9 +379,10 @@ const MyProfile = () => {
         },
         qualification: formData.qualification,
         collegeName: formData.collegeName,
+        universityName: formData.universityName,
         graduationYear: formData.graduationYear,
+        cgpaOrPercentage: formData.cgpaOrPercentage,
         previousCompany: formData.previousCompany,
-        totalExperience: formData.totalExperience,
         skills: formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) : []
       };
       
@@ -520,7 +545,8 @@ const MyProfile = () => {
 
             <button
               onClick={() => {
-                setCompanyFormData(companyProfile);
+                setCompanyFormData(JSON.parse(JSON.stringify(companyProfile)));
+                setCompanyEditModalTab('general');
                 setIsCompanyEditModalOpen(true);
               }}
               style={{
@@ -599,19 +625,44 @@ const MyProfile = () => {
           <Card title={
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <Trophy size={22} color="#fbbf24" /> Executive Leadership & Board of Directors ({companyProfile.leadershipMembers.length})
+                <Trophy size={22} color="#fbbf24" /> Executive Leadership & Board of Directors ({(companyProfile.leadershipMembers || []).length})
               </div>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Authorized Enterprise Directors</span>
             </div>
           }>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(285px, 1fr))', gap: '1.25rem' }}>
-              {companyProfile.leadershipMembers.map(member => (
-                <div key={member.id} style={{
+              {(companyProfile.leadershipMembers || []).map((member, idx) => (
+                <div key={member.id || idx} style={{
                   background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '16px', padding: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem',
                   position: 'relative'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingDirector({ ...member })}
+                    style={{
+                      position: 'absolute',
+                      top: '1rem',
+                      right: '1rem',
+                      background: 'rgba(59, 130, 246, 0.12)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      color: '#60a5fa',
+                      borderRadius: '8px',
+                      padding: '4px 9px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    title="Edit Member Details"
+                  >
+                    <Edit3 size={12} /> Edit
+                  </button>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingRight: '3.2rem' }}>
                     <div style={{
                       width: '48px', height: '48px', borderRadius: '14px', flexShrink: 0,
                       background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
@@ -619,28 +670,28 @@ const MyProfile = () => {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)'
                     }}>
-                      {member.name.charAt(0)}
+                      {member.name ? member.name.charAt(0) : 'D'}
                     </div>
                     <div>
-                      <h4 style={{ margin: 0, color: '#fff', fontSize: '1.05rem', fontWeight: 700 }}>{member.name}</h4>
-                      <span style={{ fontSize: '0.82rem', color: '#a7f3d0', fontWeight: 600, display: 'block', marginTop: '0.1rem' }}>{member.title}</span>
+                      <h4 style={{ margin: 0, color: '#fff', fontSize: '1.05rem', fontWeight: 700 }}>{member.name || 'Executive Director'}</h4>
+                      <span style={{ fontSize: '0.82rem', color: '#a7f3d0', fontWeight: 600, display: 'block', marginTop: '0.1rem' }}>{member.title || 'Board Member'}</span>
                     </div>
                   </div>
 
                   <div style={{ borderTop: '1px dashed rgba(255, 255, 255, 0.08)', paddingTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.82rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
                       <Mail size={13} color="#60a5fa" />
-                      <span>{member.email}</span>
+                      <span>{member.email || '-'}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)' }}>
                       <Phone size={13} color="#fbbf24" />
-                      <span>{member.phone}</span>
+                      <span>{member.phone || '-'}</span>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.4rem', flexWrap: 'wrap', gap: '0.4rem' }}>
                     <span style={{ fontSize: '0.72rem', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#fbbf24', padding: '3px 8px', borderRadius: '6px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-                      <ShieldCheck size={12} /> {member.role}
+                      <ShieldCheck size={12} /> {member.role || 'Executive Board'}
                     </span>
                     <span style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 600, whiteSpace: 'nowrap' }}>Active Board Member</span>
                   </div>
@@ -803,7 +854,7 @@ const MyProfile = () => {
                 <MapPin size={13} /> {profile.workLocation || 'Office'}
               </span>
               <span className="profile-meta-tag">
-                <Calendar size={13} /> Joined {profile.dateOfJoining ? new Date(profile.dateOfJoining).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Aug 2024'}
+                <Calendar size={13} /> Joined {profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/24'}
               </span>
             </div>
           </div>
@@ -960,7 +1011,7 @@ const MyProfile = () => {
             <div>
               <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Date of Birth</span>
               <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : 'Not Provided'}
+                {profile.dateOfBirth ? formatDate(profile.dateOfBirth) : 'Not Provided'}
               </div>
             </div>
 
@@ -982,13 +1033,6 @@ const MyProfile = () => {
               <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Marital Status</span>
               <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
                 {profile.maritalStatus || 'Single'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Nationality</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.nationality || 'Indian'}
               </div>
             </div>
 
@@ -1039,7 +1083,7 @@ const MyProfile = () => {
             <div>
               <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Date of Joining</span>
               <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.dateOfJoining ? new Date(profile.dateOfJoining).toLocaleDateString() : 'August 1, 2024'}
+                {profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/2024'}
               </div>
             </div>
 
@@ -1131,20 +1175,6 @@ const MyProfile = () => {
             </div>
 
             <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>PAN Card Number</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#fbbf24', fontFamily: 'monospace' }}>
-                {profile.panNumber || 'Not Provided'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Aadhaar / National ID</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc', fontFamily: 'monospace' }}>
-                {profile.aadhaarOrIdentityProofNumber || 'Not Provided'}
-              </div>
-            </div>
-
-            <div>
               <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>UPI ID (Optional)</span>
               <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399' }}>
                 {profile.upiId || 'Not Provided'}
@@ -1168,9 +1198,16 @@ const MyProfile = () => {
             </div>
 
             <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>College / University</span>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>College Name</span>
               <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.collegeName || 'Anna University'}
+                {profile.collegeName || 'SRM Institute of Science & Technology'}
+              </div>
+            </div>
+
+            <div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>University Name</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#60a5fa' }}>
+                {profile.universityName || 'Anna University'}
               </div>
             </div>
 
@@ -1182,9 +1219,9 @@ const MyProfile = () => {
             </div>
 
             <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Total Experience</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.totalExperience || '2+ Years'}
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>CGPA / Percentage</span>
+              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399' }}>
+                {profile.cgpaOrPercentage || '8.5 CGPA'}
               </div>
             </div>
           </div>
@@ -1613,11 +1650,6 @@ const MyProfile = () => {
                   <option value="Prefer not to say">Prefer not to say</option>
                 </select>
               </div>
-
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                <label>Nationality *</label>
-                <input type="text" className="input-field" placeholder="e.g. Indian" value={formData.nationality} onChange={e => setFormData({ ...formData, nationality: e.target.value })} required />
-              </div>
             </div>
           )}
 
@@ -1688,16 +1720,6 @@ const MyProfile = () => {
                 <input type="text" className="input-field" placeholder="e.g. Main Branch, Chennai" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} required />
               </div>
 
-              <div className="form-group">
-                <label>PAN Card Number *</label>
-                <input type="text" className="input-field" placeholder="e.g. ABCDE1234F" value={formData.panNumber} onChange={e => setFormData({ ...formData, panNumber: e.target.value })} required />
-              </div>
-
-              <div className="form-group">
-                <label>Aadhaar / National Identity Number *</label>
-                <input type="text" className="input-field" placeholder="e.g. 1234 5678 9012" value={formData.aadhaarOrIdentityProofNumber} onChange={e => setFormData({ ...formData, aadhaarOrIdentityProofNumber: e.target.value })} required />
-              </div>
-
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label>UPI ID *</label>
                 <input type="text" className="input-field" placeholder="e.g. user@upi" value={formData.upiId} onChange={e => setFormData({ ...formData, upiId: e.target.value })} required />
@@ -1709,14 +1731,19 @@ const MyProfile = () => {
           {modalFormTab === 'education' && (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
+                <div className="form-group" style={{ gridColumn: 'span 2' }}>
                   <label>Highest Qualification *</label>
                   <input type="text" className="input-field" placeholder="e.g. B.E. Computer Science" value={formData.qualification} onChange={e => setFormData({ ...formData, qualification: e.target.value })} required />
                 </div>
 
                 <div className="form-group">
-                  <label>College / University *</label>
-                  <input type="text" className="input-field" placeholder="e.g. Anna University" value={formData.collegeName} onChange={e => setFormData({ ...formData, collegeName: e.target.value })} required />
+                  <label>College Name *</label>
+                  <input type="text" className="input-field" placeholder="e.g. SRM Institute of Science & Tech" value={formData.collegeName} onChange={e => setFormData({ ...formData, collegeName: e.target.value })} required />
+                </div>
+
+                <div className="form-group">
+                  <label>University Name *</label>
+                  <input type="text" className="input-field" placeholder="e.g. Anna University" value={formData.universityName} onChange={e => setFormData({ ...formData, universityName: e.target.value })} required />
                 </div>
 
                 <div className="form-group">
@@ -1725,8 +1752,8 @@ const MyProfile = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Total Experience *</label>
-                  <input type="text" className="input-field" placeholder="e.g. 2+ Years" value={formData.totalExperience} onChange={e => setFormData({ ...formData, totalExperience: e.target.value })} required />
+                  <label>CGPA / Percentage *</label>
+                  <input type="text" className="input-field" placeholder="e.g. 8.5 CGPA or 85%" value={formData.cgpaOrPercentage} onChange={e => setFormData({ ...formData, cgpaOrPercentage: e.target.value })} required />
                 </div>
               </div>
 
@@ -1800,7 +1827,6 @@ const MyProfile = () => {
       {/* EDIT COMPANY ENTERPRISE PROFILE MODAL */}
       <Modal isOpen={isCompanyEditModalOpen} onClose={() => setIsCompanyEditModalOpen(false)} title="Edit Company Enterprise Profile">
         <form onSubmit={handleCompanySave} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-          
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label>Company Legal Name *</label>
@@ -1808,7 +1834,7 @@ const MyProfile = () => {
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label>Tagline / Overview *</label>
+              <label>Tagline / Corporate Overview *</label>
               <input type="text" className="input-field" value={companyFormData.tagline || ''} onChange={e => setCompanyFormData({ ...companyFormData, tagline: e.target.value })} required />
             </div>
 
@@ -1859,7 +1885,7 @@ const MyProfile = () => {
 
             <div className="form-group">
               <label>Branch Name *</label>
-              <input type="text" className="input-field" placeholder="e.g. IT Park Branch, Chennai" value={companyFormData.branchName || ''} onChange={e => setCompanyFormData({ ...companyFormData, branchName: e.target.value })} required />
+              <input type="text" className="input-field" placeholder="e.g. Tech Park Branch, Coimbatore" value={companyFormData.branchName || ''} onChange={e => setCompanyFormData({ ...companyFormData, branchName: e.target.value })} required />
             </div>
           </div>
 
@@ -1869,6 +1895,80 @@ const MyProfile = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Individual Director Edit Modal */}
+      {editingDirector && (
+        <Modal
+          isOpen={!!editingDirector}
+          onClose={() => setEditingDirector(null)}
+          title={`Edit Board Member - ${editingDirector.name || 'Director'}`}
+        >
+          <form onSubmit={handleSaveSingleDirector} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '0.5rem 0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group">
+                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Full Name *</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={editingDirector.name || ''}
+                  onChange={e => setEditingDirector({ ...editingDirector, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Designation / Title *</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={editingDirector.title || ''}
+                  onChange={e => setEditingDirector({ ...editingDirector, title: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Official Email *</label>
+                <input
+                  type="email"
+                  className="input-field"
+                  value={editingDirector.email || ''}
+                  onChange={e => setEditingDirector({ ...editingDirector, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Phone Number *</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  value={editingDirector.phone || ''}
+                  onChange={e => setEditingDirector({ ...editingDirector, phone: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>Role / Tag *</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="e.g. CodeThrive Infotech, HR Lead, Tech Lead"
+                  value={editingDirector.role || ''}
+                  onChange={e => setEditingDirector({ ...editingDirector, role: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '1rem' }}>
+              <button type="button" className="btn-outline-glass" onClick={() => setEditingDirector(null)}>Cancel</button>
+              <button type="submit" className="btn-primary-glow">Save Changes</button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
     </motion.div>
   );

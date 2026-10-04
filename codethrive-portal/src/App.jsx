@@ -24,10 +24,8 @@ const Attendance = lazy(() => import('./pages/Attendance'));
 const Timesheet = lazy(() => import('./pages/Timesheet'));
 const Team = lazy(() => import('./pages/Team'));
 const Projects = lazy(() => import('./pages/Projects'));
-const _HRMS = lazy(() => import('./pages/HRMS'));
 const Payroll = lazy(() => import('./pages/Payroll'));
 const Performance = lazy(() => import('./pages/Performance'));
-const _Reports = lazy(() => import('./pages/Reports'));
 const Admin = lazy(() => import('./pages/Admin'));
 const AdminTasks = lazy(() => import('./pages/AdminTasks'));
 const AdminReports = lazy(() => import('./pages/AdminReports'));
@@ -249,20 +247,10 @@ function AppContent() {
       document.body.classList.remove('light-mode');
     }
 
-    // Clean stale legacy demo items from localStorage on startup
+    // Clean all test and mock records from localStorage on fresh workspace startup
     try {
-      ['cti_shared_leaves', 'cti_shared_payrolls', 'cti_shared_documents', 'cti_local_users'].forEach(key => {
-        const raw = JSON.parse(localStorage.getItem(key) || '[]');
-        if (Array.isArray(raw)) {
-          const cleaned = raw.filter(item => {
-            if (!item) return false;
-            const id = (item._id || item.id || '').toString();
-            if (id.includes('demo') || id.includes('mock') || id.includes('shared')) return false;
-            if (item.reason?.toLowerCase().includes('personal family')) return false;
-            return true;
-          });
-          localStorage.setItem(key, JSON.stringify(cleaned));
-        }
+      ['cti_shared_leaves', 'cti_shared_payrolls', 'cti_shared_documents', 'cti_local_users', 'cti_admin_tasks', 'cti_daily_reports', 'cti_employees'].forEach(key => {
+        localStorage.removeItem(key);
       });
     } catch (err) {}
 

@@ -590,3 +590,47 @@ body.light-mode .search-results-popover {
   border: 1px solid rgba(0, 0, 0, 0.12) !important;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12) !important;
 }
+
+/* ==========================================================================
+   MOBILE & RESPONSIVE DESIGN (PHONES & TABLETS - <768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .dashboard-grid,
+  .emp-metrics-grid,
+  .reports-metrics-grid,
+  .reports-toolbar-card,
+  .hero-right-actions,
+  .grid-2col,
+  .grid-3col,
+  .grid-4col {
+    grid-template-columns: 1fr !important;
+  }
+
+  .table-container,
+  .data-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-content {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    padding: 1rem !important;
+    margin: 10px auto !important;
+  }
+
+  .hero-main-title {
+    font-size: 1.4rem !important;
+  }
+
+  .hero-subtext {
+    font-size: 0.85rem !important;
+  }
+
+  .btn,
+  .btn-primary-glow,
+  .btn-outline-glass {
+    padding: 0.5rem 0.85rem !important;
+    font-size: 0.82rem !important;
+  }
+}

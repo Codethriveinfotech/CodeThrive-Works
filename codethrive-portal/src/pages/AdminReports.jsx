@@ -4,10 +4,14 @@ import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
 import DataTable from '../components/common/DataTable';
 import Modal from '../components/common/Modal';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { 
   FileText, Search, Calendar, Eye, Check, X, 
-  Sparkles, Clock, CheckCircle2, AlertCircle 
+  Sparkles, Clock, CheckCircle2, AlertCircle, Download, Printer, Filter
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import './Admin.css';
 
 const DEFAULT_DEMO_REPORTS = [];
@@ -17,10 +21,74 @@ const AdminReports = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [selectedMonth, setSelectedMonth] = useState('All');
   
   // Modal State
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const exportDailyReportsPDF = () => {
+    try {
+      const doc = new jsPDF();
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 35, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(15);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 16);
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(167, 243, 208);
+      doc.text(`DAILY WORK REPORTS AUDIT STATEMENT (${selectedMonth})`, 14, 25);
+
+      const tableColumn = ["Date", "Employee Name", "Department", "Work Summary", "Hours", "Status"];
+      const tableRows = filteredReports.map(r => [
+        r.date ? formatDate(r.date) : '-',
+        r.employee?.fullName || 'Employee',
+        r.employee?.department || '-',
+        r.summary || '-',
+        `${r.hoursLogged || 0} hrs`,
+        r.status || 'Approved'
+      ]);
+
+      const renderTable = typeof autoTable === 'function' ? autoTable : (autoTable.default || doc.autoTable);
+      if (typeof renderTable === 'function') {
+        renderTable(doc, {
+          startY: 40,
+          head: [tableColumn],
+          body: tableRows,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8.5, fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 2.5 }
+        });
+      } else {
+        throw new Error('PDF autoTable renderer could not be initialized');
+      }
+
+      doc.save(`Daily_Work_Reports_${selectedMonth}.pdf`);
+    } catch (e) {
+      alert('Error exporting PDF: ' + e.message);
+    }
+  };
+
+  const exportDailyReportsExcel = () => {
+    try {
+      const exportData = filteredReports.map(r => ({
+        Date: r.date ? formatDate(r.date) : '-',
+        'Employee Name': r.employee?.fullName || 'Employee',
+        'Department': r.employee?.department || '-',
+        'Work Summary': r.summary || '-',
+        'Hours Logged': r.hoursLogged || 0,
+        Status: r.status || 'Approved'
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Daily Reports");
+      XLSX.writeFile(workbook, `Daily_Work_Reports_${selectedMonth}.xlsx`);
+    } catch (e) {
+      alert('Error exporting Excel: ' + e.message);
+    }
+  };
 
   useEffect(() => {
     fetchReports();
@@ -80,7 +148,7 @@ const AdminReports = () => {
       accessor: 'date', 
       render: (row) => (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontFamily: 'monospace', fontWeight: 600, color: '#818cf8' }}>
-          <Calendar size={14} color="#818cf8" /> {new Date(row.date).toLocaleDateString()}
+          <Calendar size={14} color="#818cf8" /> {formatDate(row.date)}
         </span>
       )
     },
@@ -163,48 +231,106 @@ const AdminReports = () => {
               Audit & Review End-of-Day Work Reports Submitted by Employees with One-Click Approvals
             </p>
           </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button className="btn btn-outline" onClick={exportDailyReportsPDF} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Printer size={15} /> Download PDF Report
+            </button>
+            <button className="btn btn-primary" onClick={exportDailyReportsExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Download size={15} /> Export Excel (.xlsx)
+            </button>
+          </div>
         </div>
       </div>
 
       {/* 2. METRICS CARDS GRID */}
       <div className="metrics-grid">
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('ALL')}>
-          <div className="metric-icon bg-primary-light">
-            <FileText size={26} color="#818cf8" />
+        <div 
+          className={`stat-card stat-card-indigo ${statusFilter === 'ALL' ? 'selected' : ''}`}
+          onClick={() => setStatusFilter('ALL')}
+          title="Click to view all reports"
+        >
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-indigo">
+              <FileText size={18} />
+            </div>
+            <span className="stat-tag tag-indigo">
+              <span className="beacon-dot"></span> ALL REPORTS
+            </span>
           </div>
-          <div className="metric-data">
-            <p>Total Submitted Reports</p>
-            <h3>{totalReports}</h3>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{totalReports}</h3>
+            <p className="stat-title">Total Submitted Reports</p>
           </div>
-        </div>
-
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('Pending')}>
-          <div className="metric-icon bg-warning-light">
-            <AlertCircle size={26} color="#fbbf24" />
-          </div>
-          <div className="metric-data">
-            <p>Pending Approval</p>
-            <h3>{pendingReports}</h3>
-          </div>
-        </div>
-
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('Approved')}>
-          <div className="metric-icon bg-success-light">
-            <CheckCircle2 size={26} color="#34d399" />
-          </div>
-          <div className="metric-data">
-            <p>Approved Reports</p>
-            <h3>{approvedReports}</h3>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">System Submissions</span>
+            <span className="stat-active-pill pill-indigo">Total</span>
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-icon bg-info-light">
-            <Clock size={26} color="#38bdf8" />
+        <div 
+          className={`stat-card stat-card-amber ${statusFilter === 'Pending' ? 'selected' : ''}`}
+          onClick={() => setStatusFilter('Pending')}
+          title="Click to filter Pending reports"
+        >
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-amber">
+              <AlertCircle size={18} />
+            </div>
+            <span className="stat-tag tag-amber">REVIEW REQ</span>
           </div>
-          <div className="metric-data">
-            <p>Total Hours Logged</p>
-            <h3>{totalHours.toFixed(1)}h</h3>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{pendingReports}</h3>
+            <p className="stat-title">Pending Approval</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Awaiting Lead Action</span>
+            <span className="stat-active-pill pill-amber">Pending</span>
+          </div>
+        </div>
+
+        <div 
+          className={`stat-card stat-card-emerald ${statusFilter === 'Approved' ? 'selected' : ''}`}
+          onClick={() => setStatusFilter('Approved')}
+          title="Click to filter Approved reports"
+        >
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-emerald">
+              <CheckCircle2 size={18} />
+            </div>
+            <span className="stat-tag tag-emerald">VERIFIED</span>
+          </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{approvedReports}</h3>
+            <p className="stat-title">Approved Reports</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Lead Verified</span>
+            <span className="stat-active-pill pill-emerald">Approved</span>
+          </div>
+        </div>
+
+        <div 
+          className="stat-card stat-card-cyan"
+          title="Total Work Hours Logged"
+        >
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-cyan">
+              <Clock size={18} />
+            </div>
+            <span className="stat-tag tag-cyan">TIME TRACKED</span>
+          </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{totalHours.toFixed(1)}h</h3>
+            <p className="stat-title">Total Hours Logged</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Productive Time</span>
+            <span className="stat-active-pill pill-cyan">Hours</span>
           </div>
         </div>
       </div>
@@ -255,7 +381,7 @@ const AdminReports = () => {
                 <span style={{ color: '#94a3b8', fontSize: '0.88rem' }}>{selectedReport.employee?.department} &bull; ID: {selectedReport.employee?.employeeId}</span>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ display: 'block', fontWeight: 700, color: '#818cf8', fontFamily: 'monospace', marginBottom: '4px' }}>Date: {new Date(selectedReport.date).toLocaleDateString()}</span>
+                <span style={{ display: 'block', fontWeight: 700, color: '#818cf8', fontFamily: 'monospace', marginBottom: '4px' }}>Date: {formatDate(selectedReport.date)}</span>
                 <StatusBadge status={selectedReport.status} />
               </div>
             </div>

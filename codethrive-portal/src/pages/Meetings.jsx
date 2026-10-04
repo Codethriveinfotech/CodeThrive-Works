@@ -7,6 +7,7 @@ import {
   Briefcase, Calendar, Clock, Video, 
   MapPin, Users, PlusCircle, CheckCircle2 
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import './Modules.css';
 
 const Meetings = () => {
@@ -97,7 +98,7 @@ const Meetings = () => {
         <div>
           <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>{meeting.title}</h4>
           <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Calendar size={14}/> {new Date(meeting.date).toLocaleDateString()}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Calendar size={14}/> {formatDate(meeting.date)}</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Clock size={14}/> {meeting.time}</span>
           </div>
         </div>

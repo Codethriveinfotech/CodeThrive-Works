@@ -9,6 +9,8 @@ import {
   AlertCircle, CalendarRange, Sparkles, Filter, 
   FileText, ArrowUpRight, Search, RefreshCw, UserCheck, ShieldCheck, MessageSquare
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
+import './Admin.css';
 import './Leave.css';
 
 const Leave = () => {
@@ -268,84 +270,87 @@ _Submitted automatically via CodeThrive HR Portal_`;
       {/* --------------------------------------------------------------------------
           2. LEAVE BALANCE METRIC CARDS (4 ANIMATED CARDS)
          -------------------------------------------------------------------------- */}
+      {/* 2. LEAVE BALANCE METRIC CARDS (4 ANIMATED CARDS) */}
       <div className="leave-metrics-grid">
         {/* Card 1: Casual Leave */}
-        <motion.div 
-          className="leave-metric-card emerald"
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-        >
-          <div className="metric-icon-wrapper emerald">
-            <CheckCircle2 size={24} />
-          </div>
-          <div className="metric-details">
-            <span className="metric-title">Casual Leave Balance</span>
-            <div className="metric-value-row">
-              <span className="metric-value">{data.casualLeaveBalance || 12}</span>
-              <span className="metric-unit">days available</span>
+        <div className="stat-card stat-card-emerald" title="Casual Leave Balance">
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-emerald">
+              <CheckCircle2 size={18} />
             </div>
-            <span className="metric-subtext">Annual quota: 12 days</span>
-          </div>
-        </motion.div>
-
-        {/* Card 2: Sick Leave */}
-        <motion.div 
-          className="leave-metric-card amber"
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-        >
-          <div className="metric-icon-wrapper amber">
-            <AlertCircle size={24} />
-          </div>
-          <div className="metric-details">
-            <span className="metric-title">Sick Leave Balance</span>
-            <div className="metric-value-row">
-              <span className="metric-value">{data.sickLeaveBalance || 6}</span>
-              <span className="metric-unit">days available</span>
-            </div>
-            <span className="metric-subtext">Annual quota: 6 days</span>
-          </div>
-        </motion.div>
-
-        {/* Card 3: Unpaid Leave (Calculates if monthly leave > 2 days) */}
-        <motion.div 
-          className="leave-metric-card red"
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-        >
-          <div className="metric-icon-wrapper red">
-            <AlertCircle size={24} />
-          </div>
-          <div className="metric-details">
-            <span className="metric-title">Unpaid Leave</span>
-            <div className="metric-value-row">
-              <span className="metric-value" style={{ color: totalUnpaidDays > 0 ? '#f87171' : '#f8fafc' }}>
-                {totalUnpaidDays}
-              </span>
-              <span className="metric-unit">{totalUnpaidDays === 1 ? 'day incurred' : 'days incurred'}</span>
-            </div>
-            <span className="metric-subtext">
-              {currentMonthLeaveDays > 2 
-                ? `Exceeded 2 days limit (${currentMonthLeaveDays} days taken)` 
-                : 'Monthly limit: 2 days max'}
+            <span className="stat-tag tag-emerald">
+              <span className="beacon-dot"></span> AVAILABLE
             </span>
           </div>
-        </motion.div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{data.casualLeaveBalance || 12} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>days</span></h3>
+            <p className="stat-title">Casual Leave Balance</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Annual Quota: 12 Days</span>
+            <span className="stat-active-pill pill-emerald">Casual</span>
+          </div>
+        </div>
+
+        {/* Card 2: Sick Leave */}
+        <div className="stat-card stat-card-amber" title="Sick Leave Balance">
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-amber">
+              <AlertCircle size={18} />
+            </div>
+            <span className="stat-tag tag-amber">SICK LEAVE</span>
+          </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{data.sickLeaveBalance || 6} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>days</span></h3>
+            <p className="stat-title">Sick Leave Balance</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Annual Quota: 6 Days</span>
+            <span className="stat-active-pill pill-amber">Sick</span>
+          </div>
+        </div>
+
+        {/* Card 3: Unpaid Leave */}
+        <div className="stat-card stat-card-red" title="Unpaid Leave">
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-red">
+              <AlertCircle size={18} />
+            </div>
+            <span className="stat-tag tag-red">UNPAID</span>
+          </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number" style={{ color: totalUnpaidDays > 0 ? '#f87171' : '#fff' }}>
+              {totalUnpaidDays} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>{totalUnpaidDays === 1 ? 'day' : 'days'}</span>
+            </h3>
+            <p className="stat-title">Unpaid Leave</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">{currentMonthLeaveDays > 2 ? `Exceeded 2d limit (${currentMonthLeaveDays}d)` : 'Monthly limit: 2 days max'}</span>
+            <span className="stat-active-pill pill-red">LWP</span>
+          </div>
+        </div>
 
         {/* Card 4: Pending Approvals */}
-        <motion.div 
-          className="leave-metric-card purple"
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
-        >
-          <div className="metric-icon-wrapper purple">
-            <Clock size={24} />
-          </div>
-          <div className="metric-details">
-            <span className="metric-title">Pending Approvals</span>
-            <div className="metric-value-row">
-              <span className="metric-value">{data.pendingRequests || 0}</span>
-              <span className="metric-unit">active requests</span>
+        <div className="stat-card stat-card-purple" title="Pending Approvals">
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-purple">
+              <Clock size={18} />
             </div>
-            <span className="metric-subtext">Awaiting Manager Review</span>
+            <span className="stat-tag tag-purple">PENDING</span>
           </div>
-        </motion.div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{data.pendingRequests || 0} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>requests</span></h3>
+            <p className="stat-title">Pending Approvals</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Awaiting Manager Review</span>
+            <span className="stat-active-pill pill-purple">Review</span>
+          </div>
+        </div>
       </div>
 
       {/* --------------------------------------------------------------------------
@@ -435,7 +440,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
                     const start = new Date(req.startDate);
                     const end = new Date(req.endDate);
                     const days = calcDays(req.startDate, req.endDate) || 1;
-                    const appliedOn = req.createdAt ? new Date(req.createdAt).toLocaleDateString() : 'Today';
+                    const appliedOn = req.createdAt ? formatDate(req.createdAt) : 'Today';
 
                     return (
                       <motion.tr 
@@ -452,7 +457,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
                         </td>
                         <td>
                           <div className="date-range-cell">
-                            <span className="dates">{start.toLocaleDateString()} - {end.toLocaleDateString()}</span>
+                            <span className="dates">{formatDate(req.startDate)} - {formatDate(req.endDate)}</span>
                           </div>
                         </td>
                         <td>

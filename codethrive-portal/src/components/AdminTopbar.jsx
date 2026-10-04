@@ -232,18 +232,19 @@ const AdminTopbar = () => {
           <div className="profile-widget" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }} onClick={() => navigate('/admin/profile')}>
             <div className="profile-avatar" style={{ 
               width: '40px', height: '40px', borderRadius: '50%', 
-              background: 'linear-gradient(135deg, var(--danger), var(--warning))',
+              background: 'linear-gradient(135deg, var(--primary), #10b981)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--text-main)'
+              fontWeight: 'bold', fontSize: '1rem', color: '#fff',
+              boxShadow: '0 0 12px rgba(16, 185, 129, 0.4)'
             }}>
-              {getInitials(user?.name || user?.email || 'Admin')}
+              CTI
             </div>
             <div className="profile-info" style={{ display: 'flex', flexDirection: 'column' }}>
-              <span className="profile-name" style={{ fontWeight: '600', fontSize: '0.95rem' }}>
-                {user?.name || 'Administrator'}
+              <span className="profile-name" style={{ fontWeight: '700', fontSize: '0.95rem', color: '#fff' }}>
+                Codethrive Infotech
               </span>
-              <span className="profile-role" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                {user?.role || 'Admin'}
+              <span className="profile-role" style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'capitalize' }}>
+                {user?.role === 'superadmin' ? 'Superadmin' : (user?.role || 'Admin')}
               </span>
             </div>
             <ChevronDown className="topbar-profile-chevron" size={16} color="var(--text-muted)" style={{ marginLeft: '0.5rem' }} />

@@ -20,12 +20,12 @@ const Task = require('./models/Task');
 const TaskActivity = require('./models/TaskActivity');
 const Timesheet = require('./models/Timesheet');
 
-const resetAllData = async () => {
+const resetFreshDatabase = async () => {
   try {
     console.log('Connecting to database...');
     await connectDB();
 
-    console.log('Clearing all registered employee and transactional data...');
+    console.log('Wiping all test/demo records from database collections...');
     await Promise.all([
       User.deleteMany({}),
       Employee.deleteMany({}),
@@ -44,25 +44,39 @@ const resetAllData = async () => {
       Timesheet.deleteMany({})
     ]);
 
-    console.log('Creating initial Super Admin account...');
-    await User.create({
+    // Create Fresh Master Admin Account
+    const adminUser = await User.create({
       email: 'admin@codethrive.com',
       password: 'Password@123',
       role: 'superadmin',
       status: 'active'
     });
 
-    console.log('SUCCESS: All registered details have been completely removed!');
-    console.log('System is now fresh and ready for new registrations and usage.');
-    console.log('Default Super Admin Login:');
-    console.log('Email: admin@codethrive.com');
-    console.log('Password: Password@123');
+    await Employee.create({
+      user: adminUser._id,
+      employeeId: 'CTI-ADM-001',
+      fullName: 'CodeThrive Admin',
+      personalEmailAddress: 'admin@codethrive.com',
+      personalPhoneNumber: '+91 78128 64905',
+      designation: 'Super Administrator',
+      department: 'Management',
+      employmentType: 'Full-Time',
+      status: 'Active'
+    });
+
+    console.log('================================================');
+    console.log('✨ DATABASE SUCCESSFULLY RESET TO FRESH STATE! ✨');
+    console.log('All test data, test tasks, test reports & employees wiped.');
+    console.log('🔑 FRESH ADMIN ACCOUNT:');
+    console.log('   Email: admin@codethrive.com');
+    console.log('   Password: Password@123');
+    console.log('================================================');
 
     process.exit(0);
   } catch (err) {
-    console.error('ERROR resetting database:', err);
+    console.error('Reset Error:', err.message);
     process.exit(1);
   }
 };
 
-resetAllData();
+resetFreshDatabase();

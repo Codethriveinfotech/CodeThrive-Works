@@ -7,6 +7,7 @@ import {
   Search, CheckCircle, XCircle, Calendar, Clock, 
   Eye, Check, X, Sparkles, RefreshCw, FileText, Layers
 } from 'lucide-react';
+import './Admin.css';
 import './Modules.css';
 
 const AdminLeave = () => {
@@ -208,102 +209,96 @@ const AdminLeave = () => {
       </div>
 
       {/* KPI Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-        <motion.div 
-          whileHover={{ y: -4, scale: 1.02 }}
+      <div className="metrics-grid">
+        <div 
+          className={`stat-card stat-card-indigo ${statusFilter === 'ALL' ? 'selected' : ''}`}
           onClick={() => setStatusFilter('ALL')}
-          style={{
-            background: statusFilter === 'ALL' ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(15, 23, 42, 0.8))' : 'rgba(15, 23, 42, 0.6)',
-            border: statusFilter === 'ALL' ? '1px solid rgba(99, 102, 241, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
-            padding: '1.3rem 1.5rem',
-            borderRadius: '16px',
-            backdropFilter: 'blur(12px)',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            boxShadow: statusFilter === 'ALL' ? '0 10px 25px rgba(99, 102, 241, 0.2)' : 'none'
-          }}
+          title="Click to view all leave applications"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Applications</span>
-            <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' }}>
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-indigo">
               <Layers size={18} />
             </div>
+            <span className="stat-tag tag-indigo">
+              <span className="beacon-dot"></span> ALL SUBMISSIONS
+            </span>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#fff' }}>{stats.total}</div>
-          <div style={{ fontSize: '0.8rem', color: '#a5b4fc', marginTop: '0.3rem' }}>All employee submissions</div>
-        </motion.div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{stats.total}</h3>
+            <p className="stat-title">Total Applications</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">All Staff Submissions</span>
+            <span className="stat-active-pill pill-indigo">Total</span>
+          </div>
+        </div>
 
-        <motion.div 
-          whileHover={{ y: -4, scale: 1.02 }}
+        <div 
+          className={`stat-card stat-card-amber ${statusFilter === 'Pending' ? 'selected' : ''}`}
           onClick={() => setStatusFilter('Pending')}
-          style={{
-            background: statusFilter === 'Pending' ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(15, 23, 42, 0.8))' : 'rgba(15, 23, 42, 0.6)',
-            border: statusFilter === 'Pending' ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
-            padding: '1.3rem 1.5rem',
-            borderRadius: '16px',
-            backdropFilter: 'blur(12px)',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            boxShadow: statusFilter === 'Pending' ? '0 10px 25px rgba(245, 158, 11, 0.2)' : 'none'
-          }}
+          title="Click to filter pending applications"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pending Approval</span>
-            <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-amber">
               <Clock size={18} />
             </div>
+            <span className="stat-tag tag-amber">REVIEW REQ</span>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#fbbf24' }}>{stats.pending}</div>
-          <div style={{ fontSize: '0.8rem', color: '#fde68a', marginTop: '0.3rem' }}>Requires immediate review</div>
-        </motion.div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{stats.pending}</h3>
+            <p className="stat-title">Pending Approval</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Immediate Review Needed</span>
+            <span className="stat-active-pill pill-amber">Pending</span>
+          </div>
+        </div>
 
-        <motion.div 
-          whileHover={{ y: -4, scale: 1.02 }}
+        <div 
+          className={`stat-card stat-card-emerald ${statusFilter === 'Approved' ? 'selected' : ''}`}
           onClick={() => setStatusFilter('Approved')}
-          style={{
-            background: statusFilter === 'Approved' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(15, 23, 42, 0.8))' : 'rgba(15, 23, 42, 0.6)',
-            border: statusFilter === 'Approved' ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
-            padding: '1.3rem 1.5rem',
-            borderRadius: '16px',
-            backdropFilter: 'blur(12px)',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            boxShadow: statusFilter === 'Approved' ? '0 10px 25px rgba(16, 185, 129, 0.2)' : 'none'
-          }}
+          title="Click to filter approved applications"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Approved Leaves</span>
-            <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-emerald">
               <CheckCircle size={18} />
             </div>
+            <span className="stat-tag tag-emerald">AUTHORIZED</span>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#34d399' }}>{stats.approved}</div>
-          <div style={{ fontSize: '0.8rem', color: '#a7f3d0', marginTop: '0.3rem' }}>Authorized & logged</div>
-        </motion.div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{stats.approved}</h3>
+            <p className="stat-title">Approved Leaves</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Authorized & Logged</span>
+            <span className="stat-active-pill pill-emerald">Approved</span>
+          </div>
+        </div>
 
-        <motion.div 
-          whileHover={{ y: -4, scale: 1.02 }}
+        <div 
+          className={`stat-card stat-card-red ${statusFilter === 'Rejected' ? 'selected' : ''}`}
           onClick={() => setStatusFilter('Rejected')}
-          style={{
-            background: statusFilter === 'Rejected' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(15, 23, 42, 0.8))' : 'rgba(15, 23, 42, 0.6)',
-            border: statusFilter === 'Rejected' ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
-            padding: '1.3rem 1.5rem',
-            borderRadius: '16px',
-            backdropFilter: 'blur(12px)',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            boxShadow: statusFilter === 'Rejected' ? '0 10px 25px rgba(239, 68, 68, 0.2)' : 'none'
-          }}
+          title="Click to filter rejected applications"
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Rejected Requests</span>
-            <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-red">
               <XCircle size={18} />
             </div>
+            <span className="stat-tag tag-red">DECLINED</span>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: '#f87171' }}>{stats.rejected}</div>
-          <div style={{ fontSize: '0.8rem', color: '#fca5a5', marginTop: '0.3rem' }}>Declined applications</div>
-        </motion.div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{stats.rejected}</h3>
+            <p className="stat-title">Rejected Requests</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Declined Applications</span>
+            <span className="stat-active-pill pill-red">Rejected</span>
+          </div>
+        </div>
       </div>
 
       {/* Main Content Card - High-Tech Glass Console */}

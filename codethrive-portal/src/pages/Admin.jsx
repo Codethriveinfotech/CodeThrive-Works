@@ -10,6 +10,7 @@ import {
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
+import { formatDate } from '../utils/dateUtils';
 import './Admin.css';
 import './Dashboard.css';
 
@@ -69,7 +70,7 @@ const Admin = () => {
             email: lu.email,
             dept: lu.department || 'Engineering',
             designation: lu.role || 'Software Engineer',
-            joiningDate: new Date().toLocaleDateString(),
+            joiningDate: formatDate(new Date()),
             status: 'Not Checked In',
             firstLoginTime: null,
             lastLogoutTime: null,

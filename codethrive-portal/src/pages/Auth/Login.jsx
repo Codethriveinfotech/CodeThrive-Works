@@ -53,8 +53,8 @@ const Login = () => {
     <div className="auth-page">
       <div className="auth-card card">
         <div className="auth-header">
-          <div className="auth-logo-circle" style={{ width: '65px', height: '65px', overflow: 'hidden', border: 'none', background: 'transparent' }}>
-            <img src="/CodeThriveinfotech Only Logo.png" alt="CTI Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.2)' }} />
+          <div className="auth-logo-circle" style={{ width: '65px', height: '65px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
+            <img src="/logo.png" alt="CodeThrive Infotech Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <h2>CodeThrive Infotech</h2>
           <p>Welcome back! Please login to your account.</p>

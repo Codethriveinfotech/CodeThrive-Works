@@ -5,12 +5,46 @@ import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
 import { motion } from 'framer-motion';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { formatDate } from '../utils/dateUtils';
 import { 
   Banknote, Plus, Search, CheckCircle2, X, Zap, Eye, Printer, Users, 
-  Sparkles, DollarSign, TrendingUp, ShieldCheck, Download
+  Sparkles, DollarSign, TrendingUp, ShieldCheck, Download, FileText,
+  FileCheck, Paperclip, Receipt, Clock
 } from 'lucide-react';
 import './Payroll.css';
+
+const DEFAULT_EXPENSE_CLAIMS = [
+  {
+    _id: 'clm-1',
+    claimId: 'EXP-2026-001',
+    employeeName: 'Kirubakaran',
+    employeeId: 'CTI-EMP-002',
+    category: 'Travel Expense',
+    amount: 2500,
+    expenseDate: '2026-09-28',
+    description: 'On-site Client Visit Taxi & Conveyance Charges',
+    fileName: 'Travel_Ticket_Receipt_CTI002.pdf',
+    fileData: null,
+    status: 'Approved',
+    submittedAt: '2026-09-28'
+  },
+  {
+    _id: 'clm-2',
+    claimId: 'EXP-2026-002',
+    employeeName: 'Alex Rivera',
+    employeeId: 'CTI-EMP-007',
+    category: 'Medical Expense',
+    amount: 1500,
+    expenseDate: '2026-10-01',
+    description: 'Annual Executive Health Checkup & Prescriptions',
+    fileName: 'Medical_Consultation_Bill_CTI007.pdf',
+    fileData: null,
+    status: 'Pending',
+    submittedAt: '2026-10-01'
+  }
+];
 
 const _DEFAULT_PAYROLLS = [
   {
@@ -75,9 +109,19 @@ const AdminPayroll = () => {
   const [payrolls, setPayrolls] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('list'); // 'list', 'individual', 'bulk'
+  const [viewMode, setViewMode] = useState('list'); // 'list', 'individual', 'bulk', 'claims'
   const [searchTerm, setSearchTerm] = useState('');
   
+  // Expense Claims State
+  const [expenseClaims, setExpenseClaims] = useState(() => {
+    try {
+      const stored = localStorage.getItem('cti_expense_claims');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    localStorage.setItem('cti_expense_claims', JSON.stringify(DEFAULT_EXPENSE_CLAIMS));
+    return DEFAULT_EXPENSE_CLAIMS;
+  });
+
   // Payslip detail modal
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
@@ -94,6 +138,7 @@ const AdminPayroll = () => {
 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedClaimDetail, setSelectedClaimDetail] = useState(null);
 
   const [formData, setFormData] = useState({
     month: currentMonthName,
@@ -101,9 +146,9 @@ const AdminPayroll = () => {
     paymentDate: todayStr,
     status: 'Paid',
     basicSalary: 45000,
-    bonus: 0,
-    allowanceDetails: { hra: 18000, travel: 2500, medical: 1500, other: 1000 },
-    deductionDetails: { pf: 5400, esi: 0, professionalTax: 200, incomeTax: 1500, leaveDeduction: 0, loanAdvance: 0, other: 0 }
+    paidLeaveDays: 2,
+    allowanceDetails: { travel: 2500, medical: 1500 },
+    deductionDetails: { leaveDeduction: 0 }
   });
 
   const [bulkFormData, setBulkFormData] = useState({
@@ -165,14 +210,12 @@ const AdminPayroll = () => {
       setSelectedEmployee(emp);
       
       const basic = emp?.salaryAmount || 45000;
-      const hra = Math.round(basic * 0.4);
-      const pf = Math.round(basic * 0.12);
-
       setFormData(prev => ({
         ...prev,
         basicSalary: basic,
-        allowanceDetails: { hra, travel: 2500, medical: 1500, other: 1000 },
-        deductionDetails: { pf, esi: 0, professionalTax: 200, incomeTax: 1500, leaveDeduction: 0, loanAdvance: 0, other: 0 }
+        paidLeaveDays: 2,
+        allowanceDetails: { travel: 2500, medical: 1500 },
+        deductionDetails: { leaveDeduction: 0 }
       }));
     } else {
       setSelectedEmployee(null);
@@ -199,14 +242,121 @@ const AdminPayroll = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ 
       ...prev, 
-      [name]: name === 'basicSalary' || name === 'bonus' ? (Number(value) || 0) : value 
+      [name]: name === 'basicSalary' || name === 'paidLeaveDays' ? (Number(value) || 0) : value 
     }));
   };
 
-  const totalAllowances = Object.values(formData.allowanceDetails).reduce((acc, val) => acc + (val || 0), 0);
-  const totalDeductions = Object.values(formData.deductionDetails).reduce((acc, val) => acc + (val || 0), 0);
-  const totalEarnings = (formData.basicSalary || 0) + totalAllowances + (formData.bonus || 0);
+  const totalAllowances = (formData.allowanceDetails.travel || 0) + (formData.allowanceDetails.medical || 0);
+  const totalDeductions = formData.deductionDetails.leaveDeduction || 0;
+  const totalEarnings = (formData.basicSalary || 0) + totalAllowances;
   const netSalary = totalEarnings - totalDeductions;
+
+  const downloadExpenseBill = (claim) => {
+    try {
+      if (claim.fileData && claim.fileData.startsWith('data:')) {
+        const link = document.createElement('a');
+        link.href = claim.fileData;
+        link.download = claim.fileName || `${claim.claimId}_Bill.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+
+      // PDF Voucher Fallback
+      const doc = new jsPDF();
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 40, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 18);
+
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(167, 243, 208);
+      doc.text(`EXPENSE REIMBURSEMENT BILL RECEIPT • ${(claim.category || 'EXPENSE').toUpperCase()}`, 14, 28);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text(`CLAIM ID: ${claim.claimId || 'EXP-2026'}`, 196, 20, { align: 'right' });
+      doc.text(`STATUS: ${(claim.status || 'Pending').toUpperCase()}`, 196, 28, { align: 'right' });
+
+      const renderTable = typeof autoTable === 'function' ? autoTable : (autoTable?.default || doc?.autoTable);
+
+      const billInfo = [
+        ['Claim Reference:', claim.claimId || '-', 'Submitted Date:', formatDate(claim.submittedAt || claim.expenseDate)],
+        ['Employee Name:', claim.employeeName || 'Staff Member', 'Employee ID:', claim.employeeId || 'CTI-EMP-001'],
+        ['Expense Category:', claim.category || 'Travel Expense', 'Expense Date:', formatDate(claim.expenseDate)],
+        ['Reimbursement Amount:', `Rs. ${(claim.amount || 0).toLocaleString()}`, 'Attached Document:', claim.fileName || 'Official_Bill_Receipt.pdf']
+      ];
+
+      renderTable(doc, {
+        startY: 50,
+        body: billInfo,
+        theme: 'plain',
+        styles: { fontSize: 9.5, cellPadding: 3, textColor: [30, 41, 59] },
+        columnStyles: {
+          0: { fontStyle: 'bold', width: 45 },
+          1: { width: 55 },
+          2: { fontStyle: 'bold', width: 45 },
+          3: { width: 45 }
+        }
+      });
+
+      const currY = (doc.lastAutoTable?.finalY || 100) + 10;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 41, 59);
+      doc.text('EXPENSE REASON / DESCRIPTION:', 14, currY);
+
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(71, 85, 105);
+      doc.text(claim.description || 'Verified travel/medical reimbursement claim.', 14, currY + 6);
+
+      const boxY = currY + 16;
+      doc.setFillColor(236, 253, 245);
+      doc.setDrawColor(16, 185, 129);
+      doc.roundedRect(14, boxY, 182, 18, 3, 3, 'FD');
+
+      doc.setTextColor(6, 78, 59);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('APPROVED REIMBURSEMENT AMOUNT:', 22, boxY + 11);
+
+      doc.setTextColor(16, 185, 129);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Rs. ${(claim.amount || 0).toLocaleString()}`, 190, boxY + 12, { align: 'right' });
+
+      doc.setTextColor(100, 116, 139);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Verified digital expense claim voucher. Downloaded from CodeThrive Enterprise Portal.', 14, boxY + 28);
+
+      doc.save(`${claim.claimId || 'Claim'}_${(claim.category || 'Expense').replace(/\s+/g, '_')}_Bill.pdf`);
+    } catch (err) {
+      alert('Failed to download bill: ' + err.message);
+    }
+  };
+
+  const handleApproveClaim = (claimId) => {
+    const updated = expenseClaims.map(c => c._id === claimId ? { ...c, status: 'Approved' } : c);
+    setExpenseClaims(updated);
+    localStorage.setItem('cti_expense_claims', JSON.stringify(updated));
+    alert('Expense Claim Approved Successfully!');
+  };
+
+  const handleRejectClaim = (claimId) => {
+    const updated = expenseClaims.map(c => c._id === claimId ? { ...c, status: 'Rejected' } : c);
+    setExpenseClaims(updated);
+    localStorage.setItem('cti_expense_claims', JSON.stringify(updated));
+    alert('Expense Claim Status Updated to Rejected.');
+  };
 
   const _handleSingleSubmit = async (e) => {
     e.preventDefault();
@@ -324,7 +474,9 @@ const AdminPayroll = () => {
         ['Email ID:', empEmail, 'Payment Status:', payslip.status || 'Paid']
       ];
       
-      doc.autoTable({
+      const renderTable = typeof autoTable === 'function' ? autoTable : (autoTable?.default || doc?.autoTable);
+      
+      renderTable(doc, {
         startY: 56,
         body: employeeData,
         theme: 'plain',
@@ -337,7 +489,7 @@ const AdminPayroll = () => {
         }
       });
 
-      const currentY = doc.lastAutoTable.finalY + 8;
+      const currentY = (doc.lastAutoTable?.finalY || 100) + 8;
       
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
@@ -368,7 +520,7 @@ const AdminPayroll = () => {
         ]
       ];
 
-      doc.autoTable({
+      renderTable(doc, {
         startY: currentY + 4,
         head: [['EARNINGS', 'AMOUNT', 'DEDUCTIONS', 'AMOUNT']],
         body: salaryTableBody,
@@ -389,7 +541,7 @@ const AdminPayroll = () => {
         }
       });
 
-      const finalY = doc.lastAutoTable.finalY + 10;
+      const finalY = (doc.lastAutoTable?.finalY || 180) + 10;
 
       doc.setFillColor(236, 253, 245);
       doc.setDrawColor(16, 185, 129);
@@ -416,6 +568,74 @@ const AdminPayroll = () => {
     } catch (err) {
       console.error('PDF Generation Failed', err);
       alert('Could not generate PDF. Please try again.');
+    }
+  };
+
+  const exportFullPayrollPDF = () => {
+    try {
+      const doc = new jsPDF();
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 38, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 18);
+      
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(167, 243, 208);
+      doc.text('ORGANIZATION MASTER PAYROLL AUDIT STATEMENT', 14, 28);
+
+      const tableColumn = ["Payslip ID", "Employee Name", "Department", "Pay Period", "Gross Salary", "Deductions", "Net Payable", "Status"];
+      const tableRows = filteredPayrolls.map(p => [
+        p.payslipId || '-',
+        p.employee?.fullName || 'Employee',
+        p.employee?.department || '-',
+        p.month || '-',
+        `Rs. ${(p.grossSalary || 0).toLocaleString()}`,
+        `Rs. ${(p.deductions || 0).toLocaleString()}`,
+        `Rs. ${(p.netPayable || 0).toLocaleString()}`,
+        p.status || 'Paid'
+      ]);
+
+      const renderTable = typeof autoTable === 'function' ? autoTable : (autoTable?.default || doc?.autoTable);
+      renderTable(doc, {
+        startY: 44,
+        head: [tableColumn],
+        body: tableRows,
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8.5, fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 2.5 }
+      });
+
+      doc.save(`Master_Payroll_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+    } catch (err) {
+      alert('Could not export full payroll PDF: ' + err.message);
+    }
+  };
+
+  const exportFullPayrollExcel = () => {
+    try {
+      const excelData = filteredPayrolls.map(p => ({
+        'Payslip ID': p.payslipId || '-',
+        'Employee ID': p.employee?.employeeId || '-',
+        'Employee Name': p.employee?.fullName || '-',
+        'Department': p.employee?.department || '-',
+        'Designation': p.employee?.designation || '-',
+        'Pay Period': p.month || '-',
+        'Basic Salary': p.basicSalary || 0,
+        'Gross Salary': p.grossSalary || 0,
+        'Deductions': p.deductions || 0,
+        'Net Payable': p.netPayable || 0,
+        'Status': p.status || 'Paid'
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Payroll Summary");
+      XLSX.writeFile(workbook, `Payroll_Summary_${new Date().toISOString().slice(0,10)}.xlsx`);
+    } catch (err) {
+      alert('Could not export Excel: ' + err.message);
     }
   };
 
@@ -483,13 +703,60 @@ const AdminPayroll = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
           {viewMode === 'list' ? (
             <>
               <button 
+                onClick={exportFullPayrollPDF}
+                title="Download Organization Master Payroll Statement PDF"
+                style={{
+                  padding: '0.75rem 1.1rem', borderRadius: '12px',
+                  background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)',
+                  color: '#a5b4fc', fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem'
+                }}
+              >
+                <Download size={16} />
+                <span>Export Master PDF</span>
+              </button>
+              <button 
+                onClick={exportFullPayrollExcel}
+                title="Export Payroll Data to Excel Sheet"
+                style={{
+                  padding: '0.75rem 1.1rem', borderRadius: '12px',
+                  background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: '#38bdf8', fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem'
+                }}
+              >
+                <Download size={16} />
+                <span>Export Excel</span>
+              </button>
+              <button 
+                onClick={() => setViewMode(viewMode === 'claims' ? 'list' : 'claims')}
+                style={{
+                  padding: '0.75rem 1.1rem', borderRadius: '12px',
+                  background: viewMode === 'claims' ? 'rgba(236, 72, 153, 0.3)' : 'rgba(236, 72, 153, 0.15)',
+                  border: '1px solid rgba(236, 72, 153, 0.35)',
+                  color: '#f472b6', fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem'
+                }}
+              >
+                <Receipt size={16} />
+                <span>Expense Bills Audit</span>
+                {expenseClaims.filter(c => c.status === 'Pending').length > 0 && (
+                  <span style={{
+                    background: '#ef4444', color: '#fff', fontSize: '0.72rem', fontWeight: 800,
+                    padding: '2px 7px', borderRadius: '10px', marginLeft: '3px'
+                  }}>
+                    {expenseClaims.filter(c => c.status === 'Pending').length}
+                  </span>
+                )}
+              </button>
+              <button 
                 onClick={() => setViewMode('bulk')}
                 style={{
-                  padding: '0.75rem 1.3rem', borderRadius: '12px',
+                  padding: '0.75rem 1.1rem', borderRadius: '12px',
                   background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)',
                   color: '#fbbf24', fontWeight: 700, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: '0.5rem'
@@ -527,42 +794,120 @@ const AdminPayroll = () => {
 
       {/* KPI Stats */}
       {viewMode === 'list' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-          <motion.div whileHover={{ y: -4 }} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Total Payroll Disbursed</span>
-              <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}><DollarSign size={18} /></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '1.25rem' }}>
+          
+          {/* Card 1: Total Payroll Disbursed */}
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.75))',
+            borderRadius: '16px', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '1.25rem',
+            position: 'relative', overflow: 'hidden', backdropFilter: 'blur(12px)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)', display: 'flex', flexDirection: 'column', gap: '0.8rem'
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #10b981, #059669)' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <DollarSign size={20} color="#34d399" />
+              </div>
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.6px', color: '#a7f3d0', background: 'rgba(16, 185, 129, 0.15)', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                DISBURSED
+              </span>
             </div>
-            <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#34d399' }}>₹{stats.totalDisbursed.toLocaleString()}</div>
-            <div style={{ fontSize: '0.8rem', color: '#a7f3d0', marginTop: '0.3rem' }}>Monthly net disbursement</div>
-          </motion.div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#34d399', letterSpacing: '-0.5px' }}>
+                ₹{stats.totalDisbursed.toLocaleString()}
+              </h3>
+              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.86rem', color: '#e2e8f0', fontWeight: 600 }}>Total Payroll Disbursed</p>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.6rem', marginTop: '0.2rem' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Monthly Net Disbursement</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#34d399', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 7px', borderRadius: '5px' }}>Released</span>
+            </div>
+          </div>
 
-          <motion.div whileHover={{ y: -4 }} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Payslips Processed</span>
-              <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8' }}><CheckCircle2 size={18} /></div>
+          {/* Card 2: Payslips Processed */}
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(99, 102, 241, 0.12), rgba(15, 23, 42, 0.75))',
+            borderRadius: '16px', border: '1px solid rgba(99, 102, 241, 0.3)', padding: '1.25rem',
+            position: 'relative', overflow: 'hidden', backdropFilter: 'blur(12px)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)', display: 'flex', flexDirection: 'column', gap: '0.8rem'
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #6366f1, #4f46e5)' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.2)', border: '1px solid rgba(99, 102, 241, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CheckCircle2 size={20} color="#a5b4fc" />
+              </div>
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.6px', color: '#a5b4fc', background: 'rgba(99, 102, 241, 0.15)', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+                PROCESSED
+              </span>
             </div>
-            <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#fff' }}>{stats.paidCount}</div>
-            <div style={{ fontSize: '0.8rem', color: '#a5b4fc', marginTop: '0.3rem' }}>Completed & released</div>
-          </motion.div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#a5b4fc', letterSpacing: '-0.5px' }}>
+                {stats.paidCount}
+              </h3>
+              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.86rem', color: '#e2e8f0', fontWeight: 600 }}>Payslips Processed</p>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.6rem', marginTop: '0.2rem' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Completed & Released</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#a5b4fc', background: 'rgba(99, 102, 241, 0.15)', padding: '2px 7px', borderRadius: '5px' }}>Issued</span>
+            </div>
+          </div>
 
-          <motion.div whileHover={{ y: -4 }} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Pending Release</span>
-              <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}><Zap size={18} /></div>
+          {/* Card 3: Pending Release */}
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(245, 158, 11, 0.12), rgba(15, 23, 42, 0.75))',
+            borderRadius: '16px', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '1.25rem',
+            position: 'relative', overflow: 'hidden', backdropFilter: 'blur(12px)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)', display: 'flex', flexDirection: 'column', gap: '0.8rem'
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #f59e0b, #d97706)' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.2)', border: '1px solid rgba(245, 158, 11, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Zap size={20} color="#fbbf24" />
+              </div>
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.6px', color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                PENDING
+              </span>
             </div>
-            <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#fbbf24' }}>{stats.processingCount}</div>
-            <div style={{ fontSize: '0.8rem', color: '#fde68a', marginTop: '0.3rem' }}>Under processing approval</div>
-          </motion.div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#fbbf24', letterSpacing: '-0.5px' }}>
+                {stats.processingCount}
+              </h3>
+              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.86rem', color: '#e2e8f0', fontWeight: 600 }}>Pending Release</p>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.6rem', marginTop: '0.2rem' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Processing Approval</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', padding: '2px 7px', borderRadius: '5px' }}>Pending</span>
+            </div>
+          </div>
 
-          <motion.div whileHover={{ y: -4 }} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '1.3rem 1.5rem', borderRadius: '16px', backdropFilter: 'blur(12px)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase' }}>Average Employee Payout</span>
-              <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc' }}><TrendingUp size={18} /></div>
+          {/* Card 4: Average Employee Payout */}
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.12), rgba(15, 23, 42, 0.75))',
+            borderRadius: '16px', border: '1px solid rgba(168, 85, 247, 0.3)', padding: '1.25rem',
+            position: 'relative', overflow: 'hidden', backdropFilter: 'blur(12px)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)', display: 'flex', flexDirection: 'column', gap: '0.8rem'
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #a855f7, #7e22ce)' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(168, 85, 247, 0.2)', border: '1px solid rgba(168, 85, 247, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <TrendingUp size={20} color="#c084fc" />
+              </div>
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.6px', color: '#c084fc', background: 'rgba(168, 85, 247, 0.15)', padding: '3px 8px', borderRadius: '6px', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+                AVERAGE
+              </span>
             </div>
-            <div style={{ fontSize: '1.9rem', fontWeight: 800, color: '#e9d5ff' }}>₹{stats.avgSalary.toLocaleString()}</div>
-            <div style={{ fontSize: '0.8rem', color: '#d8b4fe', marginTop: '0.3rem' }}>Per staff net average</div>
-          </motion.div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#c084fc', letterSpacing: '-0.5px' }}>
+                ₹{stats.avgSalary.toLocaleString()}
+              </h3>
+              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.86rem', color: '#e2e8f0', fontWeight: 600 }}>Average Employee Payout</p>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.6rem', marginTop: '0.2rem' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Per Staff Net Average</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#c084fc', background: 'rgba(168, 85, 247, 0.15)', padding: '2px 7px', borderRadius: '5px' }}>Average</span>
+            </div>
+          </div>
+
         </div>
       )}
 
@@ -590,7 +935,7 @@ const AdminPayroll = () => {
             <table className="data-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
               <thead>
                 <tr style={{ color: 'var(--text-muted)', fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  <th style={{ padding: '0.8rem 1rem', textAlign: 'left' }}>Payslip ID</th>
+                  <th style={{ padding: '0.8rem 1rem', textAlign: 'left', whiteSpace: 'nowrap' }}>Payslip ID</th>
                   <th style={{ padding: '0.8rem 1rem', textAlign: 'left' }}>Employee</th>
                   <th style={{ padding: '0.8rem 1rem', textAlign: 'left' }}>Salary Month</th>
                   <th style={{ padding: '0.8rem 1rem', textAlign: 'left' }}>Gross Earnings</th>
@@ -609,8 +954,8 @@ const AdminPayroll = () => {
                     style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}
                     className="hover-lift"
                   >
-                    <td style={{ padding: '1rem', borderRadius: '12px 0 0 12px' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '4px 10px', borderRadius: '8px' }}>
+                    <td style={{ padding: '1rem', borderRadius: '12px 0 0 12px', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap', display: 'inline-block' }}>
                         {ps.payslipId}
                       </span>
                     </td>
@@ -682,6 +1027,224 @@ const AdminPayroll = () => {
               </tbody>
             </table>
           </div>
+        </Card>
+      )}
+
+      {/* Submitted Expense Claims & Bills View */}
+      {viewMode === 'claims' && (
+        <Card style={{ background: 'rgba(15, 23, 42, 0.85)', borderRadius: '20px', border: '1px solid rgba(236, 72, 153, 0.35)', padding: '1.25rem', backdropFilter: 'blur(16px)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #ec4899, #be185d)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(236,72,153,0.4)' }}>
+                <Receipt size={20} color="#fff" />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, color: '#fff', fontSize: '1.3rem', fontWeight: 800 }}>Employee Expense Claims & Submitted Bills Audit</h2>
+                <p style={{ margin: '0.2rem 0 0 0', color: '#fbcfe8', fontSize: '0.85rem' }}>
+                  Review employee travel & medical bill submissions, download attached bill documents, and approve reimbursement.
+                </p>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setViewMode('list')}
+              className="btn btn-outline"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '10px', padding: '0.45rem 0.85rem', fontSize: '0.85rem' }}
+            >
+              <X size={15} />
+              <span>Close Audit</span>
+            </button>
+          </div>
+
+          {(!expenseClaims || expenseClaims.length === 0) ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+              <Receipt size={40} style={{ opacity: 0.5, marginBottom: '0.5rem' }} />
+              <p>No expense bills submitted by employees yet.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', width: '100%', overflowX: 'hidden' }}>
+              
+              {/* Header Titles Bar */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '18% 13% 9% 9% 14% 10% 27%',
+                gap: '0.4rem', padding: '0 0.8rem', color: 'var(--text-muted)',
+                fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px',
+                alignItems: 'center', width: '100%', boxSizing: 'border-box'
+              }}>
+                <div style={{ minWidth: 0 }}>Employee Target</div>
+                <div style={{ minWidth: 0 }}>Category</div>
+                <div style={{ minWidth: 0 }}>Date</div>
+                <div style={{ minWidth: 0 }}>Amount</div>
+                <div style={{ minWidth: 0 }}>Description</div>
+                <div style={{ minWidth: 0, textAlign: 'center' }}>Status</div>
+                <div style={{ minWidth: 0, textAlign: 'left' }}>Actions & Download</div>
+              </div>
+
+              {/* Rows */}
+              {expenseClaims.map((claim, idx) => (
+                <div 
+                  key={claim._id || idx}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    padding: '0.75rem 0.85rem',
+                    display: 'grid',
+                    gridTemplateColumns: '18% 13% 9% 9% 14% 10% 27%',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}
+                  className="hover-lift"
+                >
+                  {/* 1. Employee Info */}
+                  <div style={{ minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.86rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>{claim.employeeName}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#a7f3d0', overflow: 'hidden', textOverflow: 'ellipsis' }}>{claim.employeeId}</div>
+                  </div>
+
+                  {/* 2. Category */}
+                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                    <span style={{
+                      fontSize: '0.72rem', fontWeight: 700, padding: '3px 7px', borderRadius: '6px', whiteSpace: 'nowrap', display: 'inline-block',
+                      background: claim.category === 'Travel Expense' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(168, 85, 247, 0.15)',
+                      color: claim.category === 'Travel Expense' ? '#38bdf8' : '#c084fc',
+                      border: claim.category === 'Travel Expense' ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(168, 85, 247, 0.3)'
+                    }}>
+                      {claim.category}
+                    </span>
+                  </div>
+
+                  {/* 3. Date */}
+                  <div style={{ minWidth: 0, color: '#e2e8f0', fontSize: '0.8rem', whiteSpace: 'nowrap', fontWeight: 500 }}>
+                    {formatDate(claim.expenseDate)}
+                  </div>
+
+                  {/* 4. Amount */}
+                  <div style={{ minWidth: 0, fontWeight: 800, color: '#34d399', fontSize: '0.92rem', whiteSpace: 'nowrap' }}>
+                    ₹{(claim.amount || 0).toLocaleString()}
+                  </div>
+
+                  {/* 5. Description (Clickable to View Full Details) */}
+                  <div 
+                    onClick={() => setSelectedClaimDetail(claim)}
+                    style={{ 
+                      minWidth: 0, color: '#38bdf8', fontSize: '0.8rem', 
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem'
+                    }} 
+                    title="Click to view description popup"
+                  >
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: 'underline', textUnderlineOffset: '3px' }}>
+                      {claim.description || '-'}
+                    </span>
+                    <Eye size={12} style={{ flexShrink: 0, opacity: 0.8 }} />
+                  </div>
+
+                  {/* 6. Status */}
+                  <div style={{ minWidth: 0, textAlign: 'center', whiteSpace: 'nowrap', display: 'flex', justifyContent: 'center' }}>
+                    <StatusBadge status={claim.status || 'Pending'} />
+                  </div>
+
+                  {/* 7. Actions & Download (Left-aligned for perfect space optimization) */}
+                  <div style={{ minWidth: 0, display: 'flex', justifyContent: 'flex-start', gap: '0.45rem', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                    <button
+                      onClick={() => downloadExpenseBill(claim)}
+                      title="Download Employee Bill Receipt"
+                      style={{
+                        padding: '0.45rem 0.75rem', borderRadius: '8px',
+                        background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none',
+                        color: '#fff', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+                        display: 'inline-flex', alignItems: 'center', gap: '0.35rem', whiteSpace: 'nowrap',
+                        boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)', flexShrink: 0
+                      }}
+                    >
+                      <Download size={13} />
+                      <span>Download Bill</span>
+                    </button>
+
+                    {claim.status === 'Pending' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flexShrink: 0 }}>
+                        <button
+                          onClick={() => handleApproveClaim(claim._id)}
+                          title="Approve Reimbursement"
+                          style={{
+                            padding: '0.22rem 0.6rem', borderRadius: '5px',
+                            background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)',
+                            color: '#60a5fa', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            textAlign: 'center'
+                          }}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleRejectClaim(claim._id)}
+                          title="Reject Reimbursement"
+                          style={{
+                            padding: '0.22rem 0.6rem', borderRadius: '5px',
+                            background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)',
+                            color: '#f87171', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                            textAlign: 'center'
+                          }}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Clean Description Popup Modal */}
+          {selectedClaimDetail && (
+            <div style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 9999, padding: '1rem'
+            }}>
+              <div style={{
+                background: '#0f172a', border: '1px solid rgba(236,72,153,0.4)',
+                borderRadius: '16px', padding: '1.5rem', maxWidth: '460px', width: '100%',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.6)', color: '#fff'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#ec4899', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <FileText size={18} />
+                    <span>Expense Claim Description & Reason</span>
+                  </h3>
+                  <button 
+                    onClick={() => setSelectedClaimDetail(null)} 
+                    style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#94a3b8', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.04)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', margin: '0.5rem 0' }}>
+                  <div style={{ color: '#f1f5f9', lineHeight: 1.6, fontSize: '0.95rem', wordBreak: 'break-word' }}>
+                    {selectedClaimDetail.description || 'No description provided for this claim.'}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => setSelectedClaimDetail(null)}
+                    className="btn btn-primary"
+                    style={{ padding: '0.45rem 1.25rem', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 600 }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
@@ -892,10 +1455,10 @@ const AdminPayroll = () => {
               </div>
             </div>
 
-            {/* 2. Earnings & Allowances Grid */}
+            {/* 2. Simplified Earnings & Deductions Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
               
-              {/* Allowances Card */}
+              {/* Earnings & Allowances Card */}
               <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '16px', padding: '1.4rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
                   <h3 style={{ margin: 0, color: '#34d399', fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -909,7 +1472,7 @@ const AdminPayroll = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div className="form-group">
-                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Basic Monthly Salary (₹) *</label>
+                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem', fontWeight: 600 }}>Basic Monthly Salary (₹) *</label>
                     <input 
                       type="number" 
                       name="basicSalary"
@@ -920,31 +1483,9 @@ const AdminPayroll = () => {
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Performance Bonus (₹)</label>
-                    <input 
-                      type="number" 
-                      name="bonus"
-                      value={formData.bonus} 
-                      onChange={_handleChange}
-                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>House Rent Allowance (HRA ₹)</label>
-                    <input 
-                      type="number" 
-                      name="hra"
-                      value={formData.allowanceDetails.hra} 
-                      onChange={_handleAllowanceChange}
-                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
-                    />
-                  </div>
-
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
                     <div className="form-group">
-                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Travel (₹)</label>
+                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Travel Expenses (₹)</label>
                       <input 
                         type="number" 
                         name="travel"
@@ -954,7 +1495,7 @@ const AdminPayroll = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Medical (₹)</label>
+                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Medical Expenses (₹)</label>
                       <input 
                         type="number" 
                         name="medical"
@@ -964,6 +1505,18 @@ const AdminPayroll = () => {
                       />
                     </div>
                   </div>
+
+                  <div className="form-group">
+                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Paid Leave Days (Days)</label>
+                    <input 
+                      type="number" 
+                      name="paidLeaveDays"
+                      value={formData.paidLeaveDays} 
+                      onChange={_handleChange}
+                      placeholder="e.g. 2"
+                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -972,7 +1525,7 @@ const AdminPayroll = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
                   <h3 style={{ margin: 0, color: '#f87171', fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <ShieldCheck size={18} color="#f87171" />
-                    <span>Statutory Deductions & Taxes</span>
+                    <span>Deductions & Adjustments</span>
                   </h3>
                   <span style={{ fontSize: '0.8rem', color: '#fca5a5', fontWeight: 700, background: 'rgba(239, 68, 68, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>
                     Total: -₹{totalDeductions.toLocaleString()}
@@ -981,58 +1534,13 @@ const AdminPayroll = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div className="form-group">
-                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Provident Fund (PF ₹)</label>
-                    <input 
-                      type="number" 
-                      name="pf"
-                      value={formData.deductionDetails.pf} 
-                      onChange={_handleDeductionChange}
-                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Income Tax (TDS ₹)</label>
-                    <input 
-                      type="number" 
-                      name="incomeTax"
-                      value={formData.deductionDetails.incomeTax} 
-                      onChange={_handleDeductionChange}
-                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
-                    <div className="form-group">
-                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Prof. Tax (₹)</label>
-                      <input 
-                        type="number" 
-                        name="professionalTax"
-                        value={formData.deductionDetails.professionalTax} 
-                        onChange={_handleDeductionChange}
-                        style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>ESI Tax (₹)</label>
-                      <input 
-                        type="number" 
-                        name="esi"
-                        value={formData.deductionDetails.esi} 
-                        onChange={_handleDeductionChange}
-                        style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>Unpaid Leave Deductions (₹)</label>
+                    <label className="field-label" style={{ color: '#e2e8f0', fontSize: '0.82rem', fontWeight: 600 }}>Unpaid Leave Deductions (₹)</label>
                     <input 
                       type="number" 
                       name="leaveDeduction"
                       value={formData.deductionDetails.leaveDeduction} 
                       onChange={_handleDeductionChange}
-                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
+                      style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171', fontWeight: 700, padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
                     />
                   </div>
                 </div>

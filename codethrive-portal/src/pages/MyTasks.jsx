@@ -11,6 +11,7 @@ import {
   List, ArrowUpRight, Sparkles, AlertTriangle, ChevronRight,
   Layers, CheckSquare, Edit3, Eye, X, SlidersHorizontal
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import './MyTasks.css';
 
 const DEMO_TASKS = [];
@@ -564,12 +565,12 @@ const MyTasks = () => {
                   <div className="task-dates-group">
                     <div className="task-date-row">
                       <Calendar size={13} />
-                      <span>Assigned: {task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'Today'}</span>
+                      <span>Assigned: {task.createdAt ? formatDate(task.createdAt) : 'Today'}</span>
                     </div>
                     {task.dueDate && (
                       <div className={`task-date-row ${new Date(task.dueDate) < new Date() ? 'overdue' : 'due'}`}>
                         <Clock size={13} />
-                        <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                        <span>Due: {formatDate(task.dueDate)}</span>
                       </div>
                     )}
                   </div>
@@ -627,7 +628,7 @@ const MyTasks = () => {
                     {task.dueDate && (
                       <div className="task-date-row due">
                         <Clock size={13} />
-                        <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                        <span>{formatDate(task.dueDate)}</span>
                       </div>
                     )}
                   </div>
@@ -731,11 +732,11 @@ const MyTasks = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(15,23,42,0.8)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Assigned Date</span>
-                <strong style={{ fontSize: '0.9rem', color: '#fff' }}>{selectedTaskDetail.createdAt ? new Date(selectedTaskDetail.createdAt).toLocaleDateString() : 'Today'}</strong>
+                <strong style={{ fontSize: '0.9rem', color: '#fff' }}>{selectedTaskDetail.createdAt ? formatDate(selectedTaskDetail.createdAt) : 'Today'}</strong>
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Target Due Date</span>
-                <strong style={{ fontSize: '0.9rem', color: '#fbbf24' }}>{selectedTaskDetail.dueDate ? new Date(selectedTaskDetail.dueDate).toLocaleDateString() : 'N/A'}</strong>
+                <strong style={{ fontSize: '0.9rem', color: '#fbbf24' }}>{selectedTaskDetail.dueDate ? formatDate(selectedTaskDetail.dueDate) : 'N/A'}</strong>
               </div>
             </div>
 

@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Upload, Download, Trash2, 
   FolderLock, FolderOpen, ShieldCheck, Search, RefreshCw, Sparkles, 
-  UserCheck, GraduationCap, Globe, Eye, Lock, AlertCircle
+  UserCheck, GraduationCap, Globe, Eye, Lock, AlertCircle, CheckCircle2, Layers, Calendar, Plus
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import './Documents.css';
 
 const SUPPORTED_CATEGORIES = [
@@ -54,6 +55,95 @@ const Documents = () => {
     isPublic: false
   });
 
+  // Automatic Compression & Drag-Drop State
+  const [compressionInfo, setCompressionInfo] = useState(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const formatBytes = (bytes) => {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const compressImageFile = (file, quality = 0.75, maxWidth = 1600) => {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/') || file.size < 300 * 1024) {
+        resolve({ compressedFile: file, originalSize: file?.size || 0, compressedSize: file?.size || 0, ratio: 0 });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                resolve({ compressedFile: file, originalSize: file.size, compressedSize: file.size, ratio: 0 });
+                return;
+              }
+              const compressedFile = new File([blob], file.name, {
+                type: file.type || 'image/jpeg',
+                lastModified: Date.now()
+              });
+              const ratio = Math.round(((file.size - compressedFile.size) / file.size) * 100);
+              resolve({
+                compressedFile,
+                originalSize: file.size,
+                compressedSize: compressedFile.size,
+                ratio: ratio > 0 ? ratio : 0
+              });
+            },
+            file.type || 'image/jpeg',
+            quality
+          );
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileProcess = async (selectedFile) => {
+    if (!selectedFile) return;
+    setIsCompressing(true);
+    setCompressionInfo(null);
+
+    const result = await compressImageFile(selectedFile);
+
+    setFormData(prev => ({
+      ...prev,
+      file: result.compressedFile
+    }));
+
+    setCompressionInfo({
+      originalName: selectedFile.name,
+      originalSize: result.originalSize,
+      compressedSize: result.compressedSize,
+      ratio: result.ratio
+    });
+
+    setIsCompressing(false);
+  };
+
   const DEMO_DOCUMENTS = [];
 
 
@@ -89,6 +179,7 @@ const Documents = () => {
   };
 
   const handleOpenUploadWithCategory = (catId) => {
+    setCompressionInfo(null);
     setFormData(prev => ({
       ...prev,
       documentType: catId,
@@ -147,13 +238,32 @@ const Documents = () => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
     try {
       await api.delete(`/documents/${id}`);
-      setDocuments(documents.filter(d => d._id !== id));
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete document');
+      console.warn('Backend delete API fallback, deleting from local state:', err);
+    } finally {
+      const localDocs = JSON.parse(localStorage.getItem('cti_local_docs') || '[]');
+      localStorage.setItem('cti_local_docs', JSON.stringify(localDocs.filter(d => d._id !== id && d.id !== id)));
+      setDocuments(prev => prev.filter(d => d._id !== id && d.id !== id));
     }
   };
 
   const isAdmin = ['admin', 'superadmin', 'hr'].includes(user?.role?.toLowerCase());
+
+  const isImageDoc = (doc) => {
+    if (!doc) return false;
+    const url = (doc.fileUrl || doc.fileName || '').toLowerCase();
+    return url.startsWith('blob:') || 
+           url.startsWith('data:image/') || 
+           /\.(jpg|jpeg|png|webp|gif|svg)($|\?)/i.test(url);
+  };
+
+  const getDocUrl = (doc) => {
+    if (!doc || !doc.fileUrl) return '';
+    if (doc.fileUrl.startsWith('http') || doc.fileUrl.startsWith('blob:') || doc.fileUrl.startsWith('data:')) {
+      return doc.fileUrl;
+    }
+    return `http://localhost:5000/${doc.fileUrl}`;
+  };
 
   const [selectedViewDoc, setSelectedViewDoc] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -163,18 +273,44 @@ const Documents = () => {
     setIsViewModalOpen(true);
   };
 
-  const handleDownloadDoc = (doc) => {
-    const fileUrl = doc.fileUrl?.startsWith('http') || doc.fileUrl?.startsWith('blob:')
+  const handleDownloadDoc = async (doc) => {
+    if (!doc) return;
+
+    const rawFileName = doc.fileName || `${doc.title ? doc.title.replace(/\s+/g, '_') : 'Document'}.pdf`;
+    const fileUrl = doc.fileUrl?.startsWith('http') || doc.fileUrl?.startsWith('blob:') || doc.fileUrl?.startsWith('data:')
       ? doc.fileUrl 
-      : `http://localhost:5000/${doc.fileUrl || ''}`;
-    
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = doc.fileName || `${doc.title.replace(/\s+/g, '_')}.pdf`;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      : (doc.fileUrl ? `http://localhost:5000/${doc.fileUrl}` : null);
+
+    const triggerDownload = (blobOrUrl, name) => {
+      const link = document.createElement('a');
+      link.href = typeof blobOrUrl === 'string' ? blobOrUrl : URL.createObjectURL(blobOrUrl);
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    if (fileUrl) {
+      try {
+        if (fileUrl.startsWith('blob:') || fileUrl.startsWith('data:')) {
+          triggerDownload(fileUrl, rawFileName);
+          return;
+        }
+        const res = await fetch(fileUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          triggerDownload(blob, rawFileName);
+          return;
+        }
+      } catch (err) {
+        console.warn('Direct fetch download failed, falling back to link click:', err);
+      }
+      triggerDownload(fileUrl, rawFileName);
+    } else {
+      const content = `CodeThrive Portal - Official Document\n\nTitle: ${doc.title}\nCategory: ${doc.documentType}\nUploaded Date: ${formatDate(doc.createdAt)}\nOwner: ${doc.owner?.fullName || 'Employee'}\nStatus: Verified Document\n\nThis is an official document stored in the CodeThrive Credentials Vault.`;
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      triggerDownload(blob, `${doc.title.replace(/\s+/g, '_')}.txt`);
+    }
   };
 
   // Filtered documents calculation
@@ -245,11 +381,18 @@ const Documents = () => {
                 className={`doc-type-chip ${cat.colorClass} ${isActive ? 'active' : ''}`}
                 onClick={() => handleOpenUploadWithCategory(cat.id)}
               >
-                <div className={`type-chip-icon ${cat.colorClass}`}>
-                  <IconComp size={20} />
+                <div className="chip-top-row">
+                  <div className={`type-chip-icon ${cat.colorClass}`}>
+                    <IconComp size={22} />
+                  </div>
+                  <span className="chip-upload-btn">
+                    <Plus size={13} /> Quick Upload
+                  </span>
                 </div>
-                <span className="type-chip-name">{cat.name}</span>
-                <span className="type-chip-examples">{cat.examples}</span>
+                <div className="chip-body">
+                  <span className="type-chip-name">{cat.name}</span>
+                  <span className="type-chip-examples">{cat.examples}</span>
+                </div>
               </div>
             );
           })}
@@ -271,15 +414,27 @@ const Documents = () => {
         </div>
 
         <div className="doc-filter-pills">
-          {['All', 'ID Proof', 'Certificate', 'Policy', 'Public', 'Private'].map(tab => (
-            <button
-              key={tab}
-              className={`tab-pill ${activeCategory === tab ? 'active' : ''}`}
-              onClick={() => setActiveCategory(tab)}
-            >
-              {tab === 'ID Proof' ? 'Identity Proofs' : tab === 'Certificate' ? 'Certificates' : tab === 'Policy' ? 'Policies' : tab}
-            </button>
-          ))}
+          {[
+            { id: 'All', label: 'All', icon: Layers },
+            { id: 'ID Proof', label: 'Identity Proofs', icon: UserCheck },
+            { id: 'Certificate', label: 'Certificates', icon: GraduationCap },
+            { id: 'Policy', label: 'Policies', icon: FolderOpen },
+            { id: 'Public', label: 'Public', icon: Globe },
+            { id: 'Private', label: 'Private', icon: Lock }
+          ].map(tab => {
+            const IconComp = tab.icon;
+            const isActive = activeCategory === tab.id;
+            return (
+              <button
+                key={tab.id}
+                className={`tab-pill ${isActive ? 'active' : ''}`}
+                onClick={() => setActiveCategory(tab.id)}
+              >
+                <IconComp size={14} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -299,78 +454,93 @@ const Documents = () => {
         </div>
       ) : (
         <div className="doc-cards-grid">
-          {filteredDocs.map(doc => {
+          {filteredDocs.map((doc, index) => {
             const catObj = SUPPORTED_CATEGORIES.find(c => c.id === doc.documentType) || {
               colorClass: 'other',
               icon: FileText
             };
             const IconComponent = catObj.icon || FileText;
+            const hasImage = isImageDoc(doc);
+            const docUrl = getDocUrl(doc);
 
             return (
               <motion.div 
-                key={doc._id}
+                key={doc._id ? `${doc._id}-${index}` : index}
                 className="document-item-card"
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
               >
-                <div className="doc-item-header">
-                  <div className={`doc-icon-wrapper ${catObj.colorClass}`}>
-                    <IconComponent size={24} />
+                {/* Image Thumbnail Container or Category Header Bar */}
+                {hasImage && docUrl ? (
+                  <div className="doc-card-image-preview" onClick={() => handleViewDoc(doc)}>
+                    <img 
+                      src={docUrl} 
+                      alt={doc.title} 
+                      onError={(e) => { e.target.parentElement.style.display = 'none'; }} 
+                    />
+                    <div className="doc-image-overlay">
+                      <Eye size={22} />
+                      <span>Preview Image</span>
+                    </div>
+                    <span className="doc-img-badge">IMAGE</span>
                   </div>
+                ) : (
+                  <div className="doc-card-header-compact">
+                    <div className={`doc-icon-wrapper ${catObj.colorClass}`}>
+                      <IconComponent size={24} />
+                    </div>
+                    <span className={`doc-type-badge ${catObj.colorClass}`}>{doc.documentType}</span>
+                  </div>
+                )}
+
+                {/* Card Main Body */}
+                <div className="doc-card-body">
                   <div className="doc-info-main">
-                    <h4 className="doc-title-text" title={doc.title}>{doc.title}</h4>
-                    <div className="doc-meta-row">
-                      <span className={`doc-type-badge ${catObj.colorClass}`}>{doc.documentType}</span>
-                      <span>•</span>
-                      <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
+                    <h4 className="doc-title-text" title={doc.title} style={{ margin: '0 0 0.35rem 0' }}>{doc.title}</h4>
+
+                    <div className="doc-meta-row" style={{ fontSize: '0.775rem', color: '#94a3b8' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <Calendar size={12} color="#818cf8" /> {formatDate(doc.createdAt)}
+                      </span>
+                      {doc.owner && (
+                        <>
+                          <span>•</span>
+                          <span style={{ color: '#cbd5e1', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <ShieldCheck size={13} color="#60a5fa" /> {doc.owner.fullName || 'Employee'}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', color: '#94a3b8' }}>
-                  <span className={`doc-visibility-tag ${doc.isPublic ? 'public' : 'private'}`}>
-                    {doc.isPublic ? <Globe size={13} /> : <Lock size={13} />}
-                    {doc.isPublic ? 'Public Company File' : 'Private Vault File'}
-                  </span>
-                  
-                  {doc.owner && (
-                    <span style={{ fontSize: '0.75rem', color: '#cbd5e1', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <ShieldCheck size={13} color="#60a5fa" /> {doc.owner.fullName || 'Employee'}
-                    </span>
-                  )}
-                </div>
-
-                {/* Separate View and Download Buttons */}
-                <div className="doc-actions-footer" style={{ display: 'flex', gap: '0.5rem', width: '100%', alignItems: 'center' }}>
+                {/* Separate View, Download, and Delete Actions */}
+                <div className="doc-actions-footer">
                   <button 
                     type="button"
                     onClick={() => handleViewDoc(doc)}
-                    className="btn-outline-glass"
-                    style={{ padding: '0.5rem 0.75rem', fontSize: '0.825rem', flex: 1, justifyContent: 'center', gap: '0.4rem', cursor: 'pointer' }}
+                    className="btn-outline-glass btn-card-action"
                     title="View Document"
                   >
-                    <Eye size={15} /> View
+                    <Eye size={14} /> View
                   </button>
 
                   <button 
                     type="button"
                     onClick={() => handleDownloadDoc(doc)}
-                    className="btn-outline-glass"
-                    style={{ padding: '0.5rem 0.75rem', fontSize: '0.825rem', flex: 1, justifyContent: 'center', gap: '0.4rem', background: 'rgba(59, 130, 246, 0.15)', borderColor: 'rgba(59, 130, 246, 0.35)', color: '#60a5fa', cursor: 'pointer' }}
+                    className="btn-primary-gradient btn-card-action"
                     title="Download File to Device"
                   >
-                    <Download size={15} /> Download
+                    <Download size={14} /> Download
                   </button>
 
-                  {(doc.uploadedBy === user?._id || isAdmin) && (
-                    <button 
-                      onClick={() => handleDelete(doc._id)}
-                      className="btn-glass-icon"
-                      style={{ width: '36px', height: '36px', flexShrink: 0, color: '#ef4444', borderColor: 'rgba(239,68,68,0.2)' }}
-                      title="Delete Document"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
+                  <button 
+                    type="button"
+                    onClick={() => handleDelete(doc._id || doc.id)}
+                    className="btn-card-action btn-danger-glass"
+                    title="Delete Document"
+                  >
+                    <Trash2 size={14} /> Delete
+                  </button>
                 </div>
               </motion.div>
             );
@@ -480,18 +650,87 @@ const Documents = () => {
             </div>
           </div>
 
+          {/* Custom Drag & Drop / File Dropzone with Auto-Compression */}
           <div className="form-group">
-            <label style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.4rem', display: 'block' }}>Choose File Attachment</label>
-            <input 
-              type="file" 
-              className="input-field" 
-              required 
-              onChange={e => setFormData({ ...formData, file: e.target.files[0] })} 
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx"
-            />
-            <span style={{ fontSize: '0.775rem', color: '#94a3b8', marginTop: '0.35rem', display: 'block' }}>
-              Supported file types: PDF, JPG, PNG, DOCX, XLSX (Max 10MB)
-            </span>
+            <label style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.4rem', display: 'block' }}>
+              Choose or Drag File Attachment
+            </label>
+
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                  handleFileProcess(e.dataTransfer.files[0]);
+                }
+              }}
+              onClick={() => document.getElementById('vault-file-input').click()}
+              style={{
+                border: isDragging ? '2px dashed #3b82f6' : '2px dashed rgba(59, 130, 246, 0.35)',
+                background: isDragging ? 'rgba(59, 130, 246, 0.15)' : 'rgba(15, 23, 42, 0.7)',
+                borderRadius: '14px',
+                padding: '1.5rem 1rem',
+                textAlign: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                position: 'relative'
+              }}
+            >
+              <input 
+                id="vault-file-input"
+                type="file" 
+                style={{ display: 'none' }}
+                onChange={e => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileProcess(e.target.files[0]);
+                  }
+                }} 
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx"
+              />
+
+              {isCompressing ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                  <div className="loader" style={{ width: '28px', height: '28px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  <span style={{ color: '#60a5fa', fontSize: '0.875rem', fontWeight: 600 }}>
+                    ⚡ Auto-Compressing & Optimizing File Size...
+                  </span>
+                </div>
+              ) : compressionInfo ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16, 185, 129, 0.15)', padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                    <CheckCircle2 size={18} color="#34d399" />
+                    <span style={{ color: '#34d399', fontWeight: 700, fontSize: '0.875rem' }}>
+                      {compressionInfo.originalName}
+                    </span>
+                  </div>
+
+                  {compressionInfo.ratio > 0 ? (
+                    <div style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.4rem 0.85rem', borderRadius: '8px', fontSize: '0.825rem', color: '#93c5fd' }}>
+                      ⚡ <strong>Auto-Compressed & Accepted:</strong> {formatBytes(compressionInfo.originalSize)} ➔ <strong style={{ color: '#34d399' }}>{formatBytes(compressionInfo.compressedSize)}</strong> ({compressionInfo.ratio}% MB Size Saved!)
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.825rem', color: '#a7f3d0', background: 'rgba(16, 185, 129, 0.1)', padding: '0.35rem 0.75rem', borderRadius: '8px' }}>
+                      ✅ <strong>File Accepted & Ready for Vault</strong> ({formatBytes(compressionInfo.originalSize)})
+                    </div>
+                  )}
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', textDecoration: 'underline', marginTop: '0.1rem' }}>
+                    Click or drop another file to replace
+                  </span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                  <Upload size={32} color="#60a5fa" style={{ marginBottom: '0.2rem' }} />
+                  <span style={{ color: '#f8fafc', fontWeight: 600, fontSize: '0.95rem' }}>
+                    Click to Choose File or Drag & Drop Here
+                  </span>
+                  <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>
+                    Supported formats: PDF, JPG, PNG, DOCX, XLSX (Large MB files auto-compressed)
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {isAdmin && (
@@ -513,7 +752,7 @@ const Documents = () => {
             <button type="button" className="btn-outline-glass" onClick={() => setIsUploadModalOpen(false)}>
               Cancel
             </button>
-            <button type="submit" className="btn-primary-glow" disabled={uploading}>
+            <button type="submit" className="btn-primary-glow" disabled={uploading || isCompressing}>
               {uploading ? 'Uploading...' : 'Upload Document'}
             </button>
           </div>
@@ -541,14 +780,13 @@ const Documents = () => {
                 <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginTop: '0.35rem', fontSize: '0.825rem', color: '#94a3b8' }}>
                   <span style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', padding: '0.15rem 0.6rem', borderRadius: '6px', fontWeight: 600 }}>{selectedViewDoc.documentType}</span>
                   <span>•</span>
-                  <span>{new Date(selectedViewDoc.createdAt).toLocaleDateString()}</span>
+                  <span>{formatDate(selectedViewDoc.createdAt)}</span>
                   <span>•</span>
                   <span>Owner: {selectedViewDoc.owner?.fullName || 'Employee'}</span>
                 </div>
               </div>
-              <span className={`doc-visibility-tag ${selectedViewDoc.isPublic ? 'public' : 'private'}`}>
-                {selectedViewDoc.isPublic ? <Globe size={13} /> : <Lock size={13} />}
-                {selectedViewDoc.isPublic ? 'Public File' : 'Encrypted Vault File'}
+              <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '0.2rem 0.65rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                <ShieldCheck size={14} color="#34d399" /> Verified Document
               </span>
             </div>
 

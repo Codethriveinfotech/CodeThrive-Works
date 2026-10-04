@@ -13,6 +13,7 @@ import Modal from '../components/common/Modal';
 import SkeletonLoader from '../components/common/SkeletonLoader';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
+import { formatDate } from '../utils/dateUtils';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -65,93 +66,126 @@ const Dashboard = () => {
   const [priorityTasks, setPriorityTasks] = useState([]);
   const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
 
+  const fetchDashboardData = async () => {
+    try {
+      const [dashRes, notifRes, tasksRes] = await Promise.all([
+        api.get('/dashboard/employee'),
+        api.get('/notifications'),
+        api.get('/tasks/my-tasks')
+      ]);
+      
+      const dashData = dashRes?.data?.data || dashRes?.data || {};
+      if (dashData.attendance) {
+        setAttendance(dashData.attendance);
+      }
+      if (dashData.activeSession !== undefined) {
+        setActiveSession(dashData.activeSession);
+      }
+      
+      const tasksPayload = tasksRes?.data?.data || tasksRes?.data || [];
+      const tasks = Array.isArray(tasksPayload) ? tasksPayload : [];
+      setTasksData(tasks);
+      
+      const notifPayload = notifRes?.data?.data || notifRes?.data || [];
+      setNotifications(Array.isArray(notifPayload) ? notifPayload : []);
+      
+      // Calculate Task Stats
+      let pending = 0;
+      let completed = 0;
+      const priority = [];
+      const deadlines = [];
+      
+      tasks.forEach(task => {
+        if (task.status === 'Completed') completed++;
+        else pending++; 
+
+        if ((task.priority === 'High' || task.priority === 'Urgent') && task.status !== 'Completed') {
+          priority.push(task);
+        }
+
+        if (task.dueDate && task.status !== 'Completed') {
+          deadlines.push(task);
+        }
+      });
+
+      priority.sort((a, b) => new Date(a.dueDate || '2099') - new Date(b.dueDate || '2099'));
+      deadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+      setTaskStats({ total: tasks.length, pending, completed });
+      setPriorityTasks(priority.slice(0, 4));
+      setUpcomingDeadlines(deadlines.slice(0, 4));
+
+      setLoading(false);
+    } catch (err) {
+      console.warn('Backend API offline. Loading fallback demo dashboard data...', err);
+      const mockTasks = [
+        { _id: 't1', title: 'Complete Code Review & Module Testing', status: 'In Progress', priority: 'High', dueDate: '2026-09-15' },
+        { _id: 't2', title: 'Update Enterprise Portal Documentation', status: 'Pending', priority: 'Medium', dueDate: '2026-09-18' },
+        { _id: 't3', title: 'Weekly Engineering Sync', status: 'Completed', priority: 'High', dueDate: '2026-09-07' }
+      ];
+      setTasksData(mockTasks);
+      setTaskStats({ total: 3, pending: 2, completed: 1 });
+      setPriorityTasks([mockTasks[0]]);
+      setUpcomingDeadlines([mockTasks[0], mockTasks[1]]);
+      setNotifications([
+        { _id: 'n1', title: 'Welcome to CodeThrive Portal!', message: 'Your workspace is ready and active.', createdAt: new Date().toISOString() }
+      ]);
+      let savedAttendance = null;
+      let savedActiveSession = null;
+      try {
+        const cached = localStorage.getItem('codethrive_session');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const todayStr = new Date().toDateString();
+          if (parsed.savedDate === todayStr) {
+            savedAttendance = parsed.attendance;
+            savedActiveSession = parsed.activeSession;
+          }
+        }
+      } catch (e) {}
+
+      setAttendance(savedAttendance || { status: 'Not Checked In', totalWorkDurationInSeconds: 0, totalBreakDurationInSeconds: 0, totalLunchDurationInSeconds: 0 });
+      setActiveSession(savedActiveSession || null);
+      setLoading(false);
+    }
+  };
+
   // Load Dashboard Data
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [dashRes, notifRes, tasksRes] = await Promise.all([
-          api.get('/dashboard/employee'),
-          api.get('/notifications'),
-          api.get('/tasks/my-tasks')
-        ]);
-        
-        const dashData = dashRes?.data?.data || dashRes?.data || {};
-        if (dashData.attendance) {
-          setAttendance(dashData.attendance);
-        }
-        if (dashData.activeSession !== undefined) {
-          setActiveSession(dashData.activeSession);
-        }
-        
-        const tasksPayload = tasksRes?.data?.data || tasksRes?.data || [];
-        const tasks = Array.isArray(tasksPayload) ? tasksPayload : [];
-        setTasksData(tasks);
-        
-        const notifPayload = notifRes?.data?.data || notifRes?.data || [];
-        setNotifications(Array.isArray(notifPayload) ? notifPayload : []);
-        
-        // Calculate Task Stats
-        let pending = 0;
-        let completed = 0;
-        const priority = [];
-        const deadlines = [];
-        
-        tasks.forEach(task => {
-          if (task.status === 'Completed') completed++;
-          else pending++; 
+    fetchDashboardData();
 
-          if ((task.priority === 'High' || task.priority === 'Urgent') && task.status !== 'Completed') {
-            priority.push(task);
-          }
+    const handleSync = () => {
+      fetchDashboardData();
+    };
+    window.addEventListener('cti_attendance_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('cti_attendance_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
-          if (task.dueDate && task.status !== 'Completed') {
-            deadlines.push(task);
-          }
-        });
+  // Automatic Calendar Day Change Detector (Resets status to 'Not Checked In' at Midnight 12:00 AM)
+  const [sessionDate, setSessionDate] = useState(new Date().toDateString());
 
-        priority.sort((a, b) => new Date(a.dueDate || '2099') - new Date(b.dueDate || '2099'));
-        deadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-
-        setTaskStats({ total: tasks.length, pending, completed });
-        setPriorityTasks(priority.slice(0, 4));
-        setUpcomingDeadlines(deadlines.slice(0, 4));
-
-        setLoading(false);
-      } catch (err) {
-        console.warn('Backend API offline. Loading fallback demo dashboard data...', err);
-        const mockTasks = [
-          { _id: 't1', title: 'Complete Code Review & Module Testing', status: 'In Progress', priority: 'High', dueDate: '2026-09-15' },
-          { _id: 't2', title: 'Update Enterprise Portal Documentation', status: 'Pending', priority: 'Medium', dueDate: '2026-09-18' },
-          { _id: 't3', title: 'Weekly Engineering Sync', status: 'Completed', priority: 'High', dueDate: '2026-09-07' }
-        ];
-        setTasksData(mockTasks);
-        setTaskStats({ total: 3, pending: 2, completed: 1 });
-        setPriorityTasks([mockTasks[0]]);
-        setUpcomingDeadlines([mockTasks[0], mockTasks[1]]);
-        setNotifications([
-          { _id: 'n1', title: 'Welcome to CodeThrive Portal!', message: 'Your workspace is ready and active.', createdAt: new Date().toISOString() }
-        ]);
-        let savedAttendance = null;
-        let savedActiveSession = null;
-        try {
-          const cached = localStorage.getItem('codethrive_session');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            const todayStr = new Date().toDateString();
-            if (parsed.savedDate === todayStr) {
-              savedAttendance = parsed.attendance;
-              savedActiveSession = parsed.activeSession;
-            }
-          }
-        } catch (e) {}
-
-        setAttendance(savedAttendance || { status: 'Not Checked In', totalWorkDurationInSeconds: 0, totalBreakDurationInSeconds: 0, totalLunchDurationInSeconds: 0 });
-        setActiveSession(savedActiveSession || null);
-        setLoading(false);
+  useEffect(() => {
+    const checkDateChange = () => {
+      const todayStr = new Date().toDateString();
+      if (sessionDate !== todayStr) {
+        setSessionDate(todayStr);
+        setAttendance({ status: 'Not Checked In', totalWorkDurationInSeconds: 0, totalBreakDurationInSeconds: 0, totalLunchDurationInSeconds: 0 });
+        setActiveSession(null);
+        fetchDashboardData();
       }
     };
-    fetchDashboardData();
-  }, []);
+
+    const dateInterval = setInterval(checkDateChange, 5000);
+    window.addEventListener('focus', checkDateChange);
+    return () => {
+      clearInterval(dateInterval);
+      window.removeEventListener('focus', checkDateChange);
+    };
+  }, [sessionDate]);
 
   // Real-time Dynamic Multi-timer Logic
   useEffect(() => {
@@ -232,6 +266,7 @@ const Dashboard = () => {
       setAttendance(newAttendance);
       setActiveSession({ startTime: now.toISOString(), sessionType: 'Work' });
     } finally {
+      window.dispatchEvent(new CustomEvent('cti_attendance_updated'));
       setIsActionLoading(false);
     }
   };
@@ -258,6 +293,7 @@ const Dashboard = () => {
       }));
       setActiveSession({ startTime: now.toISOString(), sessionType: 'Break' });
     } finally {
+      window.dispatchEvent(new CustomEvent('cti_attendance_updated'));
       setIsActionLoading(false);
     }
   };
@@ -284,6 +320,7 @@ const Dashboard = () => {
       }));
       setActiveSession({ startTime: now.toISOString(), sessionType: 'Lunch' });
     } finally {
+      window.dispatchEvent(new CustomEvent('cti_attendance_updated'));
       setIsActionLoading(false);
     }
   };
@@ -312,6 +349,7 @@ const Dashboard = () => {
       }));
       setActiveSession({ startTime: now.toISOString(), sessionType: 'Work' });
     } finally {
+      window.dispatchEvent(new CustomEvent('cti_attendance_updated'));
       setIsActionLoading(false);
     }
   };
@@ -340,6 +378,7 @@ const Dashboard = () => {
         totalLunchDurationInSeconds: activeSession?.sessionType === 'Lunch' ? liveLunchDuration : (prev?.totalLunchDurationInSeconds || 0)
       }));
     } finally {
+      window.dispatchEvent(new CustomEvent('cti_attendance_updated'));
       setIsActionLoading(false);
     }
   };
@@ -404,7 +443,7 @@ const Dashboard = () => {
   const greeting = isMorning ? 'Good Morning' : (isEvening ? 'Good Evening' : 'Good Afternoon');
   const GreetingIcon = isEvening ? Moon : Sun;
 
-  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const currentDate = formatDate(new Date());
 
   const currentStatus = attendance?.status || 'Not Checked In';
   const isWorking = currentStatus === 'Working';
@@ -664,7 +703,7 @@ const Dashboard = () => {
                       <h4 className="item-title">{task.title}</h4>
                       <div className="item-meta">
                         <span className="item-meta-info"><CheckSquare size={12}/> {task.taskId}</span>
-                        {task.dueDate && <span className="item-meta-info"><Calendar size={12}/> {new Date(task.dueDate).toLocaleDateString()}</span>}
+                        {task.dueDate && <span className="item-meta-info"><Calendar size={12}/> {formatDate(task.dueDate)}</span>}
                       </div>
                     </div>
                     <StatusBadge status={task.status} />
@@ -694,7 +733,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <span style={{fontSize: '0.85rem', color: 'var(--danger)', fontWeight: '600'}}>
-                      {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}
+                      {formatDate(task.dueDate)}
                     </span>
                   </li>
                 ))}
@@ -763,7 +802,7 @@ const Dashboard = () => {
                 <div className="breakdown-footer">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                     <span>Progress: <strong style={{ color: '#38bdf8' }}>{task.progressPercentage || 0}%</strong></span>
-                    {task.dueDate && <span>Due: <strong style={{ color: '#fbbf24' }}>{new Date(task.dueDate).toLocaleDateString()}</strong></span>}
+                    {task.dueDate && <span>Due: <strong style={{ color: '#fbbf24' }}>{formatDate(task.dueDate)}</strong></span>}
                   </div>
                   <button 
                     className="btn btn-outline btn-sm" 

@@ -8,6 +8,7 @@ import {
   CheckSquare, Plus, Search, Edit, Trash2, Calendar, Clock, 
   Briefcase, AlertCircle, CheckCircle2, TrendingUp, Sparkles, Filter, FileText, AlignLeft, UserCheck 
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import './Admin.css';
 
 const DEFAULT_DEMO_TASKS = [];
@@ -209,7 +210,7 @@ const AdminTasks = () => {
       accessor: 'dueDate', 
       render: (row) => (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.82rem', color: '#cbd5e1' }}>
-          <Calendar size={14} color="#818cf8" /> {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : 'No Date'}
+          <Calendar size={14} color="#818cf8" /> {row.dueDate ? formatDate(row.dueDate) : 'No Date'}
         </span>
       )
     },
@@ -260,43 +261,92 @@ const AdminTasks = () => {
 
       {/* 2. METRICS CARDS GRID */}
       <div className="metrics-grid">
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('ALL')}>
-          <div className="metric-icon bg-primary-light">
-            <CheckSquare size={26} color="#818cf8" />
+        <div 
+          className={`stat-card stat-card-indigo ${statusFilter === 'ALL' ? 'selected' : ''}`}
+          onClick={() => setStatusFilter('ALL')}
+          title="Click to view all tasks"
+        >
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-indigo">
+              <CheckSquare size={18} />
+            </div>
+            <span className="stat-tag tag-indigo">
+              <span className="beacon-dot"></span> ALL TASKS
+            </span>
           </div>
-          <div className="metric-data">
-            <p>Total Tasks</p>
-            <h3>{totalTasks}</h3>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{totalTasks}</h3>
+            <p className="stat-title">Total Tasks</p>
           </div>
-        </div>
-
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('In Progress')}>
-          <div className="metric-icon bg-info-light">
-            <Briefcase size={26} color="#38bdf8" />
-          </div>
-          <div className="metric-data">
-            <p>In Progress</p>
-            <h3>{inProgressTasks}</h3>
-          </div>
-        </div>
-
-        <div className="metric-card" style={{ cursor: 'pointer' }} onClick={() => setStatusFilter('Completed')}>
-          <div className="metric-icon bg-success-light">
-            <CheckCircle2 size={26} color="#34d399" />
-          </div>
-          <div className="metric-data">
-            <p>Completed Tasks</p>
-            <h3>{completedTasks}</h3>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">System Workload</span>
+            <span className="stat-active-pill pill-indigo">Active</span>
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-icon bg-warning-light">
-            <AlertCircle size={26} color="#fbbf24" />
+        <div 
+          className={`stat-card stat-card-cyan ${statusFilter === 'In Progress' ? 'selected' : ''}`}
+          onClick={() => setStatusFilter('In Progress')}
+          title="Click to filter In Progress tasks"
+        >
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-cyan">
+              <Briefcase size={18} />
+            </div>
+            <span className="stat-tag tag-cyan">IN SPRINT</span>
           </div>
-          <div className="metric-data">
-            <p>Urgent / High Priority</p>
-            <h3>{urgentTasks}</h3>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{inProgressTasks}</h3>
+            <p className="stat-title">In Progress</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Active Execution</span>
+            <span className="stat-active-pill pill-cyan">Running</span>
+          </div>
+        </div>
+
+        <div 
+          className={`stat-card stat-card-emerald ${statusFilter === 'Completed' ? 'selected' : ''}`}
+          onClick={() => setStatusFilter('Completed')}
+          title="Click to filter Completed tasks"
+        >
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-emerald">
+              <CheckCircle2 size={18} />
+            </div>
+            <span className="stat-tag tag-emerald">DELIVERED</span>
+          </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{completedTasks}</h3>
+            <p className="stat-title">Completed Tasks</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Verified Work</span>
+            <span className="stat-active-pill pill-emerald">Done</span>
+          </div>
+        </div>
+
+        <div 
+          className="stat-card stat-card-amber"
+          title="Urgent & High Priority Tasks"
+        >
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-amber">
+              <AlertCircle size={18} />
+            </div>
+            <span className="stat-tag tag-amber">ATTENTION</span>
+          </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number">{urgentTasks}</h3>
+            <p className="stat-title">Urgent / High Priority</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Critical Queue</span>
+            <span className="stat-active-pill pill-amber">Urgent</span>
           </div>
         </div>
       </div>

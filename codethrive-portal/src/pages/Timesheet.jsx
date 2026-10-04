@@ -3,6 +3,7 @@ import api from '../utils/api';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import { Clock, Plus, CheckCircle2, MoreVertical } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
 import './Timesheet.css';
 
 const Timesheet = () => {
@@ -22,8 +23,8 @@ const Timesheet = () => {
       // setEntries(res.data);
       setTimeout(() => {
         setEntries([
-          { _id: '1', task: 'Implemented Auth Context', hours: '4.5', date: new Date().toLocaleDateString() },
-          { _id: '2', task: 'Built Employee Dashboard', hours: '3.5', date: new Date().toLocaleDateString() }
+          { _id: '1', task: 'Implemented Auth Context', hours: '4.5', date: formatDate(new Date()) },
+          { _id: '2', task: 'Built Employee Dashboard', hours: '3.5', date: formatDate(new Date()) }
         ]);
         setLoading(false);
       }, 500);
@@ -40,7 +41,7 @@ const Timesheet = () => {
     const payload = {
       task,
       hours: parseFloat(hours).toFixed(1),
-      date: new Date().toLocaleDateString()
+      date: formatDate(new Date())
     };
 
     try {
@@ -58,7 +59,7 @@ const Timesheet = () => {
   const totalHours = entries.reduce((sum, entry) => sum + parseFloat(entry.hours), 0).toFixed(1);
 
   const columns = [
-    { header: 'Date', accessor: 'date' },
+    { header: 'Date', accessor: 'date', render: row => formatDate(row.date) },
     { header: 'Task Description', accessor: 'task' },
     { header: 'Hours Spent', accessor: 'hours', render: row => <span style={{ fontWeight: 600, color: 'var(--primary-light)' }}>{row.hours} hrs</span> },
     { header: 'Actions', render: () => <button className="btn btn-outline" style={{ padding: '0.2rem 0.5rem' }}><MoreVertical size={14}/></button> }
