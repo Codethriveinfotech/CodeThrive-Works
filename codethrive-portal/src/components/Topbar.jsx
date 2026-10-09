@@ -11,6 +11,9 @@ const Topbar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const getDisplayName = () => user?.fullName || user?.name || 'CodeThrive Employee';
+  const getDisplayRole = () => user?.designation || user?.role || 'Employee';
+
   const getInitials = (name) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -103,14 +106,14 @@ const Topbar = () => {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--text-main)'
             }}>
-              {getInitials(user?.name || user?.email || 'User')}
+              {getInitials(getDisplayName())}
             </div>
             <div className="profile-info" style={{ display: 'flex', flexDirection: 'column' }}>
               <span className="profile-name" style={{ fontWeight: '600', fontSize: '0.95rem' }}>
-                {user?.name || 'CodeThrive Employee'}
+                {getDisplayName()}
               </span>
               <span className="profile-role" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                {user?.role || 'Employee'}
+                {getDisplayRole()}
               </span>
             </div>
             <ChevronDown className="topbar-profile-chevron" size={16} color="var(--text-muted)" style={{ marginLeft: '0.5rem' }} />

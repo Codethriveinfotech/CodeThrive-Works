@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
-const connectDB = require('./config/db');
+const { connectDB, query } = require('./config/db');
 const path = require('path');
 
 // Load env vars
@@ -77,30 +77,17 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-const User = require('./models/User');
-
-// Connect to database, then start the server
+// Connect to Neon PostgreSQL database, then start express server
 connectDB().then(async () => {
-  // Auto-seed admin user if missing
   try {
-    let admin = await User.findOne({ email: 'admin@codethrive.com' });
-    if (!admin) {
-      await User.create({
-        email: 'admin@codethrive.com',
-        password: 'Password@123',
-        role: 'superadmin',
-        status: 'active'
-      });
-      console.log('Admin user auto-seeded (admin@codethrive.com)');
+    const adminCheck = await query('SELECT * FROM users WHERE email = $1', ['admin@codethrive.com']);
+    if (adminCheck.rows.length === 0) {
+      console.log('Admin user missing in Neon PostgreSQL. Run node setupNeonPostgres.js to seed.');
     } else {
-      admin.password = 'Password@123';
-      admin.role = 'superadmin';
-      admin.status = 'active';
-      await admin.save();
-      console.log('Admin user verified (admin@codethrive.com)');
+      console.log('⚡ Admin user verified on Neon PostgreSQL (admin@codethrive.com)');
     }
   } catch (err) {
-    console.error('Failed to auto-seed admin:', err.message);
+    console.error('Failed to verify admin on Neon PostgreSQL:', err.message);
   }
 
   app.listen(PORT, () => {

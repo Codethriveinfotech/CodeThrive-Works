@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  role          String         @default("employee")
+  status        String         @default("active")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  employee      Employee?
+  assignedTasks Task[]         @relation("AssignedByTasks")
+  organizedMeetings Meeting[]  @relation("OrganizedMeetings")
+  notifications Notification[]
+  taskActivities TaskActivity[]
+  supportAssigned SupportTicket[] @relation("AssignedSupport")
+  uploadedDocuments Document[]    @relation("UploadedDocs")
+  approvedLeaves LeaveRequest[]   @relation("ApprovedLeaves")
+  approvedCorrections AttendanceCorrection[] @relation("ApprovedCorrections")
+}
+
+model Employee {
+  id                    String        @id @default(uuid())
+  userId                String?       @unique
+  user                  User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeId            String        @unique
+  fullName              String
+  personalEmailAddress  String?
+  personalPhoneNumber   String?
+  designation           String?
+  department            String?
+  employmentType        String?
+  workLocation          String?
+  dateOfJoining         DateTime?
+  salaryAmount          Float?
+  salaryType            String?
+  status                String        @default("Active")
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  attendances           Attendance[]
+  attendanceSessions    AttendanceSession[]
+  attendanceCorrections AttendanceCorrection[]
+  leaveRequests         LeaveRequest[]
+  dailyReports          DailyReport[]
+  payrolls              Payroll[]
+  timesheets            Timesheet[]
+  assignedTasks         Task[]        @relation("AssignedToTasks")
+  supportTickets        SupportTicket[] @relation("EmployeeSupport")
+  ownedDocuments        Document[]    @relation("OwnedDocs")
+}
+
+model Attendance {
+  id                String              @id @default(uuid())
+  employeeId        String
+  employee          Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date              DateTime
+  firstLoginTime    DateTime?
+  lastLogoutTime    DateTime?
+  status            String              @default("Present")
+  totalWorkMinutes  Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  sessions          AttendanceSession[]
+}
+
+model AttendanceSession {
+  id                String        @id @default(uuid())
+  attendanceId      String
+  attendance        Attendance    @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+  employeeId        String
+  employee          Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  sessionType       String        @default("Work")
+  startTime         DateTime
+  endTime           DateTime?
+  durationInSeconds Int           @default(0)
+  status            String        @default("Active")
+  forceCloseReason  String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model AttendanceCorrection {
+  id                    String      @id @default(uuid())
+  employeeId            String
+  employee              Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date                  DateTime
+  reason                String
+  attachment            String?
+  requestedCheckOutTime String?
+  status                String      @default("Pending")
+  approvedById          String?
+  approvedBy            User?       @relation("ApprovedCorrections", fields: [approvedById], references: [id])
+  approvedAt            DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+}
+
+model LeaveRequest {
+  id            String      @id @default(uuid())
+  employeeId    String
+  employee      Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType     String
+  startDate     DateTime
+  endDate       DateTime
+  reason        String
+  status        String      @default("Pending")
+  approvedById  String?
+  approvedBy    User?       @relation("ApprovedLeaves", fields: [approvedById], references: [id])
+  approvedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model DailyReport {
+  id                String      @id @default(uuid())
+  employeeId        String
+  employee          Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date              DateTime    @default(now())
+  tasksWorked       String
+  workSummary       String
+  hoursWorked       Float
+  completedWork     String?
+  pendingWork       String?
+  issuesFaced       String?
+  tomorrowsPlan     String?
+  status            String      @default("Submitted")
+  teamLeadComments  String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model Meeting {
+  id            String      @id @default(uuid())
+  title         String
+  agenda        String
+  date          DateTime
+  time          String
+  meetingLink   String?
+  organizerId   String
+  organizer     User        @relation("OrganizedMeetings", fields: [organizerId], references: [id], onDelete: Cascade)
+  location      String?
+  status        String      @default("Scheduled")
+  notes         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Payroll {
+  id            String      @id @default(uuid())
+  employeeId    String
+  employee      Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  payslipId     String      @unique
+  month         String
+  basicSalary   Float
+  allowances    Float       @default(0)
+  bonus         Float       @default(0)
+  deductions    Float       @default(0)
+  grossSalary   Float
+  netPayable    Float
+  paymentDate   DateTime?
+  status        String      @default("Paid")
+  hra           Float       @default(0)
+  travel        Float       @default(0)
+  medical       Float       @default(0)
+  pf            Float       @default(0)
+  incomeTax     Float       @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Task {
+  id                 String         @id @default(uuid())
+  taskId             String         @unique
+  title              String
+  description        String?
+  assignedToId       String
+  assignedTo         Employee       @relation("AssignedToTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
+  assignedById       String
+  assignedBy         User           @relation("AssignedByTasks", fields: [assignedById], references: [id], onDelete: Cascade)
+  priority           String         @default("Medium")
+  status             String         @default("Assigned")
+  progressPercentage Int            @default(0)
+  startDate          DateTime?
+  dueDate            DateTime?
+  estimatedHours     Float?
+  actualHours        Float          @default(0)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  activities         TaskActivity[]
+}
+
+model TaskActivity {
+  id            String      @id @default(uuid())
+  taskId        String
+  task          Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action        String
+  previousValue String?
+  newValue      String?
+  comment       String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Timesheet {
+  id            String      @id @default(uuid())
+  employeeId    String
+  employee      Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  task          String
+  hours         Float
+  date          String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model SupportTicket {
+  id            String      @id @default(uuid())
+  ticketId      String      @unique
+  subject       String
+  category      String      @default("IT Support")
+  priority      String      @default("Medium")
+  description   String
+  status        String      @default("Open")
+  employeeId    String
+  employee      Employee    @relation("EmployeeSupport", fields: [employeeId], references: [id], onDelete: Cascade)
+  assignedToId  String?
+  assignedTo    User?       @relation("AssignedSupport", fields: [assignedToId], references: [id])
+  resolution    String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Document {
+  id            String      @id @default(uuid())
+  title         String
+  documentType  String      @default("Other")
+  ownerId       String?
+  owner         Employee?   @relation("OwnedDocs", fields: [ownerId], references: [id])
+  uploadedById  String
+  uploadedBy    User        @relation("UploadedDocs", fields: [uploadedById], references: [id], onDelete: Cascade)
+  fileUrl       String
+  isPublic      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Notification {
+  id              String    @id @default(uuid())
+  recipientId     String
+  recipient       User      @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  title           String
+  description     String
+  notificationType String
+  priority        String    @default("Low")
+  isRead          Boolean   @default(false)
+  relatedModuleId String?
+  actionLink      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}

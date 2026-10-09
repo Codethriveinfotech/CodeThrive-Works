@@ -206,7 +206,7 @@ const seedDatabase = async () => {
     await LeaveRequest.create([
       {
         employee: emp1._id,
-        leaveType: 'Casual Leave',
+        leaveType: 'Casual',
         startDate: new Date('2026-09-25'),
         endDate: new Date('2026-09-26'),
         reason: 'Family occasion',
@@ -214,7 +214,7 @@ const seedDatabase = async () => {
       },
       {
         employee: emp2._id,
-        leaveType: 'Sick Leave',
+        leaveType: 'Sick',
         startDate: new Date('2026-09-02'),
         endDate: new Date('2026-09-03'),
         reason: 'Viral Fever',
@@ -226,21 +226,19 @@ const seedDatabase = async () => {
     await Meeting.create([
       {
         title: 'Sprint Planning & Architecture Sync',
-        description: 'Weekly team roadmap review and backend scaling discussion.',
+        agenda: 'Weekly team roadmap review and backend scaling discussion.',
         date: new Date('2026-09-16'),
         time: '10:30 AM',
-        duration: 45,
-        link: 'https://teams.microsoft.com/l/meetup-join/codethrive-sync',
+        meetingLink: 'https://teams.microsoft.com/l/meetup-join/codethrive-sync',
         organizer: adminUser._id,
         participants: [emp1._id, emp2._id, emp3._id]
       },
       {
         title: 'Client Demo & Deliverables Sign-off',
-        description: 'Presenting the newly built Portal features to stakeholders.',
+        agenda: 'Presenting the newly built Portal features to stakeholders.',
         date: new Date('2026-09-18'),
         time: '03:00 PM',
-        duration: 60,
-        link: 'https://teams.microsoft.com/l/meetup-join/codethrive-demo',
+        meetingLink: 'https://teams.microsoft.com/l/meetup-join/codethrive-demo',
         organizer: adminUser._id,
         participants: [emp1._id, emp2._id]
       }
@@ -251,22 +249,141 @@ const seedDatabase = async () => {
       {
         employee: emp1._id,
         date: new Date('2026-09-14'),
-        todaysTasks: 'Completed authentication API unit tests and token security headers.',
-        challengesFaced: 'None',
-        plansForTomorrow: 'Optimize database queries for heavy report aggregation.',
+        tasksWorked: 'Completed authentication API unit tests and token security headers.',
+        workSummary: 'Finished core auth API setup and added token security headers.',
+        completedWork: 'Auth API & Unit tests',
+        tomorrowsPlan: 'Optimize database queries for heavy report aggregation.',
         hoursWorked: 8
       },
       {
         employee: emp2._id,
         date: new Date('2026-09-14'),
-        todaysTasks: 'Polished dashboard dark-mode styling and toast animations.',
-        challengesFaced: 'Minor responsive alignment issue on mobile screens.',
-        plansForTomorrow: 'Finalize profile page layout and photo upload component.',
+        tasksWorked: 'Polished dashboard dark-mode styling and toast animations.',
+        workSummary: 'Designed and updated UI widgets with animations.',
+        completedWork: 'Dashboard styling & Toast component',
+        tomorrowsPlan: 'Finalize profile page layout and photo upload component.',
         hoursWorked: 8
       }
     ]);
 
-    console.log('Database seeded with rich production demo data!');
+    // 8. Seed Payrolls
+    await Payroll.create([
+      {
+        employee: emp1._id,
+        payslipId: 'PAY-2026-09-001',
+        month: 'September 2026',
+        basicSalary: 50000,
+        allowances: 35000,
+        allowanceDetails: { hra: 20000, travel: 10000, medical: 5000 },
+        deductions: 5000,
+        deductionDetails: { pf: 3000, incomeTax: 2000 },
+        grossSalary: 85000,
+        netPayable: 80000,
+        paymentDate: new Date('2026-09-30'),
+        status: 'Paid'
+      }
+    ]);
+
+    // 9. Seed Notifications
+    await Notification.create([
+      {
+        recipient: adminUser._id,
+        title: 'New Leave Request',
+        description: 'Kirubakaran has requested Casual leave for Sep 25 - Sep 26.',
+        notificationType: 'Leave',
+        priority: 'Medium',
+        isRead: false
+      },
+      {
+        recipient: emp1User._id,
+        title: 'Task Assigned',
+        description: 'You have been assigned to TSK-101: Implement OAuth Authentication.',
+        notificationType: 'Task',
+        priority: 'High',
+        isRead: true
+      }
+    ]);
+
+    // 10. Seed Support Tickets
+    await SupportTicket.create([
+      {
+        ticketId: 'TCK-2026-001',
+        subject: 'VPN Connection Drop Issues',
+        category: 'IT Support',
+        priority: 'High',
+        description: 'Unable to maintain continuous VPN connection during remote work sessions.',
+        status: 'In Progress',
+        employee: emp3._id,
+        assignedTo: adminUser._id
+      }
+    ]);
+
+    // 11. Seed Timesheets
+    await Timesheet.create([
+      {
+        employee: emp1._id,
+        task: 'OAuth & JWT Implementation',
+        hours: 8,
+        date: '2026-09-14'
+      }
+    ]);
+
+    // 12. Seed Documents
+    await Document.create([
+      {
+        title: 'CodeThrive Employee Handbook 2026',
+        documentType: 'Policy',
+        uploadedBy: adminUser._id,
+        fileUrl: 'https://codethrive.com/docs/handbook-2026.pdf',
+        isPublic: true
+      }
+    ]);
+
+    // 13. Seed Attendance Sessions
+    const attRec = await Attendance.findOne({ employee: emp1._id });
+    await AttendanceSession.create([
+      {
+        attendanceId: attRec._id,
+        employee: emp1._id,
+        sessionType: 'Work',
+        startTime: new Date('2026-09-14T09:15:00'),
+        endTime: new Date('2026-09-14T17:30:00'),
+        status: 'Completed',
+        durationInSeconds: 29700
+      }
+    ]);
+
+    // 14. Seed Attendance Corrections
+    await AttendanceCorrection.create([
+      {
+        employee: emp1._id,
+        date: new Date('2026-09-10'),
+        reason: 'Forgot to check out due to sudden server maintenance',
+        requestedCheckOutTime: '18:30',
+        status: 'Approved'
+      }
+    ]);
+
+    // 15. Seed Task Activities
+    await TaskActivity.create([
+      {
+        task: (await Task.findOne({ taskId: 'TSK-101' }))._id,
+        user: adminUser._id,
+        action: 'Status Changed',
+        previousValue: 'Not Started',
+        newValue: 'In Progress',
+        comment: 'Task updated to In Progress'
+      }
+    ]);
+
+    console.log('\n--- SEEDED COLLECTIONS & DOCUMENT COUNTS ---');
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    for (let col of collections) {
+      const count = await mongoose.connection.db.collection(col.name).countDocuments();
+      console.log(`  - ${col.name}: ${count} documents`);
+    }
+
+    console.log('\nDatabase seeded with rich production demo data!');
     console.log('================================================');
     console.log('🔑 ADMIN LOGIN:');
     console.log('   Email: admin@codethrive.com');

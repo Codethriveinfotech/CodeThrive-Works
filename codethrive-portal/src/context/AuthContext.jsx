@@ -17,6 +17,16 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Normalize user object: ensure both name & fullName are always present
+  const normalizeUser = (u) => {
+    if (!u) return u;
+    return {
+      ...u,
+      name: u.name || u.fullName || u.email?.split('@')[0] || 'Employee',
+      fullName: u.fullName || u.name || u.email?.split('@')[0] || 'Employee'
+    };
+  };
+
   axios.defaults.baseURL = getApiBaseUrl();
   axios.defaults.withCredentials = true;
 
@@ -24,7 +34,11 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        const normalized = normalizeUser(parsed);
+        setUser(normalized);
+        // Persist normalized back so future loads also have both name & fullName
+        localStorage.setItem('user', JSON.stringify(normalized));
       } catch (e) {
         console.error('Failed to parse stored user', e);
       }
@@ -32,8 +46,9 @@ export const AuthProvider = ({ children }) => {
       // Fetch fresh data in background if backend is reachable
       axios.get('/auth/me').then(res => {
         if (res.data?.user) {
-          setUser(res.data.user);
-          localStorage.setItem('user', JSON.stringify(res.data.user));
+          const normalized = normalizeUser(res.data.user);
+          setUser(normalized);
+          localStorage.setItem('user', JSON.stringify(normalized));
         }
       }).catch(_err => {
         console.warn('Backend session refresh skipped (Offline/Local mode active)');
@@ -63,9 +78,10 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     try {
       const res = await axios.post('/auth/login', { employeeId: identifier, password });
-      setUser(res.data.user);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      return { success: true, user: res.data.user };
+      const normalized = normalizeUser(res.data.user);
+      setUser(normalized);
+      localStorage.setItem('user', JSON.stringify(normalized));
+      return { success: true, user: normalized };
     } catch (err) {
       if (isOfflineOrApiMissing(err)) {
         // Local Fallback Login when backend is offline
@@ -80,9 +96,10 @@ export const AuthProvider = ({ children }) => {
           };
         }
 
-        setUser(match);
-        localStorage.setItem('user', JSON.stringify(match));
-        return { success: true, user: match, isLocalMode: true };
+        const normalized = normalizeUser(match);
+        setUser(normalized);
+        localStorage.setItem('user', JSON.stringify(normalized));
+        return { success: true, user: normalized, isLocalMode: true };
       }
       
       const isNotFound = err.response?.status === 404 || 
@@ -101,9 +118,10 @@ export const AuthProvider = ({ children }) => {
   const adminLogin = async (email, password) => {
     try {
       const res = await axios.post('/auth/admin-login', { email, password });
-      setUser(res.data.user);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      return { success: true, user: res.data.user };
+      const normalized = normalizeUser(res.data.user);
+      setUser(normalized);
+      localStorage.setItem('user', JSON.stringify(normalized));
+      return { success: true, user: normalized };
     } catch (err) {
       if (isOfflineOrApiMissing(err)) {
         const adminUser = {
@@ -147,9 +165,10 @@ export const AuthProvider = ({ children }) => {
           localUsers.push(newUser);
         }
 
+        const normalized = normalizeUser(newUser);
         localStorage.setItem('cti_local_users', JSON.stringify(localUsers));
-        localStorage.setItem('user', JSON.stringify(newUser));
-        setUser(newUser);
+        localStorage.setItem('user', JSON.stringify(normalized));
+        setUser(normalized);
         return { 
           success: true, 
           message: 'Employee Registered Successfully! Redirecting to login...', 
