@@ -7,7 +7,8 @@ import autoTable from 'jspdf-autotable';
 import { formatDate } from '../utils/dateUtils';
 import { 
   Search, Filter, Plus, User, Briefcase, Banknote, Edit, Eye,
-  RefreshCw, Trash2, UserCheck, Download, X
+  RefreshCw, Trash2, UserCheck, Download, X,
+  UserPlus, Mail, Phone, Building2, ShieldCheck, KeyRound, EyeOff, IndianRupee, Loader2
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
@@ -29,6 +30,7 @@ const Employees = () => {
 
   // Register New Employee Modal
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [newEmpData, setNewEmpData] = useState({
     fullName: '',
     personalEmailAddress: '',
@@ -450,52 +452,119 @@ const Employees = () => {
 
       {/* Register New Employee Modal */}
       {showAddModal && (
-        <div className="workspace-360-overlay">
-          <div className="admin-modal-box">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Plus size={18} /> Register New Employee
-              </h3>
-              <button onClick={() => setShowAddModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <X size={20} />
+        <div className="workspace-360-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="admin-modal-box" onClick={e => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <div className="admin-modal-title-group">
+                <div className="admin-modal-icon-badge">
+                  <UserPlus size={22} />
+                </div>
+                <div>
+                  <h3 className="admin-modal-title">Register New Employee</h3>
+                  <p className="admin-modal-subtitle">
+                    Create staff credentials, assign department, access role & monthly salary
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="admin-modal-close-btn" 
+                onClick={() => setShowAddModal(false)}
+                title="Close modal"
+              >
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleRegisterNewEmployee} className="form-grid">
-              <div className="form-group">
-                <label>Full Name *</label>
-                <input type="text" required placeholder="e.g. Ramesh Kumar" className="form-input" value={newEmpData.fullName} onChange={e => setNewEmpData({...newEmpData, fullName: e.target.value})} />
+            <form onSubmit={handleRegisterNewEmployee} className="reg-emp-grid">
+              {/* Full Name */}
+              <div className="reg-emp-field">
+                <label className="reg-emp-label">
+                  <User size={13} className="reg-emp-label-icon" /> Full Name <span className="reg-emp-req">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  required 
+                  placeholder="e.g. Ramesh Kumar" 
+                  className="reg-emp-input" 
+                  value={newEmpData.fullName} 
+                  onChange={e => setNewEmpData({...newEmpData, fullName: e.target.value})} 
+                />
               </div>
 
-              <div className="form-group">
-                <label>Email Address *</label>
-                <input type="email" required placeholder="e.g. ramesh@codethrive.com" className="form-input" value={newEmpData.personalEmailAddress} onChange={e => setNewEmpData({...newEmpData, personalEmailAddress: e.target.value})} />
+              {/* Email Address */}
+              <div className="reg-emp-field">
+                <label className="reg-emp-label">
+                  <Mail size={13} className="reg-emp-label-icon" /> Email Address <span className="reg-emp-req">*</span>
+                </label>
+                <input 
+                  type="email" 
+                  required 
+                  placeholder="e.g. ramesh@codethrive.com" 
+                  className="reg-emp-input" 
+                  value={newEmpData.personalEmailAddress} 
+                  onChange={e => setNewEmpData({...newEmpData, personalEmailAddress: e.target.value})} 
+                />
               </div>
 
-              <div className="form-group">
-                <label>Phone Number</label>
-                <input type="text" placeholder="9876543210" className="form-input" value={newEmpData.personalPhoneNumber} onChange={e => setNewEmpData({...newEmpData, personalPhoneNumber: e.target.value})} />
+              {/* Phone Number */}
+              <div className="reg-emp-field">
+                <label className="reg-emp-label">
+                  <Phone size={13} className="reg-emp-label-icon" /> Phone Number
+                </label>
+                <input 
+                  type="tel" 
+                  placeholder="e.g. 9876543210" 
+                  className="reg-emp-input" 
+                  value={newEmpData.personalPhoneNumber} 
+                  onChange={e => setNewEmpData({...newEmpData, personalPhoneNumber: e.target.value})} 
+                />
               </div>
 
-              <div className="form-group">
-                <label>Department</label>
-                <select className="form-input" value={newEmpData.department} onChange={e => setNewEmpData({...newEmpData, department: e.target.value})}>
+              {/* Department */}
+              <div className="reg-emp-field">
+                <label className="reg-emp-label">
+                  <Building2 size={13} className="reg-emp-label-icon" /> Department
+                </label>
+                <select 
+                  className="reg-emp-input" 
+                  value={newEmpData.department} 
+                  onChange={e => setNewEmpData({...newEmpData, department: e.target.value})}
+                >
                   <option value="Engineering">Engineering</option>
                   <option value="UI/UX Design">UI/UX Design</option>
                   <option value="Management">Management</option>
                   <option value="HR">HR</option>
                   <option value="Marketing">Marketing</option>
+                  <option value="Quality Assurance">Quality Assurance</option>
+                  <option value="Operations">Operations</option>
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>Designation</label>
-                <input type="text" placeholder="e.g. Full Stack Developer" className="form-input" value={newEmpData.designation} onChange={e => setNewEmpData({...newEmpData, designation: e.target.value})} />
+              {/* Designation */}
+              <div className="reg-emp-field">
+                <label className="reg-emp-label">
+                  <Briefcase size={13} className="reg-emp-label-icon" /> Designation
+                </label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Software Developer" 
+                  className="reg-emp-input" 
+                  value={newEmpData.designation} 
+                  onChange={e => setNewEmpData({...newEmpData, designation: e.target.value})} 
+                />
               </div>
 
-              <div className="form-group">
-                <label>Access Role</label>
-                <select className="form-input" value={newEmpData.role} onChange={e => setNewEmpData({...newEmpData, role: e.target.value})}>
+              {/* Access Role */}
+              <div className="reg-emp-field">
+                <label className="reg-emp-label">
+                  <ShieldCheck size={13} className="reg-emp-label-icon" /> Access Role
+                </label>
+                <select 
+                  className="reg-emp-input" 
+                  value={newEmpData.role} 
+                  onChange={e => setNewEmpData({...newEmpData, role: e.target.value})}
+                >
                   <option value="employee">Employee</option>
                   <option value="teamlead">Team Lead</option>
                   <option value="hr">HR Manager</option>
@@ -504,20 +573,71 @@ const Employees = () => {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>Monthly Salary (₹)</label>
-                <input type="number" placeholder="60000" className="form-input" value={newEmpData.salaryAmount} onChange={e => setNewEmpData({...newEmpData, salaryAmount: e.target.value})} />
+              {/* Monthly Salary */}
+              <div className="reg-emp-field">
+                <label className="reg-emp-label">
+                  <IndianRupee size={13} className="reg-emp-label-icon" /> Monthly Salary (₹)
+                </label>
+                <input 
+                  type="number" 
+                  placeholder="e.g. 60000" 
+                  className="reg-emp-input" 
+                  value={newEmpData.salaryAmount} 
+                  onChange={e => setNewEmpData({...newEmpData, salaryAmount: e.target.value})} 
+                />
               </div>
 
-              <div className="form-group">
-                <label>Initial Account Password</label>
-                <input type="password" placeholder="Password@123" className="form-input" value={newEmpData.password} onChange={e => setNewEmpData({...newEmpData, password: e.target.value})} />
+              {/* Initial Account Password */}
+              <div className="reg-emp-field">
+                <label className="reg-emp-label">
+                  <KeyRound size={13} className="reg-emp-label-icon" /> Initial Account Password
+                </label>
+                <div className="reg-emp-input-wrap">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="e.g. Password@123" 
+                    className="reg-emp-input" 
+                    style={{ paddingRight: '2.5rem' }}
+                    value={newEmpData.password} 
+                    onChange={e => setNewEmpData({...newEmpData, password: e.target.value})} 
+                  />
+                  <button 
+                    type="button" 
+                    className="reg-emp-pwd-toggle" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex="-1"
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
-              <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-                <button type="button" className="btn btn-outline" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" disabled={isAddingEmp} className="btn btn-primary">
-                  {isAddingEmp ? 'Registering...' : 'Register Employee'}
+              {/* Modal Actions Footer */}
+              <div className="reg-emp-footer">
+                <button 
+                  type="button" 
+                  className="reg-emp-btn-cancel" 
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isAddingEmp} 
+                  className="reg-emp-btn-submit"
+                >
+                  {isAddingEmp ? (
+                    <>
+                      <Loader2 size={17} style={{ animation: 'spin 1s linear infinite' }} />
+                      Registering...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={17} />
+                      Register Employee
+                    </>
+                  )}
                 </button>
               </div>
             </form>
