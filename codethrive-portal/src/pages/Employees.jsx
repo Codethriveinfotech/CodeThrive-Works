@@ -49,7 +49,11 @@ const Employees = () => {
 
     const handleRefreshEvent = () => fetchEmployees();
     window.addEventListener('cti_global_refresh', handleRefreshEvent);
-    return () => window.removeEventListener('cti_global_refresh', handleRefreshEvent);
+    window.addEventListener('storage', handleRefreshEvent);
+    return () => {
+      window.removeEventListener('cti_global_refresh', handleRefreshEvent);
+      window.removeEventListener('storage', handleRefreshEvent);
+    };
   }, []);
 
   const fetchEmployees = async () => {
@@ -62,28 +66,41 @@ const Employees = () => {
       const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
       const combined = [...dbEmps];
       localUsers.forEach(lu => {
-        const exists = combined.some(e => e.personalEmailAddress === lu.email || e.employeeId === lu.employeeId);
-        if (!exists) {
-          combined.push({
+        const luEmpId = (lu.employeeId || '').toLowerCase().trim();
+        const luEmail = (lu.email || lu.personalEmailAddress || '').toLowerCase().trim();
+
+        const exists = combined.some(e => {
+          const eId = (e.employeeId || '').toLowerCase().trim();
+          const eEmail = (e.personalEmailAddress || e.email || '').toLowerCase().trim();
+          return (luEmpId && eId === luEmpId) || (luEmail && eEmail === luEmail);
+        });
+
+        if (!exists && luEmail !== 'admin@codethrive.com' && luEmpId !== 'cti-adm-001') {
+          combined.unshift({
             _id: lu._id || 'local_' + Date.now(),
             employeeId: lu.employeeId || 'CTI-EMP-NEW',
-            fullName: lu.fullName || lu.name,
-            personalEmailAddress: lu.email,
-            personalPhoneNumber: lu.phoneNumber || '9876543210',
+            fullName: lu.fullName || lu.name || 'New Employee',
+            personalEmailAddress: lu.email || lu.personalEmailAddress,
+            personalPhoneNumber: lu.phoneNumber || lu.personalPhoneNumber || '9876543210',
             department: lu.department || 'Engineering',
-            designation: lu.role || 'Software Engineer',
+            designation: lu.role || lu.designation || 'Software Engineer',
             employmentType: 'Full-Time',
             status: lu.status || 'Active',
-            dateOfJoining: new Date().toISOString().split('T')[0],
+            isNewRegistration: true,
+            dateOfJoining: lu.dateOfJoining || new Date().toISOString().split('T')[0],
             workLocation: 'Office',
-            salaryAmount: 65000,
+            salaryAmount: lu.salaryAmount || 65000,
             user: { role: lu.role || 'employee', status: 'active' }
           });
         }
       });
 
       // Filter out admin user from employee directory so only real staff show up
-      const filtered = combined.filter(e => e.personalEmailAddress !== 'admin@codethrive.com' && e.employeeId !== 'CTI-ADM-001');
+      const filtered = combined.filter(e => {
+        const email = (e.personalEmailAddress || e.email || '').toLowerCase();
+        const id = (e.employeeId || '').toLowerCase();
+        return email !== 'admin@codethrive.com' && id !== 'cti-adm-001';
+      });
       setEmployees(filtered);
     } catch (err) {
       console.warn('API error fetching employees:', err);

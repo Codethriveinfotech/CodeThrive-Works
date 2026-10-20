@@ -110,7 +110,9 @@ exports.registerEmployee = async (req, res) => {
           employeeId: employeeId,
           personalEmailAddress: emailId,
           personalPhoneNumber: phoneNumber,
+          department: req.body.department || 'Engineering',
           designation: customRoleText,
+          dateOfJoining: new Date(),
           status: 'Active'
         });
       }
@@ -136,7 +138,9 @@ exports.registerEmployee = async (req, res) => {
       employeeId: employeeId,
       personalEmailAddress: emailId,
       personalPhoneNumber: phoneNumber,
+      department: req.body.department || 'Engineering',
       designation: customRoleText,
+      dateOfJoining: new Date(),
       status: 'Active'
     });
 

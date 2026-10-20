@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, UserCheck, Coffee, CheckCircle2, Eye, 
   Clock, Plus, X, ListTodo, Briefcase, Mail, Calendar,
-  FileText, Check, ArrowRight, RefreshCw, ShieldCheck, Sparkles, TrendingUp
+  FileText, Check, ArrowRight, RefreshCw, ShieldCheck, Sparkles, TrendingUp,
+  UserPlus
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
@@ -61,17 +62,26 @@ const Admin = () => {
       // Check local storage registered users
       const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
       localUsers.forEach(lu => {
-        const exists = liveList.some(e => e.email === lu.email || e.id === lu.employeeId);
-        if (!exists && lu.email !== 'admin@codethrive.com') {
-          liveList.push({
+        const luEmpId = (lu.employeeId || '').toLowerCase().trim();
+        const luEmail = (lu.email || lu.personalEmailAddress || '').toLowerCase().trim();
+
+        const exists = liveList.some(e => {
+          const eId = (e.id || e.employeeId || '').toLowerCase().trim();
+          const eEmail = (e.email || e.personalEmailAddress || '').toLowerCase().trim();
+          return (luEmpId && eId === luEmpId) || (luEmail && eEmail === luEmail);
+        });
+
+        if (!exists && luEmail !== 'admin@codethrive.com' && luEmpId !== 'cti-adm-001') {
+          liveList.unshift({
             _id: lu._id || 'local_' + Date.now(),
             id: lu.employeeId || 'CTI-EMP-NEW',
-            name: lu.fullName || lu.name,
-            email: lu.email,
+            name: lu.fullName || lu.name || 'New Employee',
+            email: lu.email || lu.personalEmailAddress || 'N/A',
             dept: lu.department || 'Engineering',
-            designation: lu.role || 'Software Engineer',
-            joiningDate: formatDate(new Date()),
-            status: 'Not Checked In',
+            designation: lu.role || lu.designation || 'Software Engineer',
+            joiningDate: lu.dateOfJoining || formatDate(new Date()),
+            status: lu.status === 'Active' ? 'Not Checked In' : (lu.status || 'Not Checked In'),
+            isNewRegistration: true,
             firstLoginTime: null,
             lastLogoutTime: null,
             workSec: 0,
@@ -85,7 +95,11 @@ const Admin = () => {
       });
 
       // Filter out system administrator from monitoring
-      const filteredLive = liveList.filter(e => e.email !== 'admin@codethrive.com' && e.id !== 'CTI-ADM-001');
+      const filteredLive = liveList.filter(e => {
+        const email = (e.email || e.personalEmailAddress || '').toLowerCase();
+        const id = (e.id || e.employeeId || '').toLowerCase();
+        return email !== 'admin@codethrive.com' && id !== 'cti-adm-001';
+      });
       setLiveMonitoring(filteredLive);
 
       const working = filteredLive.filter(e => e.status === 'Working').length;
@@ -93,6 +107,7 @@ const Admin = () => {
       const onLunch = filteredLive.filter(e => e.status === 'On Lunch').length;
       const checkedOut = filteredLive.filter(e => e.status === 'Checked Out').length;
       const absent = filteredLive.length - working - onBreak - onLunch - checkedOut;
+      const newRegisteredCount = filteredLive.filter(e => e.isNewRegistration || e.status === 'Not Checked In').length;
 
       setStats({
         totalEmployees: filteredLive.length,
@@ -101,7 +116,7 @@ const Admin = () => {
         onLunch,
         checkedOut,
         absent: Math.max(0, absent),
-        pendingRegistrations: 0,
+        pendingRegistrations: newRegisteredCount,
         pendingTaskReviews: 0
       });
 
@@ -122,7 +137,11 @@ const Admin = () => {
 
     const handleRefreshEvent = () => fetchStats();
     window.addEventListener('cti_global_refresh', handleRefreshEvent);
-    return () => window.removeEventListener('cti_global_refresh', handleRefreshEvent);
+    window.addEventListener('storage', handleRefreshEvent);
+    return () => {
+      window.removeEventListener('cti_global_refresh', handleRefreshEvent);
+      window.removeEventListener('storage', handleRefreshEvent);
+    };
   }, []);
 
   const handleRefresh = () => {
@@ -172,7 +191,8 @@ const Admin = () => {
     const matchesFilter = activeFilter === 'ALL' || 
       (activeFilter === 'Working' && e.status === 'Working') ||
       (activeFilter === 'On Break' && (e.status === 'On Break' || e.status === 'On Lunch')) ||
-      (activeFilter === 'Checked Out' && e.status === 'Checked Out');
+      (activeFilter === 'Checked Out' && e.status === 'Checked Out') ||
+      (activeFilter === 'New Registered' && (e.isNewRegistration || e.status === 'Not Checked In'));
     return matchesEmp && matchesFilter;
   });
 
@@ -187,9 +207,16 @@ const Admin = () => {
             {row.name ? row.name.charAt(0).toUpperCase() : 'E'}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
-              {row.name}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
+                {row.name}
+              </span>
+              {row.isNewRegistration && (
+                <span style={{ background: 'rgba(168, 85, 247, 0.25)', color: '#d8b4fe', border: '1px solid rgba(168, 85, 247, 0.5)', fontSize: '0.62rem', fontWeight: 800, padding: '1px 5px', borderRadius: '4px', letterSpacing: '0.04em' }}>
+                  NEW
+                </span>
+              )}
+            </div>
             <span style={{ fontSize: '0.74rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={row.email}>
               {row.email} &bull; <strong style={{ color: '#818cf8' }}>{row.id}</strong>
             </span>
@@ -315,8 +342,33 @@ const Admin = () => {
             {activeFilter === 'ALL' && <span className="stat-active-pill pill-indigo">Active</span>}
           </div>
         </div>
+
+        {/* Card 2: New Registrations */}
+        <div 
+          className={`stat-card stat-card-purple ${activeFilter === 'New Registered' ? 'selected' : ''}`}
+          onClick={() => setActiveFilter('New Registered')}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className="stat-card-glow"></div>
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper" style={{ background: 'rgba(168, 85, 247, 0.25)', color: '#c084fc' }}>
+              <UserPlus size={18} />
+            </div>
+            <span className="stat-tag" style={{ background: 'rgba(168, 85, 247, 0.2)', color: '#d8b4fe', border: '1px solid rgba(168, 85, 247, 0.4)' }}>
+              NEW SIGNUPS
+            </span>
+          </div>
+          <div className="stat-card-body">
+            <h3 className="stat-number" style={{ color: '#f3e8ff' }}>{stats.pendingRegistrations}</h3>
+            <p className="stat-title">New Registrations</p>
+          </div>
+          <div className="stat-card-footer">
+            <span className="stat-subtext">Filter new signups</span>
+            {activeFilter === 'New Registered' && <span className="stat-active-pill" style={{ background: '#9333ea', color: '#fff' }}>Active</span>}
+          </div>
+        </div>
         
-        {/* Card 2: Working Right Now */}
+        {/* Card 3: Working Right Now */}
         <div 
           className={`stat-card stat-card-emerald ${activeFilter === 'Working' ? 'selected' : ''}`}
           onClick={() => setActiveFilter('Working')}
@@ -340,7 +392,7 @@ const Admin = () => {
           </div>
         </div>
         
-        {/* Card 3: On Break / Lunch */}
+        {/* Card 4: On Break / Lunch */}
         <div 
           className={`stat-card stat-card-amber ${activeFilter === 'On Break' ? 'selected' : ''}`}
           onClick={() => setActiveFilter('On Break')}
@@ -362,7 +414,7 @@ const Admin = () => {
           </div>
         </div>
 
-        {/* Card 4: Checked Out Today */}
+        {/* Card 5: Checked Out Today */}
         <div 
           className={`stat-card stat-card-cyan ${activeFilter === 'Checked Out' ? 'selected' : ''}`}
           onClick={() => setActiveFilter('Checked Out')}
@@ -411,6 +463,17 @@ const Admin = () => {
                 }}
               >
                 All ({liveMonitoring.length})
+              </button>
+              <button 
+                onClick={() => setActiveFilter('New Registered')}
+                style={{
+                  background: activeFilter === 'New Registered' ? 'rgba(168, 85, 247, 0.3)' : 'transparent',
+                  color: activeFilter === 'New Registered' ? '#d8b4fe' : '#94a3b8',
+                  border: activeFilter === 'New Registered' ? '1px solid rgba(168, 85, 247, 0.5)' : '1px solid transparent',
+                  padding: '4px 10px', borderRadius: '6px', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer'
+                }}
+              >
+                ✨ New Signups ({stats.pendingRegistrations})
               </button>
               <button 
                 onClick={() => setActiveFilter('Working')}
