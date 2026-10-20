@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../utils/api';
 import {
-  ClipboardList, Search, Save, CheckCircle2, RefreshCw,
-  ChevronLeft, ChevronRight, CalendarDays, Users,
-  Clock, UserCheck, UserX, PlaneTakeoff, Coffee, Monitor, AlertCircle
+  Search, Save, CheckCircle2, RefreshCw,
+  ChevronLeft, ChevronRight, CalendarDays, AlertCircle
 } from 'lucide-react';
 import './AdminAttendance.css';
+
 
 // ─── Helpers ────────────────────────────────────────────────
 const toLocalDateStr = (d) => {
