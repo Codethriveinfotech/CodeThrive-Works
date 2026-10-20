@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerEmployee, approveEmployee, createCredentials, login, adminLogin, logout, updatePassword } = require('../controllers/authController');
+const { registerEmployee, approveEmployee, createCredentials, login, adminLogin, logout, updatePassword, updateEmail } = require('../controllers/authController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -16,6 +16,7 @@ router.put('/approve-employee/:id', protect, authorize('superadmin', 'admin', 'h
 
 // Protected Employee Routes
 router.put('/updatepassword', protect, updatePassword);
+router.put('/update-email', protect, updateEmail);
 router.get('/me', protect, require('../controllers/authController').getMe);
 
 module.exports = router;

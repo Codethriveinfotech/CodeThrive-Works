@@ -439,6 +439,49 @@ exports.updatePassword = async (req, res) => {
   }
 };
 
+// @desc    Update login email (username)
+// @route   PUT /api/v1/auth/update-email
+// @access  Private
+exports.updateEmail = async (req, res) => {
+  try {
+    const { newEmail, currentPassword } = req.body;
+
+    if (!newEmail || !currentPassword) {
+      return res.status(400).json({ success: false, message: 'New email and current password are required.' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
+    }
+
+    const user = await User.findById(req.user.id).select('+password');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+    }
+
+    const existing = await User.findOne({ email: newEmail });
+    if (existing && existing._id.toString() !== user._id.toString()) {
+      return res.status(400).json({ success: false, message: 'This email is already in use by another account.' });
+    }
+
+    user.email = newEmail;
+    await user.save();
+
+    // Sync with Employee record
+    await Employee.findOneAndUpdate({ user: user._id }, { personalEmailAddress: newEmail });
+
+    await sendTokenResponse(user, 200, res);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // @desc    Get current logged in user
 // @route   GET /api/v1/auth/me
 // @access  Private

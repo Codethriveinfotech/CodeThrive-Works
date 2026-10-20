@@ -18,6 +18,12 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
   const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
+  // Change Email (Username) state
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailData, setEmailData] = useState({ newEmail: '', currentPassword: '' });
+  const [emailMsg, setEmailMsg] = useState({ type: '', text: '' });
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
+
   const handleSave = (e) => {
     e.preventDefault();
     setSavedSuccess(true);
@@ -84,15 +90,60 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
     }
   };
 
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    setEmailMsg({ type: '', text: '' });
+
+    if (!emailData.newEmail || !emailData.currentPassword) {
+      setEmailMsg({ type: 'error', text: 'Please fill in all fields.' });
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailData.newEmail)) {
+      setEmailMsg({ type: 'error', text: 'Please enter a valid email address.' });
+      return;
+    }
+    try {
+      setIsSavingEmail(true);
+      const res = await api.put('/auth/update-email', {
+        newEmail: emailData.newEmail,
+        currentPassword: emailData.currentPassword,
+      });
+      // Update stored user token
+      if (res.data?.token) {
+        localStorage.setItem('token', res.data.token);
+        const stored = JSON.parse(localStorage.getItem('user') || '{}');
+        stored.email = emailData.newEmail;
+        localStorage.setItem('user', JSON.stringify(stored));
+      }
+      setEmailMsg({ type: 'success', text: `Username updated to ${emailData.newEmail}` });
+      setEmailData({ newEmail: '', currentPassword: '' });
+      setTimeout(() => {
+        setShowEmailForm(false);
+        setEmailMsg({ type: '', text: '' });
+        window.location.reload();
+      }, 1600);
+    } catch (err) {
+      setEmailMsg({ type: 'error', text: err.response?.data?.message || 'Failed to update email.' });
+    } finally {
+      setIsSavingEmail(false);
+    }
+  };
+
   const resetModalState = () => {
     setShowPasswordForm(false);
+    setShowEmailForm(false);
     setPasswordMsg({ type: '', text: '' });
+    setEmailMsg({ type: '', text: '' });
     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setEmailData({ newEmail: '', currentPassword: '' });
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={resetModalState} title={showPasswordForm ? "Change Password" : "Portal Workspace Settings"}>
+    <Modal isOpen={isOpen} onClose={resetModalState} title={
+      showPasswordForm ? "Change Password" : showEmailForm ? "Change Username / Email" : "Portal Workspace Settings"
+    }>
       {showPasswordForm ? (
         <form onSubmit={handlePasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
           
@@ -196,6 +247,78 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
                   <Lock size={16} /> Update Password
                 </>
               )}
+            </button>
+          </div>
+        </form>
+      ) : showEmailForm ? (
+        /* ─── CHANGE EMAIL FORM ─── */
+        <form onSubmit={handleEmailSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+          <button
+            type="button"
+            className="btn-outline-glass"
+            onClick={() => { setShowEmailForm(false); setEmailMsg({ type: '', text: '' }); }}
+            style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem', alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}
+          >
+            <ArrowLeft size={14} /> Back to Settings
+          </button>
+
+          {emailMsg.text && (
+            <div style={{
+              padding: '0.75rem 1rem',
+              background: emailMsg.type === 'success' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+              border: `1px solid ${emailMsg.type === 'success' ? '#10b981' : '#ef4444'}`,
+              borderRadius: '12px',
+              color: emailMsg.type === 'success' ? '#34d399' : '#f87171',
+              fontSize: '0.875rem', fontWeight: '600',
+              display: 'flex', alignItems: 'center', gap: '0.5rem'
+            }}>
+              {emailMsg.type === 'success' ? <Check size={18} /> : <Shield size={18} />}
+              {emailMsg.text}
+            </div>
+          )}
+
+          <div style={{ background: 'rgba(15,23,42,0.4)', padding: '1rem', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            {/* Current email display */}
+            <div style={{ marginBottom: '1rem', padding: '0.65rem 0.9rem', background: 'rgba(99,102,241,0.1)', borderRadius: '10px', border: '1px solid rgba(99,102,241,0.2)' }}>
+              <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Username / Email</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#a5b4fc' }}>{user?.email || '—'}</div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label style={{ fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <User size={14} /> New Email / Username
+              </label>
+              <input
+                type="email"
+                className="input-field"
+                placeholder="Enter new email address"
+                value={emailData.newEmail}
+                onChange={(e) => setEmailData({ ...emailData, newEmail: e.target.value })}
+                required
+                id="settings-new-email"
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '0' }}>
+              <label style={{ fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 600, marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Key size={14} /> Current Password (to confirm)
+              </label>
+              <input
+                type="password"
+                className="input-field"
+                placeholder="Enter your current password"
+                value={emailData.currentPassword}
+                onChange={(e) => setEmailData({ ...emailData, currentPassword: e.target.value })}
+                required
+                id="settings-email-password"
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1rem' }}>
+            <button type="button" className="btn-outline-glass" onClick={() => { setShowEmailForm(false); setEmailMsg({ type: '', text: '' }); }}>Cancel</button>
+            <button type="submit" className="btn-primary-glow" disabled={isSavingEmail} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              {isSavingEmail ? <><RefreshCw size={16} className="spin" /> Updating...</> : <><Check size={16} /> Update Username</>}
             </button>
           </div>
         </form>
@@ -317,13 +440,21 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
               <button
                 type="button"
                 className="btn-outline-glass"
-                onClick={() => {
-                  setShowPasswordForm(true);
-                  setPasswordMsg({ type: '', text: '' });
-                }}
+                onClick={() => { setShowPasswordForm(true); setPasswordMsg({ type: '', text: '' }); }}
                 style={{ padding: '0.75rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                id="settings-change-password-btn"
               >
                 <Lock size={16} /> Change Password
+              </button>
+
+              <button
+                type="button"
+                className="btn-outline-glass"
+                onClick={() => { setShowEmailForm(true); setEmailMsg({ type: '', text: '' }); }}
+                style={{ padding: '0.75rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', borderColor: 'rgba(99,102,241,0.4)', color: '#a5b4fc' }}
+                id="settings-change-email-btn"
+              >
+                <User size={16} /> Change Username
               </button>
 
               <button
