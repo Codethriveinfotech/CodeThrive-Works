@@ -563,13 +563,20 @@ const Dashboard = () => {
           </div>
         </motion.div>
 
-        <motion.div className="metric-card" variants={itemVariants}>
+        <motion.div 
+          className="metric-card clickable" 
+          variants={itemVariants}
+          onClick={() => navigate('/employee/attendance')}
+        >
           <div className="metric-icon-wrapper info">
             <Clock size={24} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Work Logged</span>
             <span className="metric-value">{formatDuration(liveWorkDuration)}</span>
+          </div>
+          <div className="metric-action-arrow">
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
       </div>
