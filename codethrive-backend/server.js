@@ -26,6 +26,7 @@ const meetingRoutes = require('./routes/meetingRoutes');
 const documentRoutes = require('./routes/documentRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
+const adminAttendanceRoutes = require('./routes/adminAttendanceRoutes');
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use('/api/v1/meetings', meetingRoutes);
 app.use('/api/v1/documents', documentRoutes);
 app.use('/api/v1/support', supportRoutes);
 app.use('/api/v1/leaves', leaveRoutes);
+app.use('/api/v1/admin/attendance', adminAttendanceRoutes);
 
 app.get('/', (req, res) => {
   res.send('CodeThrive API is running...');

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, Users, CheckSquare, 
   FileText, Banknote, FolderOpen, UserCircle, Building2,
-  CalendarOff, LogOut, ChevronLeft, ChevronRight 
+  CalendarOff, LogOut, ChevronLeft, ChevronRight, ClipboardList
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -41,6 +41,7 @@ const AdminSidebar = () => {
   const adminLinks = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Employees', path: '/admin/employees', icon: <Users size={20} /> },
+    { name: 'Attendance', path: '/admin/attendance', icon: <ClipboardList size={20} /> },
     { name: 'Tasks', path: '/admin/tasks', icon: <CheckSquare size={20} /> },
     { name: 'Daily Reports', path: '/admin/reports', icon: <FileText size={20} /> },
     { name: 'Leave', path: '/admin/leave', icon: <CalendarOff size={20} /> },
