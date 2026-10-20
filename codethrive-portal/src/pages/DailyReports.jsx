@@ -11,8 +11,10 @@ import {
   PlusCircle, Search, Calendar, Star, 
   Sparkles, RefreshCw, MessageSquare, 
   ArrowUpRight, Grid, List, Award, Eye, ShieldCheck, Activity, Download,
-  UploadCloud, FolderArchive, FileCode, X, Check, Paperclip
+  UploadCloud, FolderArchive, FileCode, X, Check, Paperclip,
+  Zap, Loader2
 } from 'lucide-react';
+import { zipSync } from 'fflate';
 import { formatDate } from '../utils/dateUtils';
 import './DailyReports.css';
 
@@ -42,12 +44,14 @@ const DailyReports = () => {
   // Dedicated SRC Document Modal State (Separate Feature)
   const [isSrcModalOpen, setIsSrcModalOpen] = useState(false);
   const [srcSelectedFile, setSrcSelectedFile] = useState(null);
+  const [srcCompressionInfo, setSrcCompressionInfo] = useState(null);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [isSrcSubmitting, setIsSrcSubmitting] = useState(false);
   const srcFileInputRef = useRef(null);
 
   const initialSrcFormState = {
     projectTitle: '',
-    tasksWorked: '',
     date: new Date().toISOString().split('T')[0],
     hoursWorked: 8,
     workSummary: '',
@@ -58,7 +62,56 @@ const DailyReports = () => {
   const resetSrcModal = () => {
     setSrcFormData(initialSrcFormState);
     setSrcSelectedFile(null);
+    setSrcCompressionInfo(null);
+    setIsCompressing(false);
+    setIsDragOver(false);
     if (srcFileInputRef.current) srcFileInputRef.current.value = '';
+  };
+
+  // Auto-compress large files (PDF, Word, Code) using fflate if size is high (> 1.5MB)
+  const handleProcessSrcFile = async (file) => {
+    if (!file) return;
+
+    const fileName = file.name;
+    const isAlreadyArchive = /\.(zip|rar|7z|tar|gz)$/i.test(fileName);
+    const COMPRESSION_THRESHOLD = 1.5 * 1024 * 1024; // 1.5 MB
+
+    if (file.size > COMPRESSION_THRESHOLD && !isAlreadyArchive) {
+      try {
+        setIsCompressing(true);
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8 = new Uint8Array(arrayBuffer);
+
+        // Compress file into standard ZIP container
+        const zipped = zipSync({ [fileName]: uint8 }, { level: 6 });
+        const compressedBlob = new Blob([zipped], { type: 'application/zip' });
+
+        const baseName = fileName.replace(/\.[^/.]+$/, '');
+        const zipFileName = `${baseName}.zip`;
+        const compressedFile = new File([compressedBlob], zipFileName, { type: 'application/zip' });
+
+        const origSize = file.size;
+        const compSize = compressedFile.size;
+        const savedPercent = Math.max(0, Math.round(((origSize - compSize) / origSize) * 100));
+
+        setSrcCompressionInfo({
+          originalName: fileName,
+          originalSize: origSize,
+          compressedSize: compSize,
+          savedPercent
+        });
+        setSrcSelectedFile(compressedFile);
+      } catch (err) {
+        console.warn('Auto compression fallback, using original file:', err);
+        setSrcSelectedFile(file);
+        setSrcCompressionInfo(null);
+      } finally {
+        setIsCompressing(false);
+      }
+    } else {
+      setSrcCompressionInfo(null);
+      setSrcSelectedFile(file);
+    }
   };
 
   // Optional file upload inside standard daily log
@@ -314,7 +367,7 @@ const DailyReports = () => {
   const handleSubmitSrcDocument = async (e) => {
     e.preventDefault();
     if (!srcSelectedFile) {
-      alert('Please select an SRC document or code archive file to upload.');
+      alert('Please select or upload a document or code archive file.');
       return;
     }
     setIsSrcSubmitting(true);
@@ -324,11 +377,11 @@ const DailyReports = () => {
       : `${(srcSelectedFile.size / (1024 * 1024)).toFixed(2)} MB`;
 
     const payload = new FormData();
-    payload.append('projectTitle', srcFormData.projectTitle || 'Project SRC Deliverable');
-    payload.append('tasksWorked', srcFormData.tasksWorked || 'SRC Code Package');
+    payload.append('projectTitle', srcFormData.projectTitle || 'Project Deliverable');
+    payload.append('tasksWorked', srcFormData.projectTitle || 'Project Documentation & Code');
     payload.append('date', srcFormData.date);
     payload.append('hoursWorked', srcFormData.hoursWorked || 8);
-    payload.append('workSummary', srcFormData.workSummary || `Submitted Project Source Code Deliverable: ${srcSelectedFile.name}`);
+    payload.append('workSummary', srcFormData.workSummary || `Submitted Project Deliverable: ${srcSelectedFile.name}`);
     payload.append('progressStatus', srcFormData.progressStatus || 'Completed');
     payload.append('issuesFaced', 'None');
     payload.append('srcFile', srcSelectedFile);
@@ -345,6 +398,7 @@ const DailyReports = () => {
         const fallbackRep = {
           _id: 'src-' + Date.now(),
           ...srcFormData,
+          tasksWorked: srcFormData.projectTitle || 'Project Documentation & Code',
           srcFileName: srcSelectedFile.name,
           srcFileSize: fileSizeStr,
           srcFileUrl: URL.createObjectURL(srcSelectedFile),
@@ -355,12 +409,13 @@ const DailyReports = () => {
       }
       setIsSrcModalOpen(false);
       resetSrcModal();
-      alert('✅ Project SRC document submitted successfully to Admin!');
+      alert('✅ Project document/code archive submitted successfully to Admin!');
     } catch (err) {
       console.warn('API error, saving report locally:', err);
       const fallbackRep = {
         _id: 'src-' + Date.now(),
         ...srcFormData,
+        tasksWorked: srcFormData.projectTitle || 'Project Documentation & Code',
         srcFileName: srcSelectedFile.name,
         srcFileSize: fileSizeStr,
         srcFileUrl: URL.createObjectURL(srcSelectedFile),
@@ -370,7 +425,7 @@ const DailyReports = () => {
       setReports([fallbackRep, ...reports]);
       setIsSrcModalOpen(false);
       resetSrcModal();
-      alert('✅ Project SRC document submitted successfully!');
+      alert('✅ Project document/code archive submitted successfully!');
     } finally {
       setIsSrcSubmitting(false);
     }
@@ -1309,28 +1364,16 @@ const DailyReports = () => {
             <input 
               type="text" 
               className="input-field-pro" 
-              placeholder="e.g. Enterprise HRMS - Frontend & Backend Source Code"
+              placeholder="e.g. Enterprise HRMS - Frontend & Backend Source Code / Document"
               value={srcFormData.projectTitle}
               onChange={e => setSrcFormData({...srcFormData, projectTitle: e.target.value})}
               required
             />
           </div>
 
-          {/* 2. Tasks / Features Worked On */}
+          {/* 2. Submitting Date */}
           <div className="form-group-pro">
-            <label className="form-label-pro">2. Task ID(s) or Modules Covered</label>
-            <input 
-              type="text" 
-              className="input-field-pro" 
-              placeholder="e.g. AUTH-MODULE, ATTENDANCE-FLOW, API-V1"
-              value={srcFormData.tasksWorked}
-              onChange={e => setSrcFormData({...srcFormData, tasksWorked: e.target.value})}
-            />
-          </div>
-
-          {/* 3. Submitting Date */}
-          <div className="form-group-pro">
-            <label className="form-label-pro">3. Submitting Date *</label>
+            <label className="form-label-pro">2. Submitting Date *</label>
             <input 
               type="date" 
               className="input-field-pro" 
@@ -1340,25 +1383,45 @@ const DailyReports = () => {
             />
           </div>
 
-          {/* 4. SRC File Upload Zone */}
+          {/* 3. Document / Code File Upload Zone with Auto-Compression */}
           <div className="form-group-pro">
-            <label className="form-label-pro">4. Upload SRC Document / Code Archive (ZIP/RAR/Files) *</label>
+            <label className="form-label-pro">
+              3. Upload Document / Code Archive (PDF, Word, ZIP, RAR, Code) *
+            </label>
             <input 
               type="file" 
               ref={srcFileInputRef}
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) setSrcSelectedFile(f);
+                if (f) handleProcessSrcFile(f);
               }}
-              accept=".zip,.rar,.7z,.tar,.gz,.js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.html,.css,.json,.txt,.pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,.zip,.rar,.7z,.tar,.gz,.js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.html,.css,.json,.txt,.md,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,application/x-zip-compressed"
               style={{ display: 'none' }}
               id="standalone-src-file-input"
             />
 
-            {!srcSelectedFile ? (
+            {isCompressing ? (
+              <div className="src-compressing-banner">
+                <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} color="#c084fc" />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
+                  <span style={{ fontWeight: 700, color: '#f3e8ff' }}>⚡ High MB file detected: Auto-compressing document...</span>
+                  <span style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 400 }}>
+                    Compressing into a lightweight ZIP package for instant upload
+                  </span>
+                </div>
+              </div>
+            ) : !srcSelectedFile ? (
               <div 
-                className="src-upload-dropzone"
+                className={`src-upload-dropzone ${isDragOver ? 'drag-over' : ''}`}
                 onClick={() => srcFileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(false);
+                  const f = e.dataTransfer.files?.[0];
+                  if (f) handleProcessSrcFile(f);
+                }}
                 style={{ padding: '1.5rem', borderColor: '#a855f7' }}
               >
                 <div className="src-dropzone-icon" style={{ background: 'rgba(147, 51, 234, 0.25)', color: '#d8b4fe' }}>
@@ -1366,26 +1429,46 @@ const DailyReports = () => {
                 </div>
                 <div className="src-dropzone-text">
                   <span className="src-dropzone-title" style={{ fontSize: '1rem', color: '#ffffff' }}>
-                    Click to select or drag & drop your SRC project files
+                    Click to select or drag & drop your files
                   </span>
                   <span className="src-dropzone-sub">
-                    Accepts .ZIP, .RAR, .TAR.GZ archives and code documents (up to 50MB)
+                    Accepts PDF, Word (.DOC/.DOCX), ZIP, RAR archives & code files (Auto-compressed if MB is high)
                   </span>
                 </div>
               </div>
             ) : (
               <div className="src-file-pill-card" style={{ borderColor: '#a855f7' }}>
                 <div className="src-file-pill-info">
-                  <div className="src-file-avatar" style={{ background: 'rgba(147, 51, 234, 0.35)' }}>
-                    <FolderArchive size={22} color="#e9d5ff" />
+                  <div className="src-file-avatar" style={{ 
+                    background: srcSelectedFile.name.endsWith('.pdf') 
+                      ? 'rgba(239, 68, 68, 0.25)' 
+                      : (/\.(doc|docx)$/i.test(srcSelectedFile.name) 
+                        ? 'rgba(59, 130, 246, 0.25)' 
+                        : 'rgba(147, 51, 234, 0.35)'),
+                    color: srcSelectedFile.name.endsWith('.pdf') 
+                      ? '#f87171' 
+                      : (/\.(doc|docx)$/i.test(srcSelectedFile.name) 
+                        ? '#60a5fa' 
+                        : '#e9d5ff')
+                  }}>
+                    {srcSelectedFile.name.endsWith('.pdf') || /\.(doc|docx)$/i.test(srcSelectedFile.name)
+                      ? <FileText size={22} />
+                      : <FolderArchive size={22} />}
                   </div>
                   <div className="src-file-details">
                     <span className="src-filename-text" style={{ fontSize: '0.95rem' }}>{srcSelectedFile.name}</span>
-                    <span className="src-filesize-text">
-                      {srcSelectedFile.size < 1024 * 1024 
-                        ? `${(srcSelectedFile.size / 1024).toFixed(1)} KB` 
-                        : `${(srcSelectedFile.size / (1024 * 1024)).toFixed(2)} MB`} &bull; Ready for upload
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginTop: '3px' }}>
+                      <span className="src-filesize-text">
+                        {srcSelectedFile.size < 1024 * 1024 
+                          ? `${(srcSelectedFile.size / 1024).toFixed(1)} KB` 
+                          : `${(srcSelectedFile.size / (1024 * 1024)).toFixed(2)} MB`} &bull; Ready for upload
+                      </span>
+                      {srcCompressionInfo && (
+                        <span className="src-compressed-badge">
+                          <Zap size={11} /> Auto-Compressed: {(srcCompressionInfo.originalSize / (1024 * 1024)).toFixed(2)} MB ➔ {(srcCompressionInfo.compressedSize / (1024 * 1024)).toFixed(2)} MB (-{srcCompressionInfo.savedPercent}%)
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1395,6 +1478,7 @@ const DailyReports = () => {
                     className="src-remove-btn" 
                     onClick={() => {
                       setSrcSelectedFile(null);
+                      setSrcCompressionInfo(null);
                       if (srcFileInputRef.current) srcFileInputRef.current.value = '';
                     }}
                     title="Remove selected file"
@@ -1406,13 +1490,13 @@ const DailyReports = () => {
             )}
           </div>
 
-          {/* 5. Notes / Summary */}
+          {/* 4. Notes / Summary */}
           <div className="form-group-pro">
-            <label className="form-label-pro">5. SRC Deliverable Notes / Summary *</label>
+            <label className="form-label-pro">4. SRC Deliverable Notes / Summary *</label>
             <textarea 
               className="input-field-pro" 
               rows="3"
-              placeholder="Explain what is included in this SRC package, implementation notes, or instructions for the Admin/Reviewer..."
+              placeholder="Explain what is included in this deliverable package or document, implementation notes, or instructions for the Admin/Reviewer..."
               value={srcFormData.workSummary}
               onChange={e => setSrcFormData({...srcFormData, workSummary: e.target.value})}
               required
@@ -1430,10 +1514,10 @@ const DailyReports = () => {
             <button 
               type="submit" 
               className="btn-primary-glow" 
-              disabled={isSrcSubmitting}
+              disabled={isSrcSubmitting || isCompressing}
               style={{ background: 'linear-gradient(135deg, #9333ea 0%, #6366f1 100%)', border: 'none' }}
             >
-              {isSrcSubmitting ? 'Uploading SRC to Admin...' : '🚀 Submit SRC Document'}
+              {isSrcSubmitting ? 'Uploading to Admin...' : (isCompressing ? '⚡ Compressing...' : '🚀 Submit SRC Document')}
             </button>
           </div>
         </form>
