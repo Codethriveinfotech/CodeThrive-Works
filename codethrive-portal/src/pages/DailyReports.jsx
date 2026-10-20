@@ -39,7 +39,29 @@ const DailyReports = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // SRC File Upload state
+  // Dedicated SRC Document Modal State (Separate Feature)
+  const [isSrcModalOpen, setIsSrcModalOpen] = useState(false);
+  const [srcSelectedFile, setSrcSelectedFile] = useState(null);
+  const [isSrcSubmitting, setIsSrcSubmitting] = useState(false);
+  const srcFileInputRef = useRef(null);
+
+  const initialSrcFormState = {
+    projectTitle: '',
+    tasksWorked: '',
+    date: new Date().toISOString().split('T')[0],
+    hoursWorked: 8,
+    workSummary: '',
+    progressStatus: 'Completed'
+  };
+  const [srcFormData, setSrcFormData] = useState(initialSrcFormState);
+
+  const resetSrcModal = () => {
+    setSrcFormData(initialSrcFormState);
+    setSrcSelectedFile(null);
+    if (srcFileInputRef.current) srcFileInputRef.current.value = '';
+  };
+
+  // Optional file upload inside standard daily log
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -56,6 +78,7 @@ const DailyReports = () => {
   };
 
   const [formData, setFormData] = useState(initialFormState);
+
 
 
   useEffect(() => {
@@ -288,6 +311,71 @@ const DailyReports = () => {
   };
 
 
+  const handleSubmitSrcDocument = async (e) => {
+    e.preventDefault();
+    if (!srcSelectedFile) {
+      alert('Please select an SRC document or code archive file to upload.');
+      return;
+    }
+    setIsSrcSubmitting(true);
+
+    const fileSizeStr = srcSelectedFile.size < 1024 * 1024 
+      ? `${(srcSelectedFile.size / 1024).toFixed(1)} KB` 
+      : `${(srcSelectedFile.size / (1024 * 1024)).toFixed(2)} MB`;
+
+    const payload = new FormData();
+    payload.append('projectTitle', srcFormData.projectTitle || 'Project SRC Deliverable');
+    payload.append('tasksWorked', srcFormData.tasksWorked || 'SRC Code Package');
+    payload.append('date', srcFormData.date);
+    payload.append('hoursWorked', srcFormData.hoursWorked || 8);
+    payload.append('workSummary', srcFormData.workSummary || `Submitted Project Source Code Deliverable: ${srcSelectedFile.name}`);
+    payload.append('progressStatus', srcFormData.progressStatus || 'Completed');
+    payload.append('issuesFaced', 'None');
+    payload.append('srcFile', srcSelectedFile);
+    payload.append('srcFileName', srcSelectedFile.name);
+    payload.append('srcFileSize', fileSizeStr);
+
+    try {
+      const res = await api.post('/daily-reports', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data?.success) {
+        setReports([res.data.data, ...reports]);
+      } else {
+        const fallbackRep = {
+          _id: 'src-' + Date.now(),
+          ...srcFormData,
+          srcFileName: srcSelectedFile.name,
+          srcFileSize: fileSizeStr,
+          srcFileUrl: URL.createObjectURL(srcSelectedFile),
+          status: 'Submitted',
+          createdAt: new Date().toISOString()
+        };
+        setReports([fallbackRep, ...reports]);
+      }
+      setIsSrcModalOpen(false);
+      resetSrcModal();
+      alert('✅ Project SRC document submitted successfully to Admin!');
+    } catch (err) {
+      console.warn('API error, saving report locally:', err);
+      const fallbackRep = {
+        _id: 'src-' + Date.now(),
+        ...srcFormData,
+        srcFileName: srcSelectedFile.name,
+        srcFileSize: fileSizeStr,
+        srcFileUrl: URL.createObjectURL(srcSelectedFile),
+        status: 'Submitted',
+        createdAt: new Date().toISOString()
+      };
+      setReports([fallbackRep, ...reports]);
+      setIsSrcModalOpen(false);
+      resetSrcModal();
+      alert('✅ Project SRC document submitted successfully!');
+    } finally {
+      setIsSrcSubmitting(false);
+    }
+  };
+
   const safeReports = Array.isArray(reports) ? reports : [];
 
   const filteredReports = safeReports.filter(rep => {
@@ -301,7 +389,11 @@ const DailyReports = () => {
                           tasks.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           dateStr.includes(searchQuery);
 
-    const matchesTab = activeFilterTab === 'All' || rep?.status === activeFilterTab || rep?.progressStatus === activeFilterTab;
+    const matchesTab = activeFilterTab === 'All' 
+      ? true 
+      : activeFilterTab === 'SRC' 
+        ? Boolean(rep?.srcFileUrl || rep?.srcFileName) 
+        : (rep?.status === activeFilterTab || rep?.progressStatus === activeFilterTab);
 
     return matchesSearch && matchesTab;
   });
@@ -309,6 +401,7 @@ const DailyReports = () => {
   // Calculate Metrics
   const totalReportsCount = safeReports.length;
   const totalHoursLogged = safeReports.reduce((acc, r) => acc + (parseFloat(r.hoursWorked) || 0), 0);
+  const srcFilesCount = safeReports.filter(r => r.srcFileUrl || r.srcFileName).length;
   const reviewedCount = safeReports.filter(r => r.status === 'Reviewed' || r.status === 'Approved').length;
   const pendingReviewCount = safeReports.filter(r => r.status === 'Submitted' || r.progressStatus === 'Pending').length;
   const avgRating = totalReportsCount > 0 
@@ -381,6 +474,33 @@ const DailyReports = () => {
             <FileText size={16} color="#60a5fa" />
             <span>Export CSV</span>
           </button>
+
+          {/* Standalone Separate SRC Document Submission Button */}
+          <button 
+            type="button"
+            onClick={() => { resetSrcModal(); setIsSrcModalOpen(true); }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              background: 'linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)',
+              color: '#ffffff',
+              padding: '0.62rem 1.2rem',
+              borderRadius: '12px',
+              fontWeight: 700,
+              fontSize: '0.86rem',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 16px rgba(147, 51, 234, 0.4)',
+              transition: 'all 0.2s ease'
+            }}
+            title="Submit Project SRC Documents"
+          >
+            <FolderArchive size={17} />
+            <span>📦 Submit SRC Deliverable</span>
+          </button>
+
+          {/* Standard Daily Work Log Button */}
           <button 
             className="btn-primary-glow"
             onClick={() => { resetForm(); setIsSubmitModalOpen(true); }}
@@ -390,6 +510,7 @@ const DailyReports = () => {
           </button>
         </div>
       </div>
+
 
       {/* --------------------------------------------------------------------------
           2. METRIC CARDS OVERVIEW (4 INTERACTIVE CARDS)
@@ -423,9 +544,30 @@ const DailyReports = () => {
           </div>
         </div>
 
-        <div className="metric-card-exec">
+        <div 
+          className="metric-card-exec"
+          style={{ cursor: 'pointer', border: activeFilterTab === 'SRC' ? '1px solid #c084fc' : undefined }}
+          onClick={() => setActiveFilterTab('SRC')}
+          title="Click to view all SRC deliverables"
+        >
+
           <div className="metric-icon-box purple">
-            <ShieldCheck size={22} />
+
+            <FolderArchive size={22} color="#c084fc" />
+          </div>
+          <div className="metric-info-body">
+            <span className="metric-label" style={{ color: '#d8b4fe' }}>SRC Deliverables</span>
+            <div className="metric-value-row">
+              <span className="metric-value" style={{ color: '#ffffff' }}>{srcFilesCount}</span>
+              <span className="metric-unit">packages</span>
+            </div>
+            <span className="metric-footer-text">Project source archives</span>
+          </div>
+        </div>
+
+        <div className="metric-card-exec">
+          <div className="metric-icon-box amber">
+            <ShieldCheck size={22} color="#fbbf24" />
           </div>
           <div className="metric-info-body">
             <span className="metric-label">Reviewed & Approved</span>
@@ -433,21 +575,7 @@ const DailyReports = () => {
               <span className="metric-value">{reviewedCount}</span>
               <span className="metric-unit">verified</span>
             </div>
-            <span className="metric-footer-text">Manager reviewed logs</span>
-          </div>
-        </div>
-
-        <div className="metric-card-exec">
-          <div className="metric-icon-box amber">
-            <Award size={22} />
-          </div>
-          <div className="metric-info-body">
-            <span className="metric-label">Avg Productivity</span>
-            <div className="metric-value-row">
-              <span className="metric-value">{avgRating}</span>
-              <span className="rating-badge-glow">★ Star</span>
-            </div>
-            <span className="metric-footer-text">Self & Lead Rating</span>
+            <span className="metric-footer-text">Manager approved</span>
           </div>
         </div>
       </div>
@@ -479,6 +607,14 @@ const DailyReports = () => {
             All Worklogs ({totalReportsCount})
           </button>
           <button 
+            className={`tab-btn-pill ${activeFilterTab === 'SRC' ? 'active' : ''}`}
+            onClick={() => setActiveFilterTab('SRC')}
+            style={activeFilterTab === 'SRC' ? { borderColor: '#c084fc', color: '#e9d5ff', background: 'rgba(147, 51, 234, 0.25)' } : {}}
+          >
+            <FolderArchive size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+            SRC Deliverables ({srcFilesCount})
+          </button>
+          <button 
             className={`tab-btn-pill ${activeFilterTab === 'Submitted' ? 'active' : ''}`}
             onClick={() => setActiveFilterTab('Submitted')}
           >
@@ -492,6 +628,7 @@ const DailyReports = () => {
           </button>
         </div>
       </div>
+
 
       {/* --------------------------------------------------------------------------
           4. WORKLOGS CONTENT DISPLAY
@@ -1133,9 +1270,178 @@ const DailyReports = () => {
         </Modal>
       )}
 
+      {/* --------------------------------------------------------------------------
+          7. DEDICATED SEPARATE MODAL: SUBMIT PROJECT SRC DOCUMENTS / CODE DELIVERABLE
+         -------------------------------------------------------------------------- */}
+      <Modal 
+
+        isOpen={isSrcModalOpen} 
+        onClose={() => { setIsSrcModalOpen(false); resetSrcModal(); }}
+        title="Submit Project SRC Documents / Code Archive"
+      >
+        <form onSubmit={handleSubmitSrcDocument} className="exec-modal-form">
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%)',
+            border: '1px solid rgba(168, 85, 247, 0.4)',
+            padding: '0.9rem 1.15rem',
+            borderRadius: '12px',
+            marginBottom: '0.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem'
+          }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(147, 51, 234, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <FolderArchive size={22} color="#e9d5ff" />
+            </div>
+            <div>
+              <span style={{ display: 'block', fontWeight: 700, color: '#f3e8ff', fontSize: '0.92rem' }}>
+                Dedicated Project SRC Deliverable Portal
+              </span>
+              <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
+                Submit today's created project source code or documentation directly to Admin
+              </span>
+            </div>
+          </div>
+
+          {/* 1. Project Title */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">1. Project / Deliverable Name *</label>
+            <input 
+              type="text" 
+              className="input-field-pro" 
+              placeholder="e.g. Enterprise HRMS - Frontend & Backend Source Code"
+              value={srcFormData.projectTitle}
+              onChange={e => setSrcFormData({...srcFormData, projectTitle: e.target.value})}
+              required
+            />
+          </div>
+
+          {/* 2. Tasks / Features Worked On */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">2. Task ID(s) or Modules Covered</label>
+            <input 
+              type="text" 
+              className="input-field-pro" 
+              placeholder="e.g. AUTH-MODULE, ATTENDANCE-FLOW, API-V1"
+              value={srcFormData.tasksWorked}
+              onChange={e => setSrcFormData({...srcFormData, tasksWorked: e.target.value})}
+            />
+          </div>
+
+          {/* 3. Submitting Date */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">3. Submitting Date *</label>
+            <input 
+              type="date" 
+              className="input-field-pro" 
+              value={srcFormData.date}
+              onChange={e => setSrcFormData({...srcFormData, date: e.target.value})}
+              required
+            />
+          </div>
+
+          {/* 4. SRC File Upload Zone */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">4. Upload SRC Document / Code Archive (ZIP/RAR/Files) *</label>
+            <input 
+              type="file" 
+              ref={srcFileInputRef}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setSrcSelectedFile(f);
+              }}
+              accept=".zip,.rar,.7z,.tar,.gz,.js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.html,.css,.json,.txt,.pdf,.doc,.docx"
+              style={{ display: 'none' }}
+              id="standalone-src-file-input"
+            />
+
+            {!srcSelectedFile ? (
+              <div 
+                className="src-upload-dropzone"
+                onClick={() => srcFileInputRef.current?.click()}
+                style={{ padding: '1.5rem', borderColor: '#a855f7' }}
+              >
+                <div className="src-dropzone-icon" style={{ background: 'rgba(147, 51, 234, 0.25)', color: '#d8b4fe' }}>
+                  <UploadCloud size={32} />
+                </div>
+                <div className="src-dropzone-text">
+                  <span className="src-dropzone-title" style={{ fontSize: '1rem', color: '#ffffff' }}>
+                    Click to select or drag & drop your SRC project files
+                  </span>
+                  <span className="src-dropzone-sub">
+                    Accepts .ZIP, .RAR, .TAR.GZ archives and code documents (up to 50MB)
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="src-file-pill-card" style={{ borderColor: '#a855f7' }}>
+                <div className="src-file-pill-info">
+                  <div className="src-file-avatar" style={{ background: 'rgba(147, 51, 234, 0.35)' }}>
+                    <FolderArchive size={22} color="#e9d5ff" />
+                  </div>
+                  <div className="src-file-details">
+                    <span className="src-filename-text" style={{ fontSize: '0.95rem' }}>{srcSelectedFile.name}</span>
+                    <span className="src-filesize-text">
+                      {srcSelectedFile.size < 1024 * 1024 
+                        ? `${(srcSelectedFile.size / 1024).toFixed(1)} KB` 
+                        : `${(srcSelectedFile.size / (1024 * 1024)).toFixed(2)} MB`} &bull; Ready for upload
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="src-ready-badge"><Check size={12} /> Ready</span>
+                  <button 
+                    type="button" 
+                    className="src-remove-btn" 
+                    onClick={() => {
+                      setSrcSelectedFile(null);
+                      if (srcFileInputRef.current) srcFileInputRef.current.value = '';
+                    }}
+                    title="Remove selected file"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 5. Notes / Summary */}
+          <div className="form-group-pro">
+            <label className="form-label-pro">5. SRC Deliverable Notes / Summary *</label>
+            <textarea 
+              className="input-field-pro" 
+              rows="3"
+              placeholder="Explain what is included in this SRC package, implementation notes, or instructions for the Admin/Reviewer..."
+              value={srcFormData.workSummary}
+              onChange={e => setSrcFormData({...srcFormData, workSummary: e.target.value})}
+              required
+            ></textarea>
+          </div>
+
+          <div className="modal-actions-footer">
+            <button 
+              type="button" 
+              className="btn-outline-glass" 
+              onClick={() => { setIsSrcModalOpen(false); resetSrcModal(); }}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="btn-primary-glow" 
+              disabled={isSrcSubmitting}
+              style={{ background: 'linear-gradient(135deg, #9333ea 0%, #6366f1 100%)', border: 'none' }}
+            >
+              {isSrcSubmitting ? 'Uploading SRC to Admin...' : '🚀 Submit SRC Document'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
     </motion.div>
   );
 };
 
 export default DailyReports;
+

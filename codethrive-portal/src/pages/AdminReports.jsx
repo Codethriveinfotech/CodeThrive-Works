@@ -144,10 +144,15 @@ const AdminReports = () => {
         r.workSummary?.toLowerCase().includes(q) ||
         r.summary?.toLowerCase().includes(q) ||
         r.srcFileName?.toLowerCase().includes(q);
-      const matchesStatus = statusFilter === 'ALL' || r.status === statusFilter;
+      const matchesStatus = statusFilter === 'ALL' 
+        ? true 
+        : statusFilter === 'SRC Deliverables'
+          ? Boolean(r.srcFileUrl || r.srcFileName || (r.attachments && r.attachments.length > 0))
+          : r.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [reports, searchTerm, statusFilter]);
+
 
 
   const totalReports = reports.length;
@@ -409,22 +414,23 @@ const AdminReports = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.4rem', background: 'rgba(15, 23, 42, 0.8)', padding: '3px', borderRadius: '10px' }}>
-            {['ALL', 'Pending', 'Approved', 'Rejected'].map(st => (
+          <div style={{ display: 'flex', gap: '0.4rem', background: 'rgba(15, 23, 42, 0.8)', padding: '3px', borderRadius: '10px', flexWrap: 'wrap' }}>
+            {['ALL', 'SRC Deliverables', 'Pending', 'Approved', 'Rejected'].map(st => (
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}
                 style={{
                   background: statusFilter === st ? 'rgba(99, 102, 241, 0.25)' : 'transparent',
-                  color: statusFilter === st ? '#818cf8' : '#94a3b8',
-                  border: statusFilter === st ? '1px solid rgba(99, 102, 241, 0.4)' : 'none',
+                  color: statusFilter === st ? (st === 'SRC Deliverables' ? '#d8b4fe' : '#818cf8') : '#94a3b8',
+                  border: statusFilter === st ? (st === 'SRC Deliverables' ? '1px solid #a855f7' : '1px solid rgba(99, 102, 241, 0.4)') : 'none',
                   padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer'
                 }}
               >
-                {st}
+                {st === 'SRC Deliverables' ? '📦 SRC Deliverables' : st}
               </button>
             ))}
           </div>
+
         </div>
 
         <DataTable columns={columns} data={filteredReports} searchable={false} itemsPerPage={10} />
