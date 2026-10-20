@@ -11,6 +11,7 @@ if (!fs.existsSync(localUploadDir)) {
   fs.mkdirSync(localUploadDir, { recursive: true });
 }
 
+
 let storage;
 
 // Use Cloudinary if credentials are provided, otherwise fallback to local disk storage
@@ -25,7 +26,11 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
     cloudinary: cloudinary,
     params: {
       folder: 'codethrive_erp',
-      allowedFormats: ['jpeg', 'png', 'jpg', 'pdf', 'doc', 'docx', 'xls', 'xlsx']
+      resource_type: 'auto',
+      allowedFormats: [
+        'jpeg', 'png', 'jpg', 'pdf', 'doc', 'docx', 'xls', 'xlsx',
+        'zip', 'rar', '7z', 'tar', 'gz', 'js', 'jsx', 'ts', 'tsx', 'py', 'java', 'cpp', 'html', 'css', 'json', 'txt'
+      ]
     }
   });
   console.log('Document Storage: Using Cloudinary');
@@ -35,13 +40,18 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
       cb(null, localUploadDir);
     },
     filename: function (req, file, cb) {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+      const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E6);
+      cb(null, `${uniqueSuffix}-${sanitizedName}`);
     }
   });
   console.log('Document Storage: Using Local Storage (Fallback)');
 }
 
-const upload = multer({ storage: storage });
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB max for source code & archives
+});
 
 module.exports = { cloudinary, upload };
+

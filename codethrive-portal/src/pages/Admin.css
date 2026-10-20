@@ -574,3 +574,28 @@
   background: rgba(99, 102, 241, 0.12);
   border-color: rgba(99, 102, 241, 0.3);
 }
+
+/* Admin SRC File Badge & Download Link */
+.admin-src-dl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(147, 51, 234, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: #e9d5ff !important;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.admin-src-dl-pill:hover {
+  background: rgba(147, 51, 234, 0.3);
+  border-color: #a855f7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+}
+

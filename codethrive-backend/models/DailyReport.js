@@ -6,6 +6,10 @@ const dailyReportSchema = new mongoose.Schema({
     ref: 'Employee',
     required: true
   },
+  projectTitle: {
+    type: String,
+    default: 'General Project'
+  },
   date: {
     type: Date,
     required: true,
@@ -32,15 +36,32 @@ const dailyReportSchema = new mongoose.Schema({
   issuesFaced: {
     type: String
   },
+  progressStatus: {
+    type: String,
+    default: 'Completed'
+  },
+  productivityRating: {
+    type: Number,
+    default: 5
+  },
   tomorrowsPlan: {
     type: String
   },
   attachments: [{
     type: String // URL from Cloudinary or local
   }],
+  srcFileUrl: {
+    type: String
+  },
+  srcFileName: {
+    type: String
+  },
+  srcFileSize: {
+    type: String
+  },
   status: {
     type: String,
-    enum: ['Submitted', 'Reviewed', 'Rejected'],
+    enum: ['Submitted', 'Reviewed', 'Approved', 'Rejected', 'Pending'],
     default: 'Submitted'
   },
   teamLeadComments: {
@@ -51,3 +72,4 @@ const dailyReportSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('DailyReport', dailyReportSchema);
+

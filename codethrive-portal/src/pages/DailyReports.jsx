@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../utils/api';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
@@ -10,7 +10,8 @@ import {
   FileText, Send, CheckCircle2, Clock, 
   PlusCircle, Search, Calendar, Star, 
   Sparkles, RefreshCw, MessageSquare, 
-  ArrowUpRight, Grid, List, Award, Eye, ShieldCheck, Activity, Download
+  ArrowUpRight, Grid, List, Award, Eye, ShieldCheck, Activity, Download,
+  UploadCloud, FolderArchive, FileCode, X, Check, Paperclip
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import './DailyReports.css';
@@ -38,6 +39,10 @@ const DailyReports = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // SRC File Upload state
+  const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
+
   // Clean form state without workLocation & tomorrowsPlan; Tasks Worked On is 2nd field
   const initialFormState = {
     projectTitle: '',
@@ -51,6 +56,7 @@ const DailyReports = () => {
   };
 
   const [formData, setFormData] = useState(initialFormState);
+
 
   useEffect(() => {
     fetchReports();
@@ -92,9 +98,24 @@ const DailyReports = () => {
     fetchReports();
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const resetForm = () => {
     setFormData(initialFormState);
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
 
   const handleExportCSV = () => {
     const listToExport = safeReports.length > 0 ? safeReports : reports;
@@ -192,10 +213,19 @@ const DailyReports = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    const fileSizeStr = selectedFile 
+      ? (selectedFile.size < 1024 * 1024 
+          ? `${(selectedFile.size / 1024).toFixed(1)} KB` 
+          : `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`)
+      : null;
+
     if (usingDemoData) {
       const newReport = {
         _id: 'rep-local-' + Date.now(),
         ...formData,
+        srcFileName: selectedFile ? selectedFile.name : null,
+        srcFileSize: fileSizeStr,
+        srcFileUrl: selectedFile ? URL.createObjectURL(selectedFile) : null,
         status: 'Submitted',
         createdAt: new Date().toISOString(),
         teamLeadComments: null
@@ -212,6 +242,12 @@ const DailyReports = () => {
       if (formData[key] !== null) payload.append(key, formData[key]);
     });
 
+    if (selectedFile) {
+      payload.append('srcFile', selectedFile);
+      payload.append('srcFileName', selectedFile.name);
+      payload.append('srcFileSize', fileSizeStr);
+    }
+
     try {
       const res = await api.post('/daily-reports', payload, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -222,6 +258,9 @@ const DailyReports = () => {
         const fallbackRep = {
           _id: 'rep-' + Date.now(),
           ...formData,
+          srcFileName: selectedFile ? selectedFile.name : null,
+          srcFileSize: fileSizeStr,
+          srcFileUrl: selectedFile ? URL.createObjectURL(selectedFile) : null,
           status: 'Submitted',
           createdAt: new Date().toISOString()
         };
@@ -234,6 +273,9 @@ const DailyReports = () => {
       const fallbackRep = {
         _id: 'rep-' + Date.now(),
         ...formData,
+        srcFileName: selectedFile ? selectedFile.name : null,
+        srcFileSize: fileSizeStr,
+        srcFileUrl: selectedFile ? URL.createObjectURL(selectedFile) : null,
         status: 'Submitted',
         createdAt: new Date().toISOString()
       };
@@ -244,6 +286,7 @@ const DailyReports = () => {
       setIsSubmitting(false);
     }
   };
+
 
   const safeReports = Array.isArray(reports) ? reports : [];
 
@@ -566,6 +609,26 @@ const DailyReports = () => {
                         </p>
                       </div>
 
+                      {/* SRC File Attachment Badge */}
+                      {(rep.srcFileName || rep.srcFileUrl) && (
+                        <div className="card-src-attachment-badge">
+                          <FolderArchive size={14} color="#c084fc" />
+                          <span className="src-name-truncate">{rep.srcFileName || 'Source Archive'}</span>
+                          {rep.srcFileSize && <span style={{ opacity: 0.75, fontSize: '0.72rem' }}>({rep.srcFileSize})</span>}
+                          <a 
+                            href={rep.srcFileUrl?.startsWith('http') ? rep.srcFileUrl : `http://localhost:5000${rep.srcFileUrl}`}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="src-quick-dl"
+                            title="Download SRC File"
+                            download={rep.srcFileName || 'source_code.zip'}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Download size={13} />
+                          </a>
+                        </div>
+                      )}
+
                       {/* Issues & Blockers */}
                       {rep.issuesFaced && rep.issuesFaced !== 'None' && (
                         <div className="doc-section-box blocker" style={{ padding: '0.65rem 0.85rem', margin: '0' }}>
@@ -577,6 +640,7 @@ const DailyReports = () => {
                           </p>
                         </div>
                       )}
+
 
                       {/* Manager Review Callout Banner */}
                       {rep.teamLeadComments && (
@@ -628,6 +692,7 @@ const DailyReports = () => {
                     <th>Work Summary</th>
                     <th>Issues / Blockers</th>
                     <th>Process Status</th>
+                    <th>SRC File</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -673,6 +738,26 @@ const DailyReports = () => {
                           <StatusBadge status={rep.progressStatus || 'Completed'} />
                         </td>
                         <td>
+                          {(rep.srcFileName || rep.srcFileUrl) ? (
+                            <a 
+                              href={rep.srcFileUrl?.startsWith('http') ? rep.srcFileUrl : `http://localhost:5000${rep.srcFileUrl}`}
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              download={rep.srcFileName || 'source_code.zip'}
+                              className="card-src-attachment-badge"
+                              style={{ margin: 0, textDecoration: 'none', padding: '0.25rem 0.5rem' }}
+                              title="Download SRC File"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <FolderArchive size={13} color="#c084fc" />
+                              <span className="src-name-truncate" style={{ maxWidth: '85px' }}>{rep.srcFileName || 'SRC'}</span>
+                              <Download size={12} />
+                            </a>
+                          ) : (
+                            <span style={{ color: '#64748b', fontSize: '0.8rem' }}>-</span>
+                          )}
+                        </td>
+                        <td>
                           <button 
                             className="t-action-btn"
                             onClick={() => { setSelectedReport(rep); setIsViewModalOpen(true); }}
@@ -684,6 +769,7 @@ const DailyReports = () => {
                       </tr>
                     );
                   })}
+
                 </tbody>
               </table>
             </motion.div>
@@ -853,6 +939,71 @@ const DailyReports = () => {
             </select>
           </div>
 
+          {/* 8th Field: Upload SRC / Source Code Archive */}
+          <div className="form-group-pro">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <label className="form-label-pro" style={{ margin: 0 }}>
+                8. Upload Project SRC / Source Code Archive
+              </label>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                .ZIP, .RAR, .TAR.GZ, or Code Files (.js, .py, etc.)
+              </span>
+            </div>
+
+            <input 
+              type="file" 
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".zip,.rar,.7z,.tar,.gz,.js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.html,.css,.json,.txt,.pdf,.doc,.docx"
+              style={{ display: 'none' }}
+              id="src-file-input"
+            />
+
+            {!selectedFile ? (
+              <div 
+                className="src-upload-dropzone"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="src-dropzone-icon">
+                  <UploadCloud size={28} />
+                </div>
+                <div className="src-dropzone-text">
+                  <span className="src-dropzone-title">Click to select or drag & drop SRC file</span>
+                  <span className="src-dropzone-sub">
+                    Upload your daily source code archive (ZIP/RAR/code files) so Admin can receive and inspect it
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="src-file-pill-card">
+                <div className="src-file-pill-info">
+                  <div className="src-file-avatar">
+                    <FolderArchive size={20} />
+                  </div>
+                  <div className="src-file-details">
+                    <span className="src-filename-text">{selectedFile.name}</span>
+                    <span className="src-filesize-text">
+                      {selectedFile.size < 1024 * 1024 
+                        ? `${(selectedFile.size / 1024).toFixed(1)} KB` 
+                        : `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`} &bull; Ready to submit
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="src-ready-badge"><Check size={12} /> Ready</span>
+                  <button 
+                    type="button" 
+                    className="src-remove-btn" 
+                    onClick={removeFile}
+                    title="Remove selected file"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="modal-actions-footer">
             <button 
               type="button" 
@@ -866,7 +1017,7 @@ const DailyReports = () => {
               className="btn-primary-glow" 
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving Activity...' : 'Submit Worklog'}
+              {isSubmitting ? 'Saving Activity & Uploading SRC...' : 'Submit Worklog & SRC'}
             </button>
           </div>
         </form>
@@ -892,6 +1043,46 @@ const DailyReports = () => {
               <div className="doc-section-box">
                 <span className="doc-section-title">Project Title</span>
                 <p className="doc-summary-text" style={{ fontWeight: '700', color: '#60a5fa' }}>{selectedReport.projectTitle}</p>
+              </div>
+            )}
+
+            {/* SRC File Download Box */}
+            {(selectedReport.srcFileUrl || selectedReport.srcFileName) && (
+              <div className="doc-section-box src-file-highlight-box">
+                <div className="src-highlight-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <FolderArchive size={18} color="#c084fc" />
+                    <span className="doc-section-title" style={{ margin: 0, color: '#c084fc' }}>
+                      Project Source Code (SRC) File
+                    </span>
+                  </div>
+                  {selectedReport.srcFileSize && (
+                    <span className="tag-pill" style={{ background: 'rgba(192, 132, 252, 0.15)', color: '#d8b4fe' }}>
+                      {selectedReport.srcFileSize}
+                    </span>
+                  )}
+                </div>
+
+                <div className="src-highlight-body">
+                  <div className="src-file-name-display">
+                    <FileCode size={18} color="#60a5fa" />
+                    <span style={{ fontWeight: 600, color: '#f8fafc' }}>
+                      {selectedReport.srcFileName || 'project_source.zip'}
+                    </span>
+                  </div>
+
+                  <a
+                    href={selectedReport.srcFileUrl?.startsWith('http') 
+                      ? selectedReport.srcFileUrl 
+                      : `http://localhost:5000${selectedReport.srcFileUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download={selectedReport.srcFileName || 'source_code.zip'}
+                    className="btn-download-src-glow"
+                  >
+                    <Download size={15} /> Download SRC File
+                  </a>
+                </div>
               </div>
             )}
 
@@ -941,6 +1132,7 @@ const DailyReports = () => {
           </div>
         </Modal>
       )}
+
 
     </motion.div>
   );
