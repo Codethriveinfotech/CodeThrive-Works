@@ -38,11 +38,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Security headers
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false }));
 
 // Enable CORS
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend URL
+  origin: true,
   credentials: true
 }));
 

@@ -59,41 +59,6 @@ const Admin = () => {
         liveList = res.data.liveMonitoring || [];
       }
 
-      // Check local storage registered users
-      const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
-      localUsers.forEach(lu => {
-        const luEmpId = (lu.employeeId || '').toLowerCase().trim();
-        const luEmail = (lu.email || lu.personalEmailAddress || '').toLowerCase().trim();
-
-        const exists = liveList.some(e => {
-          const eId = (e.id || e.employeeId || '').toLowerCase().trim();
-          const eEmail = (e.email || e.personalEmailAddress || '').toLowerCase().trim();
-          return (luEmpId && eId === luEmpId) || (luEmail && eEmail === luEmail);
-        });
-
-        if (!exists && luEmail !== 'admin@codethrive.com' && luEmpId !== 'cti-adm-001') {
-          liveList.unshift({
-            _id: lu._id || 'local_' + Date.now(),
-            id: lu.employeeId || 'CTI-EMP-NEW',
-            name: lu.fullName || lu.name || 'New Employee',
-            email: lu.email || lu.personalEmailAddress || 'N/A',
-            dept: lu.department || 'Engineering',
-            designation: lu.role || lu.designation || 'Software Engineer',
-            joiningDate: lu.dateOfJoining || formatDate(new Date()),
-            status: lu.status === 'Active' ? 'Not Checked In' : (lu.status || 'Not Checked In'),
-            isNewRegistration: true,
-            firstLoginTime: null,
-            lastLogoutTime: null,
-            workSec: 0,
-            breakSec: 0,
-            lunchSec: 0,
-            duration: '00h 00m',
-            assignedTasksCount: 0,
-            tasks: []
-          });
-        }
-      });
-
       // Filter out system administrator from monitoring
       const filteredLive = liveList.filter(e => {
         const email = (e.email || e.personalEmailAddress || '').toLowerCase();

@@ -1,77 +1,32 @@
-const mongoose = require('mongoose');
+const { BaseModel } = require('./BaseModel');
 
-const employeeSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: false // User is linked AFTER approval and credentials creation
-  },
-  employeeId: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
-  status: {
-    type: String,
-    enum: ['Pending', 'Approved', 'Rejected', 'Active', 'Inactive', 'Suspended'],
-    default: 'Pending'
-  },
-  
-  // 1. Personal Details
-  fullName: { type: String, required: true },
-  profilePhoto: { type: String },
-  dateOfBirth: { type: Date },
-  gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'] },
-  bloodGroup: { type: String },
-  maritalStatus: { type: String, enum: ['Single', 'Married', 'Divorced', 'Widowed', 'Prefer not to say'], default: 'Single' },
-  nationality: { type: String, default: 'Indian' },
-  personalPhoneNumber: { type: String, required: true },
-  personalEmailAddress: { type: String, required: true, unique: true },
-  currentAddress: { type: String },
-  permanentAddress: { type: String },
-  emergencyContact: {
-    name: String,
-    phone: String,
-    relationship: String
-  },
+class EmployeeModel extends BaseModel {
+  constructor() {
+    super('employees', {
+      user: { table: 'users', foreignKey: 'user_id' },
+      reportingManager: { table: 'employees', foreignKey: 'reporting_manager_id' }
+    });
+  }
 
-  // 2. Professional Details
-  department: { type: String },
-  designation: { type: String },
-  employmentType: { type: String, enum: ['Full-Time', 'Part-Time', 'Contract', 'Internship'] },
-  dateOfJoining: { type: Date },
-  workLocation: { type: String, enum: ['Office', 'Remote', 'Hybrid'], default: 'Office' },
-  reportingManager: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
-  qualification: { type: String },
-  collegeName: { type: String },
-  graduationYear: { type: String },
-  previousCompany: { type: String },
-  totalExperience: { type: String },
-  skills: [String],
-  technologyKnowledge: [String],
-  resumeUpload: { type: String },
+  async create(data) {
+    const dataCopy = { ...data };
+    const year = new Date().getFullYear();
 
-  // 3. Identity and Document Details
-  aadhaarOrIdentityProofNumber: { type: String },
-  identityProofUpload: { type: String },
-  addressProofUpload: { type: String },
-  educationalCertificateUpload: { type: String },
-  experienceCertificateUpload: { type: String },
-  offerLetterUpload: { type: String },
-  passportSizePhotoUpload: { type: String },
+    if (!dataCopy.employeeId && !dataCopy.employee_id) {
+      const count = await this.countDocuments();
+      dataCopy.employeeId = `CTI-${year}-${String(count + 1).padStart(3, '0')}`;
+    }
 
-  // 4. Bank and Payroll Details (Sensitive)
-  bankAccountHolderName: { type: String },
-  bankName: { type: String },
-  accountNumber: { type: String },
-  ifscCode: { type: String },
-  branchName: { type: String },
-  panNumber: { type: String },
-  upiId: { type: String },
-  salaryAmount: { type: Number },
-  salaryType: { type: String, enum: ['Monthly', 'Hourly', 'Project-Based'] }
-}, {
-  timestamps: true
-});
+    const checkId = dataCopy.employeeId || dataCopy.employee_id;
+    if (checkId) {
+      const exists = await this.findOne({ employeeId: checkId });
+      if (exists) {
+        dataCopy.employeeId = `${checkId}-${Math.floor(100 + Math.random() * 900)}`;
+      }
+    }
 
-module.exports = mongoose.model('Employee', employeeSchema);
+    return await super.create(dataCopy);
+  }
+}
+
+module.exports = new EmployeeModel();

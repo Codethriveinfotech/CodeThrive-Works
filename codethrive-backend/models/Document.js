@@ -1,34 +1,12 @@
-const mongoose = require('mongoose');
+const { BaseModel } = require('./BaseModel');
 
-const documentSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true
-  },
-  documentType: {
-    type: String,
-    enum: ['Policy', 'Contract', 'Payslip', 'ID Proof', 'Certificate', 'Other'],
-    default: 'Other'
-  },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee', // User who owns the doc, null for company-wide policies
-  },
-  uploadedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  fileUrl: {
-    type: String,
-    required: true
-  },
-  isPublic: {
-    type: Boolean, // True for company-wide policies
-    default: false
+class DocumentModel extends BaseModel {
+  constructor() {
+    super('documents', {
+      owner: { table: 'employees', foreignKey: 'owner_id' },
+      uploadedBy: { table: 'users', foreignKey: 'uploaded_by_id' }
+    });
   }
-}, {
-  timestamps: true
-});
+}
 
-module.exports = mongoose.model('Document', documentSchema);
+module.exports = new DocumentModel();

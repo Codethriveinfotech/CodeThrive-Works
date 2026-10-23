@@ -1,42 +1,12 @@
-const mongoose = require('mongoose');
+const { BaseModel } = require('./BaseModel');
 
-const leaveRequestSchema = new mongoose.Schema({
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee',
-    required: true
-  },
-  leaveType: {
-    type: String,
-    enum: ['Casual', 'Sick', 'Paid', 'Unpaid', 'WFH', 'Permission'],
-    required: true
-  },
-  startDate: {
-    type: Date,
-    required: true
-  },
-  endDate: {
-    type: Date,
-    required: true
-  },
-  reason: {
-    type: String,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['Pending', 'Approved', 'Rejected'],
-    default: 'Pending'
-  },
-  approvedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  approvedAt: {
-    type: Date
+class LeaveRequestModel extends BaseModel {
+  constructor() {
+    super('leave_requests', {
+      employee: { table: 'employees', foreignKey: 'employee_id' },
+      approvedBy: { table: 'users', foreignKey: 'approved_by' }
+    });
   }
-}, {
-  timestamps: true
-});
+}
 
-module.exports = mongoose.model('LeaveRequest', leaveRequestSchema);
+module.exports = new LeaveRequestModel();

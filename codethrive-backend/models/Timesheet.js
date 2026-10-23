@@ -1,23 +1,11 @@
-const mongoose = require('mongoose');
+const { BaseModel } = require('./BaseModel');
 
-const timesheetSchema = new mongoose.Schema({
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee',
-    required: true
-  },
-  task: {
-    type: String,
-    required: true
-  },
-  hours: {
-    type: Number,
-    required: true
-  },
-  date: {
-    type: String,
-    required: true
+class TimesheetModel extends BaseModel {
+  constructor() {
+    super('timesheets', {
+      employee: { table: 'employees', foreignKey: 'employee_id' }
+    });
   }
-}, { timestamps: true });
+}
 
-module.exports = mongoose.model('Timesheet', timesheetSchema);
+module.exports = new TimesheetModel();

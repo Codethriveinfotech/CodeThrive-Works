@@ -106,29 +106,8 @@ const TeamsCallWidget = () => {
       const res = await api.get('/employees').catch(() => ({ data: { success: false, data: [] } }));
       let dbEmps = res.data && res.data.success && Array.isArray(res.data.data) ? res.data.data : [];
       
-      // Also get local users if registered in browser session
-      const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
-      
-      // Combine & format
-      const combined = [...dbEmps];
-      localUsers.forEach(lu => {
-        const exists = combined.some(e => e.personalEmailAddress === lu.email || e.employeeId === lu.employeeId);
-        if (!exists) {
-          combined.push({
-            _id: lu._id || 'local_' + Date.now(),
-            fullName: lu.fullName || lu.name,
-            employeeId: lu.employeeId,
-            personalEmailAddress: lu.email,
-            personalPhoneNumber: lu.phoneNumber || '9876543210',
-            designation: lu.role || 'Software Engineer',
-            department: lu.department || 'Engineering',
-            status: 'Active'
-          });
-        }
-      });
-
       // Filter out admin account itself so only staff/employees show
-      const formattedList = combined
+      const formattedList = dbEmps
         .filter(emp => emp.personalEmailAddress !== 'admin@codethrive.com' && emp.employeeId !== 'CTI-ADM-001')
         .map((emp, idx) => {
           const rawPhone = emp.personalPhoneNumber || '9876543210';

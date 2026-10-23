@@ -31,32 +31,7 @@ const AdminTopbar = () => {
       const res = await api.get('/employees').catch(() => ({ data: { success: false, data: [] } }));
       let dbStaff = res.data?.success && Array.isArray(res.data.data) ? res.data.data : [];
 
-      const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
       const combined = [...dbStaff];
-
-      localUsers.forEach(lu => {
-        const luEmpId = (lu.employeeId || '').toLowerCase().trim();
-        const luEmail = (lu.email || lu.personalEmailAddress || '').toLowerCase().trim();
-
-        const exists = combined.some(e => {
-          const eId = (e.employeeId || '').toLowerCase().trim();
-          const eEmail = (e.personalEmailAddress || e.email || '').toLowerCase().trim();
-          return (luEmpId && eId === luEmpId) || (luEmail && eEmail === luEmail);
-        });
-
-        if (!exists && luEmail !== 'admin@codethrive.com' && luEmpId !== 'cti-adm-001') {
-          combined.unshift({
-            _id: lu._id || 'local_' + Date.now(),
-            fullName: lu.fullName || lu.name || 'New Employee',
-            employeeId: lu.employeeId || 'CTI-EMP-NEW',
-            designation: lu.role || lu.designation || 'Software Engineer',
-            department: lu.department || 'Engineering',
-            personalEmailAddress: lu.email || lu.personalEmailAddress,
-            status: lu.status || 'Active',
-            isNewRegistration: true
-          });
-        }
-      });
 
       const filtered = combined.filter(e => {
         const email = (e.personalEmailAddress || e.email || '').toLowerCase();

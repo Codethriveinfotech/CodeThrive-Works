@@ -1,36 +1,12 @@
-const mongoose = require('mongoose');
+const { BaseModel } = require('./BaseModel');
 
-const attendanceCorrectionSchema = new mongoose.Schema({
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee',
-    required: true
-  },
-  date: {
-    type: Date,
-    required: true
-  },
-  reason: {
-    type: String,
-    required: true
-  },
-  attachment: {
-    type: String
-  },
-  status: {
-    type: String,
-    enum: ['Pending', 'Approved', 'Rejected'],
-    default: 'Pending'
-  },
-  approvedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  approvedAt: {
-    type: Date
+class AttendanceCorrectionModel extends BaseModel {
+  constructor() {
+    super('attendance_corrections', {
+      employee: { table: 'employees', foreignKey: 'employee_id' },
+      approvedBy: { table: 'users', foreignKey: 'approved_by' }
+    });
   }
-}, {
-  timestamps: true
-});
+}
 
-module.exports = mongoose.model('AttendanceCorrection', attendanceCorrectionSchema);
+module.exports = new AttendanceCorrectionModel();

@@ -34,8 +34,17 @@ exports.addEmployee = async (req, res) => {
     }
     
     const year = new Date().getFullYear();
-    const count = await Employee.countDocuments();
-    const employeeId = req.body.employeeId || `CTI-${year}-${String(count + 1).padStart(3, '0')}`;
+    let employeeId = req.body.employeeId;
+    if (!employeeId) {
+      const count = await Employee.countDocuments();
+      employeeId = `CTI-${year}-${String(count + 1).padStart(3, '0')}`;
+    }
+
+    let existingEmpId = await Employee.findOne({ employeeId });
+    if (existingEmpId) {
+      const rand = Math.floor(100 + Math.random() * 900);
+      employeeId = `${employeeId.replace(/-\d{3}$/, '')}-${rand}`;
+    }
     
     const userRole = role ? role.toLowerCase() : 'employee';
     let user = await User.findOne({ email: personalEmailAddress });

@@ -7,266 +7,319 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  password      String
-  role          String         @default("employee")
-  status        String         @default("active")
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  employee      Employee?
-  assignedTasks Task[]         @relation("AssignedByTasks")
-  organizedMeetings Meeting[]  @relation("OrganizedMeetings")
-  notifications Notification[]
-  taskActivities TaskActivity[]
-  supportAssigned SupportTicket[] @relation("AssignedSupport")
-  uploadedDocuments Document[]    @relation("UploadedDocs")
-  approvedLeaves LeaveRequest[]   @relation("ApprovedLeaves")
-  approvedCorrections AttendanceCorrection[] @relation("ApprovedCorrections")
+model attendance_corrections {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id             String    @db.Uuid
+  date                    DateTime  @db.Timestamptz(6)
+  reason                  String
+  attachment              String?
+  requested_checkout_time String?   @db.VarChar(20)
+  status                  String?   @default("Pending") @db.VarChar(50)
+  approved_by             String?   @db.Uuid
+  approved_at             DateTime? @db.Timestamptz(6)
+  created_at              DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime? @default(now()) @db.Timestamptz(6)
+  users                   users?    @relation(fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employees               employees @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model Employee {
-  id                    String        @id @default(uuid())
-  userId                String?       @unique
-  user                  User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  employeeId            String        @unique
-  fullName              String
-  personalEmailAddress  String?
-  personalPhoneNumber   String?
-  designation           String?
-  department            String?
-  employmentType        String?
-  workLocation          String?
-  dateOfJoining         DateTime?
-  salaryAmount          Float?
-  salaryType            String?
-  status                String        @default("Active")
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
-
-  attendances           Attendance[]
-  attendanceSessions    AttendanceSession[]
-  attendanceCorrections AttendanceCorrection[]
-  leaveRequests         LeaveRequest[]
-  dailyReports          DailyReport[]
-  payrolls              Payroll[]
-  timesheets            Timesheet[]
-  assignedTasks         Task[]        @relation("AssignedToTasks")
-  supportTickets        SupportTicket[] @relation("EmployeeSupport")
-  ownedDocuments        Document[]    @relation("OwnedDocs")
+model attendance_sessions {
+  id                  String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  attendance_id       String      @db.Uuid
+  employee_id         String      @db.Uuid
+  session_type        String?     @default("Work") @db.VarChar(50)
+  start_time          DateTime    @db.Timestamptz(6)
+  end_time            DateTime?   @db.Timestamptz(6)
+  duration_in_seconds Int?        @default(0)
+  status              String?     @default("Active") @db.VarChar(50)
+  force_close_reason  String?
+  created_at          DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?   @default(now()) @db.Timestamptz(6)
+  attendances         attendances @relation(fields: [attendance_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  employees           employees   @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model Attendance {
-  id                String              @id @default(uuid())
-  employeeId        String
-  employee          Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  date              DateTime
-  firstLoginTime    DateTime?
-  lastLogoutTime    DateTime?
-  status            String              @default("Present")
-  totalWorkMinutes  Int                 @default(0)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-
-  sessions          AttendanceSession[]
+model attendances {
+  id                              String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id                     String                @db.Uuid
+  date                            DateTime              @db.Timestamptz(6)
+  first_login_time                DateTime?             @db.Timestamptz(6)
+  last_logout_time                DateTime?             @db.Timestamptz(6)
+  status                          String?               @default("Working") @db.VarChar(50)
+  total_work_minutes              Int?                  @default(0)
+  total_work_duration_in_seconds  Int?                  @default(0)
+  created_at                      DateTime?             @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?             @default(now()) @db.Timestamptz(6)
+  total_break_duration_in_seconds Int?                  @default(0)
+  total_lunch_duration_in_seconds Int?                  @default(0)
+  is_manual_correction            Boolean?              @default(false)
+  correction_reason               String?
+  attendance_sessions             attendance_sessions[]
+  employees                       employees             @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model AttendanceSession {
-  id                String        @id @default(uuid())
-  attendanceId      String
-  attendance        Attendance    @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
-  employeeId        String
-  employee          Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  sessionType       String        @default("Work")
-  startTime         DateTime
-  endTime           DateTime?
-  durationInSeconds Int           @default(0)
-  status            String        @default("Active")
-  forceCloseReason  String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+model daily_reports {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id         String    @db.Uuid
+  date                DateTime? @default(now()) @db.Timestamptz(6)
+  tasks_worked        String
+  work_summary        String
+  hours_worked        Decimal   @db.Decimal(5, 2)
+  completed_work      String?
+  pending_work        String?
+  issues_faced        String?
+  tomorrows_plan      String?
+  status              String?   @default("Submitted") @db.VarChar(50)
+  team_lead_comments  String?
+  created_at          DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime? @default(now()) @db.Timestamptz(6)
+  project_title       String?   @default("General Project") @db.VarChar(255)
+  progress_status     String?   @default("Completed") @db.VarChar(100)
+  productivity_rating Int?      @default(5)
+  attachments         Json?     @default("[]")
+  src_file_url        String?
+  src_file_name       String?   @db.VarChar(255)
+  src_file_size       String?   @db.VarChar(50)
+  employees           employees @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model AttendanceCorrection {
-  id                    String      @id @default(uuid())
-  employeeId            String
-  employee              Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  date                  DateTime
-  reason                String
-  attachment            String?
-  requestedCheckOutTime String?
-  status                String      @default("Pending")
-  approvedById          String?
-  approvedBy            User?       @relation("ApprovedCorrections", fields: [approvedById], references: [id])
-  approvedAt            DateTime?
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
+model documents {
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String     @db.VarChar(255)
+  document_type  String?    @default("Other") @db.VarChar(100)
+  owner_id       String?    @db.Uuid
+  uploaded_by_id String     @db.Uuid
+  file_url       String
+  is_public      Boolean?   @default(false)
+  created_at     DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?  @default(now()) @db.Timestamptz(6)
+  employees      employees? @relation(fields: [owner_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users          users      @relation(fields: [uploaded_by_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model LeaveRequest {
-  id            String      @id @default(uuid())
-  employeeId    String
-  employee      Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  leaveType     String
-  startDate     DateTime
-  endDate       DateTime
-  reason        String
-  status        String      @default("Pending")
-  approvedById  String?
-  approvedBy    User?       @relation("ApprovedLeaves", fields: [approvedById], references: [id])
-  approvedAt    DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+model employees {
+  id                               String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                          String?                  @unique @db.Uuid
+  employee_id                      String                   @unique @db.VarChar(100)
+  full_name                        String                   @db.VarChar(255)
+  personal_email_address           String?                  @db.VarChar(255)
+  personal_phone_number            String?                  @db.VarChar(50)
+  designation                      String?                  @db.VarChar(150)
+  department                       String?                  @db.VarChar(150)
+  employment_type                  String?                  @db.VarChar(50)
+  work_location                    String?                  @db.VarChar(100)
+  date_of_joining                  DateTime?                @db.Timestamptz(6)
+  salary_amount                    Decimal?                 @db.Decimal(12, 2)
+  salary_type                      String?                  @db.VarChar(50)
+  profile_photo                    String?
+  address                          String?
+  emergency_contact                String?                  @db.VarChar(255)
+  status                           String?                  @default("Active") @db.VarChar(50)
+  created_at                       DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime?                @default(now()) @db.Timestamptz(6)
+  gender                           String?                  @db.VarChar(50)
+  date_of_birth                    DateTime?                @db.Timestamptz(6)
+  blood_group                      String?                  @db.VarChar(20)
+  marital_status                   String?                  @db.VarChar(50)
+  nationality                      String?                  @default("Indian") @db.VarChar(100)
+  current_address                  String?
+  permanent_address                String?
+  emergency_contact_details        Json?
+  qualification                    String?                  @db.VarChar(255)
+  college_name                     String?                  @db.VarChar(255)
+  graduation_year                  String?                  @db.VarChar(50)
+  previous_company                 String?                  @db.VarChar(255)
+  total_experience                 String?                  @db.VarChar(50)
+  skills                           Json?                    @default("[]")
+  technology_knowledge             Json?                    @default("[]")
+  resume_upload                    String?
+  aadhaar_or_identity_proof_number String?                  @db.VarChar(100)
+  identity_proof_upload            String?
+  address_proof_upload             String?
+  educational_certificate_upload   String?
+  experience_certificate_upload    String?
+  offer_letter_upload              String?
+  passport_size_photo_upload       String?
+  bank_account_holder_name         String?                  @db.VarChar(255)
+  bank_name                        String?                  @db.VarChar(255)
+  account_number                   String?                  @db.VarChar(100)
+  ifsc_code                        String?                  @db.VarChar(50)
+  branch_name                      String?                  @db.VarChar(255)
+  pan_number                       String?                  @db.VarChar(50)
+  upi_id                           String?                  @db.VarChar(100)
+  reporting_manager_id             String?                  @db.Uuid
+  attendance_corrections           attendance_corrections[]
+  attendance_sessions              attendance_sessions[]
+  attendances                      attendances[]
+  daily_reports                    daily_reports[]
+  documents                        documents[]
+  employees                        employees?               @relation("employeesToemployees", fields: [reporting_manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_employees                  employees[]              @relation("employeesToemployees")
+  users                            users?                   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  leave_requests                   leave_requests[]
+  payrolls                         payrolls[]
+  support_tickets                  support_tickets[]
+  tasks                            tasks[]
+  timesheets                       timesheets[]
 }
 
-model DailyReport {
-  id                String      @id @default(uuid())
-  employeeId        String
-  employee          Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  date              DateTime    @default(now())
-  tasksWorked       String
-  workSummary       String
-  hoursWorked       Float
-  completedWork     String?
-  pendingWork       String?
-  issuesFaced       String?
-  tomorrowsPlan     String?
-  status            String      @default("Submitted")
-  teamLeadComments  String?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+model leave_requests {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id String    @db.Uuid
+  leave_type  String    @db.VarChar(50)
+  start_date  DateTime  @db.Timestamptz(6)
+  end_date    DateTime  @db.Timestamptz(6)
+  reason      String
+  status      String?   @default("Pending") @db.VarChar(50)
+  approved_by String?   @db.Uuid
+  approved_at DateTime? @db.Timestamptz(6)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  users       users?    @relation(fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employees   employees @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model Meeting {
-  id            String      @id @default(uuid())
-  title         String
-  agenda        String
-  date          DateTime
-  time          String
-  meetingLink   String?
-  organizerId   String
-  organizer     User        @relation("OrganizedMeetings", fields: [organizerId], references: [id], onDelete: Cascade)
-  location      String?
-  status        String      @default("Scheduled")
-  notes         String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+model meetings {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title        String    @db.VarChar(255)
+  agenda       String
+  date         DateTime  @db.Timestamptz(6)
+  time         String    @db.VarChar(50)
+  meeting_link String?
+  organizer_id String    @db.Uuid
+  location     String?   @db.VarChar(255)
+  status       String?   @default("Scheduled") @db.VarChar(50)
+  notes        String?
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+  participants Json?     @default("[]")
+  users        users     @relation(fields: [organizer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model Payroll {
-  id            String      @id @default(uuid())
-  employeeId    String
-  employee      Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  payslipId     String      @unique
-  month         String
-  basicSalary   Float
-  allowances    Float       @default(0)
-  bonus         Float       @default(0)
-  deductions    Float       @default(0)
-  grossSalary   Float
-  netPayable    Float
-  paymentDate   DateTime?
-  status        String      @default("Paid")
-  hra           Float       @default(0)
-  travel        Float       @default(0)
-  medical       Float       @default(0)
-  pf            Float       @default(0)
-  incomeTax     Float       @default(0)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+model notifications {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient_id      String    @db.Uuid
+  title             String    @db.VarChar(255)
+  description       String
+  notification_type String    @db.VarChar(100)
+  priority          String?   @default("Low") @db.VarChar(50)
+  is_read           Boolean?  @default(false)
+  related_module_id String?   @db.Uuid
+  action_link       String?
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+  users             users     @relation(fields: [recipient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model Task {
-  id                 String         @id @default(uuid())
-  taskId             String         @unique
-  title              String
-  description        String?
-  assignedToId       String
-  assignedTo         Employee       @relation("AssignedToTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
-  assignedById       String
-  assignedBy         User           @relation("AssignedByTasks", fields: [assignedById], references: [id], onDelete: Cascade)
-  priority           String         @default("Medium")
-  status             String         @default("Assigned")
-  progressPercentage Int            @default(0)
-  startDate          DateTime?
-  dueDate            DateTime?
-  estimatedHours     Float?
-  actualHours        Float          @default(0)
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-
-  activities         TaskActivity[]
+model payrolls {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id       String    @db.Uuid
+  payslip_id        String    @unique @db.VarChar(100)
+  month             String    @db.VarChar(50)
+  basic_salary      Decimal   @db.Decimal(12, 2)
+  allowances        Decimal?  @default(0) @db.Decimal(12, 2)
+  bonus             Decimal?  @default(0) @db.Decimal(12, 2)
+  deductions        Decimal?  @default(0) @db.Decimal(12, 2)
+  gross_salary      Decimal   @db.Decimal(12, 2)
+  net_payable       Decimal   @db.Decimal(12, 2)
+  payment_date      DateTime? @db.Timestamptz(6)
+  status            String?   @default("Paid") @db.VarChar(50)
+  hra               Decimal?  @default(0) @db.Decimal(12, 2)
+  travel            Decimal?  @default(0) @db.Decimal(12, 2)
+  medical           Decimal?  @default(0) @db.Decimal(12, 2)
+  pf                Decimal?  @default(0) @db.Decimal(12, 2)
+  income_tax        Decimal?  @default(0) @db.Decimal(12, 2)
+  allowance_details Json?     @default("{}")
+  deduction_details Json?     @default("{}")
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+  employees         employees @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model TaskActivity {
-  id            String      @id @default(uuid())
-  taskId        String
-  task          Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action        String
-  previousValue String?
-  newValue      String?
-  comment       String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+model support_tickets {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticket_id      String    @unique @db.VarChar(100)
+  subject        String    @db.VarChar(255)
+  category       String?   @default("IT Support") @db.VarChar(100)
+  priority       String?   @default("Medium") @db.VarChar(50)
+  description    String
+  status         String?   @default("Open") @db.VarChar(50)
+  employee_id    String    @db.Uuid
+  assigned_to_id String?   @db.Uuid
+  resolution     String?
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+  attachments    Json?     @default("[]")
+  users          users?    @relation(fields: [assigned_to_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employees      employees @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model Timesheet {
-  id            String      @id @default(uuid())
-  employeeId    String
-  employee      Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  task          String
-  hours         Float
-  date          String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+model task_activities {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id        String    @db.Uuid
+  user_id        String    @db.Uuid
+  action         String    @db.VarChar(255)
+  previous_value String?
+  new_value      String?
+  comment        String?
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+  tasks          tasks     @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users          users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model SupportTicket {
-  id            String      @id @default(uuid())
-  ticketId      String      @unique
-  subject       String
-  category      String      @default("IT Support")
-  priority      String      @default("Medium")
-  description   String
-  status        String      @default("Open")
-  employeeId    String
-  employee      Employee    @relation("EmployeeSupport", fields: [employeeId], references: [id], onDelete: Cascade)
-  assignedToId  String?
-  assignedTo    User?       @relation("AssignedSupport", fields: [assignedToId], references: [id])
-  resolution    String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+model tasks {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id             String            @unique @db.VarChar(100)
+  title               String            @db.VarChar(255)
+  description         String?
+  assigned_to_id      String            @db.Uuid
+  assigned_by_id      String            @db.Uuid
+  priority            String?           @default("Medium") @db.VarChar(50)
+  status              String?           @default("Assigned") @db.VarChar(100)
+  progress_percentage Int?              @default(0)
+  start_date          DateTime?         @db.Timestamptz(6)
+  due_date            DateTime?         @db.Timestamptz(6)
+  due_time            String?           @db.VarChar(20)
+  estimated_hours     Decimal?          @db.Decimal(6, 2)
+  actual_hours        Decimal?          @default(0) @db.Decimal(6, 2)
+  attachments         Json?             @default("[]")
+  links               Json?             @default("{}")
+  created_at          DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?         @default(now()) @db.Timestamptz(6)
+  task_activities     task_activities[]
+  users               users             @relation(fields: [assigned_by_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  employees           employees         @relation(fields: [assigned_to_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model Document {
-  id            String      @id @default(uuid())
-  title         String
-  documentType  String      @default("Other")
-  ownerId       String?
-  owner         Employee?   @relation("OwnedDocs", fields: [ownerId], references: [id])
-  uploadedById  String
-  uploadedBy    User        @relation("UploadedDocs", fields: [uploadedById], references: [id], onDelete: Cascade)
-  fileUrl       String
-  isPublic      Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+model timesheets {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id String    @db.Uuid
+  task        String
+  hours       Decimal   @db.Decimal(5, 2)
+  date        String    @db.VarChar(50)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  employees   employees @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
-model Notification {
-  id              String    @id @default(uuid())
-  recipientId     String
-  recipient       User      @relation(fields: [recipientId], references: [id], onDelete: Cascade)
-  title           String
-  description     String
-  notificationType String
-  priority        String    @default("Low")
-  isRead          Boolean   @default(false)
-  relatedModuleId String?
-  actionLink      String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+model users {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                  String                   @unique @db.VarChar(255)
+  password               String                   @db.VarChar(255)
+  role                   String?                  @default("employee") @db.VarChar(50)
+  status                 String?                  @default("active") @db.VarChar(50)
+  created_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  reset_password_token   String?                  @db.VarChar(255)
+  reset_password_expire  DateTime?                @db.Timestamptz(6)
+  attendance_corrections attendance_corrections[]
+  documents              documents[]
+  employees              employees?
+  leave_requests         leave_requests[]
+  meetings               meetings[]
+  notifications          notifications[]
+  support_tickets        support_tickets[]
+  task_activities        task_activities[]
+  tasks                  tasks[]
 }

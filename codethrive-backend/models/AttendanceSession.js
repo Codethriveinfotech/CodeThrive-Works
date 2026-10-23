@@ -1,40 +1,12 @@
-const mongoose = require('mongoose');
+const { BaseModel } = require('./BaseModel');
 
-const attendanceSessionSchema = new mongoose.Schema({
-  attendanceId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Attendance',
-    required: true
-  },
-  employee: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Employee',
-    required: true
-  },
-  sessionType: {
-    type: String,
-    enum: ['Work', 'Break', 'Lunch'],
-    required: true
-  },
-  startTime: {
-    type: Date,
-    required: true
-  },
-  endTime: {
-    type: Date
-  },
-  durationInSeconds: {
-    type: Number,
-    default: 0
-  },
-  status: {
-    type: String,
-    enum: ['Active', 'Completed', 'ForceClosed'],
-    default: 'Active'
-  },
-  forceCloseReason: String
-}, {
-  timestamps: true
-});
+class AttendanceSessionModel extends BaseModel {
+  constructor() {
+    super('attendance_sessions', {
+      attendanceId: { table: 'attendances', foreignKey: 'attendance_id' },
+      employee: { table: 'employees', foreignKey: 'employee_id' }
+    });
+  }
+}
 
-module.exports = mongoose.model('AttendanceSession', attendanceSessionSchema);
+module.exports = new AttendanceSessionModel();

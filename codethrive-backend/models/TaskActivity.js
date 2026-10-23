@@ -1,25 +1,12 @@
-const mongoose = require('mongoose');
+const { BaseModel } = require('./BaseModel');
 
-const taskActivitySchema = new mongoose.Schema({
-  task: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Task',
-    required: true
-  },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  action: {
-    type: String,
-    required: true // e.g., 'Status Changed', 'Progress Updated', 'File Uploaded', 'Comment Added'
-  },
-  previousValue: String,
-  newValue: String,
-  comment: String
-}, {
-  timestamps: true
-});
+class TaskActivityModel extends BaseModel {
+  constructor() {
+    super('task_activities', {
+      task: { table: 'tasks', foreignKey: 'task_id' },
+      user: { table: 'users', foreignKey: 'user_id' }
+    });
+  }
+}
 
-module.exports = mongoose.model('TaskActivity', taskActivitySchema);
+module.exports = new TaskActivityModel();

@@ -62,41 +62,8 @@ const Employees = () => {
       const res = await api.get('/employees').catch(() => ({ data: { success: false, data: [] } }));
       let dbEmps = res.data && res.data.success && Array.isArray(res.data.data) ? res.data.data : [];
 
-      // Combine with local storage registered users if any exist
-      const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
-      const combined = [...dbEmps];
-      localUsers.forEach(lu => {
-        const luEmpId = (lu.employeeId || '').toLowerCase().trim();
-        const luEmail = (lu.email || lu.personalEmailAddress || '').toLowerCase().trim();
-
-        const exists = combined.some(e => {
-          const eId = (e.employeeId || '').toLowerCase().trim();
-          const eEmail = (e.personalEmailAddress || e.email || '').toLowerCase().trim();
-          return (luEmpId && eId === luEmpId) || (luEmail && eEmail === luEmail);
-        });
-
-        if (!exists && luEmail !== 'admin@codethrive.com' && luEmpId !== 'cti-adm-001') {
-          combined.unshift({
-            _id: lu._id || 'local_' + Date.now(),
-            employeeId: lu.employeeId || 'CTI-EMP-NEW',
-            fullName: lu.fullName || lu.name || 'New Employee',
-            personalEmailAddress: lu.email || lu.personalEmailAddress,
-            personalPhoneNumber: lu.phoneNumber || lu.personalPhoneNumber || '9876543210',
-            department: lu.department || 'Engineering',
-            designation: lu.role || lu.designation || 'Software Engineer',
-            employmentType: 'Full-Time',
-            status: lu.status || 'Active',
-            isNewRegistration: true,
-            dateOfJoining: lu.dateOfJoining || new Date().toISOString().split('T')[0],
-            workLocation: 'Office',
-            salaryAmount: lu.salaryAmount || 65000,
-            user: { role: lu.role || 'employee', status: 'active' }
-          });
-        }
-      });
-
       // Filter out admin user from employee directory so only real staff show up
-      const filtered = combined.filter(e => {
+      const filtered = dbEmps.filter(e => {
         const email = (e.personalEmailAddress || e.email || '').toLowerCase();
         const id = (e.employeeId || '').toLowerCase();
         return email !== 'admin@codethrive.com' && id !== 'cti-adm-001';
@@ -154,12 +121,13 @@ const Employees = () => {
         employeeId: empId
       });
       if (res.data?.success) {
-        setEmployees(prev => [res.data.data, ...prev]);
+        await fetchEmployees();
+        alert(`Registered new employee (${res.data.data?.employeeId || empId}) successfully in database!`);
       } else {
-        setEmployees(prev => [newDoc, ...prev]);
+        alert(res.data?.message || 'Failed to register employee');
       }
     } catch (err) {
-      setEmployees(prev => [newDoc, ...prev]);
+      alert(err.response?.data?.message || err.message || 'Failed to register employee in database');
     } finally {
       setIsAddingEmp(false);
       setShowAddModal(false);
@@ -174,7 +142,6 @@ const Employees = () => {
         salaryAmount: '60000',
         password: 'Password@123'
       });
-      alert(`Registered new employee (${empId}) successfully!`);
     }
   };
 
