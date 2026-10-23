@@ -5,7 +5,14 @@ const getApiUrl = () => {
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return 'http://localhost:5000/api/v1';
   }
-  return '/api/v1';
+  return 'https://codethrive-backend.onrender.com/api/v1';
+};
+
+export const getBaseServerUrl = () => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000';
+  }
+  return 'https://codethrive-backend.onrender.com';
 };
 
 const API_URL = getApiUrl();
