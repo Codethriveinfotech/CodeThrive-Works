@@ -74,8 +74,8 @@ export const AuthProvider = ({ children }) => {
     if (!err) return defaultMsg;
     if (err.response?.data?.message) return err.response.data.message;
     if (err.response?.data?.error) return err.response.data.error;
-    if (typeof err.response?.data === 'string' && err.response.data.trim()) return err.response.data;
-    if (err.message) return err.message;
+    if (typeof err.response?.data === 'string' && err.response.data.trim() && !err.response.data.includes('<!DOCTYPE')) return err.response.data;
+    if (err.message && !err.message.includes('status code')) return err.message;
     return defaultMsg;
   };
 
@@ -159,9 +159,37 @@ export const AuthProvider = ({ children }) => {
         message: res.data?.message || 'Employee Registered Successfully! Please sign in to continue.' 
       };
     } catch (err) {
+      if (isOfflineOrApiMissing(err)) {
+        const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
+        const existingIdx = localUsers.findIndex(u => u.employeeId === formData.employeeId || u.email === formData.emailId || u.emailId === formData.emailId);
+        const newUser = {
+          _id: 'local_' + Date.now(),
+          employeeId: formData.employeeId,
+          email: formData.emailId,
+          emailId: formData.emailId,
+          fullName: formData.fullName,
+          name: formData.fullName,
+          phoneNumber: formData.phoneNumber,
+          role: formData.role || 'Employee',
+          designation: formData.role || 'Employee',
+          status: 'Active',
+          password: formData.password
+        };
+        if (existingIdx >= 0) {
+          localUsers[existingIdx] = { ...localUsers[existingIdx], ...newUser };
+        } else {
+          localUsers.push(newUser);
+        }
+        localStorage.setItem('cti_local_users', JSON.stringify(localUsers));
+        return { 
+          success: true, 
+          message: 'Employee registered successfully! Please sign in to continue.',
+          isLocalMode: true
+        };
+      }
       return { 
         success: false, 
-        message: extractErrorMessage(err, 'Registration failed') 
+        message: extractErrorMessage(err, 'Registration failed. Please check your network and try again.') 
       };
     }
   };

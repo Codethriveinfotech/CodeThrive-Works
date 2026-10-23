@@ -44,6 +44,15 @@ exports.registerEmployee = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Full Name, Employee ID, and Password are required.' });
     }
 
+    // Validate strong password
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long and contain letters (both uppercase and lowercase), numbers, and special characters.'
+      });
+    }
+
     // Auto-format email if missing or missing domain
     if (!emailId || !emailId.includes('@')) {
       const cleanId = (employeeId || fullName).toLowerCase().replace(/[^a-z0-9]/g, '');

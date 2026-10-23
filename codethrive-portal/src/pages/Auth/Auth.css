@@ -280,24 +280,109 @@
 }
 
 .password-input-wrapper input {
-  padding-right: 3rem; /* space for toggle icon */
+  width: 100%;
+  padding-right: 3rem !important; /* space for toggle icon */
 }
 
 .pwd-toggle-btn {
   position: absolute;
-  right: 1rem;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
-  color: var(--text-muted);
-  display: flex;
+  color: #94a3b8;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  transition: color var(--transition-fast);
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 5;
+  transition: all var(--transition-fast);
 }
 
 .pwd-toggle-btn:hover {
-  color: var(--text-main);
+  color: #38bdf8;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Password Strength Indicator */
+.password-strength-box {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  backdrop-filter: blur(8px);
+}
+
+.strength-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.strength-title {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.strength-level {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.strength-level.weak { color: #f87171; }
+.strength-level.fair { color: #fb923c; }
+.strength-level.good { color: #fbbf24; }
+.strength-level.strong { color: #34d399; }
+
+.strength-meter-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.65rem;
+}
+
+.strength-meter-bar {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 999px;
+}
+
+.strength-rules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.strength-rule-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.strength-rule-item.valid {
+  color: #34d399;
+  font-weight: 500;
+}
+
+.strength-rule-item.invalid {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.strength-rule-item svg {
+  flex-shrink: 0;
 }
 
 .input-error {
