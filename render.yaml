@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: codethrive-backend
+    env: node
+    rootDir: codethrive-backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_eAGxiSMqh2y9@ep-icy-pond-b4m6hzfg-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require
+      - key: JWT_SECRET
+        value: temporary_development_secret_key_12345
+      - key: JWT_EXPIRES_IN
+        value: 7d
