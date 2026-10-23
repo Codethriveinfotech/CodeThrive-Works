@@ -308,36 +308,7 @@ exports.login = async (req, res) => {
       await user.save();
     }
 
-    // --- ATTENDANCE TRACKING ON LOGIN ---
-    try {
-      if (employee) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Start of day
 
-        let attendance = await Attendance.findOne({
-          employee: employee._id,
-          date: {
-            $gte: today,
-            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
-          }
-        });
-
-        if (!attendance) {
-          await Attendance.create({
-            employee: employee._id,
-            date: new Date(),
-            firstLoginTime: new Date(),
-            status: 'Working'
-          });
-        } else if (attendance.status === 'Checked Out' || attendance.status === 'Not Checked In') {
-          attendance.status = 'Working';
-          await attendance.save();
-        }
-      }
-    } catch (attError) {
-      console.warn('Attendance tracking skipped due to DB error or missing record', attError.message);
-    }
-    // ------------------------------------
 
     await sendTokenResponse(user, 200, res);
   } catch (err) {
@@ -381,36 +352,6 @@ exports.adminLogin = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
-  try {
-    if (req.user) {
-      const employeeData = await Employee.findOne({ user: req.user.id });
-      if (employeeData) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        let attendance = await Attendance.findOne({
-          employee: employeeData._id,
-          date: { $gte: today, $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) }
-        });
-
-        if (attendance) {
-          attendance.lastLogoutTime = new Date();
-          attendance.status = 'Checked Out';
-          
-          // Calculate total duration in seconds based on firstLogin and lastLogout
-          // In a real app we might sum up sessions. Here we do simple diff.
-          if (attendance.firstLoginTime) {
-            const diff = Math.floor((attendance.lastLogoutTime.getTime() - attendance.firstLoginTime.getTime()) / 1000);
-            attendance.totalWorkDurationInSeconds = diff;
-          }
-          await attendance.save();
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('Error saving logout attendance', err.message);
-  }
-
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true

@@ -83,7 +83,16 @@ const Attendance = () => {
 
     updateTimers();
     interval = setInterval(updateTimers, 1000);
-    return () => clearInterval(interval);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') updateTimers();
+    };
+    window.addEventListener('focus', updateTimers);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', updateTimers);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [activeSession, todayAttendance]);
 
   // 2. Sync session to LocalStorage so closing/refreshing tab doesn't lose state

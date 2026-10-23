@@ -225,7 +225,16 @@ const Dashboard = () => {
 
     updateTimers();
     interval = setInterval(updateTimers, 1000);
-    return () => clearInterval(interval);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') updateTimers();
+    };
+    window.addEventListener('focus', updateTimers);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', updateTimers);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [activeSession, attendance]);
 
   // Sync session state to localStorage to persist tab closes and page refreshes

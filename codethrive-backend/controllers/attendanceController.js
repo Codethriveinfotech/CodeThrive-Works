@@ -56,6 +56,18 @@ exports.getTodayAttendance = async (req, res) => {
         attendanceId: attendance._id,
         status: 'Active'
       });
+
+      // If marked Working but activeSession record is missing, recover it using firstLoginTime
+      if (!activeSession && attendance.status === 'Working') {
+        const startTime = attendance.firstLoginTime || attendance.date || new Date();
+        activeSession = await AttendanceSession.create({
+          attendanceId: attendance._id,
+          employee: employee._id,
+          sessionType: 'Work',
+          startTime: startTime,
+          status: 'Active'
+        });
+      }
     }
 
     res.status(200).json({ success: true, data: { attendance, activeSession } });
@@ -129,7 +141,8 @@ exports.startWorkSession = async (req, res) => {
         attendanceId: attendance._id,
         employee: employee._id,
         sessionType: 'Work',
-        startTime: now
+        startTime: now,
+        status: 'Active'
       });
     }
 
@@ -184,7 +197,8 @@ exports.startBreak = async (req, res) => {
       attendanceId: attendance._id,
       employee: employee._id,
       sessionType: 'Break',
-      startTime: now
+      startTime: now,
+      status: 'Active'
     });
 
     attendance.status = 'On Break';
@@ -241,7 +255,8 @@ exports.startLunch = async (req, res) => {
       attendanceId: attendance._id,
       employee: employee._id,
       sessionType: 'Lunch',
-      startTime: now
+      startTime: now,
+      status: 'Active'
     });
 
     attendance.status = 'On Lunch';
@@ -303,7 +318,8 @@ exports.resumeWork = async (req, res) => {
       attendanceId: attendance._id,
       employee: employee._id,
       sessionType: 'Work',
-      startTime: now
+      startTime: now,
+      status: 'Active'
     });
 
     attendance.status = 'Working';
@@ -336,6 +352,7 @@ exports.checkout = async (req, res) => {
         date: now,
         firstLoginTime: now,
         lastLogoutTime: now,
+        totalWorkDurationInSeconds: 0,
         status: 'Checked Out'
       });
     } else {
@@ -358,6 +375,14 @@ exports.checkout = async (req, res) => {
         } else if (activeSession.sessionType === 'Lunch') {
           attendance.totalLunchDurationInSeconds = (attendance.totalLunchDurationInSeconds || 0) + activeSession.durationInSeconds;
         }
+      }
+
+      // Complete elapsed work time fallback guarantee
+      if (attendance.firstLoginTime) {
+        const totalElapsed = Math.floor((now.getTime() - new Date(attendance.firstLoginTime).getTime()) / 1000);
+        const breakLunch = (attendance.totalBreakDurationInSeconds || 0) + (attendance.totalLunchDurationInSeconds || 0);
+        const netWork = Math.max(0, totalElapsed - breakLunch);
+        attendance.totalWorkDurationInSeconds = Math.max(attendance.totalWorkDurationInSeconds || 0, netWork);
       }
 
       attendance.lastLogoutTime = now;
