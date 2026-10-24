@@ -621,6 +621,7 @@ const Dashboard = () => {
           <div className="metric-content">
             <span className="metric-label">Total Tasks</span>
             <span className="metric-value">{taskStats.total}</span>
+            <span className="metric-subtext">All assigned tasks</span>
           </div>
           <div className="metric-action-arrow">
             <ArrowUpRight size={14} />
@@ -639,6 +640,7 @@ const Dashboard = () => {
           <div className="metric-content">
             <span className="metric-label">Pending</span>
             <span className="metric-value">{taskStats.pending}</span>
+            <span className="metric-subtext">Requires action</span>
           </div>
           <div className="metric-action-arrow">
             <ArrowUpRight size={14} />
@@ -657,6 +659,7 @@ const Dashboard = () => {
           <div className="metric-content">
             <span className="metric-label">Completed</span>
             <span className="metric-value">{taskStats.completed}</span>
+            <span className="metric-subtext">Done & verified</span>
           </div>
           <div className="metric-action-arrow">
             <ArrowUpRight size={14} />
@@ -675,6 +678,7 @@ const Dashboard = () => {
           <div className="metric-content">
             <span className="metric-label">Work Logged</span>
             <span className="metric-value">{formatDuration(liveWorkDuration)}</span>
+            <span className="metric-subtext">Today's total session</span>
           </div>
           <div className="metric-action-arrow">
             <ArrowUpRight size={14} />
@@ -748,11 +752,21 @@ const Dashboard = () => {
             </div>
 
             {/* Action Buttons depending on status */}
-            <div style={{ marginTop: 'auto' }}>
+            <div className="timer-actions-wrapper">
               {isNotStarted && (
-                <button onClick={handleCheckIn} disabled={isActionLoading} className={`btn-huge btn-primary ${!isActionLoading ? 'pulse-btn' : ''}`}>
-                  {isActionLoading ? <span className="loader-small"></span> : <><LogIn size={20} style={{marginRight: '0.5rem'}} /> START WORK (CHECK IN)</>}
-                </button>
+                <div className="btn-session-group">
+                  <button onClick={handleCheckIn} disabled={isActionLoading} className={`btn-huge btn-primary ${!isActionLoading ? 'pulse-btn' : ''}`}>
+                    {isActionLoading ? <span className="loader-small"></span> : <><LogIn size={20} style={{marginRight: '0.5rem'}} /> START WORK (CHECK IN)</>}
+                  </button>
+                  <div className="btn-session-row">
+                    <button onClick={handleStartBreak} disabled={isActionLoading} className="btn-session btn-break">
+                      <Coffee size={18} /> Break
+                    </button>
+                    <button onClick={handleStartLunch} disabled={isActionLoading} className="btn-session btn-lunch">
+                      <Utensils size={18} /> Lunch
+                    </button>
+                  </div>
+                </div>
               )}
 
               {isWorking && (
@@ -776,9 +790,20 @@ const Dashboard = () => {
                   <button onClick={handleResumeWork} disabled={isActionLoading} className="btn-huge btn-resume">
                     {isActionLoading ? <span className="loader-small"></span> : <><Play size={20} style={{marginRight: '0.5rem'}} /> RESUME WORK</>}
                   </button>
-                  <button onClick={handleCheckOut} disabled={isActionLoading} className="btn-session btn-danger" style={{width: '100%'}}>
-                    <LogOut size={18} /> Check Out
-                  </button>
+                  <div className="btn-session-row">
+                    {isOnBreak ? (
+                      <button onClick={handleStartLunch} disabled={isActionLoading} className="btn-session btn-lunch">
+                        <Utensils size={18} /> Lunch
+                      </button>
+                    ) : (
+                      <button onClick={handleStartBreak} disabled={isActionLoading} className="btn-session btn-break">
+                        <Coffee size={18} /> Break
+                      </button>
+                    )}
+                    <button onClick={handleCheckOut} disabled={isActionLoading} className="btn-session btn-danger">
+                      <LogOut size={18} /> Check Out
+                    </button>
+                  </div>
                 </div>
               )}
 

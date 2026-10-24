@@ -648,6 +648,15 @@
   color: #f8fafc;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
+  margin-top: 0.15rem;
+}
+
+.metric-subtext {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+  font-weight: 400;
+  white-space: nowrap;
 }
 
 /* -----------------------------
@@ -657,6 +666,7 @@
   display: grid;
   grid-template-columns: 1.2fr 2fr;
   gap: 1.5rem;
+  align-items: start;
 }
 
 @media (max-width: 1024px) {
@@ -673,8 +683,12 @@
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  height: 100%;
+  gap: 1.25rem;
+  height: auto;
+}
+
+.timer-actions-wrapper {
+  margin-top: 0.25rem;
 }
 
 .timer-header {
