@@ -5,7 +5,8 @@ import {
   Clock, LogIn, LogOut, CheckCircle2, 
   Bell, Activity, AlertTriangle, 
   CheckSquare, Calendar, FileText, Sun, Moon, Briefcase, ListTodo, MoreHorizontal, UserCircle,
-  Coffee, Utensils, Play, ArrowUpRight, Edit3, ExternalLink, Sparkles
+  Coffee, Utensils, Play, ArrowUpRight, Edit3, ExternalLink, Sparkles,
+  TrendingUp, Zap, ChevronRight, Award, ShieldCheck, Compass
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
@@ -452,7 +453,12 @@ const Dashboard = () => {
   const greeting = isMorning ? 'Good Morning' : (isEvening ? 'Good Evening' : 'Good Afternoon');
   const GreetingIcon = isEvening ? Moon : Sun;
 
-  const currentDate = formatDate(new Date());
+  const todayDateStr = new Date().toLocaleDateString('en-US', { 
+    weekday: 'short', 
+    day: 'numeric', 
+    month: 'short', 
+    year: 'numeric' 
+  });
 
   const currentStatus = attendance?.status || 'Not Checked In';
   const isWorking = currentStatus === 'Working';
@@ -463,6 +469,18 @@ const Dashboard = () => {
 
   const displayName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Employee';
   const roleDisplay = user?.designation || (user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Software Engineer');
+
+  const userInitials = (displayName || 'EP')
+    .split(' ')
+    .filter(Boolean)
+    .map(n => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  // 8-hour target progress
+  const targetShiftSeconds = 8 * 3600; // 28,800s
+  const shiftProgressPercent = Math.min(100, Math.round((liveWorkDuration / targetShiftSeconds) * 100));
 
   // Active Timer Value and Label Calculation
   let displayMainTimer = liveWorkDuration;
@@ -486,35 +504,112 @@ const Dashboard = () => {
       animate="show"
     >
       {/* -----------------------------
-          Tier 1: Hero Banner
+          Tier 1: Ultra-Modern Hero Banner
       ----------------------------- */}
       <motion.div className="dashboard-hero" variants={itemVariants}>
-        <div className="hero-content">
-          <div className="hero-date">
-            <Calendar size={14} />
-            {currentDate}
-          </div>
-          <h1 className="hero-title">
-            <GreetingIcon size={28} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
-            <div className="hero-greeting-text">
-              {greeting}, <span>{displayName}</span>
+        <div className="hero-left-wrapper">
+          <div className="hero-avatar-box">
+            <div className="hero-avatar-circle">
+              {user?.profilePhoto ? (
+                <img src={user.profilePhoto} alt={displayName} className="hero-avatar-img" />
+              ) : (
+                <span className="hero-avatar-initials">{userInitials}</span>
+              )}
+              <span className={`hero-status-dot ${isWorking ? 'active' : ''}`} title={isWorking ? 'Session Active' : 'User Active'}></span>
             </div>
-          </h1>
+          </div>
 
-          <div className="hero-badges">
-            <span className="hero-badge"><Briefcase size={14} /> {roleDisplay}</span>
-            <span className="hero-badge"><UserCircle size={14} /> ID: {user?.employeeId || user?.id}</span>
+          <div className="hero-content">
+            <div className="hero-meta-row">
+              <span className="hero-date-badge">
+                <Calendar size={13} />
+                {todayDateStr}
+              </span>
+              <span className="hero-shift-badge">
+                <Clock size={13} /> General Shift (09:30 AM - 06:30 PM)
+              </span>
+            </div>
+
+            <h1 className="hero-title">
+              <GreetingIcon size={26} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
+              <div className="hero-greeting-text">
+                {greeting}, <span>{displayName}</span>
+              </div>
+            </h1>
+
+            <div className="hero-badges">
+              <span className="hero-badge badge-role">
+                <Briefcase size={13} /> {roleDisplay}
+              </span>
+              <span className="hero-badge badge-id">
+                <UserCircle size={13} /> ID: {user?.employeeId || user?.id || 'CTI-EMP'}
+              </span>
+              <span className={`hero-badge badge-status ${isWorking ? 'live' : ''}`}>
+                <span className={`status-live-pulse ${isWorking ? 'live' : ''}`}></span>
+                {isWorking ? 'Session Active' : (isCheckedOut ? 'Shift Completed' : 'Ready to Work')}
+              </span>
+            </div>
           </div>
         </div>
         
         <div className="hero-actions">
-           <Link to="/employee/tasks" className="btn btn-outline">
+           <Link to="/employee/tasks" className="btn btn-outline hero-action-btn">
              <CheckSquare size={16} /> My Tasks
+             {taskStats.pending > 0 && <span className="hero-badge-count">{taskStats.pending}</span>}
            </Link>
-           <Link to="/employee/reports" className="btn btn-primary">
-             <FileText size={16} /> Submit Report
+           <Link to="/employee/reports" className="btn btn-primary hero-action-btn hero-action-glow">
+             <Sparkles size={16} /> Submit Report
            </Link>
         </div>
+      </motion.div>
+
+      {/* -----------------------------
+          Executive Quick Access Hub (4 Direct Workflows)
+      ----------------------------- */}
+      <motion.div className="quick-hub-grid" variants={itemVariants}>
+        <Link to="/employee/reports" className="quick-hub-card hub-report">
+          <div className="hub-icon-wrapper">
+            <FileText size={20} />
+          </div>
+          <div className="hub-text-group">
+            <h4>Daily Report</h4>
+            <p>Log work & tasks</p>
+          </div>
+          <ArrowUpRight size={16} className="hub-arrow" />
+        </Link>
+
+        <Link to="/employee/attendance" className="quick-hub-card hub-attendance">
+          <div className="hub-icon-wrapper">
+            <Clock size={20} />
+          </div>
+          <div className="hub-text-group">
+            <h4>Attendance</h4>
+            <p>Sessions & history</p>
+          </div>
+          <ArrowUpRight size={16} className="hub-arrow" />
+        </Link>
+
+        <Link to="/employee/leave" className="quick-hub-card hub-leave">
+          <div className="hub-icon-wrapper">
+            <Calendar size={20} />
+          </div>
+          <div className="hub-text-group">
+            <h4>Leave Request</h4>
+            <p>Apply time-off</p>
+          </div>
+          <ArrowUpRight size={16} className="hub-arrow" />
+        </Link>
+
+        <Link to="/employee/payroll" className="quick-hub-card hub-payroll">
+          <div className="hub-icon-wrapper">
+            <Award size={20} />
+          </div>
+          <div className="hub-text-group">
+            <h4>My Payroll</h4>
+            <p>Payslips & salary</p>
+          </div>
+          <ArrowUpRight size={16} className="hub-arrow" />
+        </Link>
       </motion.div>
 
       {/* -----------------------------
@@ -522,70 +617,78 @@ const Dashboard = () => {
       ----------------------------- */}
       <div className="metrics-grid">
         <motion.div 
-          className="metric-card clickable" 
+          className="metric-card metric-tasks clickable" 
           variants={itemVariants}
           onClick={() => openTaskModal('All')}
         >
+          <div className="metric-glow-accent primary"></div>
           <div className="metric-icon-wrapper primary">
-            <ListTodo size={24} />
+            <ListTodo size={22} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Total Tasks</span>
             <span className="metric-value">{taskStats.total}</span>
+            <span className="metric-subtext">All assigned</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={16} />
+            <ArrowUpRight size={15} />
           </div>
         </motion.div>
 
         <motion.div 
-          className="metric-card clickable" 
+          className="metric-card metric-pending clickable" 
           variants={itemVariants}
           onClick={() => openTaskModal('Pending')}
         >
+          <div className="metric-glow-accent warning"></div>
           <div className="metric-icon-wrapper warning">
-            <AlertTriangle size={24} />
+            <AlertTriangle size={22} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Pending</span>
             <span className="metric-value">{taskStats.pending}</span>
+            <span className="metric-subtext">Action required</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={16} />
+            <ArrowUpRight size={15} />
           </div>
         </motion.div>
 
         <motion.div 
-          className="metric-card clickable" 
+          className="metric-card metric-completed clickable" 
           variants={itemVariants}
           onClick={() => openTaskModal('Completed')}
         >
+          <div className="metric-glow-accent success"></div>
           <div className="metric-icon-wrapper success">
-            <CheckCircle2 size={24} />
+            <CheckCircle2 size={22} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Completed</span>
             <span className="metric-value">{taskStats.completed}</span>
+            <span className="metric-subtext">Done & verified</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={16} />
+            <ArrowUpRight size={15} />
           </div>
         </motion.div>
 
         <motion.div 
-          className="metric-card clickable" 
+          className="metric-card metric-work clickable" 
           variants={itemVariants}
           onClick={() => navigate('/employee/attendance')}
         >
+          <div className="metric-glow-accent info"></div>
           <div className="metric-icon-wrapper info">
-            <Clock size={24} />
+            <Clock size={22} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Work Logged</span>
             <span className="metric-value">{formatDuration(liveWorkDuration)}</span>
+            <span className="metric-subtext">{isWorking ? '🟢 Session Live' : 'Today total'}</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={16} />
+            <ArrowUpRight size={15} />
           </div>
         </motion.div>
       </div>
@@ -600,8 +703,12 @@ const Dashboard = () => {
           <div className="timer-widget">
             <div className="timer-header">
               <div>
-                <h3 style={{margin: '0 0 0.25rem 0', fontSize: '1.1rem'}}>Work Session</h3>
-                <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>Track today's activity & breaks</span>
+                <h3 style={{margin: '0 0 0.25rem 0', fontSize: '1.15rem', fontWeight: '700', letterSpacing: '-0.01em'}}>
+                  Work Session
+                </h3>
+                <span style={{fontSize: '0.82rem', color: 'var(--text-muted)'}}>
+                  Track today's live activity, breaks & shift target
+                </span>
               </div>
               <div className="timer-status">
                 {isWorking && <><span className="status-dot active"></span> Working</>}
@@ -612,12 +719,33 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="timer-display">
-              {isWorking && <div className="timer-ring"></div>}
-              {isOnBreak && <div className="timer-ring ring-break"></div>}
-              {isOnLunch && <div className="timer-ring ring-lunch"></div>}
-              <span className="timer-value">{formatDuration(displayMainTimer)}</span>
-              <span className="timer-label">{timerLabelText}</span>
+            <div className="timer-display-modern">
+              <div className={`timer-ring-container ${isWorking ? 'working' : (isOnBreak ? 'break' : (isOnLunch ? 'lunch' : ''))}`}>
+                <div className="timer-display-inner">
+                  <span className="timer-value">{formatDuration(displayMainTimer)}</span>
+                  <span className="timer-label">{timerLabelText}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 8-Hour Shift Goal Progress Tracker */}
+            <div className="shift-goal-widget">
+              <div className="shift-goal-header">
+                <span className="sg-title">
+                  <TrendingUp size={13} color="var(--primary-light)" /> 8-Hour Workday Goal
+                </span>
+                <span className="sg-pct">{shiftProgressPercent}%</span>
+              </div>
+              <div className="shift-goal-track">
+                <div 
+                  className="shift-goal-fill" 
+                  style={{ width: `${shiftProgressPercent}%` }}
+                ></div>
+              </div>
+              <div className="shift-goal-footer">
+                <span>{formatDuration(liveWorkDuration)} logged</span>
+                <span>Target: 08h 00m</span>
+              </div>
             </div>
 
             {/* 3-Way Duration Breakdown */}
@@ -704,9 +832,32 @@ const Dashboard = () => {
           
           <Card title={<div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}><AlertTriangle size={18} color="var(--warning)"/> Priority Tasks</div>}>
             {priorityTasks.length === 0 ? (
-              <div className="empty-state-modern">
-                <CheckCircle2 size={32} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                <p>No high priority tasks currently.</p>
+              <div className="empty-state-delight">
+                <div className="delight-icon-wrap">
+                  <Sparkles size={24} color="#38bdf8" />
+                </div>
+                <h4 style={{ margin: '0.5rem 0 0.25rem 0', color: '#f8fafc', fontSize: '1rem', fontWeight: '600' }}>
+                  All Caught Up!
+                </h4>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', maxWidth: '340px', lineHeight: 1.5 }}>
+                  You have no urgent or blocked tasks pending right now. Great job keeping your queue clean!
+                </p>
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                  <button 
+                    className="btn btn-outline btn-sm" 
+                    onClick={() => openTaskModal('All')}
+                    style={{ borderRadius: '8px', fontSize: '0.8rem', padding: '0.45rem 0.9rem' }}
+                  >
+                    View All Tasks
+                  </button>
+                  <Link 
+                    to="/employee/reports" 
+                    className="btn btn-primary btn-sm"
+                    style={{ borderRadius: '8px', fontSize: '0.8rem', padding: '0.45rem 0.9rem' }}
+                  >
+                    Submit Report
+                  </Link>
+                </div>
               </div>
             ) : (
               <ul className="modern-list">
