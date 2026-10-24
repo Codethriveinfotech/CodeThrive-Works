@@ -303,7 +303,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
             <span className="stat-tag tag-amber">SICK LEAVE</span>
           </div>
           <div className="stat-card-body">
-            <h3 className="stat-number">{data.sickLeaveBalance || 6} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>days</span></h3>
+            <h3 className="stat-number">{Math.min(6, data.sickLeaveBalance !== undefined ? data.sickLeaveBalance : 6)} <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>days</span></h3>
             <p className="stat-title">Sick Leave Balance</p>
           </div>
           <div className="stat-card-footer">
