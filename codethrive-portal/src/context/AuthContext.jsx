@@ -208,6 +208,75 @@ export const AuthProvider = ({ children }) => {
 
 
 
+  const verifyResetIdentity = async (employeeId, phoneNumber) => {
+    try {
+      const res = await axios.post('/auth/verify-reset-identity', { employeeId, phoneNumber });
+      return { 
+        success: true, 
+        message: res.data?.message || 'Identity verified successfully', 
+        employee: res.data?.employee 
+      };
+    } catch (err) {
+      if (isOfflineOrApiMissing(err)) {
+        const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
+        const cleanPhone = (phoneNumber || '').replace(/\D/g, '');
+        const match = localUsers.find(u => {
+          const matchId = u.employeeId?.toLowerCase() === employeeId?.toLowerCase();
+          const uPhone = (u.phoneNumber || u.phone || '').replace(/\D/g, '');
+          const matchPhone = uPhone && cleanPhone && (uPhone.endsWith(cleanPhone) || cleanPhone.endsWith(uPhone));
+          return matchId && matchPhone;
+        });
+
+        if (match) {
+          return {
+            success: true,
+            message: 'Identity verified successfully (Local Mode)',
+            employee: { employeeId: match.employeeId, fullName: match.fullName || match.name }
+          };
+        }
+        return {
+          success: false,
+          message: 'Employee ID or Phone Number does not match our local records.'
+        };
+      }
+      return {
+        success: false,
+        message: extractErrorMessage(err, 'Identity verification failed.')
+      };
+    }
+  };
+
+  const resetPasswordWithPhone = async (employeeId, phoneNumber, newPassword) => {
+    try {
+      const res = await axios.post('/auth/reset-password-with-phone', { employeeId, phoneNumber, newPassword });
+      return {
+        success: true,
+        message: res.data?.message || 'Password reset successfully!'
+      };
+    } catch (err) {
+      if (isOfflineOrApiMissing(err)) {
+        const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
+        const idx = localUsers.findIndex(u => u.employeeId?.toLowerCase() === employeeId?.toLowerCase());
+        if (idx >= 0) {
+          localUsers[idx].password = newPassword;
+          localStorage.setItem('cti_local_users', JSON.stringify(localUsers));
+          return {
+            success: true,
+            message: 'Password reset successfully! Please log in.'
+          };
+        }
+        return {
+          success: false,
+          message: 'Failed to update password.'
+        };
+      }
+      return {
+        success: false,
+        message: extractErrorMessage(err, 'Password reset failed.')
+      };
+    }
+  };
+
   const logout = async () => {
     try {
       await axios.get('/auth/logout');
@@ -222,7 +291,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, adminLogin, registerEmployee, createCredentials, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      adminLogin, 
+      registerEmployee, 
+      createCredentials, 
+      verifyResetIdentity,
+      resetPasswordWithPhone,
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );

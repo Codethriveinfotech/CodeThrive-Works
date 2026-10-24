@@ -450,3 +450,152 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// @desc    Verify employee identity via Employee ID & Phone Number
+// @route   POST /api/v1/auth/verify-reset-identity
+// @access  Public
+exports.verifyResetIdentity = async (req, res) => {
+  try {
+    const { employeeId, phoneNumber } = req.body;
+
+    if (!employeeId || !phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both your Employee ID and registered Phone Number.'
+      });
+    }
+
+    const trimmedEmpId = employeeId.trim();
+    const cleanPhone = phoneNumber.trim();
+    const digitsOnly = cleanPhone.replace(/\D/g, '');
+
+    // Search by employeeId (case-insensitive where possible or direct)
+    const employee = await Employee.findOne({ employeeId: trimmedEmpId });
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'No employee account found with this Employee ID.'
+      });
+    }
+
+    const empPhone = (employee.personalPhoneNumber || employee.personal_phone_number || '').trim();
+    const empPhoneDigits = empPhone.replace(/\D/g, '');
+    
+    // Check match: either exact match or matching last 10 digits
+    const isPhoneMatch = (digitsOnly && empPhoneDigits && (empPhoneDigits.endsWith(digitsOnly) || digitsOnly.endsWith(empPhoneDigits))) || empPhone === cleanPhone;
+
+    if (!isPhoneMatch) {
+      return res.status(400).json({
+        success: false,
+        message: 'The phone number does not match our records for this Employee ID.'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Identity verified successfully.',
+      employee: {
+        employeeId: employee.employeeId || employee.employee_id,
+        fullName: employee.fullName || employee.full_name
+      }
+    });
+  } catch (err) {
+    console.error('verifyResetIdentity error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Reset password using verified Employee ID & Phone Number
+// @route   POST /api/v1/auth/reset-password-with-phone
+// @access  Public
+exports.resetPasswordWithPhone = async (req, res) => {
+  try {
+    const { employeeId, phoneNumber, newPassword } = req.body;
+
+    if (!employeeId || !phoneNumber || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Employee ID, Phone Number, and New Password are required.'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters long.'
+      });
+    }
+
+    const trimmedEmpId = employeeId.trim();
+    const cleanPhone = phoneNumber.trim();
+    const digitsOnly = cleanPhone.replace(/\D/g, '');
+
+    const employee = await Employee.findOne({ employeeId: trimmedEmpId });
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee account not found.'
+      });
+    }
+
+    const empPhone = (employee.personalPhoneNumber || employee.personal_phone_number || '').trim();
+    const empPhoneDigits = empPhone.replace(/\D/g, '');
+    const isPhoneMatch = (digitsOnly && empPhoneDigits && (empPhoneDigits.endsWith(digitsOnly) || digitsOnly.endsWith(empPhoneDigits))) || empPhone === cleanPhone;
+
+    if (!isPhoneMatch) {
+      return res.status(400).json({
+        success: false,
+        message: 'Phone number does not match our records for this Employee ID.'
+      });
+    }
+
+    // Find linked User
+    let user = null;
+    if (employee.user_id || employee.user) {
+      user = await User.findById(employee.user_id || employee.user);
+    }
+    const empEmail = (employee.personalEmailAddress || employee.personal_email_address || '').trim();
+    if (!user && empEmail) {
+      user = await User.findOne({ email: empEmail });
+    }
+
+    if (user) {
+      user.password = newPassword;
+      await user.save();
+    } else {
+      // If user document didn't exist yet, create one
+      user = await User.create({
+        email: empEmail || `${employee.employeeId.toLowerCase()}@codethrive.local`,
+        password: newPassword,
+        role: employee.employmentType === 'Internship' ? 'intern' : 'employee',
+        status: 'active'
+      });
+      employee.user = user._id || user.id;
+      employee.user_id = user._id || user.id;
+      employee.status = 'Active';
+      await employee.save();
+    }
+
+    // Notify user of password change
+    try {
+      const { createNotification } = require('./notificationController');
+      await createNotification(
+        user._id || user.id,
+        'Password Reset Successfully',
+        'Your account password was updated using Employee ID and Phone Number verification.',
+        'Profile',
+        'High',
+        '/profile'
+      );
+    } catch (_) {}
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password reset successful! You can now log in with your new password.'
+    });
+  } catch (err) {
+    console.error('resetPasswordWithPhone error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+

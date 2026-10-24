@@ -1,5 +1,16 @@
 const express = require('express');
-const { registerEmployee, approveEmployee, createCredentials, login, adminLogin, logout, updatePassword, updateEmail } = require('../controllers/authController');
+const { 
+  registerEmployee, 
+  approveEmployee, 
+  createCredentials, 
+  login, 
+  adminLogin, 
+  logout, 
+  updatePassword, 
+  updateEmail,
+  verifyResetIdentity,
+  resetPasswordWithPhone
+} = require('../controllers/authController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -7,6 +18,8 @@ const router = express.Router();
 // Public Routes
 router.post('/register-employee', registerEmployee);
 router.post('/create-credentials', createCredentials);
+router.post('/verify-reset-identity', verifyResetIdentity);
+router.post('/reset-password-with-phone', resetPasswordWithPhone);
 router.post('/login', login);
 router.post('/admin-login', adminLogin);
 router.get('/logout', protect, logout);
