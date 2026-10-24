@@ -44,11 +44,12 @@ exports.registerEmployee = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Full Name, Employee ID, and Password are required.' });
     }
 
-    // Validate password length
-    if (password.length < 6) {
+    // Validate password (at least 8 characters, uppercase, lowercase, numbers, symbols)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/;
+    if (!passwordRegex.test(password)) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters long.'
+        message: 'Password must be at least 8 characters and include uppercase, lowercase, numbers, and symbols (@$!%*?&#).'
       });
     }
 

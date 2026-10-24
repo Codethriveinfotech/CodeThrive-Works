@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 
@@ -21,17 +21,22 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+    if (e.target.name === 'password') {
+      setPasswordError('');
+    }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setPasswordError('');
     
     if (
       !formData.fullName.trim() || 
@@ -45,8 +50,15 @@ const Register = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    const pwd = formData.password;
+    const hasMinLen = pwd.length >= 8;
+    const hasLower = /[a-z]/.test(pwd);
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasNumber = /\d/.test(pwd);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
+
+    if (!hasMinLen || !hasLower || !hasUpper || !hasNumber || !hasSpecial) {
+      setPasswordError('Password must be at least 8 characters and include uppercase, lowercase, numbers, and symbols (@$!%*?&#).');
       return;
     }
 
@@ -63,7 +75,12 @@ const Register = () => {
       setSuccess(result.message);
       setTimeout(() => navigate('/employee/login'), 2500);
     } else {
-      setError(result.message || 'Registration failed. Please check your details and try again.');
+      const msg = result.message || 'Registration failed. Please check your details and try again.';
+      if (msg.toLowerCase().includes('password')) {
+        setPasswordError(msg);
+      } else {
+        setError(msg);
+      }
     }
   };
 
@@ -162,6 +179,7 @@ const Register = () => {
                 placeholder="Enter password"
                 value={formData.password} 
                 onChange={handleChange} 
+                onFocus={() => setPasswordError('')}
                 className="input-field" 
                 required 
               />
@@ -176,6 +194,12 @@ const Register = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            {passwordError && (
+              <div style={{ marginTop: '0.4rem', color: '#f87171', fontSize: '0.78rem', lineHeight: 1.35, display: 'flex', alignItems: 'flex-start', gap: '0.35rem' }}>
+                <AlertCircle size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
+                <span>{passwordError}</span>
+              </div>
+            )}
           </div>
           
           <div className="form-group half-width">
