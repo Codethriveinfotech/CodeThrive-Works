@@ -40,7 +40,7 @@ const Sidebar = () => {
   const navLinks = [
     { name: 'Dashboard', path: '/employee/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'My Tasks', path: '/employee/tasks', icon: <CheckSquare size={20} /> },
-    { name: 'Today\'s Work', path: '/employee/reports', icon: <FileText size={20} /> },
+    { name: 'Project Reports', path: '/employee/reports', icon: <FileText size={20} /> },
     { name: 'Leave', path: '/employee/leave', icon: <CalendarOff size={20} /> },
     { name: 'Payslips', path: '/employee/payslips', icon: <Banknote size={20} /> },
     { name: 'Documents', path: '/employee/documents', icon: <FolderOpen size={20} /> },

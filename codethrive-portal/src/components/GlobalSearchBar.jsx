@@ -68,7 +68,7 @@ const GlobalSearchBar = ({ isAdmin = false, placeholder = 'Search Employee Porta
   ] : [
     { title: 'Employee Dashboard', category: 'Pages', route: '/employee/dashboard', icon: LayoutDashboard, keywords: 'home overview main' },
     { title: 'My Tasks', category: 'Pages', route: '/employee/tasks', icon: CheckSquare, keywords: 'tasks assigned todo work pending completed' },
-    { title: 'Daily Reports', category: 'Pages', route: '/employee/reports', icon: FileText, keywords: 'reports daily submit log work status' },
+    { title: 'Project Reports', category: 'Pages', route: '/employee/reports', icon: FileText, keywords: 'project reports daily submit log work status src deliverable' },
     { title: 'My Payslips & Payroll', category: 'Pages', route: '/employee/payslips', icon: CreditCard, keywords: 'payslip salary pay breakdown tax pf' },
     { title: 'My Documents', category: 'Pages', route: '/employee/documents', icon: Folder, keywords: 'documents files uploads identity aadhaar pan' },
     { title: 'My Profile', category: 'Pages', route: '/employee/profile', icon: User, keywords: 'profile account identity address photo edit' },

@@ -202,6 +202,87 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Dedicated High-Impact SRC Deliverable Action Button */
+.btn-src-highlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.22) 0%, rgba(99, 102, 241, 0.28) 100%);
+  border: 1px solid rgba(192, 132, 252, 0.45);
+  padding: 0.65rem 1.35rem;
+  border-radius: 14px;
+  cursor: pointer;
+  color: #ffffff;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px -2px rgba(147, 51, 234, 0.38),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.btn-src-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  transition: left 0.6s ease;
+}
+
+.btn-src-highlight:hover::before {
+  left: 100%;
+}
+
+.btn-src-highlight:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.36) 0%, rgba(99, 102, 241, 0.42) 100%);
+  border-color: rgba(216, 180, 254, 0.8);
+  box-shadow: 0 8px 25px rgba(147, 51, 234, 0.52),
+              0 0 18px rgba(168, 85, 247, 0.35);
+}
+
+.src-btn-icon-wrapper {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.5);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.btn-src-highlight:hover .src-btn-icon-wrapper {
+  transform: scale(1.08);
+}
+
+.src-btn-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.src-btn-title {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+}
+
+.src-btn-sub {
+  font-size: 0.74rem;
+  color: #d8b4fe;
+  font-weight: 500;
+}
+
 
 /* --------------------------------------------------------------------------
    2. METRIC CARDS OVERVIEW (4 INTERACTIVE CARDS)
