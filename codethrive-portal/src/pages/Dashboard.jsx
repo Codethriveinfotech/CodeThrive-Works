@@ -616,7 +616,7 @@ const Dashboard = () => {
         >
           <div className="metric-glow-accent primary"></div>
           <div className="metric-icon-wrapper primary">
-            <ListTodo size={18} />
+            <ListTodo size={24} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Total Tasks</span>
@@ -634,7 +634,7 @@ const Dashboard = () => {
         >
           <div className="metric-glow-accent warning"></div>
           <div className="metric-icon-wrapper warning">
-            <AlertTriangle size={18} />
+            <AlertTriangle size={24} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Pending</span>
@@ -652,7 +652,7 @@ const Dashboard = () => {
         >
           <div className="metric-glow-accent success"></div>
           <div className="metric-icon-wrapper success">
-            <CheckCircle2 size={18} />
+            <CheckCircle2 size={24} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Completed</span>
@@ -670,7 +670,7 @@ const Dashboard = () => {
         >
           <div className="metric-glow-accent info"></div>
           <div className="metric-icon-wrapper info">
-            <Clock size={18} />
+            <Clock size={24} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Work Logged</span>
