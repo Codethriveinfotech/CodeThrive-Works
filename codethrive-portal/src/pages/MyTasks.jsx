@@ -196,7 +196,6 @@ const MyTasks = () => {
   const inProgressTasks = safeTasks.filter(t => t?.status === 'In Progress' || t?.status === 'Ready for Review').length;
   const pendingTasks = safeTasks.filter(t => t?.status === 'Not Started' || t?.status === 'Assigned' || t?.status === 'Blocked' || t?.status === 'On Hold').length;
   const urgentTasks = safeTasks.filter(t => (t?.priority === 'Urgent' || t?.priority === 'High') && t?.status !== 'Completed').length;
-  const completionPct = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
 
   // Framer Motion Animation Variants
   const containerVariants = {
@@ -330,47 +329,7 @@ const MyTasks = () => {
         </motion.div>
       </div>
 
-      {/* --------------------------------------------------------------------------
-          3. OVERALL PROGRESS WIDGET
-         -------------------------------------------------------------------------- */}
-      <motion.div className="overall-progress-card" variants={itemVariants}>
-        <div className="progress-header-row">
-          <div className="progress-header-title">
-            <Sparkles size={20} color="#38bdf8" />
-            <span>Overall Task Completion Rate</span>
-          </div>
-          <div className="progress-badge-pct">{completionPct}%</div>
-        </div>
 
-        <div className="progress-track-wrapper">
-          <div 
-            className="progress-track-fill" 
-            style={{ width: `${completionPct}%` }}
-          />
-        </div>
-
-        <div className="progress-stats-footer">
-          <div className="progress-pill-info">
-            <span className="pill-item done">
-              <CheckCircle2 size={15} /> {completedTasks} Completed
-            </span>
-            <span className="pill-item active">
-              <Play size={15} /> {inProgressTasks} In Progress
-            </span>
-            <span className="pill-item remaining">
-              <Clock size={15} /> {totalTasks - completedTasks} Remaining
-            </span>
-          </div>
-
-          <div className="milestone-markers">
-            <span>0%</span>
-            <span>25%</span>
-            <span>50%</span>
-            <span>75%</span>
-            <span>100%</span>
-          </div>
-        </div>
-      </motion.div>
 
       {/* --------------------------------------------------------------------------
           4. FILTER & SEARCH CONTROL TOOLBAR
