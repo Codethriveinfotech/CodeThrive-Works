@@ -10,7 +10,7 @@ import {
   Sparkles, RefreshCw, MessageSquare, 
   ArrowUpRight, Grid, List, Award, Eye, ShieldCheck, Activity, Download,
   UploadCloud, FolderArchive, FileCode, X, Check, Paperclip,
-  Zap, Loader2
+  Zap, Loader2, Briefcase
 } from 'lucide-react';
 import { zipSync } from 'fflate';
 import { formatDate } from '../utils/dateUtils';
@@ -366,6 +366,7 @@ const DailyReports = () => {
   const srcFilesCount = safeReports.filter(r => r.srcFileUrl || r.srcFileName).length;
   const reviewedCount = safeReports.filter(r => r.status === 'Reviewed' || r.status === 'Approved').length;
   const pendingReviewCount = safeReports.filter(r => r.status === 'Submitted' || r.progressStatus === 'Pending').length;
+  const activeProjectsCount = new Set(safeReports.map(r => (r.projectTitle || '').trim()).filter(Boolean)).size;
   const avgRating = totalReportsCount > 0 
     ? (safeReports.reduce((acc, r) => acc + (parseInt(r.productivityRating) || 5), 0) / totalReportsCount).toFixed(1) 
     : '5.0';
@@ -432,7 +433,11 @@ const DailyReports = () => {
           2. METRIC CARDS OVERVIEW (4 INTERACTIVE CARDS)
          -------------------------------------------------------------------------- */}
       <div className="reports-metrics-grid">
-        <div className="metric-card-exec">
+        <div 
+          className={`metric-card-exec ${activeFilterTab === 'All' ? 'active-filter' : ''}`}
+          onClick={() => setActiveFilterTab('All')}
+          title="Click to view all project reports"
+        >
           <div className="metric-icon-box blue">
             <FileText size={22} />
           </div>
@@ -440,65 +445,62 @@ const DailyReports = () => {
             <span className="metric-label">Total Reports</span>
             <div className="metric-value-row">
               <span className="metric-value">{totalReportsCount}</span>
-              <span className="metric-unit">reports submitted</span>
+              <span className="metric-unit">submitted</span>
             </div>
-            <span className="metric-footer-text">Project reports record</span>
+            <span className="metric-footer-text">All project submissions</span>
           </div>
         </div>
 
-        <div className="metric-card-exec">
-          <div className="metric-icon-box emerald">
-            <Clock size={22} />
+        <div 
+          className={`metric-card-exec ${activeFilterTab === 'Submitted' ? 'active-filter' : ''}`}
+          onClick={() => setActiveFilterTab('Submitted')}
+          title="Click to view reports pending review"
+        >
+          <div className="metric-icon-box amber">
+            <Clock size={22} color="#fbbf24" />
           </div>
           <div className="metric-info-body">
-            <span className="metric-label">Total Hours Logged</span>
+            <span className="metric-label">Pending Review</span>
             <div className="metric-value-row">
-              <span className="metric-value">{totalHoursLogged}</span>
-              <span className="metric-unit">hours</span>
+              <span className="metric-value">{pendingReviewCount}</span>
+              <span className="metric-unit">pending</span>
             </div>
-            <span className="metric-footer-text">Productive development time</span>
+            <span className="metric-footer-text">Awaiting manager review</span>
+          </div>
+        </div>
+
+        <div 
+          className={`metric-card-exec ${activeFilterTab === 'Reviewed' ? 'active-filter' : ''}`}
+          onClick={() => setActiveFilterTab('Reviewed')}
+          title="Click to view approved reports"
+        >
+          <div className="metric-icon-box emerald">
+            <ShieldCheck size={22} color="#34d399" />
+          </div>
+          <div className="metric-info-body">
+            <span className="metric-label">Approved Reports</span>
+            <div className="metric-value-row">
+              <span className="metric-value">{reviewedCount}</span>
+              <span className="metric-unit">verified</span>
+            </div>
+            <span className="metric-footer-text">Management approved</span>
           </div>
         </div>
 
         <div 
           className="metric-card-exec"
-          style={{ cursor: 'pointer', border: activeFilterTab === 'SRC' ? '1px solid #c084fc' : undefined }}
-          onClick={() => setActiveFilterTab('SRC')}
-          title="Click to view all SRC deliverables"
+          title="Total distinct projects reported"
         >
           <div className="metric-icon-box purple">
-            <FolderArchive size={22} color="#c084fc" />
-          </div>
-          <div className="metric-info-body" style={{ width: '100%' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="metric-label" style={{ color: '#d8b4fe' }}>SRC Deliverables</span>
-              <span 
-                className="card-src-tag"
-                onClick={(e) => { e.stopPropagation(); resetSrcModal(); setIsSrcModalOpen(true); }}
-                title="Submit Project SRC Deliverable"
-              >
-                + Upload
-              </span>
-            </div>
-            <div className="metric-value-row">
-              <span className="metric-value" style={{ color: '#ffffff' }}>{srcFilesCount}</span>
-              <span className="metric-unit">packages</span>
-            </div>
-            <span className="metric-footer-text">Project source archives</span>
-          </div>
-        </div>
-
-        <div className="metric-card-exec">
-          <div className="metric-icon-box amber">
-            <ShieldCheck size={22} color="#fbbf24" />
+            <Briefcase size={22} color="#c084fc" />
           </div>
           <div className="metric-info-body">
-            <span className="metric-label">Reviewed & Approved</span>
+            <span className="metric-label">Active Projects</span>
             <div className="metric-value-row">
-              <span className="metric-value">{reviewedCount}</span>
-              <span className="metric-unit">verified</span>
+              <span className="metric-value">{activeProjectsCount}</span>
+              <span className="metric-unit">projects</span>
             </div>
-            <span className="metric-footer-text">Manager approved</span>
+            <span className="metric-footer-text">Distinct project assignments</span>
           </div>
         </div>
       </div>
