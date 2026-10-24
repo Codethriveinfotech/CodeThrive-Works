@@ -525,9 +525,6 @@ const Dashboard = () => {
                 <Calendar size={13} />
                 {todayDateStr}
               </span>
-              <span className="hero-shift-badge">
-                <Clock size={13} /> General Shift (09:30 AM - 06:30 PM)
-              </span>
             </div>
 
             <h1 className="hero-title">
@@ -543,10 +540,6 @@ const Dashboard = () => {
               </span>
               <span className="hero-badge badge-id">
                 <UserCircle size={13} /> ID: {user?.employeeId || user?.id || 'CTI-EMP'}
-              </span>
-              <span className={`hero-badge badge-status ${isWorking ? 'live' : ''}`}>
-                <span className={`status-live-pulse ${isWorking ? 'live' : ''}`}></span>
-                {isWorking ? 'Session Active' : (isCheckedOut ? 'Shift Completed' : 'Ready to Work')}
               </span>
             </div>
           </div>
@@ -613,7 +606,7 @@ const Dashboard = () => {
       </motion.div>
 
       {/* -----------------------------
-          Tier 2: Metric Cards Grid
+          Tier 2: Metric Cards Grid (Compact)
       ----------------------------- */}
       <div className="metrics-grid">
         <motion.div 
@@ -623,15 +616,14 @@ const Dashboard = () => {
         >
           <div className="metric-glow-accent primary"></div>
           <div className="metric-icon-wrapper primary">
-            <ListTodo size={22} />
+            <ListTodo size={18} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Total Tasks</span>
             <span className="metric-value">{taskStats.total}</span>
-            <span className="metric-subtext">All assigned</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={15} />
+            <ArrowUpRight size={14} />
           </div>
         </motion.div>
 
@@ -642,15 +634,14 @@ const Dashboard = () => {
         >
           <div className="metric-glow-accent warning"></div>
           <div className="metric-icon-wrapper warning">
-            <AlertTriangle size={22} />
+            <AlertTriangle size={18} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Pending</span>
             <span className="metric-value">{taskStats.pending}</span>
-            <span className="metric-subtext">Action required</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={15} />
+            <ArrowUpRight size={14} />
           </div>
         </motion.div>
 
@@ -661,15 +652,14 @@ const Dashboard = () => {
         >
           <div className="metric-glow-accent success"></div>
           <div className="metric-icon-wrapper success">
-            <CheckCircle2 size={22} />
+            <CheckCircle2 size={18} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Completed</span>
             <span className="metric-value">{taskStats.completed}</span>
-            <span className="metric-subtext">Done & verified</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={15} />
+            <ArrowUpRight size={14} />
           </div>
         </motion.div>
 
@@ -680,15 +670,14 @@ const Dashboard = () => {
         >
           <div className="metric-glow-accent info"></div>
           <div className="metric-icon-wrapper info">
-            <Clock size={22} />
+            <Clock size={18} />
           </div>
           <div className="metric-content">
             <span className="metric-label">Work Logged</span>
             <span className="metric-value">{formatDuration(liveWorkDuration)}</span>
-            <span className="metric-subtext">{isWorking ? '🟢 Session Live' : 'Today total'}</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={15} />
+            <ArrowUpRight size={14} />
           </div>
         </motion.div>
       </div>
@@ -703,12 +692,8 @@ const Dashboard = () => {
           <div className="timer-widget">
             <div className="timer-header">
               <div>
-                <h3 style={{margin: '0 0 0.25rem 0', fontSize: '1.15rem', fontWeight: '700', letterSpacing: '-0.01em'}}>
-                  Work Session
-                </h3>
-                <span style={{fontSize: '0.82rem', color: 'var(--text-muted)'}}>
-                  Track today's live activity, breaks & shift target
-                </span>
+                <h3 style={{margin: '0 0 0.25rem 0', fontSize: '1.1rem'}}>Work Session</h3>
+                <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>Track today's activity & breaks</span>
               </div>
               <div className="timer-status">
                 {isWorking && <><span className="status-dot active"></span> Working</>}
@@ -719,33 +704,12 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="timer-display-modern">
-              <div className={`timer-ring-container ${isWorking ? 'working' : (isOnBreak ? 'break' : (isOnLunch ? 'lunch' : ''))}`}>
-                <div className="timer-display-inner">
-                  <span className="timer-value">{formatDuration(displayMainTimer)}</span>
-                  <span className="timer-label">{timerLabelText}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 8-Hour Shift Goal Progress Tracker */}
-            <div className="shift-goal-widget">
-              <div className="shift-goal-header">
-                <span className="sg-title">
-                  <TrendingUp size={13} color="var(--primary-light)" /> 8-Hour Workday Goal
-                </span>
-                <span className="sg-pct">{shiftProgressPercent}%</span>
-              </div>
-              <div className="shift-goal-track">
-                <div 
-                  className="shift-goal-fill" 
-                  style={{ width: `${shiftProgressPercent}%` }}
-                ></div>
-              </div>
-              <div className="shift-goal-footer">
-                <span>{formatDuration(liveWorkDuration)} logged</span>
-                <span>Target: 08h 00m</span>
-              </div>
+            <div className="timer-display">
+              {isWorking && <div className="timer-ring"></div>}
+              {isOnBreak && <div className="timer-ring ring-break"></div>}
+              {isOnLunch && <div className="timer-ring ring-lunch"></div>}
+              <span className="timer-value">{formatDuration(displayMainTimer)}</span>
+              <span className="timer-label">{timerLabelText}</span>
             </div>
 
             {/* 3-Way Duration Breakdown */}
