@@ -48,6 +48,17 @@ const DailyReports = () => {
   const [isSrcSubmitting, setIsSrcSubmitting] = useState(false);
   const srcFileInputRef = useRef(null);
 
+  const [currentTime, setCurrentTime] = useState(() => 
+    new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const initialSrcFormState = {
     projectTitle: '',
     date: new Date().toISOString().split('T')[0],
@@ -206,6 +217,7 @@ const DailyReports = () => {
       const newReport = {
         _id: 'rep-local-' + Date.now(),
         ...formData,
+        tasksWorked: formData.tasksWorked || formData.projectTitle || 'Project Deliverables',
         srcFileName: selectedFile ? selectedFile.name : null,
         srcFileSize: fileSizeStr,
         srcFileUrl: selectedFile ? URL.createObjectURL(selectedFile) : null,
@@ -222,8 +234,9 @@ const DailyReports = () => {
 
     const payload = new FormData();
     Object.keys(formData).forEach(key => {
-      if (formData[key] !== null) payload.append(key, formData[key]);
+      if (formData[key] !== null && key !== 'tasksWorked') payload.append(key, formData[key]);
     });
+    payload.append('tasksWorked', formData.tasksWorked || formData.projectTitle || 'Project Deliverables');
 
     if (selectedFile) {
       payload.append('srcFile', selectedFile);
@@ -283,12 +296,15 @@ const DailyReports = () => {
       ? `${(srcSelectedFile.size / 1024).toFixed(1)} KB` 
       : `${(srcSelectedFile.size / (1024 * 1024)).toFixed(2)} MB`;
 
+    const deliverableSummary = srcFormData.workSummary || 
+      (srcFormData.projectTitle ? `Project Deliverable: ${srcFormData.projectTitle}` : `Submitted Project Deliverable: ${srcSelectedFile.name}`);
+
     const payload = new FormData();
     payload.append('projectTitle', srcFormData.projectTitle || 'Project Deliverable');
     payload.append('tasksWorked', srcFormData.projectTitle || 'Project Documentation & Code');
     payload.append('date', srcFormData.date);
     payload.append('hoursWorked', srcFormData.hoursWorked || 8);
-    payload.append('workSummary', srcFormData.workSummary || `Submitted Project Deliverable: ${srcSelectedFile.name}`);
+    payload.append('workSummary', deliverableSummary);
     payload.append('progressStatus', srcFormData.progressStatus || 'Completed');
     payload.append('issuesFaced', 'None');
     payload.append('srcFile', srcSelectedFile);
@@ -305,6 +321,7 @@ const DailyReports = () => {
         const fallbackRep = {
           _id: 'src-' + Date.now(),
           ...srcFormData,
+          workSummary: deliverableSummary,
           tasksWorked: srcFormData.projectTitle || 'Project Documentation & Code',
           srcFileName: srcSelectedFile.name,
           srcFileSize: fileSizeStr,
@@ -322,6 +339,7 @@ const DailyReports = () => {
       const fallbackRep = {
         _id: 'src-' + Date.now(),
         ...srcFormData,
+        workSummary: deliverableSummary,
         tasksWorked: srcFormData.projectTitle || 'Project Documentation & Code',
         srcFileName: srcSelectedFile.name,
         srcFileSize: fileSizeStr,
@@ -927,51 +945,45 @@ const DailyReports = () => {
             />
           </div>
 
-          {/* 2nd Field: Tasks Worked On */}
-          <div className="form-group-pro">
-            <label className="form-label-pro">2. Tasks Worked On (IDs / Titles) *</label>
-            <input 
-              type="text" 
-              className="input-field-pro" 
-              placeholder="e.g. TASK-101, Auth Redesign, Bug Fix #42"
-              value={formData.tasksWorked}
-              onChange={e => setFormData({...formData, tasksWorked: e.target.value})}
-              required
-            />
-          </div>
-
-          {/* 3rd Field: Submitting Date & 4th Field: Working Hours */}
+          {/* 2nd Field: Submitting Date & 3rd Field: Working Hours */}
           <div className="form-row-2col">
             <div className="form-group-pro">
-              <label className="form-label-pro">3. Submitting Date *</label>
-              <input 
-                type="date" 
-                className="input-field-pro" 
-                value={formData.date}
-                onChange={e => setFormData({...formData, date: e.target.value})}
-                required
-              />
+              <label className="form-label-pro">2. Submitting Date *</label>
+              <div className="input-with-icon-wrapper">
+                <Calendar size={18} className="input-field-icon" color="#60a5fa" />
+                <input 
+                  type="date" 
+                  className="input-field-pro with-icon" 
+                  value={formData.date}
+                  onChange={e => setFormData({...formData, date: e.target.value})}
+                  required
+                />
+              </div>
             </div>
 
             <div className="form-group-pro">
-              <label className="form-label-pro">4. Working Hours *</label>
-              <input 
-                type="number" 
-                step="0.5" 
-                min="0.5" 
-                max="24"
-                className="input-field-pro" 
-                placeholder="e.g. 8"
-                value={formData.hoursWorked}
-                onChange={e => setFormData({...formData, hoursWorked: parseFloat(e.target.value) || 0})}
-                required
-              />
+              <label className="form-label-pro">3. Working Hours *</label>
+              <div className="input-with-icon-wrapper">
+                <Clock size={18} className="input-field-icon" color="#34d399" />
+                <input 
+                  type="number" 
+                  step="0.5" 
+                  min="0.5" 
+                  max="24"
+                  className="input-field-pro with-icon" 
+                  placeholder="e.g. 8"
+                  value={formData.hoursWorked}
+                  onChange={e => setFormData({...formData, hoursWorked: parseFloat(e.target.value) || 0})}
+                  required
+                />
+                <span className="input-unit-tag">hrs</span>
+              </div>
             </div>
           </div>
 
-          {/* 5th Field: Work Summary */}
+          {/* 4th Field: Work Summary */}
           <div className="form-group-pro">
-            <label className="form-label-pro">5. Work Summary & Accomplishments *</label>
+            <label className="form-label-pro">4. Work Summary & Accomplishments *</label>
             <textarea 
               className="input-field-pro" 
               rows="3"
@@ -982,9 +994,9 @@ const DailyReports = () => {
             ></textarea>
           </div>
 
-          {/* 6th Field: Issues / Blockers */}
+          {/* 5th Field: Issues / Blockers */}
           <div className="form-group-pro">
-            <label className="form-label-pro">6. Issues / Blockers (If Any)</label>
+            <label className="form-label-pro">5. Issues / Blockers (If Any)</label>
             <textarea 
               className="input-field-pro" 
               rows="2"
@@ -994,9 +1006,9 @@ const DailyReports = () => {
             ></textarea>
           </div>
 
-          {/* 7th Field: Work Process Status Dropdown */}
+          {/* 6th Field: Work Process Status Dropdown */}
           <div className="form-group-pro">
-            <label className="form-label-pro">7. Work Process Status *</label>
+            <label className="form-label-pro">6. Work Process Status *</label>
             <select 
               className="input-field-pro"
               value={formData.progressStatus || 'Completed'}
@@ -1010,14 +1022,14 @@ const DailyReports = () => {
             </select>
           </div>
 
-          {/* 8th Field: Upload SRC / Source Code Archive */}
+          {/* 7th Field: Simple Clean File Upload */}
           <div className="form-group-pro">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
               <label className="form-label-pro" style={{ margin: 0 }}>
-                8. Upload Project SRC / Source Code Archive
+                7. Project File / Document (Optional)
               </label>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontStyle: 'italic' }}>
-                .ZIP, .RAR, .TAR.GZ, or Code Files (.js, .py, etc.)
+              <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                ZIP, PDF, DOCX, Code files
               </span>
             </div>
 
@@ -1032,33 +1044,25 @@ const DailyReports = () => {
 
             {!selectedFile ? (
               <div 
-                className="src-upload-dropzone"
+                className="simple-upload-bar"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <div className="src-dropzone-icon">
-                  <UploadCloud size={28} />
+                <div className="simple-upload-info">
+                  <UploadCloud size={20} className="simple-upload-icon" />
+                  <span className="simple-upload-text">Choose file or drag & drop</span>
                 </div>
-                <div className="src-dropzone-text">
-                  <span className="src-dropzone-title">Click to select or drag & drop SRC file</span>
-                  <span className="src-dropzone-sub">
-                    Upload your daily source code archive (ZIP/RAR/code files) so Admin can receive and inspect it
-                  </span>
-                </div>
+                <span className="simple-upload-btn-chip">Browse File</span>
               </div>
             ) : (
-              <div className="src-file-pill-card">
-                <div className="src-file-pill-info">
-                  <div className="src-file-avatar">
-                    <FolderArchive size={20} />
-                  </div>
-                  <div className="src-file-details">
-                    <span className="src-filename-text">{selectedFile.name}</span>
-                    <span className="src-filesize-text">
-                      {selectedFile.size < 1024 * 1024 
-                        ? `${(selectedFile.size / 1024).toFixed(1)} KB` 
-                        : `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`} &bull; Ready to submit
-                    </span>
-                  </div>
+              <div className="simple-upload-file-ready">
+                <div className="simple-upload-info">
+                  <FolderArchive size={18} color="#c084fc" />
+                  <span className="simple-upload-name">{selectedFile.name}</span>
+                  <span className="simple-upload-size">
+                    ({selectedFile.size < 1024 * 1024 
+                      ? `${(selectedFile.size / 1024).toFixed(1)} KB` 
+                      : `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`})
+                  </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span className="src-ready-badge"><Check size={12} /> Ready</span>
@@ -1214,29 +1218,6 @@ const DailyReports = () => {
         title="Submit Project SRC Documents / Code Archive"
       >
         <form onSubmit={handleSubmitSrcDocument} className="exec-modal-form">
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%)',
-            border: '1px solid rgba(168, 85, 247, 0.4)',
-            padding: '0.9rem 1.15rem',
-            borderRadius: '12px',
-            marginBottom: '0.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(147, 51, 234, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FolderArchive size={22} color="#e9d5ff" />
-            </div>
-            <div>
-              <span style={{ display: 'block', fontWeight: 700, color: '#f3e8ff', fontSize: '0.92rem' }}>
-                Dedicated Project SRC Deliverable Portal
-              </span>
-              <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-                Submit today's created project source code or documentation directly to Admin
-              </span>
-            </div>
-          </div>
-
           {/* 1. Project Title */}
           <div className="form-group-pro">
             <label className="form-label-pro">1. Project / Deliverable Name *</label>
@@ -1250,23 +1231,51 @@ const DailyReports = () => {
             />
           </div>
 
-          {/* 2. Submitting Date */}
-          <div className="form-group-pro">
-            <label className="form-label-pro">2. Submitting Date *</label>
-            <input 
-              type="date" 
-              className="input-field-pro" 
-              value={srcFormData.date}
-              onChange={e => setSrcFormData({...srcFormData, date: e.target.value})}
-              required
-            />
+          {/* 2. Submitting Date & Submitting Time (Live) */}
+          <div className="form-row-2col">
+            <div className="form-group-pro">
+              <label className="form-label-pro">2. Submitting Date *</label>
+              <div className="input-with-icon-wrapper">
+                <Calendar size={18} className="input-field-icon" color="#a855f7" />
+                <input 
+                  type="date" 
+                  className="input-field-pro with-icon" 
+                  value={srcFormData.date}
+                  onChange={e => setSrcFormData({...srcFormData, date: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group-pro">
+              <label className="form-label-pro">Submitting Time (Live)</label>
+              <div className="input-with-icon-wrapper">
+                <Clock size={18} className="input-field-icon" color="#34d399" />
+                <input 
+                  type="text" 
+                  className="input-field-pro with-icon live-time-input" 
+                  value={currentTime}
+                  readOnly
+                  title="Current live submission time"
+                />
+                <span className="live-pulse-badge">
+                  <span className="live-dot"></span> LIVE
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* 3. Document / Code File Upload Zone with Auto-Compression */}
+          {/* 3. Document / Code File Upload Zone (Clean Compact Bar) */}
           <div className="form-group-pro">
-            <label className="form-label-pro">
-              3. Upload Document / Code Archive (PDF, Word, ZIP, RAR, Code) *
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+              <label className="form-label-pro" style={{ margin: 0 }}>
+                3. Upload Document / Code Archive (PDF, Word, ZIP, RAR, Code) *
+              </label>
+              <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                Auto-compressed if MB is high
+              </span>
+            </div>
+
             <input 
               type="file" 
               ref={srcFileInputRef}
@@ -1280,75 +1289,39 @@ const DailyReports = () => {
             />
 
             {isCompressing ? (
-              <div className="src-compressing-banner">
-                <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} color="#c084fc" />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
-                  <span style={{ fontWeight: 700, color: '#f3e8ff' }}>⚡ High MB file detected: Auto-compressing document...</span>
-                  <span style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 400 }}>
-                    Compressing into a lightweight ZIP package for instant upload
-                  </span>
+              <div className="simple-upload-file-ready" style={{ borderColor: '#a855f7', background: 'rgba(147, 51, 234, 0.15)' }}>
+                <div className="simple-upload-info">
+                  <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} color="#c084fc" />
+                  <span className="simple-upload-name" style={{ color: '#f3e8ff' }}>Auto-compressing high MB file into ZIP package...</span>
                 </div>
               </div>
             ) : !srcSelectedFile ? (
               <div 
-                className={`src-upload-dropzone ${isDragOver ? 'drag-over' : ''}`}
+                className="simple-upload-bar"
                 onClick={() => srcFileInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-                onDragLeave={() => setIsDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDragOver(false);
-                  const f = e.dataTransfer.files?.[0];
-                  if (f) handleProcessSrcFile(f);
-                }}
-                style={{ padding: '1.5rem', borderColor: '#a855f7' }}
+                style={{ borderColor: 'rgba(168, 85, 247, 0.35)' }}
               >
-                <div className="src-dropzone-icon" style={{ background: 'rgba(147, 51, 234, 0.25)', color: '#d8b4fe' }}>
-                  <UploadCloud size={32} />
+                <div className="simple-upload-info">
+                  <UploadCloud size={20} className="simple-upload-icon" style={{ color: '#c084fc' }} />
+                  <span className="simple-upload-text">Choose file (PDF, Word, ZIP, Code) or drag & drop</span>
                 </div>
-                <div className="src-dropzone-text">
-                  <span className="src-dropzone-title" style={{ fontSize: '1rem', color: '#ffffff' }}>
-                    Click to select or drag & drop your files
-                  </span>
-                  <span className="src-dropzone-sub">
-                    Accepts PDF, Word (.DOC/.DOCX), ZIP, RAR archives & code files (Auto-compressed if MB is high)
-                  </span>
-                </div>
+                <span className="simple-upload-btn-chip" style={{ background: 'rgba(147, 51, 234, 0.25)', borderColor: 'rgba(168, 85, 247, 0.4)', color: '#e9d5ff' }}>Browse File</span>
               </div>
             ) : (
-              <div className="src-file-pill-card" style={{ borderColor: '#a855f7' }}>
-                <div className="src-file-pill-info">
-                  <div className="src-file-avatar" style={{ 
-                    background: srcSelectedFile.name.endsWith('.pdf') 
-                      ? 'rgba(239, 68, 68, 0.25)' 
-                      : (/\.(doc|docx)$/i.test(srcSelectedFile.name) 
-                        ? 'rgba(59, 130, 246, 0.25)' 
-                        : 'rgba(147, 51, 234, 0.35)'),
-                    color: srcSelectedFile.name.endsWith('.pdf') 
-                      ? '#f87171' 
-                      : (/\.(doc|docx)$/i.test(srcSelectedFile.name) 
-                        ? '#60a5fa' 
-                        : '#e9d5ff')
-                  }}>
-                    {srcSelectedFile.name.endsWith('.pdf') || /\.(doc|docx)$/i.test(srcSelectedFile.name)
-                      ? <FileText size={22} />
-                      : <FolderArchive size={22} />}
-                  </div>
-                  <div className="src-file-details">
-                    <span className="src-filename-text" style={{ fontSize: '0.95rem' }}>{srcSelectedFile.name}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginTop: '3px' }}>
-                      <span className="src-filesize-text">
-                        {srcSelectedFile.size < 1024 * 1024 
-                          ? `${(srcSelectedFile.size / 1024).toFixed(1)} KB` 
-                          : `${(srcSelectedFile.size / (1024 * 1024)).toFixed(2)} MB`} &bull; Ready for upload
-                      </span>
-                      {srcCompressionInfo && (
-                        <span className="src-compressed-badge">
-                          <Zap size={11} /> Auto-Compressed: {(srcCompressionInfo.originalSize / (1024 * 1024)).toFixed(2)} MB ➔ {(srcCompressionInfo.compressedSize / (1024 * 1024)).toFixed(2)} MB (-{srcCompressionInfo.savedPercent}%)
-                        </span>
-                      )}
-                    </div>
-                  </div>
+              <div className="simple-upload-file-ready" style={{ borderColor: '#a855f7' }}>
+                <div className="simple-upload-info">
+                  <FolderArchive size={18} color="#c084fc" />
+                  <span className="simple-upload-name">{srcSelectedFile.name}</span>
+                  <span className="simple-upload-size">
+                    ({srcSelectedFile.size < 1024 * 1024 
+                      ? `${(srcSelectedFile.size / 1024).toFixed(1)} KB` 
+                      : `${(srcSelectedFile.size / (1024 * 1024)).toFixed(2)} MB`})
+                  </span>
+                  {srcCompressionInfo && (
+                    <span className="src-compressed-badge" style={{ marginLeft: '0.4rem' }}>
+                      <Zap size={11} /> Auto-Compressed (-{srcCompressionInfo.savedPercent}%)
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span className="src-ready-badge"><Check size={12} /> Ready</span>
@@ -1369,19 +1342,6 @@ const DailyReports = () => {
             )}
           </div>
 
-          {/* 4. Notes / Summary */}
-          <div className="form-group-pro">
-            <label className="form-label-pro">4. SRC Deliverable Notes / Summary *</label>
-            <textarea 
-              className="input-field-pro" 
-              rows="3"
-              placeholder="Explain what is included in this deliverable package or document, implementation notes, or instructions for the Admin/Reviewer..."
-              value={srcFormData.workSummary}
-              onChange={e => setSrcFormData({...srcFormData, workSummary: e.target.value})}
-              required
-            ></textarea>
-          </div>
-
           <div className="modal-actions-footer">
             <button 
               type="button" 
@@ -1396,7 +1356,7 @@ const DailyReports = () => {
               disabled={isSrcSubmitting || isCompressing}
               style={{ background: 'linear-gradient(135deg, #9333ea 0%, #6366f1 100%)', border: 'none' }}
             >
-              {isSrcSubmitting ? 'Uploading to Admin...' : (isCompressing ? '⚡ Compressing...' : '🚀 Submit SRC Document')}
+              {isSrcSubmitting ? 'Uploading to Admin...' : (isCompressing ? 'Compressing...' : 'Submit SRC Document')}
             </button>
           </div>
         </form>

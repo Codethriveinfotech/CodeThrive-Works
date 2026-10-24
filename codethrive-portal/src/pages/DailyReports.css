@@ -942,6 +942,169 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
+/* Input With Icon Wrappers for Date & Hours */
+.input-with-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-field-icon {
+  position: absolute;
+  left: 12px;
+  pointer-events: none;
+  z-index: 2;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.input-field-pro.with-icon {
+  padding-left: 2.6rem;
+}
+
+/* Clear & Visible Calendar Picker Indicator */
+.input-field-pro[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.85) sepia(1) saturate(5) hue-rotate(180deg);
+  opacity: 0.95;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  padding: 4px;
+}
+
+.input-field-pro[type="date"]::-webkit-calendar-picker-indicator:hover {
+  transform: scale(1.15);
+  opacity: 1;
+}
+
+.input-unit-tag {
+  position: absolute;
+  right: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+/* Simple, Compact File Upload Box */
+.simple-upload-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+
+.simple-upload-bar:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: #818cf8;
+  border-style: solid;
+}
+
+.simple-upload-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.simple-upload-icon {
+  color: #818cf8;
+  flex-shrink: 0;
+}
+
+.simple-upload-text {
+  font-size: 0.88rem;
+  color: #cbd5e1;
+}
+
+.simple-upload-btn-chip {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 0.28rem 0.75rem;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.simple-upload-bar:hover .simple-upload-btn-chip {
+  background: #6366f1;
+  color: #ffffff;
+}
+
+.simple-upload-file-ready {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  background: rgba(147, 51, 234, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 12px;
+}
+
+.simple-upload-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #f8fafc;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.simple-upload-size {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* Live Submission Clock Indicator */
+.live-pulse-badge {
+  position: absolute;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+  animation: pulseLive 1.5s infinite;
+}
+
+@keyframes pulseLive {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.live-time-input {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: #34d399 !important;
+}
+
 .modal-actions-footer {
   display: flex;
   justify-content: flex-end;
