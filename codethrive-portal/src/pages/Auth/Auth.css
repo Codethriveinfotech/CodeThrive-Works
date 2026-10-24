@@ -131,7 +131,7 @@
 
 .auth-options {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   font-size: 0.85rem;
   margin-top: 0.5rem;
