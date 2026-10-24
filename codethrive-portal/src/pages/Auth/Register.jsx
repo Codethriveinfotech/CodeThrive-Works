@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, Eye, EyeOff, Check, X, ShieldAlert } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 
@@ -24,63 +24,6 @@ const Register = () => {
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Evaluate password strength in real time
-  const passwordAnalysis = useMemo(() => {
-    const pwd = formData.password || '';
-    const hasMinLen = pwd.length >= 8;
-    const hasWord = /[a-zA-Z]/.test(pwd);
-    const hasLower = /[a-z]/.test(pwd);
-    const hasUpper = /[A-Z]/.test(pwd);
-    const hasNumber = /\d/.test(pwd);
-    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
-
-    let score = 0;
-    if (hasMinLen) score++;
-    if (hasLower && hasUpper) score++;
-    else if (hasWord) score += 0.5;
-    if (hasNumber) score++;
-    if (hasSpecial) score++;
-
-    let level = 'weak';
-    let percent = '25%';
-    let color = '#f87171';
-    let label = 'Weak (Simple)';
-
-    if (score >= 4) {
-      level = 'strong';
-      percent = '100%';
-      color = '#34d399';
-      label = 'Strong';
-    } else if (score >= 3) {
-      level = 'good';
-      percent = '75%';
-      color = '#fbbf24';
-      label = 'Good';
-    } else if (score >= 2) {
-      level = 'fair';
-      percent = '50%';
-      color = '#fb923c';
-      label = 'Fair';
-    }
-
-    const isStrong = hasMinLen && hasLower && hasUpper && hasNumber && hasSpecial;
-
-    return {
-      hasMinLen,
-      hasLower,
-      hasUpper,
-      hasWord,
-      hasNumber,
-      hasSpecial,
-      score,
-      level,
-      percent,
-      color,
-      label,
-      isStrong
-    };
-  }, [formData.password]);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
@@ -102,8 +45,8 @@ const Register = () => {
       return;
     }
 
-    if (!passwordAnalysis.isStrong) {
-      setError('Password is too simple! Please create a strong password using words (uppercase & lowercase letters), numbers, and special characters (minimum 8 characters).');
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
       return;
     }
 
@@ -216,7 +159,7 @@ const Register = () => {
               <input 
                 type={showPassword ? 'text' : 'password'} 
                 name="password" 
-                placeholder="Enter strong password"
+                placeholder="Enter password"
                 value={formData.password} 
                 onChange={handleChange} 
                 className="input-field" 
@@ -268,56 +211,6 @@ const Register = () => {
               </div>
             )}
           </div>
-
-          {/* Password Strength and Guidance Section */}
-          {formData.password && (
-            <div className="form-group full-width" style={{ marginTop: '-0.25rem' }}>
-              <div className="password-strength-box">
-                <div className="strength-header">
-                  <span className="strength-title">Password Strength:</span>
-                  <span className={`strength-level ${passwordAnalysis.level}`}>
-                    {passwordAnalysis.label} {passwordAnalysis.isStrong ? '✓' : ''}
-                  </span>
-                </div>
-
-                <div className="strength-meter-track">
-                  <div 
-                    className="strength-meter-bar" 
-                    style={{ 
-                      width: passwordAnalysis.percent, 
-                      backgroundColor: passwordAnalysis.color 
-                    }} 
-                  />
-                </div>
-
-                <div className="strength-rules">
-                  <div className={`strength-rule-item ${passwordAnalysis.hasMinLen ? 'valid' : 'invalid'}`}>
-                    {passwordAnalysis.hasMinLen ? <Check size={14} /> : <X size={14} />}
-                    <span>Min 8 characters</span>
-                  </div>
-                  <div className={`strength-rule-item ${passwordAnalysis.hasUpper && passwordAnalysis.hasLower ? 'valid' : 'invalid'}`}>
-                    {passwordAnalysis.hasUpper && passwordAnalysis.hasLower ? <Check size={14} /> : <X size={14} />}
-                    <span>Uppercase & lowercase letters</span>
-                  </div>
-                  <div className={`strength-rule-item ${passwordAnalysis.hasNumber ? 'valid' : 'invalid'}`}>
-                    {passwordAnalysis.hasNumber ? <Check size={14} /> : <X size={14} />}
-                    <span>Numbers (0-9)</span>
-                  </div>
-                  <div className={`strength-rule-item ${passwordAnalysis.hasSpecial ? 'valid' : 'invalid'}`}>
-                    {passwordAnalysis.hasSpecial ? <Check size={14} /> : <X size={14} />}
-                    <span>Special characters (@$!%*?&#)</span>
-                  </div>
-                </div>
-
-                {!passwordAnalysis.isStrong && (
-                  <div style={{ marginTop: '0.65rem', color: '#fb923c', fontSize: '0.76rem', display: 'flex', alignItems: 'center', gap: '0.4rem', lineHeight: 1.4 }}>
-                    <ShieldAlert size={15} style={{ flexShrink: 0 }} />
-                    <span>Simple passwords are not allowed. Please use a combination of words, numbers, and special characters.</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
           
           <button type="submit" className="btn btn-primary w-100 full-width" disabled={isLoading || success} style={{ padding: '1rem', marginTop: '1.5rem', fontSize: '1rem' }}>
             {isLoading ? 'Registering...' : 'Register'}
