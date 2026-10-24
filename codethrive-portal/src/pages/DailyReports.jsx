@@ -379,7 +379,7 @@ const DailyReports = () => {
   if (loading) return (
     <div className="reports-loader-screen">
       <div className="loader-ring-pulse"></div>
-      <p>Initializing Daily Worklog Intelligence Workspace...</p>
+      <p>Initializing Project Reports Workspace...</p>
     </div>
   );
 
@@ -405,40 +405,24 @@ const DailyReports = () => {
             <span className="dot-divider">•</span>
             {todayReport ? (
               <span className="today-logged-tag success">
-                <CheckCircle2 size={13} /> Today's Logged ({todayReport.hoursWorked} hrs)
+                <CheckCircle2 size={13} /> Today's Report Submitted ({todayReport.hoursWorked} hrs)
               </span>
             ) : (
               <span className="today-logged-tag warning">
-                <Clock size={13} /> Today's Log Pending
+                <Clock size={13} /> Today's Report Pending
               </span>
             )}
           </div>
         </div>
 
         <div className="hero-right-actions">
-          {/* Dedicated High-Impact SRC Deliverable Button */}
-          <button 
-            type="button"
-            className="btn-src-highlight"
-            onClick={() => { resetSrcModal(); setIsSrcModalOpen(true); }}
-            title="Submit Project Source Code Archive & Documentation"
-          >
-            <div className="src-btn-icon-wrapper">
-              <FolderArchive size={20} />
-            </div>
-            <div className="src-btn-content">
-              <span className="src-btn-title">Submit SRC Deliverable</span>
-              <span className="src-btn-sub">Code Archive & Docs</span>
-            </div>
-          </button>
-
-          {/* Standard Daily Work Log Button */}
+          {/* Standard Project Report Submission Button */}
           <button 
             className="btn-primary-glow"
             onClick={() => { resetForm(); setIsSubmitModalOpen(true); }}
           >
             <PlusCircle size={19} />
-            <span>{todayReport ? "Update Today's Log" : "+ Log Today's Work"}</span>
+            <span>{todayReport ? "Update Today's Report" : "+ Submit Project Report"}</span>
           </button>
         </div>
       </div>
@@ -453,12 +437,12 @@ const DailyReports = () => {
             <FileText size={22} />
           </div>
           <div className="metric-info-body">
-            <span className="metric-label">Total Worklogs</span>
+            <span className="metric-label">Total Reports</span>
             <div className="metric-value-row">
               <span className="metric-value">{totalReportsCount}</span>
-              <span className="metric-unit">logs submitted</span>
+              <span className="metric-unit">reports submitted</span>
             </div>
-            <span className="metric-footer-text">Project activity record</span>
+            <span className="metric-footer-text">Project reports record</span>
           </div>
         </div>
 
@@ -482,13 +466,20 @@ const DailyReports = () => {
           onClick={() => setActiveFilterTab('SRC')}
           title="Click to view all SRC deliverables"
         >
-
           <div className="metric-icon-box purple">
-
             <FolderArchive size={22} color="#c084fc" />
           </div>
-          <div className="metric-info-body">
-            <span className="metric-label" style={{ color: '#d8b4fe' }}>SRC Deliverables</span>
+          <div className="metric-info-body" style={{ width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="metric-label" style={{ color: '#d8b4fe' }}>SRC Deliverables</span>
+              <span 
+                className="card-src-tag"
+                onClick={(e) => { e.stopPropagation(); resetSrcModal(); setIsSrcModalOpen(true); }}
+                title="Submit Project SRC Deliverable"
+              >
+                + Upload
+              </span>
+            </div>
             <div className="metric-value-row">
               <span className="metric-value" style={{ color: '#ffffff' }}>{srcFilesCount}</span>
               <span className="metric-unit">packages</span>
@@ -521,7 +512,7 @@ const DailyReports = () => {
           <Search size={17} className="search-icon" />
           <input 
             type="text" 
-            placeholder="Search worklogs by project title, tasks, keywords, status, or date..."
+            placeholder="Search reports by project title, tasks, status, or date..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -536,7 +527,7 @@ const DailyReports = () => {
             className={`tab-btn-pill ${activeFilterTab === 'All' ? 'active' : ''}`}
             onClick={() => setActiveFilterTab('All')}
           >
-            All Worklogs ({totalReportsCount})
+            All Reports ({totalReportsCount})
           </button>
           <button 
             className={`tab-btn-pill ${activeFilterTab === 'SRC' ? 'active' : ''}`}
@@ -559,43 +550,52 @@ const DailyReports = () => {
             Reviewed ({reviewedCount})
           </button>
         </div>
+
+        {/* Dedicated Submit SRC Deliverable Action */}
+        <button 
+          type="button"
+          className="toolbar-src-btn"
+          onClick={() => { resetSrcModal(); setIsSrcModalOpen(true); }}
+          title="Submit Project Source Code & Documentation Archive"
+        >
+          <FolderArchive size={16} />
+          <span>Submit SRC</span>
+        </button>
       </div>
 
 
       {/* --------------------------------------------------------------------------
-          4. WORKLOGS CONTENT DISPLAY
+          4. CONTENT DISPLAY
          -------------------------------------------------------------------------- */}
       {safeReports.length === 0 ? (
         <div className="reports-empty-state">
           <div className="empty-icon-glow">
             <FileText size={42} />
           </div>
-          <h2>No Daily Worklogs Found</h2>
+          <h2>No Project Reports Found</h2>
           <p>
-            You haven't logged any daily reports yet. Submit your project title, tasks worked on, working hours, work summary, and process status.
+            You haven't submitted any project reports yet. Submit your project deliverables, working hours, work summary, and process status.
           </p>
           <div className="empty-actions-row">
             <button 
               onClick={() => { resetForm(); setIsSubmitModalOpen(true); }}
               className="btn-primary-glow"
             >
-              <PlusCircle size={18} /> + Log Today's Work
+              <PlusCircle size={18} /> + Submit Project Report
             </button>
 
-            {!usingDemoData ? (
-              <button onClick={loadDemoReports} className="btn-outline-glass">
-                <Sparkles size={16} /> Preview Sample Logs
-              </button>
-            ) : (
-              <button onClick={clearDemoReports} className="btn-outline-glass">
-                Clear Sample Preview
-              </button>
-            )}
+            <button 
+              onClick={() => { resetSrcModal(); setIsSrcModalOpen(true); }}
+              className="toolbar-src-btn"
+              style={{ padding: '0.75rem 1.4rem' }}
+            >
+              <FolderArchive size={16} /> Submit SRC Deliverable
+            </button>
           </div>
         </div>
       ) : filteredReports.length === 0 ? (
         <div className="reports-empty-state">
-          <p>No worklogs matched your search parameters.</p>
+          <p>No reports matched your search parameters.</p>
           <button onClick={() => { setSearchQuery(''); setActiveFilterTab('All'); }} className="btn-outline-glass">
             Reset Filters
           </button>
@@ -909,7 +909,7 @@ const DailyReports = () => {
       <Modal 
         isOpen={isSubmitModalOpen} 
         onClose={() => { setIsSubmitModalOpen(false); resetForm(); }}
-        title="Log Today's Work & Accomplishments"
+        title="Submit Project Report"
       >
         <form onSubmit={handleSubmitReport} className="exec-modal-form">
           {/* 1st Field: Project Title */}
@@ -1086,7 +1086,7 @@ const DailyReports = () => {
               className="btn-primary-glow" 
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving Activity & Uploading SRC...' : 'Submit Worklog & SRC'}
+              {isSubmitting ? 'Saving Activity & Uploading...' : 'Submit Project Report'}
             </button>
           </div>
         </form>
