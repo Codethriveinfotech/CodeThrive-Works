@@ -10,7 +10,7 @@ import {
   Sparkles, RefreshCw, MessageSquare, 
   ArrowUpRight, Grid, List, Award, Eye, ShieldCheck, Activity, Download,
   UploadCloud, FolderArchive, FileCode, X, Check, Paperclip,
-  Zap, Loader2, Briefcase
+  Zap, Loader2, Briefcase, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { zipSync } from 'fflate';
 import { formatDate } from '../utils/dateUtils';
@@ -77,7 +77,7 @@ const DailyReports = () => {
     if (srcFileInputRef.current) srcFileInputRef.current.value = '';
   };
 
-  // Auto-compress large files (PDF, Word, Code) using fflate if size is high (> 1.5MB)
+  // Auto-compress large files (PDF, Word, Code) using fflate silently in background if size is high (> 1.5MB)
   const handleProcessSrcFile = async (file) => {
     if (!file) return;
 
@@ -99,26 +99,14 @@ const DailyReports = () => {
         const zipFileName = `${baseName}.zip`;
         const compressedFile = new File([compressedBlob], zipFileName, { type: 'application/zip' });
 
-        const origSize = file.size;
-        const compSize = compressedFile.size;
-        const savedPercent = Math.max(0, Math.round(((origSize - compSize) / origSize) * 100));
-
-        setSrcCompressionInfo({
-          originalName: fileName,
-          originalSize: origSize,
-          compressedSize: compSize,
-          savedPercent
-        });
         setSrcSelectedFile(compressedFile);
       } catch (err) {
         console.warn('Auto compression fallback, using original file:', err);
         setSrcSelectedFile(file);
-        setSrcCompressionInfo(null);
       } finally {
         setIsCompressing(false);
       }
     } else {
-      setSrcCompressionInfo(null);
       setSrcSelectedFile(file);
     }
   };
@@ -183,9 +171,31 @@ const DailyReports = () => {
     fetchReports();
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    const fileName = file.name;
+    const isAlreadyArchive = /\.(zip|rar|7z|tar|gz)$/i.test(fileName);
+    const COMPRESSION_THRESHOLD = 1.5 * 1024 * 1024; // 1.5 MB
+
+    if (file.size > COMPRESSION_THRESHOLD && !isAlreadyArchive) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8 = new Uint8Array(arrayBuffer);
+        const zipped = zipSync({ [fileName]: uint8 }, { level: 6 });
+        const compressedBlob = new Blob([zipped], { type: 'application/zip' });
+
+        const baseName = fileName.replace(/\.[^/.]+$/, '');
+        const zipFileName = `${baseName}.zip`;
+        const compressedFile = new File([compressedBlob], zipFileName, { type: 'application/zip' });
+
+        setSelectedFile(compressedFile);
+      } catch (err) {
+        console.warn('Auto compression fallback, using original file:', err);
+        setSelectedFile(file);
+      }
+    } else {
       setSelectedFile(file);
     }
   };
@@ -949,34 +959,50 @@ const DailyReports = () => {
           <div className="form-row-2col">
             <div className="form-group-pro">
               <label className="form-label-pro">2. Submitting Date *</label>
-              <div className="input-with-icon-wrapper">
-                <Calendar size={18} className="input-field-icon" color="#60a5fa" />
-                <input 
-                  type="date" 
-                  className="input-field-pro with-icon" 
-                  value={formData.date}
-                  onChange={e => setFormData({...formData, date: e.target.value})}
-                  required
-                />
-              </div>
+              <input 
+                type="date" 
+                className="input-field-pro" 
+                value={formData.date}
+                onChange={e => setFormData({...formData, date: e.target.value})}
+                required
+              />
             </div>
 
             <div className="form-group-pro">
               <label className="form-label-pro">3. Working Hours *</label>
-              <div className="input-with-icon-wrapper">
-                <Clock size={18} className="input-field-icon" color="#34d399" />
+              <div className="hours-stepper-wrapper">
                 <input 
                   type="number" 
                   step="0.5" 
                   min="0.5" 
                   max="24"
-                  className="input-field-pro with-icon" 
+                  className="input-field-pro hours-input" 
                   placeholder="e.g. 8"
                   value={formData.hoursWorked}
                   onChange={e => setFormData({...formData, hoursWorked: parseFloat(e.target.value) || 0})}
                   required
                 />
-                <span className="input-unit-tag">hrs</span>
+                <div className="hours-controls-group">
+                  <div className="stepper-buttons">
+                    <button 
+                      type="button" 
+                      className="stepper-btn" 
+                      onClick={() => setFormData(prev => ({...prev, hoursWorked: Math.min(24, ((parseFloat(prev.hoursWorked) || 0) + 0.5))}))}
+                      title="Increase hours (+0.5h)"
+                    >
+                      <ChevronUp size={13} />
+                    </button>
+                    <button 
+                      type="button" 
+                      className="stepper-btn" 
+                      onClick={() => setFormData(prev => ({...prev, hoursWorked: Math.max(0.5, ((parseFloat(prev.hoursWorked) || 0) - 0.5))}))}
+                      title="Decrease hours (-0.5h)"
+                    >
+                      <ChevronDown size={13} />
+                    </button>
+                  </div>
+                  <span className="input-unit-tag-inline">hrs</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1235,25 +1261,21 @@ const DailyReports = () => {
           <div className="form-row-2col">
             <div className="form-group-pro">
               <label className="form-label-pro">2. Submitting Date *</label>
-              <div className="input-with-icon-wrapper">
-                <Calendar size={18} className="input-field-icon" color="#a855f7" />
-                <input 
-                  type="date" 
-                  className="input-field-pro with-icon" 
-                  value={srcFormData.date}
-                  onChange={e => setSrcFormData({...srcFormData, date: e.target.value})}
-                  required
-                />
-              </div>
+              <input 
+                type="date" 
+                className="input-field-pro" 
+                value={srcFormData.date}
+                onChange={e => setSrcFormData({...srcFormData, date: e.target.value})}
+                required
+              />
             </div>
 
             <div className="form-group-pro">
               <label className="form-label-pro">Submitting Time (Live)</label>
-              <div className="input-with-icon-wrapper">
-                <Clock size={18} className="input-field-icon" color="#34d399" />
+              <div className="live-time-wrapper">
                 <input 
                   type="text" 
-                  className="input-field-pro with-icon live-time-input" 
+                  className="input-field-pro live-time-input" 
                   value={currentTime}
                   readOnly
                   title="Current live submission time"
@@ -1267,14 +1289,9 @@ const DailyReports = () => {
 
           {/* 3. Document / Code File Upload Zone (Clean Compact Bar) */}
           <div className="form-group-pro">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <label className="form-label-pro" style={{ margin: 0 }}>
-                3. Upload Document / Code Archive (PDF, Word, ZIP, RAR, Code) *
-              </label>
-              <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
-                Auto-compressed if MB is high
-              </span>
-            </div>
+            <label className="form-label-pro">
+              3. Upload Document / Code Archive (PDF, Word, ZIP, RAR, Code) *
+            </label>
 
             <input 
               type="file" 
@@ -1289,10 +1306,10 @@ const DailyReports = () => {
             />
 
             {isCompressing ? (
-              <div className="simple-upload-file-ready" style={{ borderColor: '#a855f7', background: 'rgba(147, 51, 234, 0.15)' }}>
+              <div className="simple-upload-bar" style={{ opacity: 0.8, cursor: 'wait' }}>
                 <div className="simple-upload-info">
                   <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} color="#c084fc" />
-                  <span className="simple-upload-name" style={{ color: '#f3e8ff' }}>Auto-compressing high MB file into ZIP package...</span>
+                  <span className="simple-upload-text">Processing file...</span>
                 </div>
               </div>
             ) : !srcSelectedFile ? (
@@ -1317,11 +1334,6 @@ const DailyReports = () => {
                       ? `${(srcSelectedFile.size / 1024).toFixed(1)} KB` 
                       : `${(srcSelectedFile.size / (1024 * 1024)).toFixed(2)} MB`})
                   </span>
-                  {srcCompressionInfo && (
-                    <span className="src-compressed-badge" style={{ marginLeft: '0.4rem' }}>
-                      <Zap size={11} /> Auto-Compressed (-{srcCompressionInfo.savedPercent}%)
-                    </span>
-                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span className="src-ready-badge"><Check size={12} /> Ready</span>
@@ -1330,7 +1342,6 @@ const DailyReports = () => {
                     className="src-remove-btn" 
                     onClick={() => {
                       setSrcSelectedFile(null);
-                      setSrcCompressionInfo(null);
                       if (srcFileInputRef.current) srcFileInputRef.current.value = '';
                     }}
                     title="Remove selected file"

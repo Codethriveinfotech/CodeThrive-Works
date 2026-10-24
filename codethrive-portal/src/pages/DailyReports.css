@@ -942,8 +942,9 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-/* Input With Icon Wrappers for Date & Hours */
-.input-with-icon-wrapper {
+/* Input With Icon Wrappers & Live Time Wrappers */
+.input-with-icon-wrapper,
+.live-time-wrapper {
   position: relative;
   display: flex;
   align-items: center;
@@ -974,6 +975,73 @@
 .input-field-pro[type="date"]::-webkit-calendar-picker-indicator:hover {
   transform: scale(1.15);
   opacity: 1;
+}
+
+/* Hours Stepper & Time Adjustment Controls */
+.hours-stepper-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-field-pro.hours-input {
+  padding-right: 5.6rem;
+}
+
+.input-field-pro.hours-input::-webkit-inner-spin-button,
+.input-field-pro.hours-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.hours-controls-group {
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  z-index: 2;
+}
+
+.stepper-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stepper-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #34d399;
+  border-radius: 4px;
+  width: 22px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.stepper-btn:hover {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: #34d399;
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.input-unit-tag-inline {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  pointer-events: none;
+  line-height: 1;
 }
 
 .input-unit-tag {
