@@ -195,9 +195,18 @@ const Register = () => {
               </button>
             </div>
             {passwordError && (
-              <div style={{ marginTop: '0.4rem', color: '#f87171', fontSize: '0.78rem', lineHeight: 1.35, display: 'flex', alignItems: 'flex-start', gap: '0.35rem' }}>
+              <div className="password-field-warning">
                 <AlertCircle size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
-                <span>{passwordError}</span>
+                <span>
+                  {passwordError.includes('(@$!%*?&#)') ? (
+                    <>
+                      {passwordError.replace('(@$!%*?&#)', '').trim()}{' '}
+                      <span style={{ whiteSpace: 'nowrap' }}>(@$!%*?&#).</span>
+                    </>
+                  ) : (
+                    passwordError
+                  )}
+                </span>
               </div>
             )}
           </div>
