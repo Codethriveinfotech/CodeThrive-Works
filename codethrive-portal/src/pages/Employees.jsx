@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { formatDate } from '../utils/dateUtils';
-import { createOfficialCodeThriveDoc, exportOfficialWordDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
+import { useNavigate } from 'react-router-dom';
 import { 
-  Search, Filter, Plus, User, Briefcase, Banknote, Edit, Eye,
-  RefreshCw, Trash2, UserCheck, Download, X,
-  UserPlus, Mail, Phone, Building2, ShieldCheck, KeyRound, EyeOff, IndianRupee, Loader2, FileText
+  Search, Filter, User, Briefcase, Eye,
+  UserCheck, X, UserPlus, Mail, Phone,
+  ShieldCheck, KeyRound, EyeOff, Loader2
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
-import StatusBadge from '../components/common/StatusBadge';
 import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
 import './Employees.css';
 
 const Employees = () => {
-  const { user } = useAuth();
+  const { registerEmployee } = useAuth();
   const navigate = useNavigate();
 
   const [employees, setEmployees] = useState([]);
@@ -31,20 +26,21 @@ const Employees = () => {
   const [filterRole, setFilterRole] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  // Register New Employee Modal
+  // Register New Employee Modal (exact order & fields as Register.jsx)
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [newEmpData, setNewEmpData] = useState({
     fullName: '',
-    personalEmailAddress: '',
-    personalPhoneNumber: '',
-    department: 'Engineering',
-    designation: 'Software Developer',
-    role: 'employee',
-    employmentType: 'Full-Time',
-    salaryAmount: '60000',
-    password: 'Password@123'
+    employeeId: '',
+    role: '',
+    emailId: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: ''
   });
+  const [regError, setRegError] = useState('');
+  const [regSuccess, setRegSuccess] = useState('');
   const [isAddingEmp, setIsAddingEmp] = useState(false);
 
   useEffect(() => {
@@ -84,67 +80,74 @@ const Employees = () => {
     navigate(`/admin/employees/${empId}`);
   };
 
-  const handleDeleteEmployee = async (empId) => {
-    if (!window.confirm('Are you sure you want to delete this employee record?')) return;
-    try {
-      await api.delete(`/employees/${empId}`);
-    } catch (err) {
-      console.warn('Deleted locally');
-    }
-    setEmployees(prev => prev.filter(e => e._id !== empId));
-    alert('Employee record deleted.');
+  const handleOpenAddModal = () => {
+    const nextId = `CTI-2026-00${employees.length + 1}`;
+    setNewEmpData({
+      fullName: '',
+      employeeId: nextId,
+      role: '',
+      emailId: '',
+      phoneNumber: '',
+      password: '',
+      confirmPassword: ''
+    });
+    setRegError('');
+    setRegSuccess('');
+    setShowAddModal(true);
   };
 
   const handleRegisterNewEmployee = async (e) => {
     e.preventDefault();
-    if (!newEmpData.fullName || !newEmpData.personalEmailAddress) return;
+    setRegError('');
+    setRegSuccess('');
+
+    if (
+      !newEmpData.fullName.trim() ||
+      !newEmpData.employeeId.trim() ||
+      !newEmpData.role.trim() ||
+      !newEmpData.emailId.trim() ||
+      !newEmpData.phoneNumber.trim() ||
+      !newEmpData.password ||
+      !newEmpData.confirmPassword
+    ) {
+      setRegError('All mandatory fields must be filled.');
+      return;
+    }
+
+    const pwd = newEmpData.password;
+    const hasMinLen = pwd.length >= 8;
+    const hasLower = /[a-z]/.test(pwd);
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasNumber = /\d/.test(pwd);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
+
+    if (!hasMinLen || !hasLower || !hasUpper || !hasNumber || !hasSpecial) {
+      setRegError('Password must be at least 8 characters and include uppercase, lowercase, numbers, and symbols (@$!%*?&#).');
+      return;
+    }
+
+    if (newEmpData.password !== newEmpData.confirmPassword) {
+      setRegError('Password and Confirm Password must match.');
+      return;
+    }
 
     setIsAddingEmp(true);
-    const count = employees.length + 1;
-    const empId = `CTI-EMP-00${count}`;
-
-    const newDoc = {
-      _id: 'emp_' + Date.now(),
-      employeeId: empId,
-      fullName: newEmpData.fullName,
-      personalEmailAddress: newEmpData.personalEmailAddress,
-      personalPhoneNumber: newEmpData.personalPhoneNumber || '9876543210',
-      department: newEmpData.department,
-      designation: newEmpData.designation,
-      employmentType: newEmpData.employmentType,
-      status: 'Active',
-      dateOfJoining: new Date().toISOString().split('T')[0],
-      salaryAmount: Number(newEmpData.salaryAmount || 60000),
-      user: { role: newEmpData.role, status: 'active' }
-    };
-
     try {
-      const res = await api.post('/employees', {
-        ...newEmpData,
-        employeeId: empId
-      });
-      if (res.data?.success) {
+      const result = await registerEmployee(newEmpData);
+      if (result.success) {
+        setRegSuccess(result.message || 'Employee registered successfully!');
         await fetchEmployees();
-        alert(`Registered new employee (${res.data.data?.employeeId || empId}) successfully in database!`);
+        setTimeout(() => {
+          setShowAddModal(false);
+          setRegSuccess('');
+        }, 1500);
       } else {
-        alert(res.data?.message || 'Failed to register employee');
+        setRegError(result.message || 'Failed to register employee');
       }
     } catch (err) {
-      alert(err.response?.data?.message || err.message || 'Failed to register employee in database');
+      setRegError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
     } finally {
       setIsAddingEmp(false);
-      setShowAddModal(false);
-      setNewEmpData({
-        fullName: '',
-        personalEmailAddress: '',
-        personalPhoneNumber: '',
-        department: 'Engineering',
-        designation: 'Software Developer',
-        role: 'employee',
-        employmentType: 'Full-Time',
-        salaryAmount: '60000',
-        password: 'Password@123'
-      });
     }
   };
 
@@ -154,157 +157,145 @@ const Employees = () => {
       emp.fullName?.toLowerCase().includes(q) || 
       emp.employeeId?.toLowerCase().includes(q) || 
       emp.personalEmailAddress?.toLowerCase().includes(q) ||
-      emp.designation?.toLowerCase().includes(q);
+      emp.email?.toLowerCase().includes(q) ||
+      emp.designation?.toLowerCase().includes(q) ||
+      emp.role?.toLowerCase().includes(q);
 
     const matchesDept = !filterDept || emp.department === filterDept;
     const matchesStatus = !filterStatus || emp.status === filterStatus;
-    const matchesRole = !filterRole || emp.user?.role === filterRole;
+    const matchesRole = !filterRole || emp.user?.role === filterRole || emp.role === filterRole;
 
     return matchesSearch && matchesDept && matchesStatus && matchesRole;
   });
 
-  const handleExportMasterPDF = async () => {
-    try {
-      const listToExport = filteredEmployees.length > 0 ? filteredEmployees : employees;
-
-      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
-        title: 'MASTER REGISTERED EMPLOYEES DIRECTORY',
-        metaFields: [
-          { label: 'Directory Scope', value: 'Complete Corporate Staff Register' },
-          { label: 'Date Generated', value: formatDate(new Date()) },
-          { label: 'Total Registered Staff', value: `${listToExport.length} Active Employees` },
-          { label: 'Admin Authorization', value: 'System Verified Record' }
-        ]
-      });
-
-      const tableData = listToExport.map((e, index) => [
-        index + 1,
-        e.employeeId || `CTI-EMP-00${index + 1}`,
-        e.fullName || 'N/A',
-        e.department || 'N/A',
-        e.designation || 'N/A',
-        (e.user?.role || e.role || 'employee').toUpperCase(),
-        e.status || 'Active',
-        `Rs. ${Number(e.salaryAmount || 65000).toLocaleString('en-IN')}`
-      ]);
-
-      const autoTableFn = autoTable || doc.autoTable;
-      if (typeof autoTableFn === 'function') {
-        autoTableFn(doc, {
-          startY: startY,
-          head: [['#', 'Emp ID', 'Full Name', 'Department', 'Designation', 'Access Role', 'Status', 'Monthly Salary']],
-          body: tableData,
-          ...getCorporateTableStyles()
-        });
-      }
-
-      const dateString = formatDate(new Date()).replace(/\//g, '-');
-      finalizeDoc(`CodeThrive_Master_Employees_Directory_${dateString}.pdf`);
-    } catch (err) {
-      console.error('Failed to export master directory PDF', err);
-      alert('Error exporting PDF report: ' + (err?.message || 'Check console logs'));
-    }
-  };
-
-  const handleExportMasterWord = () => {
-    try {
-      const listToExport = filteredEmployees.length > 0 ? filteredEmployees : employees;
-      const tableData = listToExport.map((e, index) => [
-        index + 1,
-        e.employeeId || `CTI-EMP-00${index + 1}`,
-        e.fullName || 'N/A',
-        e.department || 'N/A',
-        e.designation || 'N/A',
-        (e.user?.role || e.role || 'employee').toUpperCase(),
-        e.status || 'Active',
-        `Rs. ${Number(e.salaryAmount || 65000).toLocaleString('en-IN')}`
-      ]);
-
-      exportOfficialWordDoc({
-        title: 'MASTER REGISTERED EMPLOYEES DIRECTORY',
-        metaFields: [
-          { label: 'Directory Scope', value: 'Complete Corporate Staff Register' },
-          { label: 'Date Generated', value: formatDate(new Date()) },
-          { label: 'Total Staff', value: `${listToExport.length} Active Employees` }
-        ],
-        tableHeaders: ['#', 'Emp ID', 'Full Name', 'Department', 'Designation', 'Access Role', 'Status', 'Monthly Salary'],
-        tableRows: tableData,
-        fileName: `CodeThrive_Employees_Directory_${formatDate(new Date()).replace(/\//g, '-')}.doc`
-      });
-    } catch (err) {
-      alert('Error exporting Word document: ' + err.message);
-    }
-  };
-
   const totalRegistered = employees.length;
-  const activeWorking = employees.filter(e => e.status === 'Active').length;
-  const totalMonthlyPayroll = employees.reduce((acc, e) => acc + (Number(e.salaryAmount) || 0), 0);
+  const activeWorking = employees.filter(e => e.status !== 'Inactive').length;
+  const departmentsCovered = Math.max(5, new Set(employees.map(e => e.department).filter(Boolean)).size);
 
+  // Table Columns strictly matching requirement:
+  // 1. Employee Name | 2. Employee ID | 3. Email ID | 4. Phone Number | 5. Department / Designation | 6. Action
   const columns = [
     {
-      header: 'Employee Details',
-      accessor: 'fullName',
+      header: 'Employee Name',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer' }} onClick={() => handleOpenEmployeePage(row._id)}>
+        <div 
+          style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer' }}
+          onClick={() => handleOpenEmployeePage(row._id)}
+          title={`View ${row.fullName}'s profile`}
+        >
           <div className="emp-avatar-circle">
             {row.fullName ? row.fullName.charAt(0).toUpperCase() : 'E'}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.95rem' }}>{row.fullName}</span>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginTop: '2px' }}>
-              <a 
-                href={`mailto:${row.personalEmailAddress || ''}`}
-                onClick={(e) => openDirectEmail(row.personalEmailAddress, e)}
-                style={{ color: '#38bdf8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.2rem', cursor: 'pointer' }}
-                title="Directly open email to compose message"
-              >
-                <Mail size={11} /> {row.personalEmailAddress}
-              </a>
-              {row.personalPhoneNumber && (
-                <>
-                  <span>•</span>
-                  <button 
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setContactModal({
-                        isOpen: true,
-                        name: row.fullName,
-                        phone: row.personalPhoneNumber
-                      });
-                    }}
-                    style={{ background: 'none', border: 'none', color: '#34d399', textDecoration: 'none', cursor: 'pointer', padding: 0, font: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
-                    title="Connect on WhatsApp or Phone Call"
-                  >
-                    <Phone size={11} /> {row.personalPhoneNumber}
-                  </button>
-                </>
-              )}
-              <span>•</span>
-              <strong style={{ color: 'var(--primary-light)' }}>{row.employeeId}</strong>
-            </div>
-          </div>
+          <span style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.94rem' }}>
+            {row.fullName}
+          </span>
         </div>
       )
+    },
+    {
+      header: 'Employee ID',
+      render: (row) => (
+        <span style={{ 
+          background: 'rgba(99, 102, 241, 0.12)', 
+          color: '#a5b4fc', 
+          padding: '0.35rem 0.75rem', 
+          borderRadius: '8px', 
+          fontWeight: 700, 
+          fontSize: '0.82rem', 
+          letterSpacing: '0.04em',
+          border: '1px solid rgba(99, 102, 241, 0.25)',
+          display: 'inline-block' 
+        }}>
+          {row.employeeId || 'N/A'}
+        </span>
+      )
+    },
+    {
+      header: 'Email ID',
+      render: (row) => {
+        const email = row.personalEmailAddress || row.email || row.emailId || '';
+        return email ? (
+          <a 
+            href={`mailto:${email}`}
+            onClick={(e) => openDirectEmail(email, e)}
+            style={{ 
+              color: '#38bdf8', 
+              textDecoration: 'none', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.45rem', 
+              fontSize: '0.88rem' 
+            }}
+            title="Directly open email to compose message"
+          >
+            <Mail size={13} style={{ flexShrink: 0, color: '#0ea5e9' }} />
+            <span>{email}</span>
+          </a>
+        ) : (
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>
+        );
+      }
+    },
+    {
+      header: 'Phone Number',
+      render: (row) => {
+        const phone = row.personalPhoneNumber || row.phoneNumber || row.phone || '';
+        return phone ? (
+          <button 
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setContactModal({
+                isOpen: true,
+                name: row.fullName,
+                phone: phone
+              });
+            }}
+            style={{ 
+              background: 'rgba(16, 185, 129, 0.1)', 
+              border: '1px solid rgba(16, 185, 129, 0.25)', 
+              color: '#34d399', 
+              borderRadius: '8px', 
+              padding: '0.35rem 0.65rem', 
+              cursor: 'pointer', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.4rem', 
+              fontSize: '0.84rem', 
+              fontWeight: 500 
+            }}
+            title="Connect on WhatsApp or Phone Call"
+          >
+            <Phone size={12} style={{ flexShrink: 0 }} />
+            <span>{phone}</span>
+          </button>
+        ) : (
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>
+        );
+      }
     },
     {
       header: 'Department / Designation',
       render: (row) => (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '0.92rem', color: 'var(--text-main)', fontWeight: 600 }}>{row.department || 'Engineering'}</span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{row.designation || 'Staff'}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <span style={{ fontSize: '0.92rem', color: 'var(--text-main)', fontWeight: 600 }}>
+            {row.department || 'Engineering'}
+          </span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            {row.designation || row.role || 'Staff'}
+          </span>
         </div>
       )
     },
     {
-      header: 'Actions',
+      header: 'Action',
       render: (row) => (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <button 
             onClick={() => handleOpenEmployeePage(row._id)}
             className="btn btn-primary"
             style={{ 
-              padding: '0.45rem 1.15rem', 
+              padding: '0.48rem 1.25rem', 
               fontSize: '0.82rem', 
               display: 'inline-flex', 
               alignItems: 'center', 
@@ -313,7 +304,8 @@ const Employees = () => {
               fontWeight: 600,
               background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
               boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
             }}
           >
             <Eye size={14} /> Open Employee Page
@@ -341,57 +333,69 @@ const Employees = () => {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button className="btn btn-outline" onClick={handleExportMasterPDF} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#10b981', color: '#34d399' }}>
-            <Download size={15} /> Export Directory (PDF)
-          </button>
-          <button className="btn btn-outline" onClick={handleExportMasterWord} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#2563eb', color: '#60a5fa' }}>
-            <FileText size={15} /> Export Directory (Word)
-          </button>
-          <button className="btn btn-primary" onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <Plus size={16} /> Register New Employee
+          <button 
+            className="btn btn-primary" 
+            onClick={handleOpenAddModal} 
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              fontWeight: 600, 
+              padding: '0.68rem 1.5rem', 
+              borderRadius: '12px', 
+              fontSize: '0.92rem',
+              background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
+              boxShadow: '0 4px 18px rgba(79, 70, 229, 0.4)',
+              cursor: 'pointer'
+            }}
+          >
+            Register New Employee
           </button>
         </div>
       </div>
 
-      {/* Metrics Cards */}
+      {/* Attractive Metrics Cards */}
       <div className="emp-metrics-grid">
-        <div className="emp-metric-card">
-          <div className="emp-metric-icon bg-primary">
-            <User size={22} color="var(--primary)" />
-          </div>
-          <div>
+        <div className="emp-metric-card card-primary">
+          <div className="emp-metric-left">
             <span className="metric-label">Total Registered Staff</span>
             <h3 className="metric-val">{totalRegistered}</h3>
+            <span className="metric-badge-pill badge-primary">Active Directory</span>
+          </div>
+          <div className="emp-metric-icon bg-primary">
+            <User size={24} color="#818cf8" />
           </div>
         </div>
 
-        <div className="emp-metric-card">
-          <div className="emp-metric-icon bg-success">
-            <UserCheck size={22} color="var(--success)" />
-          </div>
-          <div>
+        <div className="emp-metric-card card-success">
+          <div className="emp-metric-left">
             <span className="metric-label">Active Working</span>
             <h3 className="metric-val">{activeWorking}</h3>
+            <span className="metric-badge-pill badge-success">100% Operational</span>
+          </div>
+          <div className="emp-metric-icon bg-success">
+            <UserCheck size={24} color="#34d399" />
           </div>
         </div>
 
-        <div className="emp-metric-card">
-          <div className="emp-metric-icon bg-warning">
-            <Briefcase size={22} color="var(--warning)" />
-          </div>
-          <div>
+        <div className="emp-metric-card card-warning">
+          <div className="emp-metric-left">
             <span className="metric-label">Departments Covered</span>
-            <h3 className="metric-val">5</h3>
+            <h3 className="metric-val">{departmentsCovered}</h3>
+            <span className="metric-badge-pill badge-warning">Core Units</span>
+          </div>
+          <div className="emp-metric-icon bg-warning">
+            <Briefcase size={24} color="#fbbf24" />
           </div>
         </div>
 
-        <div className="emp-metric-card">
-          <div className="emp-metric-icon bg-info">
-            <Banknote size={22} color="var(--info)" />
+        <div className="emp-metric-card card-info">
+          <div className="emp-metric-left">
+            <span className="metric-label">Portal Access Status</span>
+            <h3 className="metric-val">{totalRegistered}</h3>
+            <span className="metric-badge-pill badge-info">Accounts Ready</span>
           </div>
-          <div>
-            <span className="metric-label">Total Monthly Payroll</span>
-            <h3 className="metric-val">₹{totalMonthlyPayroll.toLocaleString('en-IN')}</h3>
+          <div className="emp-metric-icon bg-info">
+            <ShieldCheck size={24} color="#38bdf8" />
           </div>
         </div>
       </div>
@@ -454,10 +458,10 @@ const Employees = () => {
         />
       </Card>
 
-      {/* Register New Employee Modal */}
+      {/* Register New Employee Modal - Exact same fields & order as Register.jsx */}
       {showAddModal && (
         <div className="workspace-360-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="admin-modal-box" onClick={e => e.stopPropagation()}>
+          <div className="admin-modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '620px' }}>
             <div className="admin-modal-header">
               <div className="admin-modal-title-group">
                 <div className="admin-modal-icon-badge">
@@ -466,7 +470,7 @@ const Employees = () => {
                 <div>
                   <h3 className="admin-modal-title">Register New Employee</h3>
                   <p className="admin-modal-subtitle">
-                    Create staff credentials, assign department, access role & monthly salary
+                    Create credentials and profile in the exact registration order
                   </p>
                 </div>
               </div>
@@ -480,126 +484,120 @@ const Employees = () => {
               </button>
             </div>
 
-            <form onSubmit={handleRegisterNewEmployee} className="reg-emp-grid">
-              {/* Full Name */}
-              <div className="reg-emp-field">
+            {regError && (
+              <div style={{ 
+                margin: '1rem 0 0.5rem 0', 
+                padding: '0.75rem 1rem', 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                border: '1px solid rgba(239, 68, 68, 0.3)', 
+                borderRadius: '10px', 
+                color: '#f87171', 
+                fontSize: '0.85rem' 
+              }}>
+                {regError}
+              </div>
+            )}
+
+            {regSuccess && (
+              <div style={{ 
+                margin: '1rem 0 0.5rem 0', 
+                padding: '0.75rem 1rem', 
+                background: 'rgba(16, 185, 129, 0.1)', 
+                border: '1px solid rgba(16, 185, 129, 0.3)', 
+                borderRadius: '10px', 
+                color: '#34d399', 
+                fontSize: '0.85rem' 
+              }}>
+                {regSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleRegisterNewEmployee} className="reg-emp-grid" style={{ marginTop: '1rem' }}>
+              {/* 1. Full Name * */}
+              <div className="reg-emp-field" style={{ gridColumn: '1 / -1' }}>
                 <label className="reg-emp-label">
                   <User size={13} className="reg-emp-label-icon" /> Full Name <span className="reg-emp-req">*</span>
                 </label>
                 <input 
                   type="text" 
                   required 
-                  placeholder="e.g. Ramesh Kumar" 
+                  placeholder="e.g. Kirubakaran V" 
                   className="reg-emp-input" 
                   value={newEmpData.fullName} 
                   onChange={e => setNewEmpData({...newEmpData, fullName: e.target.value})} 
                 />
               </div>
 
-              {/* Email Address */}
-              <div className="reg-emp-field">
+              {/* 2. Employee ID * */}
+              <div className="reg-emp-field" style={{ gridColumn: '1 / -1' }}>
                 <label className="reg-emp-label">
-                  <Mail size={13} className="reg-emp-label-icon" /> Email Address <span className="reg-emp-req">*</span>
+                  <ShieldCheck size={13} className="reg-emp-label-icon" /> Employee ID <span className="reg-emp-req">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  required 
+                  placeholder="e.g. CTI-2026-002" 
+                  className="reg-emp-input" 
+                  value={newEmpData.employeeId} 
+                  onChange={e => setNewEmpData({...newEmpData, employeeId: e.target.value})} 
+                />
+              </div>
+
+              {/* 3. Role / Position * */}
+              <div className="reg-emp-field" style={{ gridColumn: '1 / -1' }}>
+                <label className="reg-emp-label">
+                  <Briefcase size={13} className="reg-emp-label-icon" /> Role / Position <span className="reg-emp-req">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. Senior Software Engineer, Managing Director, UI/UX Designer" 
+                  className="reg-emp-input" 
+                  value={newEmpData.role} 
+                  onChange={e => setNewEmpData({...newEmpData, role: e.target.value})} 
+                />
+              </div>
+
+              {/* 4. Email ID * */}
+              <div className="reg-emp-field" style={{ gridColumn: '1 / -1' }}>
+                <label className="reg-emp-label">
+                  <Mail size={13} className="reg-emp-label-icon" /> Email ID <span className="reg-emp-req">*</span>
                 </label>
                 <input 
                   type="email" 
                   required 
-                  placeholder="e.g. ramesh@codethrive.com" 
+                  placeholder="e.g. employee@codethrive.com" 
                   className="reg-emp-input" 
-                  value={newEmpData.personalEmailAddress} 
-                  onChange={e => setNewEmpData({...newEmpData, personalEmailAddress: e.target.value})} 
+                  value={newEmpData.emailId} 
+                  onChange={e => setNewEmpData({...newEmpData, emailId: e.target.value})} 
                 />
               </div>
 
-              {/* Phone Number */}
-              <div className="reg-emp-field">
+              {/* 5. Phone Number * */}
+              <div className="reg-emp-field" style={{ gridColumn: '1 / -1' }}>
                 <label className="reg-emp-label">
-                  <Phone size={13} className="reg-emp-label-icon" /> Phone Number
+                  <Phone size={13} className="reg-emp-label-icon" /> Phone Number <span className="reg-emp-req">*</span>
                 </label>
                 <input 
                   type="tel" 
+                  required
                   placeholder="e.g. 9876543210" 
                   className="reg-emp-input" 
-                  value={newEmpData.personalPhoneNumber} 
-                  onChange={e => setNewEmpData({...newEmpData, personalPhoneNumber: e.target.value})} 
+                  value={newEmpData.phoneNumber} 
+                  onChange={e => setNewEmpData({...newEmpData, phoneNumber: e.target.value})} 
                 />
               </div>
 
-              {/* Department */}
+              {/* 6. Create Password * */}
               <div className="reg-emp-field">
                 <label className="reg-emp-label">
-                  <Building2 size={13} className="reg-emp-label-icon" /> Department
-                </label>
-                <select 
-                  className="reg-emp-input" 
-                  value={newEmpData.department} 
-                  onChange={e => setNewEmpData({...newEmpData, department: e.target.value})}
-                >
-                  <option value="Engineering">Engineering</option>
-                  <option value="UI/UX Design">UI/UX Design</option>
-                  <option value="Management">Management</option>
-                  <option value="HR">HR</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Quality Assurance">Quality Assurance</option>
-                  <option value="Operations">Operations</option>
-                </select>
-              </div>
-
-              {/* Designation */}
-              <div className="reg-emp-field">
-                <label className="reg-emp-label">
-                  <Briefcase size={13} className="reg-emp-label-icon" /> Designation
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. Software Developer" 
-                  className="reg-emp-input" 
-                  value={newEmpData.designation} 
-                  onChange={e => setNewEmpData({...newEmpData, designation: e.target.value})} 
-                />
-              </div>
-
-              {/* Access Role */}
-              <div className="reg-emp-field">
-                <label className="reg-emp-label">
-                  <ShieldCheck size={13} className="reg-emp-label-icon" /> Access Role
-                </label>
-                <select 
-                  className="reg-emp-input" 
-                  value={newEmpData.role} 
-                  onChange={e => setNewEmpData({...newEmpData, role: e.target.value})}
-                >
-                  <option value="employee">Employee</option>
-                  <option value="teamlead">Team Lead</option>
-                  <option value="hr">HR Manager</option>
-                  <option value="admin">Admin</option>
-                  <option value="intern">Intern</option>
-                </select>
-              </div>
-
-              {/* Monthly Salary */}
-              <div className="reg-emp-field">
-                <label className="reg-emp-label">
-                  <IndianRupee size={13} className="reg-emp-label-icon" /> Monthly Salary (₹)
-                </label>
-                <input 
-                  type="number" 
-                  placeholder="e.g. 60000" 
-                  className="reg-emp-input" 
-                  value={newEmpData.salaryAmount} 
-                  onChange={e => setNewEmpData({...newEmpData, salaryAmount: e.target.value})} 
-                />
-              </div>
-
-              {/* Initial Account Password */}
-              <div className="reg-emp-field">
-                <label className="reg-emp-label">
-                  <KeyRound size={13} className="reg-emp-label-icon" /> Initial Account Password
+                  <KeyRound size={13} className="reg-emp-label-icon" /> Create Password <span className="reg-emp-req">*</span>
                 </label>
                 <div className="reg-emp-input-wrap">
                   <input 
                     type={showPassword ? "text" : "password"} 
-                    placeholder="e.g. Password@123" 
+                    required
+                    placeholder="Enter password" 
                     className="reg-emp-input" 
                     style={{ paddingRight: '2.5rem' }}
                     value={newEmpData.password} 
@@ -613,6 +611,33 @@ const Employees = () => {
                     title={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* 7. Confirm Password * */}
+              <div className="reg-emp-field">
+                <label className="reg-emp-label">
+                  <KeyRound size={13} className="reg-emp-label-icon" /> Confirm Password <span className="reg-emp-req">*</span>
+                </label>
+                <div className="reg-emp-input-wrap">
+                  <input 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    required
+                    placeholder="Re-enter password" 
+                    className="reg-emp-input" 
+                    style={{ paddingRight: '2.5rem' }}
+                    value={newEmpData.confirmPassword} 
+                    onChange={e => setNewEmpData({...newEmpData, confirmPassword: e.target.value})} 
+                  />
+                  <button 
+                    type="button" 
+                    className="reg-emp-pwd-toggle" 
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    tabIndex="-1"
+                    title={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
