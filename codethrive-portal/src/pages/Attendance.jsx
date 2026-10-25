@@ -258,9 +258,14 @@ const Attendance = () => {
 
     // Local state fallback update
     if (action === 'start-work') {
+      const istTimeStr = now.toLocaleTimeString('en-GB', { hour12: false });
+      const [h, m] = istTimeStr.split(':').map(Number);
+      const isLate = h > 10 || (h === 10 && m > 15);
+      const autoStatus = isLate ? 'Late' : 'Working';
+
       const newAtt = { 
         ...todayAttendance,
-        status: 'Working', 
+        status: autoStatus, 
         firstLoginTime: todayAttendance?.firstLoginTime || now.toISOString(),
         totalWorkDurationInSeconds: liveWorkDuration,
         totalBreakDurationInSeconds: liveBreakDuration,
@@ -422,18 +427,15 @@ const Attendance = () => {
         ]
       });
 
-      const tableColumn = ["Date & Day", "Check In", "Check Out", "Breaks", "Status"];
+      const tableColumn = ["Date & Day", "Attendance Status", "Remarks / Shift"];
       const tableRows = recordsToExport.map(row => {
         const dateObj = row.date ? new Date(row.date) : new Date();
         const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-        const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
 
         return [
           `${formatDate(row.date)} (${dayName})`,
-          row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
-          row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
-          breakTotal > 0 ? formatHours(breakTotal) : '0m',
-          row.status || 'Present'
+          row.status || 'Present',
+          row.correctionReason || (row.isManualCorrection ? 'Admin Marked' : 'Standard Shift')
         ];
       });
 
@@ -441,7 +443,7 @@ const Attendance = () => {
       if (typeof autoTableFn === 'function') {
         autoTableFn(doc, {
           head: [tableColumn],
-          body: tableRows.length > 0 ? tableRows : [["No records found in selected range", "--", "--", "--", "--"]],
+          body: tableRows.length > 0 ? tableRows : [["No records found in selected range", "--", "--"]],
           startY: startY,
           ...getCorporateTableStyles()
         });
@@ -463,13 +465,10 @@ const Attendance = () => {
       const exportData = filteredHistory.map(row => {
         const dateObj = row.date ? new Date(row.date) : new Date();
         const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-        const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
         return {
           'Date & Day': `${formatDate(row.date)} (${dayName})`,
-          'Check In': row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
-          'Check Out': row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
-          'Breaks': breakTotal > 0 ? formatHours(breakTotal) : '0m',
-          Status: row.status || 'Present'
+          'Attendance Status': row.status || 'Present',
+          'Remarks / Shift': row.correctionReason || (row.isManualCorrection ? 'Admin Marked' : 'Standard Shift')
         };
       });
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -561,14 +560,28 @@ const Attendance = () => {
 
   // Dynamic Working Days computation for selectedMonth and selectedYear (Monday-Saturday, excluding Sundays & government holidays)
   const calculatedWorkingDays = useMemo(() => {
+    // Official gazetted government holidays (Tamil Nadu G.O. (Ms.) No. 708)
     const fixedHolidays = [
-      '01-01', // New Year's Day
+      '01-01', // New Year’s Day
       '01-15', // Pongal
       '01-16', // Thiruvalluvar Day
+      '01-17', // Uzhavar Thirunal
       '01-26', // Republic Day
+      '03-19', // Telugu New Year
+      '03-21', // Ramzan
+      '03-31', // Mahaveer Jayanthi
+      '04-03', // Good Friday
+      '04-14', // Tamil New Year / Ambedkar Jayanti
       '05-01', // May Day
+      '05-28', // Bakrid
+      '06-26', // Muharram
       '08-15', // Independence Day
-      '10-02', // Gandhi Jayanti
+      '08-26', // Milad-un-Nabi
+      '09-04', // Krishna Jayanthi
+      '09-14', // Vinayakar Chathurthi
+      '10-02', // Gandhi Jayanthi
+      '10-19', // Ayutha Pooja
+      '10-20', // Vijaya Dasami
       '12-25', // Christmas
     ];
     const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
@@ -1010,10 +1023,8 @@ const Attendance = () => {
               <tr>
                 <th>Date & Day</th>
                 {(isAdminHR || isTeamLead) && <th>Employee</th>}
-                <th>Check In</th>
-                <th>Check Out</th>
-                <th>Breaks</th>
-                <th>Status</th>
+                <th>Attendance Status</th>
+                <th>Remarks / Shift</th>
               </tr>
             </thead>
             <tbody>
@@ -1022,7 +1033,6 @@ const Attendance = () => {
                   const dateObj = row.date ? new Date(row.date) : new Date();
                   const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
                   const dateStr = formatDate(row.date);
-                  const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
 
                   return (
                     <tr key={row._id || idx}>
@@ -1043,36 +1053,20 @@ const Attendance = () => {
                       )}
 
                       <td>
-                        <span className="att-time-val">
-                          {row.firstLoginTime 
-                            ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-                            : '--:--'}
-                        </span>
-                      </td>
-
-                      <td>
-                        <span className="att-time-val">
-                          {row.lastLogoutTime 
-                            ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-                            : '--:--'}
-                        </span>
+                        <StatusBadge status={row.status || 'Present'} />
                       </td>
 
                       <td>
                         <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                          {breakTotal > 0 ? formatHours(breakTotal) : '0m'}
+                          {row.correctionReason || (row.isManualCorrection ? 'Admin Marked' : 'Standard Shift')}
                         </span>
-                      </td>
-
-                      <td>
-                        <StatusBadge status={row.status || 'Present'} />
                       </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={(isAdminHR || isTeamLead) ? 6 : 5} className="att-empty-row">
+                  <td colSpan={(isAdminHR || isTeamLead) ? 4 : 3} className="att-empty-row">
                     <div className="att-empty-icon">
                       <CalIcon size={32} />
                     </div>

@@ -93,17 +93,27 @@ exports.startWorkSession = async (req, res) => {
 
     const now = new Date();
 
+    // Shift starts at 10:00 AM with a 15-minute grace window (up to 10:15 AM). Check-in after 10:15 AM automatically marked Late
+    const istTimeStr = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+    const [h, m] = istTimeStr.split(':').map(Number);
+    const isLate = h > 10 || (h === 10 && m > 15);
+    const initialStatus = isLate ? 'Late' : 'Working';
+
     if (!attendance) {
       attendance = await Attendance.create({
         employee: employee._id,
         date: now,
         firstLoginTime: now,
-        status: 'Working'
+        status: initialStatus
       });
     } else {
-      attendance.status = 'Working';
       if (!attendance.firstLoginTime) {
         attendance.firstLoginTime = now;
+        attendance.status = initialStatus;
+      } else {
+        if (!['Late', 'Absent', 'Half Day', 'Permission', 'On Leave'].includes(attendance.status)) {
+          attendance.status = 'Working';
+        }
       }
       await attendance.save();
     }
@@ -459,15 +469,28 @@ exports.getAttendanceSummary = async (req, res) => {
       date: { $gte: startOfMonth, $lte: endOfMonth }
     });
 
-    // Dynamic working days computation (Monday to Saturday, excluding Sundays and statutory holidays)
+    // Dynamic working days computation (Monday to Saturday, excluding Sundays and gazetted public holidays)
     const fixedHolidays = [
-      '01-01', // New Year
+      '01-01', // New Year’s Day
       '01-15', // Pongal
       '01-16', // Thiruvalluvar Day
+      '01-17', // Uzhavar Thirunal
       '01-26', // Republic Day
+      '03-19', // Telugu New Year
+      '03-21', // Ramzan
+      '03-31', // Mahaveer Jayanthi
+      '04-03', // Good Friday
+      '04-14', // Tamil New Year / Ambedkar Jayanti
       '05-01', // May Day
+      '05-28', // Bakrid
+      '06-26', // Muharram
       '08-15', // Independence Day
-      '10-02', // Gandhi Jayanti
+      '08-26', // Milad-un-Nabi
+      '09-04', // Krishna Jayanthi
+      '09-14', // Vinayakar Chathurthi
+      '10-02', // Gandhi Jayanthi
+      '10-19', // Ayutha Pooja
+      '10-20', // Vijaya Dasami
       '12-25', // Christmas
     ];
 
