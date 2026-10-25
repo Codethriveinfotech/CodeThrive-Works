@@ -1,20 +1,20 @@
 /**
  * CodeThrive Infotech Official PDF & Word Document Engine
- * Generates standardized corporate letterhead with border frame, logo, company credentials,
- * metadata header, and authorized signatory footer.
+ * Generates standardized corporate letterhead matching the exact Experience Certificate Header
+ * and the Official Royal Blue Bar Footer with Contact Icons (Website, Phone, Email).
  */
 
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// Company Credentials
+// Company Credentials matching official letterhead
 export const COMPANY_INFO = {
   name: 'CODETHRIVE INFOTECH',
   legalName: 'CodeThrive Infotech Pvt Ltd',
   address: 'No.1 Srihari Nivas, Indira Nagar, Sungam, Coimbatore - 641045',
   email: 'codethriveinfotech@gmail.com',
-  website: 'codethriveinfotech.in',
-  phone: '+91 9489510499'
+  website: 'www.codethriveinfotech.in',
+  phone: '9150781685'
 };
 
 // Cached Logo Data URL
@@ -28,7 +28,7 @@ export const getLogoDataUrl = () => {
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        const maxDim = 200;
+        const maxDim = 240;
         const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
@@ -46,93 +46,89 @@ export const getLogoDataUrl = () => {
 };
 
 /**
- * Draw Official Page Border Frame
+ * Draw Official Page Border Frame (Clean rectangular frame from sample)
  */
-export const drawPageBorder = (doc, pageW = 210, pageH = 297, margin = 8) => {
-  // Outer frame
-  doc.setDrawColor(30, 41, 59); // Slate-800
-  doc.setLineWidth(0.65);
+export const drawPageBorder = (doc, pageW = 210, pageH = 297, margin = 10) => {
+  doc.setDrawColor(20, 20, 20); // Clean corporate black border
+  doc.setLineWidth(0.55);
   doc.rect(margin, margin, pageW - margin * 2, pageH - margin * 2);
-
-  // Subtle inner accent border line
-  doc.setDrawColor(226, 232, 240); // Slate-200
-  doc.setLineWidth(0.25);
-  doc.rect(margin + 1.2, margin + 1.2, pageW - (margin + 1.2) * 2, pageH - (margin + 1.2) * 2);
 };
 
 /**
- * Draw Official Company Letterhead (Logo, Title, Address, Divider)
+ * Draw Official Company Letterhead Header (Matching First Screenshot)
+ * - Logo on left
+ * - CODETHRIVE INFOTECH (Times, Bold, Teal/Navy Branding)
+ * - Address line (Times, Normal)
+ * - Email | Website (Times, Normal)
+ * - Horizontal Divider Line across width
  */
-export const drawCompanyHeader = (doc, logoData, pageW = 210, startY = 12) => {
-  // 1. Logo on top left
-  const logoW = 18;
-  const logoH = 18;
+export const drawCompanyHeader = (doc, logoData, pageW = 210, startY = 14) => {
+  const margin = 10;
+  const logoW = 20;
+  const logoH = 20;
   const logoX = 14;
   const logoY = startY;
 
+  // 1. Logo on top-left
   if (logoData) {
     try {
       doc.addImage(logoData, 'PNG', logoX, logoY, logoW, logoH, undefined, 'FAST');
     } catch (e) {
-      // Fallback geometric emblem if image fails
-      doc.setFillColor(14, 116, 144);
-      doc.roundedRect(logoX, logoY, logoW, logoH, 3, 3, 'F');
+      // Fallback geometric emblem
+      doc.setFillColor(0, 91, 148);
+      doc.roundedRect(logoX, logoY, logoW, logoH, 2.5, 2.5, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CTI', logoX + logoW / 2, logoY + 11, { align: 'center' });
+      doc.setFont('times', 'bold');
+      doc.text('CTI', logoX + logoW / 2, logoY + 12, { align: 'center' });
     }
   }
 
-  // 2. Company Name & Details
-  const textX = 36;
-  
-  // "CODETHRIVE INFOTECH"
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(2, 132, 199); // Blue
-  doc.text('CODETHRIVE', textX, startY + 6);
+  // 2. Company Name & Credentials in Serif Times font
+  const textX = 38;
 
-  const codeThriveWidth = doc.getTextWidth('CODETHRIVE ');
-  doc.setTextColor(5, 150, 105); // Green
-  doc.text('INFOTECH', textX + codeThriveWidth, startY + 6);
+  // "CODETHRIVE INFOTECH"
+  doc.setFont('times', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(0, 91, 148); // Corporate Deep Teal / Blue
+  doc.text('CODETHRIVE INFOTECH', textX, startY + 6);
 
   // Address
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(51, 65, 85); // Slate-700
-  doc.text(COMPANY_INFO.address, textX, startY + 12);
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(30, 41, 59);
+  doc.text(COMPANY_INFO.address, textX, startY + 12.5);
 
   // Contact line
-  doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105);
-  doc.text(`Email: ${COMPANY_INFO.email}   |   Website: ${COMPANY_INFO.website}`, textX, startY + 17);
+  doc.setFontSize(9);
+  doc.setTextColor(51, 65, 85);
+  doc.text(`Email: ${COMPANY_INFO.email} | Website: ${COMPANY_INFO.website.replace('www.', '')}`, textX, startY + 18);
 
   // 3. Header Divider Line
-  const dividerY = startY + 22;
-  doc.setDrawColor(203, 213, 225); // Slate-300
-  doc.setLineWidth(0.6);
-  doc.line(8, dividerY, pageW - 8, dividerY);
+  const dividerY = startY + 23;
+  doc.setDrawColor(20, 20, 20);
+  doc.setLineWidth(0.5);
+  doc.line(margin, dividerY, pageW - margin, dividerY);
 
-  return dividerY + 2;
+  return dividerY + 4;
 };
 
 /**
- * Draw Document Title & Meta Box
+ * Draw Document Title & Meta Grid
  */
-export const drawDocumentTitleAndMeta = (doc, title, metaFields = [], startY = 40, pageW = 210) => {
+export const drawDocumentTitleAndMeta = (doc, title, metaFields = [], startY = 42, pageW = 210) => {
   let currentY = startY + 5;
 
-  // Title Box / Centered Header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.setTextColor(15, 23, 42); // Dark slate
+  // Document Title (Centered, Bold, Underlined, Times)
+  doc.setFont('times', 'bold');
+  doc.setFontSize(13.5);
+  doc.setTextColor(15, 23, 42);
   doc.text(title.toUpperCase(), pageW / 2, currentY, { align: 'center' });
 
   // Underline title
   const titleWidth = doc.getTextWidth(title.toUpperCase());
-  doc.setDrawColor(14, 116, 144); // Cyan/Teal underline
-  doc.setLineWidth(1);
+  doc.setDrawColor(0, 91, 148);
+  doc.setLineWidth(0.8);
   doc.line(pageW / 2 - titleWidth / 2 - 2, currentY + 2, pageW / 2 + titleWidth / 2 + 2, currentY + 2);
 
   currentY += 8;
@@ -145,25 +141,24 @@ export const drawDocumentTitleAndMeta = (doc, title, metaFields = [], startY = 4
     const numRows = Math.ceil(metaFields.length / 2);
     const boxH = numRows * rowHeight + 6;
 
-    // Background pill container
     doc.setFillColor(248, 250, 252);
     doc.setDrawColor(226, 232, 240);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(boxX, currentY, boxW, boxH, 2.5, 2.5, 'FD');
+    doc.setLineWidth(0.35);
+    doc.roundedRect(boxX, currentY, boxW, boxH, 2, 2, 'FD');
 
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     metaFields.forEach((field, idx) => {
       const isLeft = idx % 2 === 0;
       const rowIndex = Math.floor(idx / 2);
       const fieldX = isLeft ? boxX + 6 : boxX + boxW / 2 + 6;
       const fieldY = currentY + 5 + rowIndex * rowHeight;
 
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.setTextColor(71, 85, 105);
       doc.text(`${field.label}:`, fieldX, fieldY);
 
       const labelWidth = doc.getTextWidth(`${field.label}: `);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('times', 'normal');
       doc.setTextColor(15, 23, 42);
       doc.text(String(field.value || '-'), fieldX + labelWidth, fieldY);
     });
@@ -177,60 +172,116 @@ export const drawDocumentTitleAndMeta = (doc, title, metaFields = [], startY = 4
 };
 
 /**
- * Draw Official Signatory Footer
+ * Draw Authorised Signatory Block (Right-aligned, from Experience Certificate)
  */
-export const drawCompanyFooter = (doc, pageW = 210, pageH = 297) => {
-  const footerDividerY = pageH - 24;
-
-  // Divider above footer
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.4);
-  doc.line(8, footerDividerY, pageW - 8, footerDividerY);
-
-  // Left side note
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(7);
-  doc.setTextColor(100, 116, 139);
-  doc.text('* This is an official computer-generated document from CodeThrive Infotech Portal.', 12, footerDividerY + 6);
-  doc.text(`Generated on: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • System Verified`, 12, footerDividerY + 10);
-  doc.text('Confidential & Proprietary • Valid without physical seal', 12, footerDividerY + 14);
-
-  // Right side signatory
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
+export const drawSignatoryBlock = (doc, pageW = 210, y = 230) => {
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.5);
   doc.setTextColor(30, 41, 59);
-  doc.text('For CodeThrive Infotech', pageW - 14, footerDividerY + 6, { align: 'right' });
-  
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('Authorised Signatory', pageW - 14, footerDividerY + 16, { align: 'right' });
+  doc.text('Sincerely,', pageW - 22, y, { align: 'right' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10);
+  doc.text('For CodeThrive Infotech', pageW - 22, y + 6, { align: 'right' });
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10);
+  doc.text('Authorised Signatory', pageW - 22, y + 24, { align: 'right' });
 };
 
 /**
- * Standard CodeThrive Corporate Table Theme
+ * Draw Official Footer Bar (Matching EXACT Second Screenshot)
+ * - Solid Royal Blue Horizontal Bar Line (#0052a5)
+ * - 🌐 www.codethriveinfotech.in
+ * - 📞 9150781685 (with dark badge + cyan phone)
+ * - ✉️ codethriveinfotech@gmail.com (with blue envelope)
+ */
+export const drawCompanyFooter = (doc, pageW = 210, pageH = 297) => {
+  const margin = 10;
+  const footerLineY = pageH - 20;
+
+  // 1. Solid Royal Blue Bar Line across the entire width inside margin
+  doc.setDrawColor(0, 82, 165); // #0052a5
+  doc.setLineWidth(1.3);
+  doc.line(margin, footerLineY, pageW - margin, footerLineY);
+
+  // 2. Contact Items below the line (y-center)
+  const contentY = footerLineY + 6.5;
+
+  // Item 1 (Left): 🌐 www.codethriveinfotech.in
+  const globeX = margin + 5;
+  doc.setDrawColor(0, 82, 165);
+  doc.setLineWidth(0.35);
+  doc.circle(globeX, contentY - 1, 2.7);
+  doc.line(globeX - 2.7, contentY - 1, globeX + 2.7, contentY - 1);
+  doc.line(globeX, contentY - 3.7, globeX, contentY + 1.7);
+  doc.ellipse(globeX, contentY - 1, 1.35, 2.7);
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(51, 65, 85);
+  doc.text(COMPANY_INFO.website, globeX + 4.8, contentY);
+
+  // Item 2 (Center): 📞 9150781685
+  const phoneX = pageW > 250 ? pageW / 2 - 15 : 94;
+  doc.setFillColor(30, 41, 59);
+  doc.circle(phoneX, contentY - 1, 2.7, 'F');
+
+  // Phone handset vector lines in cyan #38bdf8
+  doc.setDrawColor(56, 189, 248);
+  doc.setLineWidth(0.5);
+  doc.line(phoneX - 1.2, contentY - 0.2, phoneX - 0.7, contentY - 1.7);
+  doc.line(phoneX - 0.7, contentY - 1.7, phoneX - 0.2, contentY - 1.4);
+  doc.line(phoneX - 1.2, contentY - 0.2, phoneX + 0.5, contentY + 0.3);
+  doc.line(phoneX + 0.5, contentY + 0.3, phoneX + 1.1, contentY - 0.3);
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(51, 65, 85);
+  doc.text(COMPANY_INFO.phone, phoneX + 4.8, contentY);
+
+  // Item 3 (Right): ✉️ codethriveinfotech@gmail.com
+  const mailX = pageW > 250 ? pageW - margin - 75 : 142;
+  doc.setFillColor(0, 82, 165);
+  doc.roundedRect(mailX - 2.7, contentY - 2.8, 5.4, 3.8, 0.4, 0.4, 'F');
+  doc.setDrawColor(255, 255, 255);
+  doc.setLineWidth(0.35);
+  doc.line(mailX - 2.7, contentY - 2.8, mailX, contentY - 0.7);
+  doc.line(mailX + 2.7, contentY - 2.8, mailX, contentY - 0.7);
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(51, 65, 85);
+  doc.text(COMPANY_INFO.email, mailX + 4.8, contentY);
+};
+
+/**
+ * Standard CodeThrive Corporate Table Theme in Times New Roman
  */
 export const getCorporateTableStyles = () => ({
   margin: { left: 12, right: 12 },
   headStyles: {
-    fillColor: [15, 23, 42], // Deep Navy Slate
+    fillColor: [0, 82, 165], // Royal Blue
     textColor: [255, 255, 255],
-    fontSize: 8.5,
+    fontSize: 9,
+    font: 'times',
     fontStyle: 'bold',
     halign: 'left',
     cellPadding: 3
   },
   alternateRowStyles: {
-    fillColor: [248, 250, 252] // Light slate
+    fillColor: [248, 250, 252]
   },
   bodyStyles: {
     textColor: [30, 41, 59],
-    fontSize: 8,
+    fontSize: 8.5,
+    font: 'times',
     cellPadding: 2.8,
     lineColor: [226, 232, 240],
     lineWidth: 0.2
   },
   styles: {
-    font: 'helvetica',
+    font: 'times',
     overflow: 'linebreak'
   }
 });
@@ -256,10 +307,10 @@ export const createOfficialCodeThriveDoc = async ({
   const logoData = await getLogoDataUrl();
 
   // 2. Draw border frame on Page 1
-  drawPageBorder(doc, pageW, pageH, 8);
+  drawPageBorder(doc, pageW, pageH, 10);
 
   // 3. Draw Header
-  const afterHeaderY = drawCompanyHeader(doc, logoData, pageW, 12);
+  const afterHeaderY = drawCompanyHeader(doc, logoData, pageW, 14);
 
   // 4. Draw Title & Meta
   const startY = drawDocumentTitleAndMeta(doc, title, metaFields, afterHeaderY, pageW);
@@ -270,14 +321,17 @@ export const createOfficialCodeThriveDoc = async ({
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
       // Ensure border on every page
-      drawPageBorder(doc, pageW, pageH, 8);
-      // Ensure footer on every page
+      drawPageBorder(doc, pageW, pageH, 10);
+      // Ensure exact footer on every page
       drawCompanyFooter(doc, pageW, pageH);
-      // Page numbering at bottom center
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`Page ${i} of ${totalPages}`, pageW / 2, pageH - 10, { align: 'center' });
+      // On the final page, draw the Signatory Block if there is space
+      if (i === totalPages) {
+        const finalContentY = doc.lastAutoTable?.finalY || 160;
+        const sigY = Math.min(Math.max(finalContentY + 12, 226), pageH - 48);
+        if (sigY <= pageH - 35) {
+          drawSignatoryBlock(doc, pageW, sigY);
+        }
+      }
     }
     doc.save(filename);
   };
@@ -299,18 +353,18 @@ export const exportOfficialWordDoc = ({
 }) => {
   const metaHtml = metaFields.map(f => `
     <tr>
-      <td style="font-weight: bold; width: 25%; color: #475569; padding: 4px 8px; border: 1px solid #e2e8f0;">${f.label}:</td>
-      <td style="color: #0f172a; padding: 4px 8px; border: 1px solid #e2e8f0;">${f.value || '-'}</td>
+      <td style="font-weight: bold; width: 25%; color: #475569; padding: 4px 8px; border: 1px solid #e2e8f0; font-family: 'Times New Roman', Times, serif;">${f.label}:</td>
+      <td style="color: #0f172a; padding: 4px 8px; border: 1px solid #e2e8f0; font-family: 'Times New Roman', Times, serif;">${f.value || '-'}</td>
     </tr>
   `).join('');
 
   const tableHeadHtml = tableHeaders.map(h => `
-    <th style="background-color: #0f172a; color: #ffffff; padding: 8px 10px; font-size: 11px; text-align: left; border: 1px solid #334155;">${h}</th>
+    <th style="background-color: #0052a5; color: #ffffff; padding: 8px 10px; font-size: 11px; text-align: left; border: 1px solid #004085; font-family: 'Times New Roman', Times, serif;">${h}</th>
   `).join('');
 
   const tableRowsHtml = tableRows.map((row, idx) => `
     <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
-      ${row.map(cell => `<td style="padding: 6px 10px; font-size: 10.5px; border: 1px solid #cbd5e1; color: #1e293b;">${cell}</td>`).join('')}
+      ${row.map(cell => `<td style="padding: 6px 10px; font-size: 10.5px; border: 1px solid #cbd5e1; color: #1e293b; font-family: 'Times New Roman', Times, serif;">${cell}</td>`).join('')}
     </tr>
   `).join('');
 
@@ -321,35 +375,39 @@ export const exportOfficialWordDoc = ({
       <title>${title}</title>
       <style>
         body {
-          font-family: 'Segoe UI', Arial, sans-serif;
+          font-family: 'Times New Roman', Times, serif;
           margin: 0;
-          padding: 24px;
+          padding: 20px;
           color: #0f172a;
           background: #ffffff;
         }
         .page-container {
-          border: 2px solid #1e293b;
-          padding: 24px;
-          min-height: 900px;
+          border: 1.5px solid #1e293b;
+          padding: 24px 28px;
+          min-height: 950px;
           position: relative;
         }
         .header-table {
           width: 100%;
-          border-bottom: 2px solid #cbd5e1;
+          border-bottom: 1.5px solid #1e293b;
           padding-bottom: 12px;
           margin-bottom: 16px;
         }
         .company-title {
+          font-family: 'Times New Roman', Times, serif;
           font-size: 22px;
-          font-weight: 800;
-          margin: 0 0 4px 0;
+          font-weight: bold;
+          color: #005b94;
+          letter-spacing: 0.5px;
+          margin: 0 0 3px 0;
         }
         .doc-title {
+          font-family: 'Times New Roman', Times, serif;
           font-size: 16px;
-          font-weight: 700;
+          font-weight: bold;
           text-align: center;
           text-decoration: underline;
-          margin: 16px 0;
+          margin: 18px 0;
           color: #0f172a;
           text-transform: uppercase;
         }
@@ -364,30 +422,21 @@ export const exportOfficialWordDoc = ({
           border-collapse: collapse;
           margin-top: 14px;
         }
-        .footer-table {
-          width: 100%;
-          margin-top: 40px;
-          border-top: 1px solid #cbd5e1;
-          padding-top: 14px;
-        }
       </style>
     </head>
     <body>
       <div class="page-container">
-        <!-- Header -->
+        <!-- Header (Matching Experience Certificate) -->
         <table class="header-table" style="width: 100%; border-collapse: collapse;">
           <tr>
-            <td style="vertical-align: top; width: 80px;">
-              <div style="width: 60px; height: 60px; background-color: #0284c7; color: #ffffff; font-weight: bold; font-size: 18px; text-align: center; line-height: 60px; border-radius: 8px;">CTI</div>
+            <td style="vertical-align: middle; width: 75px;">
+              <div style="width: 60px; height: 60px; background-color: #005b94; color: #ffffff; font-weight: bold; font-size: 18px; text-align: center; line-height: 60px; border-radius: 6px;">CTI</div>
             </td>
-            <td style="vertical-align: top;">
-              <h1 class="company-title">
-                <span style="color: #0284c7;">CODETHRIVE</span>
-                <span style="color: #059669;"> INFOTECH</span>
-              </h1>
-              <div style="font-size: 11px; color: #475569; line-height: 1.4;">
+            <td style="vertical-align: middle; padding-left: 10px;">
+              <div class="company-title">CODETHRIVE INFOTECH</div>
+              <div style="font-size: 11px; color: #1e293b; line-height: 1.4;">
                 ${COMPANY_INFO.address}<br>
-                Email: ${COMPANY_INFO.email} | Website: ${COMPANY_INFO.website}
+                Email: ${COMPANY_INFO.email} | Website: ${COMPANY_INFO.website.replace('www.', '')}
               </div>
             </td>
           </tr>
@@ -417,21 +466,32 @@ export const exportOfficialWordDoc = ({
           </table>
         ` : ''}
 
-        <!-- Official Signatory Footer -->
-        <table class="footer-table" style="width: 100%; border-collapse: collapse; margin-top: 50px;">
-          <tr>
-            <td style="vertical-align: bottom; font-size: 9.5px; color: #64748b; width: 60%;">
-              * This is an officially generated computer document from CodeThrive Infotech Portal.<br>
-              Generated on: ${new Date().toLocaleDateString('en-GB')} • System Verified<br>
-              Confidential & Proprietary • Valid without physical seal
-            </td>
-            <td style="vertical-align: bottom; text-align: right; font-size: 11px; color: #1e293b;">
-              Sincerely,<br>
-              <strong>For CodeThrive Infotech</strong><br><br><br>
-              <strong>Authorised Signatory</strong>
-            </td>
-          </tr>
-        </table>
+        <!-- Official Signatory Block -->
+        <div style="text-align: right; margin-top: 35px; font-family: 'Times New Roman', Times, serif;">
+          <div style="font-size: 11.5px; color: #1e293b;">Sincerely,</div>
+          <div style="font-size: 12px; font-weight: bold; color: #1e293b; margin-top: 2px;">For CodeThrive Infotech</div>
+          <div style="margin-top: 50px; font-size: 12px; font-weight: bold; color: #1e293b;">Authorised Signatory</div>
+        </div>
+
+        <!-- Official Footer Bar (Matching Second Screenshot) -->
+        <div style="margin-top: 30px; border-top: 3.5px solid #0052a5; padding-top: 12px; font-family: 'Times New Roman', Times, serif; font-size: 11px; color: #1e293b;">
+          <table style="width: 100%; border: none; border-collapse: collapse;">
+            <tr>
+              <td style="border: none; text-align: left; width: 36%; vertical-align: middle;">
+                <span style="color: #0052a5; font-size: 13pt; vertical-align: middle;">&#127760;</span>
+                <span style="vertical-align: middle; margin-left: 4px;">${COMPANY_INFO.website}</span>
+              </td>
+              <td style="border: none; text-align: center; width: 28%; vertical-align: middle;">
+                <span style="display: inline-block; background-color: #1e293b; color: #38bdf8; border-radius: 50%; width: 20px; height: 20px; line-height: 20px; text-align: center; font-size: 10pt; vertical-align: middle;">&#128222;</span>
+                <span style="vertical-align: middle; margin-left: 4px;">${COMPANY_INFO.phone}</span>
+              </td>
+              <td style="border: none; text-align: right; width: 36%; vertical-align: middle;">
+                <span style="color: #0052a5; font-size: 13pt; vertical-align: middle;">&#9993;</span>
+                <span style="vertical-align: middle; margin-left: 4px;">${COMPANY_INFO.email}</span>
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
     </body>
     </html>
@@ -454,4 +514,3 @@ export const formatCurrencyINR = (val) => {
   const num = Number(val) || 0;
   return `Rs. ${num.toLocaleString('en-IN')}`;
 };
-
