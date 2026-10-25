@@ -11,6 +11,7 @@ import {
   Calendar, CheckCircle2, DollarSign, TrendingUp, ShieldCheck, 
   Sparkles, RefreshCw, Eye, Landmark, ArrowUpRight, Award
 } from 'lucide-react';
+import { createOfficialCodeThriveDoc, exportOfficialWordDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
 import './Payroll.css';
 
 const DEMO_PAYSLIPS = [];
@@ -63,67 +64,25 @@ const Payroll = () => {
     setIsModalOpen(true);
   };
 
-  const downloadPayslip = (payslip) => {
+  const downloadPayslip = async (payslip) => {
     try {
-      const doc = new jsPDF();
-      
-      // Dark Header Banner
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, 210, 42, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 20);
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(167, 243, 208);
-      doc.text(`OFFICIAL SALARY STATEMENT • ${payslip.month}`, 14, 29);
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`ID: ${payslip.payslipId || 'PAY-2026'}`, 196, 20, { align: 'right' });
-      doc.text(`STATUS: ${payslip.status || 'Paid'}`, 196, 29, { align: 'right' });
-      
-      // Employee Details Table
-      doc.setTextColor(30, 41, 59);
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text('EMPLOYEE INFORMATION', 14, 52);
-      
       const empName = user?.fullName || user?.name || payslip.employee?.fullName || 'Kirubakaran';
       const empId = user?.employeeId || payslip.employee?.employeeId || 'CTI-EMP-001';
       const empRole = user?.role || user?.designation || payslip.employee?.designation || 'Software Engineer';
       const empEmail = user?.email || payslip.employee?.email || `${empId.toLowerCase()}@codethrive.com`;
-      
-      const employeeData = [
-        ['Employee Name:', empName, 'Employee ID:', empId],
-        ['Designation:', empRole, 'Pay Period:', payslip.month],
-        ['Email ID:', empEmail, 'Payment Status:', payslip.status || 'Paid']
-      ];
-      
-      doc.autoTable({
-        startY: 56,
-        body: employeeData,
-        theme: 'plain',
-        styles: { fontSize: 9, cellPadding: 2.5, textColor: [51, 65, 85] },
-        columnStyles: {
-          0: { fontStyle: 'bold', width: 35 },
-          1: { width: 65 },
-          2: { fontStyle: 'bold', width: 35 },
-          3: { width: 55 }
-        }
-      });
 
-      const currentY = doc.lastAutoTable.finalY + 8;
-      
-      // Salary Breakdown Header
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 41, 59);
-      doc.text('EARNINGS & DEDUCTIONS BREAKDOWN', 14, currentY);
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'OFFICIAL SALARY STATEMENT',
+        metaFields: [
+          { label: 'Employee Name', value: empName },
+          { label: 'Employee ID', value: empId },
+          { label: 'Designation', value: empRole },
+          { label: 'Pay Period', value: payslip.month },
+          { label: 'Email ID', value: empEmail },
+          { label: 'Payslip Number', value: payslip.payslipId || 'PAY-2026' },
+          { label: 'Disbursement Status', value: payslip.status || 'Paid' }
+        ]
+      });
 
       const hra = payslip.allowanceDetails?.hra || 12000;
       const travel = payslip.allowanceDetails?.travel || 3500;
@@ -150,17 +109,17 @@ const Payroll = () => {
       ];
 
       doc.autoTable({
-        startY: currentY + 4,
-        head: [['EARNINGS', 'AMOUNT', 'DEDUCTIONS', 'AMOUNT']],
+        startY: startY,
+        head: [['EARNINGS COMPONENT', 'AMOUNT (INR)', 'DEDUCTIONS COMPONENT', 'AMOUNT (INR)']],
         body: salaryTableBody,
         theme: 'grid',
-        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
-        styles: { fontSize: 8.5, cellPadding: 3.5, textColor: [30, 41, 59] },
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
+        styles: { fontSize: 8, cellPadding: 3, textColor: [30, 41, 59] },
         columnStyles: {
           0: { width: 55 },
-          1: { width: 40, halign: 'right' },
+          1: { width: 38, halign: 'right' },
           2: { width: 55 },
-          3: { width: 40, halign: 'right' }
+          3: { width: 38, halign: 'right' }
         },
         didParseCell: function(data) {
           if (data.row.index === 5) {
@@ -170,35 +129,71 @@ const Payroll = () => {
         }
       });
 
-      const finalY = doc.lastAutoTable.finalY + 10;
+      const finalY = doc.lastAutoTable.finalY + 8;
 
       // Net Salary Callout Box
       doc.setFillColor(236, 253, 245);
       doc.setDrawColor(16, 185, 129);
-      doc.roundedRect(14, finalY, 182, 20, 3, 3, 'FD');
+      doc.roundedRect(12, finalY, 186, 16, 2.5, 2.5, 'FD');
 
       doc.setTextColor(6, 78, 59);
-      doc.setFontSize(10);
+      doc.setFontSize(9.5);
       doc.setFont('helvetica', 'bold');
-      doc.text('NET SALARY PAYABLE:', 22, finalY + 12);
+      doc.text('NET SALARY PAYABLE:', 18, finalY + 10.5);
 
       doc.setTextColor(16, 185, 129);
-      doc.setFontSize(15);
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text(`Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 190, finalY + 13, { align: 'right' });
+      doc.text(`Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 192, finalY + 11, { align: 'right' });
 
-      // Footer
-      const footerY = finalY + 30;
-      doc.setTextColor(100, 116, 139);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.text('This is an official computer-generated document issued by CodeThrive Infotech Pvt Ltd. No physical signature required.', 14, footerY);
-
-      const fileName = `Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.pdf`;
-      doc.save(fileName);
+      const fileName = `Official_Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.pdf`;
+      finalizeDoc(fileName);
     } catch (err) {
       console.error('PDF Generation Failed', err);
-      alert('Could not generate PDF. Please try again.');
+      alert('Could not generate PDF: ' + err.message);
+    }
+  };
+
+  const downloadPayslipWord = (payslip) => {
+    try {
+      const empName = user?.fullName || user?.name || payslip.employee?.fullName || 'Kirubakaran';
+      const empId = user?.employeeId || payslip.employee?.employeeId || 'CTI-EMP-001';
+      const empRole = user?.role || user?.designation || payslip.employee?.designation || 'Software Engineer';
+      const empEmail = user?.email || payslip.employee?.email || `${empId.toLowerCase()}@codethrive.com`;
+
+      const hra = payslip.allowanceDetails?.hra || 12000;
+      const travel = payslip.allowanceDetails?.travel || 3500;
+      const medical = payslip.allowanceDetails?.medical || 2500;
+      const otherAllowance = payslip.allowanceDetails?.other || 2000;
+
+      const pf = payslip.deductionDetails?.pf || 3200;
+      const profTax = payslip.deductionDetails?.professionalTax || 200;
+      const incomeTax = payslip.deductionDetails?.incomeTax || 2800;
+
+      exportOfficialWordDoc({
+        title: 'OFFICIAL SALARY STATEMENT',
+        metaFields: [
+          { label: 'Employee Name', value: empName },
+          { label: 'Employee ID', value: empId },
+          { label: 'Designation', value: empRole },
+          { label: 'Pay Period', value: payslip.month },
+          { label: 'Email ID', value: empEmail },
+          { label: 'Payslip ID', value: payslip.payslipId || 'PAY-2026' },
+          { label: 'Status', value: payslip.status || 'Paid' }
+        ],
+        tableHeaders: ['EARNINGS', 'AMOUNT', 'DEDUCTIONS', 'AMOUNT'],
+        tableRows: [
+          ['Basic Salary', `Rs. ${(payslip.basicSalary || 0).toLocaleString()}`, 'Provident Fund (PF)', `Rs. ${pf.toLocaleString()}`],
+          ['House Rent Allowance (HRA)', `Rs. ${hra.toLocaleString()}`, 'Professional Tax', `Rs. ${profTax.toLocaleString()}`],
+          ['Travel & Conveyance', `Rs. ${travel.toLocaleString()}`, 'Income Tax (TDS)', `Rs. ${incomeTax.toLocaleString()}`],
+          ['Medical Allowance', `Rs. ${medical.toLocaleString()}`, 'Special Allowances', `Rs. ${otherAllowance.toLocaleString()}`],
+          ['GROSS EARNINGS', `Rs. ${(payslip.grossSalary || 0).toLocaleString()}`, 'TOTAL DEDUCTIONS', `Rs. ${(payslip.deductions || 0).toLocaleString()}`],
+          ['NET SALARY DISBURSED', `Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 'PAYMENT MODE', 'Direct Bank Transfer']
+        ],
+        fileName: `Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.doc`
+      });
+    } catch (err) {
+      alert('Could not export Word: ' + err.message);
     }
   };
 
@@ -498,7 +493,10 @@ const Payroll = () => {
               <button className="btn-outline-glass" onClick={() => setIsModalOpen(false)}>
                 Close
               </button>
-              <button className="btn-primary-glow" onClick={() => downloadPayslip(selectedPayslip)}>
+              <button className="btn-outline-glass" onClick={() => downloadPayslipWord(selectedPayslip)} title="Download Official Word Document">
+                <FileText size={16} /> Word (.doc)
+              </button>
+              <button className="btn-primary-glow" onClick={() => downloadPayslip(selectedPayslip)} title="Download Official PDF Statement">
                 <Download size={16} /> Download Official PDF
               </button>
             </div>

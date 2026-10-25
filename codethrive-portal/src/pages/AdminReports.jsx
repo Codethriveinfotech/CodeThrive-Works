@@ -13,6 +13,7 @@ import {
   FolderArchive, FileCode
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import { createOfficialCodeThriveDoc, exportOfficialWordDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
 import './Admin.css';
 
 const DEFAULT_DEMO_REPORTS = [];
@@ -28,20 +29,52 @@ const AdminReports = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const exportDailyReportsPDF = () => {
+  const exportDailyReportsPDF = async () => {
     try {
-      const doc = new jsPDF();
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, 210, 35, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(15);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 16);
-      doc.setFontSize(9.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(167, 243, 208);
-      doc.text(`DAILY WORK REPORTS AUDIT STATEMENT (${selectedMonth})`, 14, 25);
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'DAILY WORK REPORTS AUDIT STATEMENT',
+        metaFields: [
+          { label: 'Audit Scope', value: 'All Departments / Daily Activity' },
+          { label: 'Selected Period', value: selectedMonth },
+          { label: 'Total Reports', value: `${filteredReports.length} Submissions` },
+          { label: 'Verification', value: 'Authorized Admin Audit' }
+        ]
+      });
 
+      const tableColumn = ["Date", "Employee", "Project", "Work Summary", "File", "Hours", "Status"];
+      const tableRows = filteredReports.map(r => [
+        r.date ? formatDate(r.date) : '-',
+        r.employee?.fullName || 'Employee',
+        r.projectTitle || '-',
+        r.workSummary || r.summary || '-',
+        r.srcFileName || (r.srcFileUrl ? 'Attached' : 'None'),
+        `${r.hoursWorked || r.hoursLogged || 0} hrs`,
+        r.status || 'Approved'
+      ]);
+
+      const autoTableFn = typeof autoTable === 'function' ? autoTable : (autoTable.default || doc.autoTable);
+      if (typeof autoTableFn === 'function') {
+        autoTableFn(doc, {
+          startY: startY,
+          head: [tableColumn],
+          body: tableRows,
+          ...getCorporateTableStyles(),
+          columnStyles: {
+            3: { cellWidth: 55 }
+          }
+        });
+      } else {
+        throw new Error('PDF autoTable renderer could not be initialized');
+      }
+
+      finalizeDoc(`Daily_Work_Reports_${selectedMonth}.pdf`);
+    } catch (e) {
+      alert('Error exporting PDF: ' + e.message);
+    }
+  };
+
+  const exportDailyReportsWord = () => {
+    try {
       const tableColumn = ["Date", "Employee Name", "Project", "Work Summary", "SRC File", "Hours", "Status"];
       const tableRows = filteredReports.map(r => [
         r.date ? formatDate(r.date) : '-',
@@ -53,22 +86,20 @@ const AdminReports = () => {
         r.status || 'Approved'
       ]);
 
-      const renderTable = typeof autoTable === 'function' ? autoTable : (autoTable.default || doc.autoTable);
-      if (typeof renderTable === 'function') {
-        renderTable(doc, {
-          startY: 40,
-          head: [tableColumn],
-          body: tableRows,
-          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8.5, fontStyle: 'bold' },
-          styles: { fontSize: 8, cellPadding: 2.5 }
-        });
-      } else {
-        throw new Error('PDF autoTable renderer could not be initialized');
-      }
-
-      doc.save(`Daily_Work_Reports_${selectedMonth}.pdf`);
+      exportOfficialWordDoc({
+        title: 'DAILY WORK REPORTS AUDIT STATEMENT',
+        metaFields: [
+          { label: 'Audit Scope', value: 'All Departments / Daily Activity' },
+          { label: 'Selected Period', value: selectedMonth },
+          { label: 'Total Reports', value: `${filteredReports.length} Submissions` },
+          { label: 'Status Filter', value: statusFilter }
+        ],
+        tableHeaders: tableColumn,
+        tableRows: tableRows,
+        fileName: `Daily_Work_Reports_${selectedMonth}.doc`
+      });
     } catch (e) {
-      alert('Error exporting PDF: ' + e.message);
+      alert('Error exporting Word document: ' + e.message);
     }
   };
 
@@ -299,7 +330,10 @@ const AdminReports = () => {
 
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <button className="btn btn-outline" onClick={exportDailyReportsPDF} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Printer size={15} /> Download PDF Report
+              <Printer size={15} /> Download PDF
+            </button>
+            <button className="btn btn-outline" onClick={exportDailyReportsWord} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+              <FileText size={15} /> Export Word (.doc)
             </button>
             <button className="btn btn-primary" onClick={exportDailyReportsExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
               <Download size={15} /> Export Excel (.xlsx)

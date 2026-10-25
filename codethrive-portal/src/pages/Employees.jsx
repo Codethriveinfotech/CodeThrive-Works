@@ -5,10 +5,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatDate } from '../utils/dateUtils';
+import { createOfficialCodeThriveDoc, exportOfficialWordDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
 import { 
   Search, Filter, Plus, User, Briefcase, Banknote, Edit, Eye,
   RefreshCw, Trash2, UserCheck, Download, X,
-  UserPlus, Mail, Phone, Building2, ShieldCheck, KeyRound, EyeOff, IndianRupee, Loader2
+  UserPlus, Mail, Phone, Building2, ShieldCheck, KeyRound, EyeOff, IndianRupee, Loader2, FileText
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
@@ -160,28 +161,19 @@ const Employees = () => {
     return matchesSearch && matchesDept && matchesStatus && matchesRole;
   });
 
-  const handleExportMasterPDF = () => {
+  const handleExportMasterPDF = async () => {
     try {
-      const doc = new jsPDF();
       const listToExport = filteredEmployees.length > 0 ? filteredEmployees : employees;
 
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, 210, 40, 'F');
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 18);
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(167, 243, 208);
-      doc.text('MASTER REGISTERED EMPLOYEES DIRECTORY REPORT', 14, 28);
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`TOTAL STAFF: ${listToExport.length}`, 196, 22, { align: 'right' });
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'MASTER REGISTERED EMPLOYEES DIRECTORY',
+        metaFields: [
+          { label: 'Directory Scope', value: 'Complete Corporate Staff Register' },
+          { label: 'Date Generated', value: formatDate(new Date()) },
+          { label: 'Total Registered Staff', value: `${listToExport.length} Active Employees` },
+          { label: 'Admin Authorization', value: 'System Verified Record' }
+        ]
+      });
 
       const tableData = listToExport.map((e, index) => [
         index + 1,
@@ -197,28 +189,48 @@ const Employees = () => {
       const autoTableFn = autoTable || doc.autoTable;
       if (typeof autoTableFn === 'function') {
         autoTableFn(doc, {
-          startY: 46,
+          startY: startY,
           head: [['#', 'Emp ID', 'Full Name', 'Department', 'Designation', 'Access Role', 'Status', 'Monthly Salary']],
           body: tableData,
-          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-          styles: { fontSize: 8, cellPadding: 2.5 }
-        });
-      } else if (typeof doc.autoTable === 'function') {
-        doc.autoTable({
-          startY: 46,
-          head: [['#', 'Emp ID', 'Full Name', 'Department', 'Designation', 'Access Role', 'Status', 'Monthly Salary']],
-          body: tableData,
-          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-          styles: { fontSize: 8, cellPadding: 2.5 }
+          ...getCorporateTableStyles()
         });
       }
 
       const dateString = formatDate(new Date()).replace(/\//g, '-');
-      doc.save(`CodeThrive_Master_Employees_Directory_${dateString}.pdf`);
-      alert(`Master Directory PDF Exported successfully for ${listToExport.length} employees!`);
+      finalizeDoc(`CodeThrive_Master_Employees_Directory_${dateString}.pdf`);
     } catch (err) {
       console.error('Failed to export master directory PDF', err);
       alert('Error exporting PDF report: ' + (err?.message || 'Check console logs'));
+    }
+  };
+
+  const handleExportMasterWord = () => {
+    try {
+      const listToExport = filteredEmployees.length > 0 ? filteredEmployees : employees;
+      const tableData = listToExport.map((e, index) => [
+        index + 1,
+        e.employeeId || `CTI-EMP-00${index + 1}`,
+        e.fullName || 'N/A',
+        e.department || 'N/A',
+        e.designation || 'N/A',
+        (e.user?.role || e.role || 'employee').toUpperCase(),
+        e.status || 'Active',
+        `Rs. ${Number(e.salaryAmount || 65000).toLocaleString('en-IN')}`
+      ]);
+
+      exportOfficialWordDoc({
+        title: 'MASTER REGISTERED EMPLOYEES DIRECTORY',
+        metaFields: [
+          { label: 'Directory Scope', value: 'Complete Corporate Staff Register' },
+          { label: 'Date Generated', value: formatDate(new Date()) },
+          { label: 'Total Staff', value: `${listToExport.length} Active Employees` }
+        ],
+        tableHeaders: ['#', 'Emp ID', 'Full Name', 'Department', 'Designation', 'Access Role', 'Status', 'Monthly Salary'],
+        tableRows: tableData,
+        fileName: `CodeThrive_Employees_Directory_${formatDate(new Date()).replace(/\//g, '-')}.doc`
+      });
+    } catch (err) {
+      alert('Error exporting Word document: ' + err.message);
     }
   };
 
@@ -326,6 +338,9 @@ const Employees = () => {
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button className="btn btn-outline" onClick={handleExportMasterPDF} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#10b981', color: '#34d399' }}>
             <Download size={15} /> Export Directory (PDF)
+          </button>
+          <button className="btn btn-outline" onClick={handleExportMasterWord} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: '#2563eb', color: '#60a5fa' }}>
+            <FileText size={15} /> Export Directory (Word)
           </button>
           <button className="btn btn-primary" onClick={() => setShowAddModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Plus size={16} /> Register New Employee

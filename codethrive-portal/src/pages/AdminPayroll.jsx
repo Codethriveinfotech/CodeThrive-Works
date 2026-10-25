@@ -9,6 +9,12 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { formatDate } from '../utils/dateUtils';
 import { 
+  createOfficialCodeThriveDoc, 
+  exportOfficialWordDoc, 
+  getCorporateTableStyles,
+  formatCurrencyINR
+} from '../utils/pdfLetterhead';
+import { 
   Banknote, Plus, Search, CheckCircle2, X, Zap, Eye, Printer, Users, 
   Sparkles, DollarSign, TrendingUp, ShieldCheck, Download, FileText,
   FileCheck, Paperclip, Receipt, Clock
@@ -251,7 +257,7 @@ const AdminPayroll = () => {
   const totalEarnings = (formData.basicSalary || 0) + totalAllowances;
   const netSalary = totalEarnings - totalDeductions;
 
-  const downloadExpenseBill = (claim) => {
+  const downloadExpenseBill = async (claim) => {
     try {
       if (claim.fileData && claim.fileData.startsWith('data:')) {
         const link = document.createElement('a');
@@ -263,41 +269,32 @@ const AdminPayroll = () => {
         return;
       }
 
-      // PDF Voucher Fallback
-      const doc = new jsPDF();
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, 210, 40, 'F');
+      // Official Letterhead PDF Voucher
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'EXPENSE REIMBURSEMENT BILL VOUCHER',
+        metaFields: [
+          { label: 'Claim ID Ref', value: claim.claimId || 'EXP-2026' },
+          { label: 'Employee Name', value: claim.employeeName || 'Staff Member' },
+          { label: 'Employee ID', value: claim.employeeId || 'CTI-EMP-001' },
+          { label: 'Expense Category', value: (claim.category || 'Expense').toUpperCase() },
+          { label: 'Expense Date', value: formatDate(claim.expenseDate || claim.submittedAt) },
+          { label: 'Verification Status', value: (claim.status || 'Pending').toUpperCase() }
+        ]
+      });
 
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 18);
-
-      doc.setFontSize(9.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(167, 243, 208);
-      doc.text(`EXPENSE REIMBURSEMENT BILL RECEIPT • ${(claim.category || 'EXPENSE').toUpperCase()}`, 14, 28);
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(255, 255, 255);
-      doc.text(`CLAIM ID: ${claim.claimId || 'EXP-2026'}`, 196, 20, { align: 'right' });
-      doc.text(`STATUS: ${(claim.status || 'Pending').toUpperCase()}`, 196, 28, { align: 'right' });
-
-      const renderTable = typeof autoTable === 'function' ? autoTable : (autoTable?.default || doc?.autoTable);
-
-      const billInfo = [
+      const billTable = [
         ['Claim Reference:', claim.claimId || '-', 'Submitted Date:', formatDate(claim.submittedAt || claim.expenseDate)],
         ['Employee Name:', claim.employeeName || 'Staff Member', 'Employee ID:', claim.employeeId || 'CTI-EMP-001'],
         ['Expense Category:', claim.category || 'Travel Expense', 'Expense Date:', formatDate(claim.expenseDate)],
-        ['Reimbursement Amount:', `Rs. ${(claim.amount || 0).toLocaleString()}`, 'Attached Document:', claim.fileName || 'Official_Bill_Receipt.pdf']
+        ['Approved Amount:', formatCurrencyINR(claim.amount || 0), 'Attached Bill File:', claim.fileName || 'Official_Bill_Receipt.pdf'],
+        ['Claim Description:', claim.description || 'Verified travel/medical reimbursement claim.', '', '']
       ];
 
-      renderTable(doc, {
-        startY: 50,
-        body: billInfo,
-        theme: 'plain',
-        styles: { fontSize: 9.5, cellPadding: 3, textColor: [30, 41, 59] },
+      const autoTableFn = autoTable || doc.autoTable;
+      autoTableFn(doc, {
+        startY: startY,
+        body: billTable,
+        ...getCorporateTableStyles(),
         columnStyles: {
           0: { fontStyle: 'bold', width: 45 },
           1: { width: 55 },
@@ -306,41 +303,40 @@ const AdminPayroll = () => {
         }
       });
 
-      const currY = (doc.lastAutoTable?.finalY || 100) + 10;
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 41, 59);
-      doc.text('EXPENSE REASON / DESCRIPTION:', 14, currY);
-
-      doc.setFontSize(9.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(71, 85, 105);
-      doc.text(claim.description || 'Verified travel/medical reimbursement claim.', 14, currY + 6);
-
-      const boxY = currY + 16;
-      doc.setFillColor(236, 253, 245);
-      doc.setDrawColor(16, 185, 129);
-      doc.roundedRect(14, boxY, 182, 18, 3, 3, 'FD');
-
-      doc.setTextColor(6, 78, 59);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('APPROVED REIMBURSEMENT AMOUNT:', 22, boxY + 11);
-
-      doc.setTextColor(16, 185, 129);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Rs. ${(claim.amount || 0).toLocaleString()}`, 190, boxY + 12, { align: 'right' });
-
-      doc.setTextColor(100, 116, 139);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.text('Verified digital expense claim voucher. Downloaded from CodeThrive Enterprise Portal.', 14, boxY + 28);
-
-      doc.save(`${claim.claimId || 'Claim'}_${(claim.category || 'Expense').replace(/\s+/g, '_')}_Bill.pdf`);
+      finalizeDoc(`${claim.claimId || 'Claim'}_${(claim.category || 'Expense').replace(/\s+/g, '_')}_Bill.pdf`);
     } catch (err) {
       alert('Failed to download bill: ' + err.message);
+    }
+  };
+
+  const downloadExpenseBillWord = (claim) => {
+    try {
+      exportOfficialWordDoc({
+        title: 'EXPENSE REIMBURSEMENT BILL VOUCHER',
+        metaFields: [
+          { label: 'Claim ID Ref', value: claim.claimId || 'EXP-2026' },
+          { label: 'Employee Name', value: claim.employeeName || 'Staff Member' },
+          { label: 'Employee ID', value: claim.employeeId || 'CTI-EMP-001' },
+          { label: 'Expense Category', value: (claim.category || 'Expense').toUpperCase() },
+          { label: 'Expense Date', value: formatDate(claim.expenseDate || claim.submittedAt) },
+          { label: 'Verification Status', value: (claim.status || 'Pending').toUpperCase() }
+        ],
+        tableHeaders: ['Particulars', 'Claim Details'],
+        tableRows: [
+          ['Claim ID Reference', claim.claimId || '-'],
+          ['Employee Full Name', claim.employeeName || 'Staff Member'],
+          ['Employee ID', claim.employeeId || 'CTI-EMP-001'],
+          ['Expense Category', claim.category || 'Expense'],
+          ['Expense Date', formatDate(claim.expenseDate)],
+          ['Submitted At', formatDate(claim.submittedAt || claim.expenseDate)],
+          ['Reimbursement Claim Amount', formatCurrencyINR(claim.amount || 0)],
+          ['Expense Purpose & Description', claim.description || 'Business expense reimbursement claim.'],
+          ['Approval Status', (claim.status || 'Pending').toUpperCase()]
+        ],
+        fileName: `${claim.claimId || 'Claim'}_${(claim.category || 'Expense').replace(/\s+/g, '_')}_Bill.doc`
+      });
+    } catch (err) {
+      alert('Failed to export Word bill voucher: ' + err.message);
     }
   };
 
@@ -435,67 +431,8 @@ const AdminPayroll = () => {
     }
   };
 
-  const downloadPayslipPDF = (payslip) => {
+  const downloadPayslipPDF = async (payslip) => {
     try {
-      const doc = new jsPDF();
-      
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, 210, 42, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 20);
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(167, 243, 208);
-      doc.text(`OFFICIAL SALARY STATEMENT • ${payslip.month}`, 14, 29);
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`ID: ${payslip.payslipId || 'PAY-2026'}`, 196, 20, { align: 'right' });
-      doc.text(`STATUS: ${payslip.status || 'Paid'}`, 196, 29, { align: 'right' });
-      
-      doc.setTextColor(30, 41, 59);
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text('EMPLOYEE INFORMATION', 14, 52);
-      
-      const empName = payslip.employee?.fullName || 'Kirubakaran';
-      const empId = payslip.employee?.employeeId || 'CTI-EMP-001';
-      const empRole = payslip.employee?.designation || 'Software Engineer';
-      const empEmail = payslip.employee?.email || `${empId.toLowerCase()}@codethrive.com`;
-      
-      const employeeData = [
-        ['Employee Name:', empName, 'Employee ID:', empId],
-        ['Designation:', empRole, 'Pay Period:', payslip.month],
-        ['Email ID:', empEmail, 'Payment Status:', payslip.status || 'Paid']
-      ];
-      
-      const renderTable = typeof autoTable === 'function' ? autoTable : (autoTable?.default || doc?.autoTable);
-      
-      renderTable(doc, {
-        startY: 56,
-        body: employeeData,
-        theme: 'plain',
-        styles: { fontSize: 9, cellPadding: 2.5, textColor: [51, 65, 85] },
-        columnStyles: {
-          0: { fontStyle: 'bold', width: 35 },
-          1: { width: 65 },
-          2: { fontStyle: 'bold', width: 35 },
-          3: { width: 55 }
-        }
-      });
-
-      const currentY = (doc.lastAutoTable?.finalY || 100) + 8;
-      
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 41, 59);
-      doc.text('EARNINGS & DEDUCTIONS BREAKDOWN', 14, currentY);
-
       const hra = payslip.allowanceDetails?.hra || 18000;
       const travel = payslip.allowanceDetails?.travel || 2500;
       const medical = payslip.allowanceDetails?.medical || 1500;
@@ -506,86 +443,107 @@ const AdminPayroll = () => {
       const profTax = payslip.deductionDetails?.professionalTax || 200;
       const incomeTax = payslip.deductionDetails?.incomeTax || 1500;
 
-      const salaryTableBody = [
-        ['Basic Salary', `Rs. ${(payslip.basicSalary || 0).toLocaleString()}`, 'Provident Fund (PF)', `Rs. ${pf.toLocaleString()}`],
-        ['House Rent Allowance (HRA)', `Rs. ${hra.toLocaleString()}`, 'Professional Tax', `Rs. ${profTax.toLocaleString()}`],
-        ['Travel & Conveyance', `Rs. ${travel.toLocaleString()}`, 'Income Tax (TDS)', `Rs. ${incomeTax.toLocaleString()}`],
-        ['Medical Allowance', `Rs. ${medical.toLocaleString()}`, 'ESI Deduction', `Rs. ${esi.toLocaleString()}`],
-        ['Special Allowances', `Rs. ${otherAllowance.toLocaleString()}`, '', ''],
-        [
-          'GROSS EARNINGS', 
-          `Rs. ${(payslip.grossSalary || 0).toLocaleString()}`, 
-          'TOTAL DEDUCTIONS', 
-          `Rs. ${(payslip.deductions || 0).toLocaleString()}`
-        ]
-      ];
+      const empName = payslip.employee?.fullName || 'Staff Member';
+      const empId = payslip.employee?.employeeId || 'CTI-EMP-001';
 
-      renderTable(doc, {
-        startY: currentY + 4,
-        head: [['EARNINGS', 'AMOUNT', 'DEDUCTIONS', 'AMOUNT']],
-        body: salaryTableBody,
-        theme: 'grid',
-        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
-        styles: { fontSize: 8.5, cellPadding: 3.5, textColor: [30, 41, 59] },
-        columnStyles: {
-          0: { width: 55 },
-          1: { width: 40, halign: 'right' },
-          2: { width: 55 },
-          3: { width: 40, halign: 'right' }
-        },
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'OFFICIAL MONTHLY SALARY STATEMENT',
+        metaFields: [
+          { label: 'Employee Name', value: empName },
+          { label: 'Employee ID', value: empId },
+          { label: 'Pay Period Month', value: payslip.month || 'N/A' },
+          { label: 'Designation / Dept', value: `${payslip.employee?.designation || 'Staff'} • ${payslip.employee?.department || 'Engineering'}` },
+          { label: 'Payslip ID Ref', value: payslip.payslipId || 'PAY-2026' },
+          { label: 'Payment Status', value: (payslip.status || 'Paid').toUpperCase() }
+        ]
+      });
+
+      const autoTableFn = autoTable || doc.autoTable;
+      autoTableFn(doc, {
+        startY: startY,
+        head: [['EARNINGS & ALLOWANCES', 'AMOUNT (INR)', 'STATUTORY DEDUCTIONS', 'AMOUNT (INR)']],
+        body: [
+          ['Basic Salary', formatCurrencyINR(payslip.basicSalary || 0), 'Provident Fund (PF)', formatCurrencyINR(pf)],
+          ['House Rent Allowance (HRA)', formatCurrencyINR(hra), 'Professional Tax (PT)', formatCurrencyINR(profTax)],
+          ['Travel & Conveyance', formatCurrencyINR(travel), 'Income Tax (TDS)', formatCurrencyINR(incomeTax)],
+          ['Medical Allowance', formatCurrencyINR(medical), 'ESI Contribution', formatCurrencyINR(esi)],
+          ['Special / Other Allowance', formatCurrencyINR(otherAllowance), 'Other Deductions', formatCurrencyINR(0)],
+          ['GROSS EARNINGS', formatCurrencyINR(payslip.grossSalary || 0), 'TOTAL DEDUCTIONS', formatCurrencyINR(payslip.deductions || 0)],
+          ['NET PAYABLE AMOUNT', formatCurrencyINR(payslip.netPayable || 0), 'PAYMENT DISBURSEMENT', 'DIRECT BANK TRANSFER']
+        ],
+        ...getCorporateTableStyles(),
         didParseCell: function(data) {
-          if (data.row.index === 5) {
+          if (data.row.index === 5 || data.row.index === 6) {
             data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fillColor = [241, 245, 249];
+            if (data.row.index === 6) {
+              data.cell.styles.fillColor = [224, 242, 254];
+              data.cell.styles.textColor = [3, 105, 161];
+            }
           }
         }
       });
 
-      const finalY = (doc.lastAutoTable?.finalY || 180) + 10;
-
-      doc.setFillColor(236, 253, 245);
-      doc.setDrawColor(16, 185, 129);
-      doc.roundedRect(14, finalY, 182, 20, 3, 3, 'FD');
-
-      doc.setTextColor(6, 78, 59);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('NET SALARY PAYABLE:', 22, finalY + 12);
-
-      doc.setTextColor(16, 185, 129);
-      doc.setFontSize(15);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 190, finalY + 13, { align: 'right' });
-
-      const footerY = finalY + 30;
-      doc.setTextColor(100, 116, 139);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.text('This is an official computer-generated document issued by CodeThrive Infotech Pvt Ltd. No physical signature required.', 14, footerY);
-
       const fileName = `Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.pdf`;
-      doc.save(fileName);
+      finalizeDoc(fileName);
     } catch (err) {
       console.error('PDF Generation Failed', err);
-      alert('Could not generate PDF. Please try again.');
+      alert('Could not generate PDF: ' + err.message);
     }
   };
 
-  const exportFullPayrollPDF = () => {
+  const downloadPayslipWord = (payslip) => {
     try {
-      const doc = new jsPDF();
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, 210, 38, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 18);
-      
-      doc.setFontSize(9.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(167, 243, 208);
-      doc.text('ORGANIZATION MASTER PAYROLL AUDIT STATEMENT', 14, 28);
+      const hra = payslip.allowanceDetails?.hra || 18000;
+      const travel = payslip.allowanceDetails?.travel || 2500;
+      const medical = payslip.allowanceDetails?.medical || 1500;
+      const otherAllowance = payslip.allowanceDetails?.other || 1000;
+
+      const pf = payslip.deductionDetails?.pf || 5400;
+      const esi = payslip.deductionDetails?.esi || 0;
+      const profTax = payslip.deductionDetails?.professionalTax || 200;
+      const incomeTax = payslip.deductionDetails?.incomeTax || 1500;
+
+      const empName = payslip.employee?.fullName || 'Staff Member';
+      const empId = payslip.employee?.employeeId || 'CTI-EMP-001';
+
+      exportOfficialWordDoc({
+        title: 'OFFICIAL MONTHLY SALARY STATEMENT',
+        metaFields: [
+          { label: 'Employee Name', value: empName },
+          { label: 'Employee ID', value: empId },
+          { label: 'Pay Period Month', value: payslip.month || 'N/A' },
+          { label: 'Designation / Dept', value: `${payslip.employee?.designation || 'Staff'} • ${payslip.employee?.department || 'Engineering'}` },
+          { label: 'Payslip ID Ref', value: payslip.payslipId || 'PAY-2026' },
+          { label: 'Payment Status', value: (payslip.status || 'Paid').toUpperCase() }
+        ],
+        tableHeaders: ['EARNINGS / ALLOWANCES', 'AMOUNT (INR)', 'DEDUCTIONS', 'AMOUNT (INR)'],
+        tableRows: [
+          ['Basic Salary', formatCurrencyINR(payslip.basicSalary || 0), 'Provident Fund (PF)', formatCurrencyINR(pf)],
+          ['House Rent Allowance (HRA)', formatCurrencyINR(hra), 'Professional Tax (PT)', formatCurrencyINR(profTax)],
+          ['Travel & Conveyance', formatCurrencyINR(travel), 'Income Tax (TDS)', formatCurrencyINR(incomeTax)],
+          ['Medical Allowance', formatCurrencyINR(medical), 'ESI Contribution', formatCurrencyINR(esi)],
+          ['Special / Other Allowance', formatCurrencyINR(otherAllowance), 'Other Deductions', formatCurrencyINR(0)],
+          ['GROSS EARNINGS', formatCurrencyINR(payslip.grossSalary || 0), 'TOTAL DEDUCTIONS', formatCurrencyINR(payslip.deductions || 0)],
+          ['NET PAYABLE SALARY', formatCurrencyINR(payslip.netPayable || 0), 'PAYMENT DISBURSEMENT', 'BANK TRANSFER']
+        ],
+        fileName: `Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.doc`
+      });
+    } catch (err) {
+      alert('Error generating Word payslip: ' + err.message);
+    }
+  };
+
+  const exportFullPayrollPDF = async () => {
+    try {
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'ORGANIZATION MASTER PAYROLL AUDIT STATEMENT',
+        metaFields: [
+          { label: 'Organization', value: 'CodeThrive Infotech Pvt Ltd' },
+          { label: 'Report Date', value: formatDate(new Date()) },
+          { label: 'Total Payroll Records', value: `${filteredPayrolls.length} Records` },
+          { label: 'Disbursement Status', value: 'Processed & Verified' }
+        ]
+      });
 
       const tableColumn = ["Payslip ID", "Employee Name", "Department", "Pay Period", "Gross Salary", "Deductions", "Net Payable", "Status"];
       const tableRows = filteredPayrolls.map(p => [
@@ -593,24 +551,53 @@ const AdminPayroll = () => {
         p.employee?.fullName || 'Employee',
         p.employee?.department || '-',
         p.month || '-',
-        `Rs. ${(p.grossSalary || 0).toLocaleString()}`,
-        `Rs. ${(p.deductions || 0).toLocaleString()}`,
-        `Rs. ${(p.netPayable || 0).toLocaleString()}`,
+        formatCurrencyINR(p.grossSalary || 0),
+        formatCurrencyINR(p.deductions || 0),
+        formatCurrencyINR(p.netPayable || 0),
         p.status || 'Paid'
       ]);
 
-      const renderTable = typeof autoTable === 'function' ? autoTable : (autoTable?.default || doc?.autoTable);
-      renderTable(doc, {
-        startY: 44,
+      const autoTableFn = autoTable || doc.autoTable;
+      autoTableFn(doc, {
+        startY: startY,
         head: [tableColumn],
         body: tableRows,
-        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8.5, fontStyle: 'bold' },
-        styles: { fontSize: 8, cellPadding: 2.5 }
+        ...getCorporateTableStyles()
       });
 
-      doc.save(`Master_Payroll_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+      finalizeDoc(`Master_Payroll_Report_${new Date().toISOString().slice(0,10)}.pdf`);
     } catch (err) {
       alert('Could not export full payroll PDF: ' + err.message);
+    }
+  };
+
+  const exportFullPayrollWord = () => {
+    try {
+      const tableColumn = ["Payslip ID", "Employee Name", "Department", "Pay Period", "Gross Salary", "Deductions", "Net Payable", "Status"];
+      const tableRows = filteredPayrolls.map(p => [
+        p.payslipId || '-',
+        p.employee?.fullName || 'Employee',
+        p.employee?.department || '-',
+        p.month || '-',
+        formatCurrencyINR(p.grossSalary || 0),
+        formatCurrencyINR(p.deductions || 0),
+        formatCurrencyINR(p.netPayable || 0),
+        p.status || 'Paid'
+      ]);
+
+      exportOfficialWordDoc({
+        title: 'ORGANIZATION MASTER PAYROLL AUDIT STATEMENT',
+        metaFields: [
+          { label: 'Organization', value: 'CodeThrive Infotech Pvt Ltd' },
+          { label: 'Report Date', value: formatDate(new Date()) },
+          { label: 'Total Payroll Records', value: `${filteredPayrolls.length} Records` }
+        ],
+        tableHeaders: tableColumn,
+        tableRows: tableRows,
+        fileName: `Master_Payroll_Report_${new Date().toISOString().slice(0,10)}.doc`
+      });
+    } catch (err) {
+      alert('Could not export full payroll Word doc: ' + err.message);
     }
   };
 
@@ -926,8 +913,43 @@ const AdminPayroll = () => {
               />
             </div>
 
-            <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-              Showing <strong style={{ color: '#fff' }}>{filteredPayrolls.length}</strong> issued payslip records
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <button 
+                onClick={exportFullPayrollPDF}
+                style={{
+                  padding: '0.45rem 0.85rem', borderRadius: '10px',
+                  background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)',
+                  color: '#34d399', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem'
+                }}
+              >
+                <Download size={14} /> Master PDF
+              </button>
+              <button 
+                onClick={exportFullPayrollWord}
+                style={{
+                  padding: '0.45rem 0.85rem', borderRadius: '10px',
+                  background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(37, 99, 235, 0.3)',
+                  color: '#60a5fa', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem'
+                }}
+              >
+                <FileText size={14} /> Master Word
+              </button>
+              <button 
+                onClick={exportFullPayrollExcel}
+                style={{
+                  padding: '0.45rem 0.85rem', borderRadius: '10px',
+                  background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#fff', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem'
+                }}
+              >
+                <Download size={14} /> Excel
+              </button>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+                Total: <strong style={{ color: '#fff' }}>{filteredPayrolls.length}</strong>
+              </span>
             </div>
           </div>
 
@@ -1009,7 +1031,7 @@ const AdminPayroll = () => {
                         </button>
                         <button
                           onClick={() => downloadPayslipPDF(ps)}
-                          title="Download Official PDF"
+                          title="Download Official PDF Statement"
                           style={{
                             padding: '0.45rem 0.85rem', borderRadius: '8px',
                             background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)',
@@ -1019,6 +1041,19 @@ const AdminPayroll = () => {
                         >
                           <Download size={14} />
                           <span>PDF</span>
+                        </button>
+                        <button
+                          onClick={() => downloadPayslipWord(ps)}
+                          title="Download Official Word Statement"
+                          style={{
+                            padding: '0.45rem 0.85rem', borderRadius: '8px',
+                            background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(37, 99, 235, 0.3)',
+                            color: '#60a5fa', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center', gap: '0.4rem'
+                          }}
+                        >
+                          <FileText size={14} />
+                          <span>Word</span>
                         </button>
                       </div>
                     </td>
@@ -1717,6 +1752,9 @@ const AdminPayroll = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
               <button type="button" className="btn btn-outline" onClick={() => downloadPayslipPDF(selectedPayslip)}>
                 <Download size={16} /> Download PDF
+              </button>
+              <button type="button" className="btn btn-outline" onClick={() => downloadPayslipWord(selectedPayslip)} style={{ borderColor: '#2563eb', color: '#60a5fa' }}>
+                <FileText size={16} /> Download Word
               </button>
               <button type="button" className="btn btn-outline" onClick={() => window.print()}>
                 <Printer size={16} /> Print Voucher

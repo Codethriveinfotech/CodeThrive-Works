@@ -2,8 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { 
+  createOfficialCodeThriveDoc, 
+  exportOfficialWordDoc, 
+  getCorporateTableStyles,
+  formatCurrencyINR
+} from '../utils/pdfLetterhead';
 import { 
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
   KeyRound, Plus, Download, Save, ArrowLeft, Mail, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils
@@ -289,49 +295,20 @@ const EmployeeDetail = () => {
     return `${h}h ${m}m`;
   };
 
-  const exportEmpAttendancePDF = () => {
+  const exportEmpAttendancePDF = async () => {
     if (!employee || !empAttendanceHistory) return;
     try {
-      const doc = new jsPDF();
-
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, 210, 38, 'F');
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(15);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 16);
-
-      doc.setFontSize(9.5);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(167, 243, 208);
-      doc.text(`DAILY CHECK-IN / CHECK-OUT ATTENDANCE AUDIT REPORT`, 14, 26);
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(8.5);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`GENERATED: ${formatDate(new Date())}`, 196, 16, { align: 'right' });
-      doc.text(`EMP ID: ${employee.employeeId}`, 196, 26, { align: 'right' });
-
-      const empDetails = [
-        ['Employee Name:', employee.fullName, 'Department:', employee.department || 'Engineering'],
-        ['Designation:', employee.designation || 'Software Engineer', 'Email:', employee.personalEmailAddress || '-']
-      ];
-
-      doc.autoTable({
-        startY: 42,
-        body: empDetails,
-        theme: 'plain',
-        styles: { fontSize: 8.5, cellPadding: 1.5, textColor: [30, 41, 59] },
-        columnStyles: {
-          0: { fontStyle: 'bold', width: 32 },
-          1: { width: 68 },
-          2: { fontStyle: 'bold', width: 32 },
-          3: { width: 58 }
-        }
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'EMPLOYEE ATTENDANCE AUDIT REPORT',
+        metaFields: [
+          { label: 'Employee Name', value: employee.fullName || 'N/A' },
+          { label: 'Employee ID', value: employee.employeeId || 'N/A' },
+          { label: 'Department / Role', value: `${employee.department || 'General'} • ${employee.designation || 'Staff'}` },
+          { label: 'Audit Scope', value: selectedAuditMonth === 'All' ? 'Complete Attendance History' : selectedAuditMonth }
+        ]
       });
 
-      const tableColumn = ["Date", "Check-In", "Check-Out", "Work Time", "Break Time", "Lunch Time", "Status"];
+      const tableColumn = ["Date", "Check-In", "Check-Out", "Work Time", "Break", "Lunch", "Status"];
       const tableRows = empAttendanceHistory.map(row => [
         formatDateWithDay(row.date),
         row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
@@ -342,17 +319,50 @@ const EmployeeDetail = () => {
         row.status || 'Present'
       ]);
 
-      doc.autoTable({
-        startY: doc.lastAutoTable.finalY + 6,
-        head: [tableColumn],
-        body: tableRows,
-        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8.5, fontStyle: 'bold' },
-        styles: { fontSize: 8, cellPadding: 2.5 }
-      });
+      const autoTableFn = autoTable || doc.autoTable;
+      if (typeof autoTableFn === 'function') {
+        autoTableFn(doc, {
+          startY: startY,
+          head: [tableColumn],
+          body: tableRows.length > 0 ? tableRows : [['-', '--:--', '--:--', '-', '-', '-', 'No Records']],
+          ...getCorporateTableStyles()
+        });
+      }
 
-      doc.save(`Attendance_Report_${employee.fullName.replace(/\s+/g, '_')}_${selectedAuditMonth}.pdf`);
+      finalizeDoc(`Attendance_Report_${employee.fullName.replace(/\s+/g, '_')}_${selectedAuditMonth}.pdf`);
     } catch (e) {
       alert('Error generating attendance PDF: ' + e.message);
+    }
+  };
+
+  const exportEmpAttendanceWord = () => {
+    if (!employee || !empAttendanceHistory) return;
+    try {
+      const tableColumn = ["Date", "Check-In", "Check-Out", "Work Time", "Break", "Lunch", "Status"];
+      const tableRows = empAttendanceHistory.map(row => [
+        formatDateWithDay(row.date),
+        row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
+        row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
+        formatHours(row.totalWorkDurationInSeconds),
+        formatHours(row.totalBreakDurationInSeconds || 0),
+        formatHours(row.totalLunchDurationInSeconds || 0),
+        row.status || 'Present'
+      ]);
+
+      exportOfficialWordDoc({
+        title: 'EMPLOYEE ATTENDANCE AUDIT REPORT',
+        metaFields: [
+          { label: 'Employee Name', value: employee.fullName || 'N/A' },
+          { label: 'Employee ID', value: employee.employeeId || 'N/A' },
+          { label: 'Department / Role', value: `${employee.department || 'General'} • ${employee.designation || 'Staff'}` },
+          { label: 'Audit Scope', value: selectedAuditMonth === 'All' ? 'Complete Attendance History' : selectedAuditMonth }
+        ],
+        tableHeaders: tableColumn,
+        tableRows: tableRows,
+        fileName: `Attendance_Report_${employee.fullName.replace(/\s+/g, '_')}_${selectedAuditMonth}.doc`
+      });
+    } catch (e) {
+      alert('Error generating attendance Word document: ' + e.message);
     }
   };
 
@@ -469,55 +479,23 @@ const EmployeeDetail = () => {
   const filteredLeaves = filterByMonth(employee?.sentByEmployee?.leaveApplications, l => l.dates || l.month || '');
   const filteredPayslips = filterByMonth(employee?.sentByEmployee?.payslips, p => p.monthCode || p.month || '');
 
-  const handleDownloadMonthlyAuditPDF = () => {
+  const handleDownloadMonthlyAuditPDF = async () => {
     if (!employee) return;
     try {
-      const doc = new jsPDF();
       const monthObj = AUDIT_MONTH_OPTIONS.find(m => m.value === selectedAuditMonth);
       const selectedLabel = monthObj ? monthObj.label : 'All-Time Continuous History';
 
-      // Header Banner
-      doc.setFillColor(15, 23, 42);
-      doc.rect(0, 0, 210, 42, 'F');
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('CODETHRIVE INFOTECH PVT LTD', 14, 18);
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(167, 243, 208);
-      doc.text(`CONFIDENTIAL EMPLOYEE AUDIT DOSSIER • ${selectedLabel.toUpperCase()}`, 14, 28);
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`EMP ID: ${employee.employeeId}`, 196, 18, { align: 'right' });
-      doc.text(`DATE: ${formatDate(new Date())}`, 196, 28, { align: 'right' });
-
-      // Employee Information Block
-      const employeeData = [
-        ['Employee Name:', employee.fullName || 'N/A', 'Department:', employee.department || 'N/A'],
-        ['Designation:', employee.designation || 'N/A', 'Access Role:', (employee.user?.role || 'employee').toUpperCase()],
-        ['Email Address:', employee.personalEmailAddress || 'N/A', 'Date of Joining:', employee.dateOfJoining || '2025-01-15'],
-        ['Work Location:', employee.workLocation || 'Office', 'Monthly Salary:', `Rs. ${(employee.salaryAmount || 0).toLocaleString()}`]
-      ];
-
-      doc.autoTable({
-        startY: 48,
-        body: employeeData,
-        theme: 'plain',
-        styles: { fontSize: 8.5, cellPadding: 2, textColor: [30, 41, 59] },
-        columnStyles: {
-          0: { fontStyle: 'bold', width: 32 },
-          1: { width: 68 },
-          2: { fontStyle: 'bold', width: 32 },
-          3: { width: 58 }
-        }
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'CONFIDENTIAL EMPLOYEE AUDIT DOSSIER',
+        metaFields: [
+          { label: 'Employee Name', value: employee.fullName || 'N/A' },
+          { label: 'Employee ID', value: employee.employeeId || 'N/A' },
+          { label: 'Department / Role', value: `${employee.department || 'N/A'} • ${employee.designation || 'N/A'}` },
+          { label: 'Audit Scope Period', value: selectedLabel }
+        ]
       });
 
-      let currentY = doc.lastAutoTable.finalY + 8;
+      let currentY = startY;
 
       // Section 1: Tasks
       doc.setFontSize(10);
@@ -526,17 +504,16 @@ const EmployeeDetail = () => {
       doc.text(`1. ASSIGNED TASKS & DELIVERABLES AUDIT (${filteredTasks.length})`, 14, currentY);
 
       const taskRows = filteredTasks.map(t => [t.taskId || '-', t.title || '-', t.priority || 'Medium', t.status || 'Assigned', t.dueDate || '-']);
-      doc.autoTable({
+      const autoTableFn = autoTable || doc.autoTable;
+      autoTableFn(doc, {
         startY: currentY + 3,
         head: [['Task ID', 'Task Title / Deliverable', 'Priority', 'Status', 'Due Date']],
         body: taskRows.length > 0 ? taskRows : [['-', 'No tasks logged for this audit period.', '-', '-', '-']],
-        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-        styles: { fontSize: 8, cellPadding: 2.5 },
-        columnStyles: { 0: { width: 25 }, 1: { width: 90 }, 2: { width: 22 }, 3: { width: 28 }, 4: { width: 25 } }
+        ...getCorporateTableStyles()
       });
 
       currentY = doc.lastAutoTable.finalY + 8;
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
+      if (currentY > 230) { doc.addPage(); currentY = 30; }
 
       // Section 2: Daily Reports
       doc.setFontSize(10);
@@ -545,17 +522,15 @@ const EmployeeDetail = () => {
       doc.text(`2. DAILY WORK REPORTS AUDIT (${filteredReports.length})`, 14, currentY);
 
       const reportRows = filteredReports.map(r => [r.date || '-', r.title || '-', r.hoursLogged || '-', r.status || 'Approved']);
-      doc.autoTable({
+      autoTableFn(doc, {
         startY: currentY + 3,
         head: [['Date', 'Report Summary Title', 'Hours', 'Status']],
         body: reportRows.length > 0 ? reportRows : [['-', 'No daily work reports submitted for this audit period.', '-', '-']],
-        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-        styles: { fontSize: 8, cellPadding: 2.5 },
-        columnStyles: { 0: { width: 30 }, 1: { width: 110 }, 2: { width: 25 }, 3: { width: 25 } }
+        ...getCorporateTableStyles()
       });
 
       currentY = doc.lastAutoTable.finalY + 8;
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
+      if (currentY > 230) { doc.addPage(); currentY = 30; }
 
       // Section 3: Leave Applications
       doc.setFontSize(10);
@@ -564,17 +539,15 @@ const EmployeeDetail = () => {
       doc.text(`3. LEAVE APPLICATIONS AUDIT (${filteredLeaves.length})`, 14, currentY);
 
       const leaveRows = filteredLeaves.map(l => [l.leaveType || 'Leave', l.dates || '-', l.reason || '-', l.status || 'Approved']);
-      doc.autoTable({
+      autoTableFn(doc, {
         startY: currentY + 3,
         head: [['Leave Type', 'Duration / Dates', 'Reason / Purpose', 'Status']],
         body: leaveRows.length > 0 ? leaveRows : [['-', 'No leave applications filed during this audit period.', '-', '-']],
-        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-        styles: { fontSize: 8, cellPadding: 2.5 },
-        columnStyles: { 0: { width: 35 }, 1: { width: 50 }, 2: { width: 80 }, 3: { width: 25 } }
+        ...getCorporateTableStyles()
       });
 
       currentY = doc.lastAutoTable.finalY + 8;
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
+      if (currentY > 230) { doc.addPage(); currentY = 30; }
 
       // Section 4: Monthly Payslips
       doc.setFontSize(10);
@@ -584,37 +557,49 @@ const EmployeeDetail = () => {
 
       const payslipRows = filteredPayslips.map(p => [
         p.month || '-',
-        `Rs. ${(p.basicSalary || 0).toLocaleString()}`,
-        `Rs. ${(p.grossSalary || 0).toLocaleString()}`,
-        `Rs. ${(p.deductions || 0).toLocaleString()}`,
-        `Rs. ${(p.netPayable || 0).toLocaleString()}`,
+        formatCurrencyINR(p.basicSalary || 0),
+        formatCurrencyINR(p.grossSalary || 0),
+        formatCurrencyINR(p.deductions || 0),
+        formatCurrencyINR(p.netPayable || 0),
         p.status || 'Paid'
       ]);
-      doc.autoTable({
+      autoTableFn(doc, {
         startY: currentY + 3,
         head: [['Pay Month', 'Basic Salary', 'Gross Earnings', 'Deductions', 'Net Payable', 'Status']],
         body: payslipRows.length > 0 ? payslipRows : [['-', '-', '-', '-', '-', 'No payslips recorded for period']],
-        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-        styles: { fontSize: 8, cellPadding: 2.5 },
-        columnStyles: { 0: { width: 35 }, 1: { width: 30 }, 2: { width: 32 }, 3: { width: 30 }, 4: { width: 33 }, 5: { width: 30 } }
+        ...getCorporateTableStyles()
       });
 
-      // Page numbers footer
-      const totalPages = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(148, 163, 184);
-        doc.text(`CodeThrive InfoTech Internal Audit Report • Page ${i} of ${totalPages}`, 105, 290, { align: 'center' });
-      }
-
       const fileName = `CodeThrive_Audit_${employee.employeeId}_${selectedAuditMonth}.pdf`;
-      doc.save(fileName);
-      alert(`Downloaded Confidential Monthly Audit Dossier PDF for ${employee.fullName} (${selectedLabel})!`);
+      finalizeDoc(fileName);
     } catch (err) {
       console.error('Failed to generate PDF audit dossier', err);
       alert('Error generating PDF dossier. Please try again.');
+    }
+  };
+
+  const handleDownloadMonthlyAuditWord = () => {
+    if (!employee) return;
+    try {
+      const monthObj = AUDIT_MONTH_OPTIONS.find(m => m.value === selectedAuditMonth);
+      const selectedLabel = monthObj ? monthObj.label : 'All-Time Continuous History';
+
+      const taskRows = filteredTasks.map(t => [t.taskId || '-', t.title || '-', t.priority || 'Medium', t.status || 'Assigned', t.dueDate || '-']);
+      
+      exportOfficialWordDoc({
+        title: 'CONFIDENTIAL EMPLOYEE AUDIT DOSSIER',
+        metaFields: [
+          { label: 'Employee Name', value: employee.fullName || 'N/A' },
+          { label: 'Employee ID', value: employee.employeeId || 'N/A' },
+          { label: 'Department / Role', value: `${employee.department || 'N/A'} • ${employee.designation || 'N/A'}` },
+          { label: 'Audit Scope Period', value: selectedLabel }
+        ],
+        tableHeaders: ['Task ID', 'Task Title / Deliverable', 'Priority', 'Status', 'Due Date'],
+        tableRows: taskRows.length > 0 ? taskRows : [['-', 'No tasks logged for this audit period.', '-', '-', '-']],
+        fileName: `CodeThrive_Audit_${employee.employeeId}_${selectedAuditMonth}.doc`
+      });
+    } catch (err) {
+      alert('Error exporting Word document: ' + err.message);
     }
   };
 
@@ -744,13 +729,21 @@ const EmployeeDetail = () => {
             </select>
           </div>
 
-          {/* Export PDF Download Button */}
+          {/* Export PDF & Word Download Buttons */}
           <button 
             className="btn-export-dossier" 
             onClick={handleDownloadMonthlyAuditPDF}
             title="Download Monthly Employee Audit Dossier PDF"
           >
             <Download size={15} /> Export Audit (PDF)
+          </button>
+          <button 
+            className="btn-export-dossier" 
+            onClick={handleDownloadMonthlyAuditWord}
+            title="Download Monthly Employee Audit Dossier Word"
+            style={{ background: 'linear-gradient(135deg, #1d4ed8, #2563eb)' }}
+          >
+            <FileText size={15} /> Export Audit (Word)
           </button>
 
         </div>
@@ -1058,6 +1051,9 @@ const EmployeeDetail = () => {
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <button className="btn btn-outline" onClick={exportEmpAttendancePDF} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                   <Printer size={15} /> Download PDF Report
+                </button>
+                <button className="btn btn-outline" onClick={exportEmpAttendanceWord} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', borderColor: '#2563eb', color: '#60a5fa' }}>
+                  <FileText size={15} /> Download Word Report
                 </button>
                 <button className="btn btn-primary" onClick={exportEmpAttendanceExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                   <Download size={15} /> Export Excel (.xlsx)

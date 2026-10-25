@@ -10,11 +10,12 @@ import {
 import { 
   Clock, Coffee, Utensils, LogIn, Play, LogOut, CheckCircle2, AlertTriangle, 
   Download, Printer, Search, Calendar as CalIcon, User, 
-  ChevronLeft, ChevronRight, AlertCircle, ShieldCheck, Sparkles, TrendingUp
+  ChevronLeft, ChevronRight, AlertCircle, ShieldCheck, Sparkles, TrendingUp, FileText
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
+import { createOfficialCodeThriveDoc, getCorporateTableStyles, exportOfficialWordDoc } from '../utils/pdfLetterhead';
 import './Attendance.css';
 
 const Attendance = () => {
@@ -327,28 +328,92 @@ const Attendance = () => {
     }
   };
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     try {
-      const doc = new jsPDF();
-      doc.text('Attendance Register Report', 14, 15);
-      const tableColumn = ["Date", "Check In", "Check Out", "Break", "Net Hours", "Status"];
-      const tableRows = filteredHistory.map(row => [
-        formatDate(row.date),
-        row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
-        row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
-        formatHours((row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0)),
-        formatHours(row.totalWorkDurationInSeconds),
-        row.status || 'Present'
-      ]);
-      const renderTable = typeof autoTable === 'function' ? autoTable : (autoTable?.default || doc?.autoTable);
-      if (typeof renderTable === 'function') {
-        renderTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
+      const empName = selectedEmp 
+        ? employees.find(e => e._id === selectedEmp)?.fullName || 'Employee User'
+        : (user?.fullName || user?.name || 'All Active Staff');
+
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'ATTENDANCE REGISTER REPORT',
+        metaFields: [
+          { label: 'Employee / Scope', value: empName },
+          { label: 'Reporting Period', value: monthNameFormatted },
+          { label: 'Total Logs', value: `${filteredHistory.length} Days Recorded` },
+          { label: 'Attendance Score', value: `${attendancePercentage}% (Present: ${presentDaysCount} Days)` }
+        ]
+      });
+
+      const tableColumn = ["Date & Day", "Check In", "Check Out", "Breaks", "Net Work Hours", "Status"];
+      const tableRows = filteredHistory.map(row => {
+        const dateObj = row.date ? new Date(row.date) : new Date();
+        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+        const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
+
+        return [
+          `${formatDate(row.date)} (${dayName})`,
+          row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
+          row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
+          breakTotal > 0 ? formatHours(breakTotal) : '0m',
+          formatHours(row.totalWorkDurationInSeconds),
+          row.status || 'Present'
+        ];
+      });
+
+      const autoTableFn = typeof autoTable === 'function' ? autoTable : (autoTable?.default || doc?.autoTable);
+      if (typeof autoTableFn === 'function') {
+        autoTableFn(doc, {
+          head: [tableColumn],
+          body: tableRows,
+          startY: startY,
+          ...getCorporateTableStyles()
+        });
       } else {
         throw new Error('PDF autoTable renderer could not be initialized');
       }
-      doc.save(`Attendance_Report_${selectedMonth}_${selectedYear}.pdf`);
+
+      finalizeDoc(`Attendance_Register_${selectedMonth}_${selectedYear}.pdf`);
     } catch (e) {
       alert('Could not export PDF: ' + e.message);
+    }
+  };
+
+  const exportWord = () => {
+    try {
+      const empName = selectedEmp 
+        ? employees.find(e => e._id === selectedEmp)?.fullName || 'Employee User'
+        : (user?.fullName || user?.name || 'All Active Staff');
+
+      const tableColumn = ["Date & Day", "Check In", "Check Out", "Breaks", "Net Work Hours", "Status"];
+      const tableRows = filteredHistory.map(row => {
+        const dateObj = row.date ? new Date(row.date) : new Date();
+        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+        const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
+
+        return [
+          `${formatDate(row.date)} (${dayName})`,
+          row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
+          row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
+          breakTotal > 0 ? formatHours(breakTotal) : '0m',
+          formatHours(row.totalWorkDurationInSeconds),
+          row.status || 'Present'
+        ];
+      });
+
+      exportOfficialWordDoc({
+        title: 'ATTENDANCE REGISTER REPORT',
+        metaFields: [
+          { label: 'Employee / Scope', value: empName },
+          { label: 'Reporting Period', value: monthNameFormatted },
+          { label: 'Total Logs', value: `${filteredHistory.length} Days Recorded` },
+          { label: 'Attendance Score', value: `${attendancePercentage}% (Present: ${presentDaysCount} Days)` }
+        ],
+        tableHeaders: tableColumn,
+        tableRows: tableRows,
+        fileName: `Attendance_Register_${selectedMonth}_${selectedYear}.doc`
+      });
+    } catch (e) {
+      alert('Could not export Word document: ' + e.message);
     }
   };
 
@@ -546,9 +611,12 @@ const Attendance = () => {
             </button>
           </div>
 
-          {/* Quick Exports */}
-          <button className="att-export-btn" onClick={exportPDF} title="Download PDF Report">
+          {/* Quick Exports: PDF, Word & Excel */}
+          <button className="att-export-btn" onClick={exportPDF} title="Download Official PDF Report">
             <Printer size={15} /> PDF
+          </button>
+          <button className="att-export-btn" onClick={exportWord} title="Download Official Word Document">
+            <FileText size={15} /> Word (.doc)
           </button>
           <button className="att-export-btn" onClick={exportExcel} title="Download Excel Sheet">
             <Download size={15} /> Excel
