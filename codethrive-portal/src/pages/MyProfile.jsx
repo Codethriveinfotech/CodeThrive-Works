@@ -817,19 +817,25 @@ const MyProfile = () => {
 
           {/* User Primary Identity Details */}
           <div className="profile-identity-info">
-            <div className="profile-badge-row">
-              <span className="profile-badge-status">
-                <span className="pulse-dot"></span> Active
-              </span>
+            <div className="profile-name-row">
+              <h1 className="profile-user-name">{profile.fullName}</h1>
+              <div className="profile-name-badges">
+                <span className="profile-badge-status">
+                  <span className="pulse-dot"></span> Active
+                </span>
+                <span className="profile-badge-verified" title="Verified Corporate Profile">
+                  <ShieldCheck size={13} /> Verified
+                </span>
+              </div>
             </div>
-
-            <h1 className="profile-user-name">{profile.fullName}</h1>
 
             <div className="profile-user-title">
               <span className="profile-badge-id" title="Employee ID">
                 <CreditCard size={13} /> {profile.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-001')}
               </span>
+              <span className="title-bullet">•</span>
               <span className="title-highlight">{profile.designation || 'Specialist'}</span>
+              <span className="title-company-badge">CodeThrive Infotech</span>
             </div>
 
             <div className="profile-meta-tags">
@@ -839,9 +845,13 @@ const MyProfile = () => {
                 className="profile-meta-tag clickable-link email-tag"
                 title="Directly open email to compose message"
               >
-                <Mail size={13} className="tag-icon-mail" /> 
-                <span>{profile.personalEmailAddress || user?.email || 'N/A'}</span>
+                <span className="meta-icon-bubble email">
+                  <Mail size={13} />
+                </span>
+                <span className="meta-tag-text">{profile.personalEmailAddress || user?.email || 'N/A'}</span>
+                <span className="meta-tag-arrow">↗</span>
               </a>
+
               <button 
                 type="button"
                 className="profile-meta-tag clickable-btn phone-tag"
@@ -852,19 +862,35 @@ const MyProfile = () => {
                 })}
                 title="Connect via WhatsApp or Direct Call"
               >
-                <Phone size={13} className="tag-icon-phone" /> 
-                <span>{profile.personalPhoneNumber || '9876543210'}</span>
+                <span className="meta-icon-bubble phone">
+                  <Phone size={13} />
+                </span>
+                <span className="meta-tag-text">{profile.personalPhoneNumber || '9876543210'}</span>
+                <span className="meta-tag-arrow">↗</span>
               </button>
+
               <span className="profile-meta-tag date-tag">
-                <Calendar size={13} className="tag-icon-calendar" /> 
-                <span>Joined {profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/24'}</span>
+                <span className="meta-icon-bubble date">
+                  <Calendar size={13} />
+                </span>
+                <span className="meta-tag-text">Joined {profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/24'}</span>
               </span>
             </div>
           </div>
         </div>
 
-        {/* Header Action Buttons */}
+        {/* Header Action Buttons & Vault Completeness */}
         <div className="profile-header-actions">
+          <div className="header-vault-badge" title="Profile completion level">
+            <div className="vault-badge-ring">
+              <Sparkles size={16} />
+            </div>
+            <div className="vault-badge-info">
+              <span className="vault-badge-label">Profile Vault</span>
+              <span className="vault-badge-val">{profileStrength}% Complete</span>
+            </div>
+          </div>
+
           <button className="btn-primary-glow" onClick={() => setIsEditModalOpen(true)}>
             <Edit3 size={16} />
             <span>Edit Profile</span>
