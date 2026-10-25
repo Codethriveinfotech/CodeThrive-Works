@@ -422,10 +422,10 @@ const Attendance = () => {
         ]
       });
 
-      const tableColumn = ["Date & Day", "Check In", "Check Out", "Breaks", "Net Work Hours", "Status"];
+      const tableColumn = ["Date & Day", "Check In", "Check Out", "Breaks", "Status"];
       const tableRows = recordsToExport.map(row => {
         const dateObj = row.date ? new Date(row.date) : new Date();
-        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
         const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
 
         return [
@@ -433,7 +433,6 @@ const Attendance = () => {
           row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
           row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
           breakTotal > 0 ? formatHours(breakTotal) : '0m',
-          formatHours(row.totalWorkDurationInSeconds),
           row.status || 'Present'
         ];
       });
@@ -442,7 +441,7 @@ const Attendance = () => {
       if (typeof autoTableFn === 'function') {
         autoTableFn(doc, {
           head: [tableColumn],
-          body: tableRows.length > 0 ? tableRows : [["No records found in selected range", "--", "--", "--", "--", "--"]],
+          body: tableRows.length > 0 ? tableRows : [["No records found in selected range", "--", "--", "--", "--"]],
           startY: startY,
           ...getCorporateTableStyles()
         });
@@ -461,15 +460,18 @@ const Attendance = () => {
 
   const exportExcel = () => {
     try {
-      const exportData = filteredHistory.map(row => ({
-        Date: formatDate(row.date),
-        'Check In': row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
-        'Check Out': row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
-        'Work Duration': formatHours(row.totalWorkDurationInSeconds),
-        'Break Duration': formatHours(row.totalBreakDurationInSeconds),
-        'Lunch Duration': formatHours(row.totalLunchDurationInSeconds),
-        Status: row.status || 'Present'
-      }));
+      const exportData = filteredHistory.map(row => {
+        const dateObj = row.date ? new Date(row.date) : new Date();
+        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
+        return {
+          'Date & Day': `${formatDate(row.date)} (${dayName})`,
+          'Check In': row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
+          'Check Out': row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
+          'Breaks': breakTotal > 0 ? formatHours(breakTotal) : '0m',
+          Status: row.status || 'Present'
+        };
+      });
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
@@ -557,12 +559,67 @@ const Attendance = () => {
     timerLabelText = "Total Work Logged";
   }
 
+  // Dynamic Working Days computation for selectedMonth and selectedYear (Monday-Saturday, excluding Sundays & government holidays)
+  const calculatedWorkingDays = useMemo(() => {
+    const fixedHolidays = [
+      '01-01', // New Year's Day
+      '01-15', // Pongal
+      '01-16', // Thiruvalluvar Day
+      '01-26', // Republic Day
+      '05-01', // May Day
+      '08-15', // Independence Day
+      '10-02', // Gandhi Jayanti
+      '12-25', // Christmas
+    ];
+    const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+    let count = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateObj = new Date(selectedYear, selectedMonth - 1, d);
+      if (dateObj.getDay() === 0) continue; // Sunday off
+      const mmdd = `${String(selectedMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      if (fixedHolidays.includes(mmdd)) continue; // Government holiday off
+      count++;
+    }
+    return count;
+  }, [selectedMonth, selectedYear]);
+
+  // Actual present days in selected month directly computed from history records
+  const dynamicPresentDays = useMemo(() => {
+    if (!Array.isArray(history) || history.length === 0) {
+      return summary?.presentDays || 0;
+    }
+    let presentCount = 0;
+    history.forEach(row => {
+      const s = (row.status || '').toLowerCase();
+      if (['working', 'checked out', 'present', 'on break', 'on lunch', 'late', 'permission', 'work from home'].includes(s)) {
+        presentCount += 1;
+      } else if (s === 'half day' || s === 'half-day') {
+        presentCount += 0.5;
+      }
+    });
+    return presentCount;
+  }, [history, summary]);
+
+  const dynamicAbsentDays = useMemo(() => {
+    if (!Array.isArray(history) || history.length === 0) {
+      return summary?.absentDays || 0;
+    }
+    return history.filter(row => (row.status || '').toLowerCase() === 'absent').length;
+  }, [history, summary]);
+
+  const dynamicLateDays = useMemo(() => {
+    if (!Array.isArray(history) || history.length === 0) {
+      return summary?.lateDays || 0;
+    }
+    return history.filter(row => (row.status || '').toLowerCase() === 'late').length;
+  }, [history, summary]);
+
   // Key Attendance Stats
-  const attendancePercentage = summary?.attendancePercentage || 0;
-  const presentDaysCount = summary?.presentDays || 0;
-  const totalWorkingDays = summary?.totalWorkingDays || 22;
-  const lateDaysCount = summary?.lateDays || 0;
-  const absentDaysCount = summary?.absentDays || 0;
+  const totalWorkingDays = calculatedWorkingDays;
+  const presentDaysCount = dynamicPresentDays;
+  const attendancePercentage = totalWorkingDays > 0 ? Math.min(100, Math.round((presentDaysCount / totalWorkingDays) * 100)) : 0;
+  const lateDaysCount = dynamicLateDays;
+  const absentDaysCount = dynamicAbsentDays;
   const avgHoursDisplay = summary?.averageWorkingHours ? `${summary.averageWorkingHours}h` : '0h';
   const totalHoursDisplay = summary?.totalWorkingHours ? `${summary.totalWorkingHours}h` : '0h';
 
@@ -848,8 +905,8 @@ const Attendance = () => {
               </div>
               <div className="att-policy-details">
                 <span className="att-policy-label">Standard Shift</span>
-                <span className="att-policy-val">09:30 AM – 06:30 PM</span>
-                <span className="att-policy-desc">9 hours total daily schedule</span>
+                <span className="att-policy-val">10:00 AM – 06:00 PM</span>
+                <span className="att-policy-desc">8 hours total daily schedule</span>
               </div>
             </div>
 
@@ -859,7 +916,7 @@ const Attendance = () => {
               </div>
               <div className="att-policy-details">
                 <span className="att-policy-label">Grace Window</span>
-                <span className="att-policy-val">15 Minutes (09:45 AM)</span>
+                <span className="att-policy-val">15 Minutes (10:15 AM)</span>
                 <span className="att-policy-desc">Marked late if checked in after grace</span>
               </div>
             </div>
@@ -870,7 +927,7 @@ const Attendance = () => {
               </div>
               <div className="att-policy-details">
                 <span className="att-policy-label">Break Allowance</span>
-                <span className="att-policy-val">60 Min Total / Day</span>
+                <span className="att-policy-val">1 Hour 20 Mins / Day</span>
                 <span className="att-policy-desc">Tea & lunch break intervals combined</span>
               </div>
             </div>
@@ -881,8 +938,8 @@ const Attendance = () => {
               </div>
               <div className="att-policy-details">
                 <span className="att-policy-label">Working Days</span>
-                <span className="att-policy-val">Monday – Friday</span>
-                <span className="att-policy-desc">Weekends off / standard holiday schedule</span>
+                <span className="att-policy-val">Monday – Saturday</span>
+                <span className="att-policy-desc">Sundays off / standard holiday schedule</span>
               </div>
             </div>
           </div>
@@ -924,7 +981,7 @@ const Attendance = () => {
 
             {/* Status Filter Chips */}
             <div className="att-status-filters">
-              {['All', 'Present', 'Late', 'Absent'].map(tab => (
+              {['All', 'Present', 'Absent', 'Half Day', 'Permission', 'Late'].map(tab => (
                 <button
                   key={tab}
                   className={`att-filter-chip ${historyStatusFilter === tab ? 'active' : ''}`}
@@ -956,7 +1013,6 @@ const Attendance = () => {
                 <th>Check In</th>
                 <th>Check Out</th>
                 <th>Breaks</th>
-                <th>Net Work Hours</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -964,7 +1020,7 @@ const Attendance = () => {
               {filteredHistory.length > 0 ? (
                 filteredHistory.map((row, idx) => {
                   const dateObj = row.date ? new Date(row.date) : new Date();
-                  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
                   const dateStr = formatDate(row.date);
                   const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
 
@@ -1009,12 +1065,6 @@ const Attendance = () => {
                       </td>
 
                       <td>
-                        <span className="att-duration-badge">
-                          {formatHours(row.totalWorkDurationInSeconds)}
-                        </span>
-                      </td>
-
-                      <td>
                         <StatusBadge status={row.status || 'Present'} />
                       </td>
                     </tr>
@@ -1022,7 +1072,7 @@ const Attendance = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={(isAdminHR || isTeamLead) ? 7 : 6} className="att-empty-row">
+                  <td colSpan={(isAdminHR || isTeamLead) ? 6 : 5} className="att-empty-row">
                     <div className="att-empty-icon">
                       <CalIcon size={32} />
                     </div>

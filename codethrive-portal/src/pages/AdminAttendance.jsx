@@ -29,14 +29,14 @@ const fmtDuration = (secs) => {
 };
 
 const STATUS_OPTIONS = [
-  'Present', 'Absent', 'On Leave', 'Half Day', 'Work From Home', 'Late', 'Checked Out',
+  'Present', 'Absent', 'Permission', 'Half Day', 'On Leave', 'Work From Home', 'Late', 'Checked Out',
 ];
 
 const getBadgeClass = (status) => {
   const map = {
     'Working': 'working', 'Checked Out': 'checked', 'On Break': 'working',
     'On Lunch': 'working', 'Present': 'present', 'Absent': 'absent',
-    'On Leave': 'leave', 'Half Day': 'half', 'Work From Home': 'wfh',
+    'Permission': 'permission', 'On Leave': 'leave', 'Half Day': 'half', 'Work From Home': 'wfh',
     'Late': 'late', 'Not Checked In': 'not-in',
   };
   return map[status] || 'not-in';

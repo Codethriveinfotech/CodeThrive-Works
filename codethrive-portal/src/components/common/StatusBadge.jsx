@@ -9,13 +9,15 @@ const StatusBadge = ({ status, text }) => {
   let statusClass = 'neutral';
   const s = status?.toLowerCase();
   
-  if (['active', 'completed', 'approved', 'present', 'done', 'working'].includes(s)) {
+  if (['active', 'completed', 'approved', 'present', 'done', 'working', 'checked out'].includes(s)) {
     statusClass = 'success';
-  } else if (['pending', 'in progress', 'review', 'half-day'].includes(s)) {
+  } else if (['pending', 'in progress', 'review', 'half-day', 'half day', 'late'].includes(s)) {
     statusClass = 'warning';
   } else if (['inactive', 'rejected', 'failed', 'absent', 'not completed'].includes(s)) {
     statusClass = 'danger';
-  } else if (['new', 'leave', 'on break'].includes(s)) {
+  } else if (['permission'].includes(s)) {
+    statusClass = 'purple';
+  } else if (['new', 'leave', 'on leave', 'on break', 'work from home'].includes(s)) {
     statusClass = 'info';
   }
 

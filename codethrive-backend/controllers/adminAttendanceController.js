@@ -58,8 +58,9 @@ exports.getAttendanceRegister = async (req, res) => {
     // Summary stats
     const summary = {
       total: register.length,
-      present: register.filter(r => ['Working', 'Checked Out', 'On Break', 'On Lunch', 'Present', 'Work From Home', 'Late'].includes(r.status)).length,
+      present: register.filter(r => ['Working', 'Checked Out', 'On Break', 'On Lunch', 'Present', 'Work From Home', 'Late', 'Permission'].includes(r.status)).length,
       absent: register.filter(r => r.status === 'Absent').length,
+      permission: register.filter(r => r.status === 'Permission').length,
       onLeave: register.filter(r => r.status === 'On Leave').length,
       halfDay: register.filter(r => r.status === 'Half Day').length,
       wfh: register.filter(r => r.status === 'Work From Home').length,
@@ -101,7 +102,7 @@ exports.markAttendance = async (req, res) => {
     }
 
     const validStatuses = [
-      'Present', 'Absent', 'On Leave', 'Half Day',
+      'Present', 'Absent', 'Permission', 'On Leave', 'Half Day',
       'Work From Home', 'Late', 'Working', 'Checked Out',
     ];
     if (!validStatuses.includes(status)) {

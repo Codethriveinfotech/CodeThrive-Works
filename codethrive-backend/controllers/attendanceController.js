@@ -459,18 +459,44 @@ exports.getAttendanceSummary = async (req, res) => {
       date: { $gte: startOfMonth, $lte: endOfMonth }
     });
 
-    let totalWorkingDays = 22;
+    // Dynamic working days computation (Monday to Saturday, excluding Sundays and statutory holidays)
+    const fixedHolidays = [
+      '01-01', // New Year
+      '01-15', // Pongal
+      '01-16', // Thiruvalluvar Day
+      '01-26', // Republic Day
+      '05-01', // May Day
+      '08-15', // Independence Day
+      '10-02', // Gandhi Jayanti
+      '12-25', // Christmas
+    ];
+
+    const daysInMonth = new Date(y, m, 0).getDate();
+    let totalWorkingDays = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(y, m - 1, day);
+      if (d.getDay() === 0) continue; // Sunday off
+      const mmdd = `${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      if (fixedHolidays.includes(mmdd)) continue; // Holiday off
+      totalWorkingDays++;
+    }
+
     let presentDays = 0;
     let absentDays = 0;
     let leaveDays = 0;
     let lateDays = 0;
     let halfDays = 0;
+    let permissionDays = 0;
     let workFromHomeDays = 0;
     let totalWorkSeconds = 0;
 
     records.forEach(rec => {
       totalWorkSeconds += rec.totalWorkDurationInSeconds || 0;
-      if (['Working', 'Checked Out', 'Present', 'On Break', 'On Lunch'].includes(rec.status)) {
+      if (['Working', 'Checked Out', 'Present', 'On Break', 'On Lunch', 'Late'].includes(rec.status)) {
+        presentDays++;
+        if (rec.status === 'Late') lateDays++;
+      } else if (rec.status === 'Permission') {
+        permissionDays++;
         presentDays++;
       } else if (rec.status === 'Absent') {
         absentDays++;
@@ -487,7 +513,7 @@ exports.getAttendanceSummary = async (req, res) => {
 
     const totalWorkingHours = parseFloat((totalWorkSeconds / 3600).toFixed(1));
     const averageWorkingHours = presentDays > 0 ? parseFloat((totalWorkingHours / presentDays).toFixed(1)) : 0;
-    const attendancePercentage = Math.round((presentDays / totalWorkingDays) * 100);
+    const attendancePercentage = totalWorkingDays > 0 ? Math.min(100, Math.round((presentDays / totalWorkingDays) * 100)) : 0;
 
     res.status(200).json({
       success: true,
@@ -498,6 +524,7 @@ exports.getAttendanceSummary = async (req, res) => {
         leaveDays,
         lateDays,
         halfDays,
+        permissionDays,
         workFromHomeDays,
         attendancePercentage,
         totalWorkingHours,
