@@ -419,6 +419,8 @@ const Attendance = () => {
 
       const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
         title: 'ATTENDANCE REGISTER REPORT',
+        userName: empName,
+        reportType: 'Attendance_Report',
         metaFields: [
           { label: 'Employee / Scope', value: empName },
           { label: 'Reporting Period', value: `${formatDate(pdfStartDate)} to ${formatDate(pdfEndDate)}` },
@@ -474,7 +476,7 @@ const Attendance = () => {
           
           doc.setFillColor(248, 250, 252);
           doc.setDrawColor(203, 213, 225);
-          doc.setLineWidth(0.3);
+          doc.setLineWidth(0.35);
           doc.roundedRect(14, cardY, cardW, 46, 2, 2, 'FD');
 
           // Left vertical brand bar
@@ -482,24 +484,24 @@ const Attendance = () => {
           doc.rect(14, cardY, 3, 46, 'F');
 
           doc.setFont('times', 'bold');
-          doc.setFontSize(9.5);
+          doc.setFontSize(10.5);
           doc.setTextColor(0, 82, 165);
-          doc.text('CodeThrive Infotech - Attendance Policy & Guidelines Summary', 21, cardY + 7);
+          doc.text('CodeThrive Infotech - Attendance Policy & Guidelines Summary', 21, cardY + 7.5);
 
           doc.setFont('times', 'normal');
-          doc.setFontSize(8.5);
+          doc.setFontSize(9);
           doc.setTextColor(51, 65, 85);
-          doc.text('• Standard Working Shift: 10:00 AM to 06:00 PM (Monday to Saturday)', 21, cardY + 15);
-          doc.text('• Total Break Allowance: 1 Hour 20 Minutes (Lunch Break + Refreshments)', 21, cardY + 22);
-          doc.text('• Grace Period & Late Login: Check-ins past 10:15 AM are automatically marked as Late.', 21, cardY + 29);
-          doc.text('• Non-Working Days: Sundays and Tamil Nadu Gazetted Public Holidays are fully exempted.', 21, cardY + 36);
-          doc.text('• Verification: Attendance records are officially validated and managed by CodeThrive HR/Admin Portal.', 21, cardY + 43);
+          doc.text('• Standard Working Shift: 10:00 AM to 06:00 PM (Monday to Saturday)', 21, cardY + 15.5);
+          doc.text('• Total Break Allowance: 1 Hour 20 Minutes (Lunch Break + Refreshments)', 21, cardY + 22.5);
+          doc.text('• Grace Period & Late Login: Check-ins past 10:15 AM are automatically marked as Late.', 21, cardY + 29.5);
+          doc.text('• Non-Working Days: Sundays and Tamil Nadu Gazetted Public Holidays are fully exempted.', 21, cardY + 36.5);
+          doc.text('• Verification: Attendance records are officially validated and managed by CodeThrive HR/Admin Portal.', 21, cardY + 43.5);
         }
       } else {
         throw new Error('PDF autoTable renderer could not be initialized');
       }
 
-      finalizeDoc(`Attendance_Report_${pdfStartDate}_to_${pdfEndDate}.pdf`);
+      finalizeDoc();
       setShowPdfModal(false);
     } catch (e) {
       alert('Could not export PDF: ' + e.message);

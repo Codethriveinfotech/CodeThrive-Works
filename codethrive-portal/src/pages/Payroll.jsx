@@ -73,6 +73,8 @@ const Payroll = () => {
 
       const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
         title: 'OFFICIAL SALARY STATEMENT',
+        userName: empName,
+        reportType: 'Payslip',
         metaFields: [
           { label: 'Employee Name', value: empName },
           { label: 'Employee ID', value: empId },
@@ -146,8 +148,7 @@ const Payroll = () => {
       doc.setFont('times', 'bold');
       doc.text(`Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 192, finalY + 11, { align: 'right' });
 
-      const fileName = `Official_Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.pdf`;
-      finalizeDoc(fileName);
+      finalizeDoc();
     } catch (err) {
       console.error('PDF Generation Failed', err);
       alert('Could not generate PDF: ' + err.message);
