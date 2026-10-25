@@ -879,18 +879,8 @@ const MyProfile = () => {
           </div>
         </div>
 
-        {/* Header Action Buttons & Vault Completeness */}
+        {/* Header Action Buttons */}
         <div className="profile-header-actions">
-          <div className="header-vault-badge" title="Profile completion level">
-            <div className="vault-badge-ring">
-              <Sparkles size={16} />
-            </div>
-            <div className="vault-badge-info">
-              <span className="vault-badge-label">Profile Vault</span>
-              <span className="vault-badge-val">{profileStrength}% Complete</span>
-            </div>
-          </div>
-
           <button className="btn-primary-glow" onClick={() => setIsEditModalOpen(true)}>
             <Edit3 size={16} />
             <span>Edit Profile</span>
@@ -903,74 +893,81 @@ const MyProfile = () => {
          -------------------------------------------------------------------------- */}
       <div className="profile-strength-bar-card">
         <div className="strength-info">
-          <Sparkles size={20} color="#60a5fa" />
+          <div className="strength-icon-box">
+            <Sparkles size={20} />
+          </div>
           <div>
-            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#f8fafc' }}>
-              Profile Vault Completeness
-            </span>
-            <span style={{ fontSize: '0.775rem', color: '#94a3b8', display: 'block' }}>
+            <div className="strength-title-row">
+              <span className="strength-title">Profile Vault Completeness</span>
+              <span className={`strength-pct ${profileStrength === 100 ? 'done' : ''}`}>{profileStrength}%</span>
+            </div>
+            <span className="strength-sub">
               {profileStrength === 100 
-                ? '🎉 Excellent! Your IT Employee profile is 100% complete and fully verified.' 
+                ? '🎉 Excellent! Your profile is 100% complete and fully verified.' 
                 : `Your profile is ${profileStrength}% complete. Fill all details in "Edit Profile" to reach 100%.`}
             </span>
           </div>
         </div>
 
-        <div className="strength-track" style={{ maxWidth: '300px' }}>
-          <div className="strength-fill" style={{ width: `${profileStrength}%` }}></div>
+        <div className="strength-track-wrapper">
+          <div className="strength-track">
+            <div className="strength-fill" style={{ width: `${profileStrength}%` }}></div>
+          </div>
         </div>
-
-        <span style={{ fontWeight: 800, color: profileStrength === 100 ? '#34d399' : '#60a5fa', fontSize: '0.95rem' }}>
-          {profileStrength}%
-        </span>
       </div>
 
       {/* --------------------------------------------------------------------------
-          4. FULL PAGE IT PROFILE DASHBOARD (NEAT, ORGANIZED CARDS)
+          4. FULL PAGE IT PROFILE DASHBOARD (NEAT, ORGANIZED TILES)
          -------------------------------------------------------------------------- */}
       <div className="profile-main-grid">
         {/* Admin Governance & Access Rights Card (For Admin Accounts) */}
         {isAdmin && (
           <Card title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <ShieldCheck size={22} color="#fbbf24" /> System Governance & CodeThrive Infotech Privileges
+            <div className="card-custom-header">
+              <div className="card-header-icon-bubble amber">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <span className="card-header-title">System Governance & Privileges</span>
+                <span className="card-header-subtitle">Executive Administrative Clearance</span>
+              </div>
             </div>
           }>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1.25rem' }}>
-              <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', padding: '1.1rem', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-                  <Shield size={16} color="#fbbf24" />
-                  <span style={{ fontSize: '0.78rem', color: '#fde68a', textTransform: 'uppercase', fontWeight: 700 }}>User Management</span>
+            <div className="gov-cards-grid">
+              <div className="gov-card amber">
+                <div className="gov-card-top">
+                  <Shield size={16} />
+                  <span className="gov-card-badge">User Management</span>
                 </div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.98rem' }}>Full Write & Approval</div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Register, deactivate & manage organization staff</span>
+                <div className="gov-card-status">Full Write & Approval</div>
+                <span className="gov-card-desc">Register, deactivate & manage organization staff</span>
               </div>
 
-              <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '1.1rem', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-                  <Zap size={16} color="#34d399" />
-                  <span style={{ fontSize: '0.78rem', color: '#a7f3d0', textTransform: 'uppercase', fontWeight: 700 }}>Payroll & Disbursement</span>
+              <div className="gov-card emerald">
+                <div className="gov-card-top">
+                  <Zap size={16} />
+                  <span className="gov-card-badge">Payroll & Disbursement</span>
                 </div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.98rem' }}>Disbursement Authorized</div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>1-Click bulk & single digital payslip generation</span>
+                <div className="gov-card-status">Disbursement Authorized</div>
+                <span className="gov-card-desc">1-Click bulk & single digital payslip generation</span>
               </div>
 
-              <div style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '1.1rem', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-                  <CheckCircle2 size={16} color="#60a5fa" />
-                  <span style={{ fontSize: '0.78rem', color: '#93c5fd', textTransform: 'uppercase', fontWeight: 700 }}>Leave & Attendance</span>
+              <div className="gov-card blue">
+                <div className="gov-card-top">
+                  <CheckCircle2 size={16} />
+                  <span className="gov-card-badge">Leave & Attendance</span>
                 </div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.98rem' }}>Master Overrides Active</div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Approve or reject organization leave applications</span>
+                <div className="gov-card-status">Master Overrides Active</div>
+                <span className="gov-card-desc">Approve or reject organization leave applications</span>
               </div>
 
-              <div style={{ background: 'rgba(168, 85, 247, 0.08)', border: '1px solid rgba(168, 85, 247, 0.25)', padding: '1.1rem', borderRadius: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
-                  <Trophy size={16} color="#c084fc" />
-                  <span style={{ fontSize: '0.78rem', color: '#e9d5ff', textTransform: 'uppercase', fontWeight: 700 }}>Security Level</span>
+              <div className="gov-card purple">
+                <div className="gov-card-top">
+                  <Trophy size={16} />
+                  <span className="gov-card-badge">Security Level</span>
                 </div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.98rem' }}>Tier-1 Root Clearance</div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>Master system audit logs & security control</span>
+                <div className="gov-card-status">Tier-1 Root Clearance</div>
+                <span className="gov-card-desc">Master system audit logs & security control</span>
               </div>
             </div>
           </Card>
@@ -978,188 +975,217 @@ const MyProfile = () => {
 
         {/* Card 1: Personal Details & Identity */}
         <Card title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <UserCircle size={22} color="#60a5fa" /> Personal & Identity Details
+          <div className="card-custom-header">
+            <div className="card-header-icon-bubble blue">
+              <UserCircle size={20} />
+            </div>
+            <div>
+              <span className="card-header-title">Personal & Identity Details</span>
+              <span className="card-header-subtitle">Verified Primary Identity Information</span>
+            </div>
           </div>
         }>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem' }}>
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Full Legal Name</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.fullName || 'N/A'}
+          <div className="profile-tiles-grid">
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Full Legal Name</span>
+              <div className="field-tile-val">{profile.fullName || <span className="val-not-set">Not Provided</span>}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Date of Birth</span>
+              <div className="field-tile-val">{profile.dateOfBirth ? formatDate(profile.dateOfBirth) : <span className="val-not-set">Not Provided</span>}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Gender</span>
+              <div className="field-tile-val">{profile.gender || 'Prefer not to say'}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Blood Group</span>
+              <div className="field-tile-val">
+                {profile.bloodGroup ? (
+                  <span className="blood-group-badge">{profile.bloodGroup}</span>
+                ) : (
+                  <span className="val-not-set">Not Provided</span>
+                )}
               </div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Date of Birth</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.dateOfBirth ? formatDate(profile.dateOfBirth) : 'Not Provided'}
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Marital Status</span>
+              <div className="field-tile-val">{profile.maritalStatus || 'Single'}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Nationality</span>
+              <div className="field-tile-val">{profile.nationality || 'Indian'}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Personal Email</span>
+              <div className="field-tile-val">
+                {profile.personalEmailAddress || user?.email ? (
+                  <a 
+                    href={`mailto:${profile.personalEmailAddress || user?.email}`}
+                    onClick={(e) => openDirectEmail(profile.personalEmailAddress || user?.email, e)}
+                    className="field-tile-action-link email"
+                    title="Open email composer directly"
+                  >
+                    <Mail size={13} />
+                    <span>{profile.personalEmailAddress || user?.email}</span>
+                  </a>
+                ) : (
+                  <span className="val-not-set">Not Provided</span>
+                )}
               </div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Gender</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.gender || 'Prefer not to say'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Blood Group</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#ef4444' }}>
-                {profile.bloodGroup || 'Not Provided'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Marital Status</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.maritalStatus || 'Single'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Personal Email</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1rem', color: '#60a5fa', wordBreak: 'break-all' }}>
-                {profile.personalEmailAddress || user?.email || 'N/A'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Phone Number</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.personalPhoneNumber || 'N/A'}
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Phone Number</span>
+              <div className="field-tile-val">
+                {profile.personalPhoneNumber ? (
+                  <button 
+                    type="button"
+                    className="field-tile-action-btn phone"
+                    onClick={() => setContactModal({
+                      isOpen: true,
+                      name: profile.fullName || 'Employee',
+                      phone: profile.personalPhoneNumber
+                    })}
+                    title="Connect on WhatsApp or Phone Call"
+                  >
+                    <Phone size={13} />
+                    <span>{profile.personalPhoneNumber}</span>
+                  </button>
+                ) : (
+                  <span className="val-not-set">Not Provided</span>
+                )}
               </div>
             </div>
           </div>
         </Card>
 
-        {/* Card 2: Work & Corporate Details */}
+        {/* Card 2: Work & Corporate Employment */}
         <Card title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Briefcase size={22} color="#818cf8" /> Work & Corporate Employment
+          <div className="card-custom-header">
+            <div className="card-header-icon-bubble indigo">
+              <Briefcase size={20} />
+            </div>
+            <div>
+              <span className="card-header-title">Work & Corporate Employment</span>
+              <span className="card-header-subtitle">Enterprise Role & Designation Records</span>
+            </div>
           </div>
         }>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem' }}>
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Department</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.department || 'Quality Assurance'}
+          <div className="profile-tiles-grid">
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Department</span>
+              <div className="field-tile-val">{profile.department || 'Executive Board'}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Designation</span>
+              <div className="field-tile-val highlight-blue">{profile.designation || 'Managing Director'}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Employment Type</span>
+              <div className="field-tile-val">
+                <span className="employment-type-pill">{profile.employmentType || 'Full-Time'}</span>
               </div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Designation</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.designation || 'Software Testing Specialist'}
-              </div>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Date of Joining</span>
+              <div className="field-tile-val">{profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/2024'}</div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Employment Type</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399' }}>
-                {profile.employmentType || 'Full-Time'}
-              </div>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Work Location</span>
+              <div className="field-tile-val">{profile.workLocation || 'Office'}</div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Date of Joining</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/2024'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Work Location</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#60a5fa' }}>
-                {profile.workLocation || 'Office'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Account Status</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <CheckCircle2 size={16} /> Active Verified
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Account Status</span>
+              <div className="field-tile-val">
+                <span className="account-status-pill">
+                  <CheckCircle2 size={14} /> Active Verified
+                </span>
               </div>
             </div>
           </div>
 
           {/* Attendance Summary */}
           {attendanceSummary && (
-            <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.2rem' }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Calendar size={17} color="#60a5fa" /> Monthly Attendance Summary
+            <div className="attendance-summary-section">
+              <h4 className="section-subheading">
+                <Calendar size={16} /> Monthly Attendance Summary
               </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
-                <div className="quick-stat-item">
-                  <div>
-                    <div className="quick-stat-label">Total Days</div>
-                    <div className="quick-stat-value" style={{ fontSize: '1.3rem' }}>{attendanceSummary.totalWorkingDays || 22}</div>
-                  </div>
+              <div className="attendance-summary-cards">
+                <div className="att-summary-card">
+                  <span className="att-card-label">Total Days</span>
+                  <span className="att-card-val">{attendanceSummary.totalWorkingDays || 22}</span>
                 </div>
-                <div className="quick-stat-item">
-                  <div>
-                    <div className="quick-stat-label">Days Present</div>
-                    <div className="quick-stat-value" style={{ fontSize: '1.3rem', color: '#34d399' }}>{attendanceSummary.presentDays || 20}</div>
-                  </div>
+                <div className="att-summary-card emerald">
+                  <span className="att-card-label">Days Present</span>
+                  <span className="att-card-val">{attendanceSummary.presentDays || 20}</span>
                 </div>
-                <div className="quick-stat-item">
-                  <div>
-                    <div className="quick-stat-label">Avg Hours / Day</div>
-                    <div className="quick-stat-value" style={{ fontSize: '1.3rem', color: '#60a5fa' }}>{attendanceSummary.averageWorkingHours || 8.5}h</div>
-                  </div>
+                <div className="att-summary-card blue">
+                  <span className="att-card-label">Avg Hours / Day</span>
+                  <span className="att-card-val">{attendanceSummary.averageWorkingHours || 8.5}h</span>
                 </div>
               </div>
             </div>
           )}
         </Card>
 
-        {/* Card 3: Bank Account & Payroll Tax Credentials (IT Standard) */}
+        {/* Card 3: Bank Account & Tax Credentials */}
         <Card title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Landmark size={22} color="#34d399" /> Bank Account & Tax Credentials
+          <div className="card-custom-header">
+            <div className="card-header-icon-bubble emerald">
+              <Landmark size={20} />
+            </div>
+            <div>
+              <span className="card-header-title">Bank Account & Tax Credentials</span>
+              <span className="card-header-subtitle">Secure Payroll Disbursement Vault</span>
+            </div>
           </div>
         }>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem' }}>
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Bank Account Holder</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.bankAccountHolderName || profile.fullName || 'Not Provided'}
+          <div className="profile-tiles-grid">
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Bank Account Holder</span>
+              <div className="field-tile-val">{profile.bankAccountHolderName || profile.fullName || <span className="val-not-set">Not Provided</span>}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Bank Name</span>
+              <div className="field-tile-val">{profile.bankName || <span className="val-not-set">Not Provided</span>}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Account Number</span>
+              <div className="field-tile-val mono highlight-blue">
+                {profile.accountNumber ? profile.accountNumber : <span className="val-not-set">Not Provided</span>}
               </div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Bank Name</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.bankName || 'Not Provided'}
+            <div className="profile-field-tile">
+              <span className="field-tile-label">IFSC Code</span>
+              <div className="field-tile-val mono">
+                {profile.ifscCode || <span className="val-not-set">Not Provided</span>}
               </div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Account Number</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#60a5fa', fontFamily: 'monospace' }}>
-                {profile.accountNumber ? profile.accountNumber : 'Not Provided'}
-              </div>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Branch Name</span>
+              <div className="field-tile-val">{profile.branchName || <span className="val-not-set">Not Provided</span>}</div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>IFSC Code</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc', fontFamily: 'monospace' }}>
-                {profile.ifscCode || 'Not Provided'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Branch Name</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.branchName || 'Not Provided'}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>UPI ID (Optional)</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399' }}>
-                {profile.upiId || 'Not Provided'}
+            <div className="profile-field-tile">
+              <span className="field-tile-label">UPI ID</span>
+              <div className="field-tile-val highlight-emerald">
+                {profile.upiId || <span className="val-not-set">Not Provided</span>}
               </div>
             </div>
           </div>
@@ -1167,168 +1193,177 @@ const MyProfile = () => {
 
         {/* Card 4: Education & Technical Skills */}
         <Card title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <GraduationCap size={22} color="#fbbf24" /> Education & Technical Skills
+          <div className="card-custom-header">
+            <div className="card-header-icon-bubble amber">
+              <GraduationCap size={20} />
+            </div>
+            <div>
+              <span className="card-header-title">Education & Technical Skills</span>
+              <span className="card-header-subtitle">Academic Credentials & Verified Skillset</span>
+            </div>
           </div>
         }>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.4rem', marginBottom: '1.5rem' }}>
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Highest Qualification</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.qualification || 'Bachelor of Engineering (B.E.)'}
-              </div>
+          <div className="profile-tiles-grid" style={{ marginBottom: '1.25rem' }}>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Highest Qualification</span>
+              <div className="field-tile-val">{profile.qualification || 'Bachelor of Engineering (B.E.)'}</div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>College Name</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.collegeName || 'SRM Institute of Science & Technology'}
-              </div>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">College / Institute</span>
+              <div className="field-tile-val">{profile.collegeName || 'SRM Institute of Science & Technology'}</div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>University Name</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#60a5fa' }}>
-                {profile.universityName || 'Anna University'}
-              </div>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">University</span>
+              <div className="field-tile-val">{profile.universityName || 'Anna University'}</div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Graduation Year</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#f8fafc' }}>
-                {profile.graduationYear || '2024'}
-              </div>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Graduation Year</span>
+              <div className="field-tile-val">{profile.graduationYear || '2024'}</div>
             </div>
 
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>CGPA / Percentage</span>
-              <div style={{ fontWeight: 700, marginTop: '0.3rem', fontSize: '1.05rem', color: '#34d399' }}>
-                {profile.cgpaOrPercentage || '8.5 CGPA'}
-              </div>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">CGPA / Percentage</span>
+              <div className="field-tile-val highlight-emerald">{profile.cgpaOrPercentage || '8.5 CGPA'}</div>
             </div>
           </div>
 
-          <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.8rem' }}>
-            Verified Technical Skills & Competencies
-          </h4>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
-            {profile.skills?.length > 0 ? (
-              profile.skills.map((skill, i) => (
-                <span key={i} style={{ 
-                  padding: '0.5rem 1rem', 
-                  background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.06) 100%)', 
-                  border: '1px solid rgba(59, 130, 246, 0.3)', 
-                  borderRadius: '20px', 
-                  fontSize: '0.85rem',
-                  color: '#f8fafc',
-                  fontWeight: '600'
-                }}>
-                  ✨ {skill}
+          <div className="skills-container-box">
+            <span className="skills-section-title">Verified Technical Skills & Competencies</span>
+            <div className="skills-tags-wrap">
+              {profile.skills?.length > 0 ? (
+                profile.skills.map((skill, i) => (
+                  <span key={i} className="skill-pill-tag">
+                    ✨ {skill}
+                  </span>
+                ))
+              ) : (
+                <span className="skills-empty-note">
+                  No skills listed yet. Click "Edit Profile" to add technical skills.
                 </span>
-              ))
-            ) : (
-              <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>
-                No skills listed yet. Click "Edit Profile" to add technical skills.
-              </span>
-            )}
+              )}
+            </div>
           </div>
         </Card>
 
-        {/* Card 5: Career Journey & Achievements */}
+        {/* Card 5: Career Achievements & Milestones */}
         <Card title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Trophy size={22} color="#fbbf24" /> Career Achievements & Milestones
+          <div className="card-custom-header">
+            <div className="card-header-icon-bubble purple">
+              <Trophy size={20} />
+            </div>
+            <div>
+              <span className="card-header-title">Career Achievements & Milestones</span>
+              <span className="card-header-subtitle">Corporate Recognition & Timeline</span>
+            </div>
           </div>
         }>
-          <div className="achievements-grid" style={{ marginBottom: '1.5rem' }}>
-            <div className="achievement-badge-card">
-              <div className="badge-icon-box">
-                <Trophy size={22} />
+          <div className="achievements-cards-row">
+            <div className="achievement-badge-card amber">
+              <div className="badge-icon-box amber">
+                <Trophy size={20} />
               </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#f8fafc' }}>Quality Champion</div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>QA Excellence</div>
-              </div>
-            </div>
-
-            <div className="achievement-badge-card">
-              <div className="badge-icon-box" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa' }}>
-                <Zap size={22} />
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#f8fafc' }}>Fast Performer</div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Top Attendance</div>
+              <div className="badge-info-box">
+                <span className="badge-title">Quality Champion</span>
+                <span className="badge-sub">Excellence & Leadership</span>
               </div>
             </div>
 
-            <div className="achievement-badge-card">
-              <div className="badge-icon-box" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399' }}>
-                <ShieldCheck size={22} />
+            <div className="achievement-badge-card blue">
+              <div className="badge-icon-box blue">
+                <Zap size={20} />
               </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#f8fafc' }}>Vault Verified</div>
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Verified Identity</div>
+              <div className="badge-info-box">
+                <span className="badge-title">Top Performer</span>
+                <span className="badge-sub">High Delivery Standard</span>
+              </div>
+            </div>
+
+            <div className="achievement-badge-card emerald">
+              <div className="badge-icon-box emerald">
+                <ShieldCheck size={20} />
+              </div>
+              <div className="badge-info-box">
+                <span className="badge-title">Vault Verified</span>
+                <span className="badge-sub">Identity & Credentials Checked</span>
               </div>
             </div>
           </div>
 
-          <div className="career-timeline">
-            <div className="timeline-item emerald">
-              <span className="timeline-date">August 2024 - Present</span>
-              <span className="timeline-title">Assigned as Quality Assurance Specialist</span>
-              <span className="timeline-desc">Joined CodeThrive Works and established software testing workflows.</span>
+          <div className="career-timeline-card">
+            <div className="timeline-node">
+              <span className="timeline-date-tag">August 2024 - Present</span>
+              <h5 className="timeline-node-title">{profile.designation || 'Managing Director'}</h5>
+              <p className="timeline-node-desc">Executive Leadership at CodeThrive Infotech Pvt Ltd.</p>
             </div>
           </div>
         </Card>
 
         {/* Card 6: Addresses & Emergency Contacts */}
         <Card title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Shield size={22} color="#34d399" /> Addresses & Emergency Contact
+          <div className="card-custom-header">
+            <div className="card-header-icon-bubble emerald">
+              <MapPin size={20} />
+            </div>
+            <div>
+              <span className="card-header-title">Addresses & Emergency Contact</span>
+              <span className="card-header-subtitle">Residential Location & Safety Contact</span>
+            </div>
           </div>
         }>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.75rem' }}>
-            <div>
-              <h4 style={{ margin: '0 0 0.8rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
-                <MapPin size={16} /> Addresses
+          <div className="addresses-split-grid">
+            <div className="address-column">
+              <h4 className="section-subheading">
+                <MapPin size={16} /> Residential Addresses
               </h4>
-              <div style={{ marginBottom: '1rem' }}>
-                <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Current Residential Address</span>
-                <div style={{ fontWeight: '600', marginTop: '0.2rem', color: '#f8fafc', lineHeight: 1.4 }}>
-                  {profile.currentAddress || 'Not Provided'}
-                </div>
+              <div className="address-box">
+                <span className="field-tile-label">Current Residential Address</span>
+                <div className="address-text">{profile.currentAddress || <span className="val-not-set">Not Provided</span>}</div>
               </div>
-              <div>
-                <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Permanent Address</span>
-                <div style={{ fontWeight: '600', marginTop: '0.2rem', color: '#f8fafc', lineHeight: 1.4 }}>
-                  {profile.permanentAddress || 'Not Provided'}
-                </div>
+              <div className="address-box" style={{ marginTop: '0.9rem' }}>
+                <span className="field-tile-label">Permanent Address</span>
+                <div className="address-text">{profile.permanentAddress || <span className="val-not-set">Not Provided</span>}</div>
               </div>
             </div>
 
-            <div>
-              <h4 style={{ margin: '0 0 0.8rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.875rem' }}>
+            <div className="emergency-column">
+              <h4 className="section-subheading">
                 <UserCircle size={16} /> Emergency Contact
               </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                <div>
-                  <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Contact Person Name</span>
-                  <div style={{ fontWeight: '700', marginTop: '0.2rem', color: '#f8fafc' }}>
-                    {profile.emergencyContact?.name || 'Not Provided'}
+              <div className="profile-tiles-grid" style={{ gridTemplateColumns: '1fr' }}>
+                <div className="profile-field-tile">
+                  <span className="field-tile-label">Contact Person</span>
+                  <div className="field-tile-val">{profile.emergencyContact?.name || <span className="val-not-set">Not Provided</span>}</div>
+                </div>
+
+                <div className="profile-field-tile">
+                  <span className="field-tile-label">Emergency Phone</span>
+                  <div className="field-tile-val">
+                    {profile.emergencyContact?.phone ? (
+                      <button 
+                        type="button"
+                        className="field-tile-action-btn phone"
+                        onClick={() => setContactModal({
+                          isOpen: true,
+                          name: profile.emergencyContact?.name || 'Emergency Contact',
+                          phone: profile.emergencyContact?.phone
+                        })}
+                        title="WhatsApp or Direct Call"
+                      >
+                        <Phone size={13} />
+                        <span>{profile.emergencyContact?.phone}</span>
+                      </button>
+                    ) : (
+                      <span className="val-not-set">Not Provided</span>
+                    )}
                   </div>
                 </div>
-                <div>
-                  <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Phone Number</span>
-                  <div style={{ fontWeight: '700', marginTop: '0.2rem', color: '#60a5fa' }}>
-                    {profile.emergencyContact?.phone || 'Not Provided'}
-                  </div>
-                </div>
-                <div>
-                  <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>Relationship</span>
-                  <div style={{ fontWeight: '700', marginTop: '0.2rem', color: '#f8fafc' }}>
-                    {profile.emergencyContact?.relationship || 'Not Provided'}
-                  </div>
+
+                <div className="profile-field-tile">
+                  <span className="field-tile-label">Relationship</span>
+                  <div className="field-tile-val">{profile.emergencyContact?.relationship || <span className="val-not-set">Not Provided</span>}</div>
                 </div>
               </div>
             </div>
