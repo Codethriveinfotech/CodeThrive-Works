@@ -1,14 +1,9 @@
 import React from 'react';
 import { PhoneCall, X, MessageSquare, Phone } from 'lucide-react';
+import { cleanPhoneNumberForWhatsApp, openDirectEmail } from '../../utils/contactHelpers';
 import './ContactActionModal.css';
 
-export const cleanPhoneNumberForWhatsApp = (phone) => {
-  if (!phone) return '';
-  const digits = String(phone).replace(/\D/g, '');
-  if (digits.length === 10) return `91${digits}`;
-  if (digits.length === 12 && digits.startsWith('91')) return digits;
-  return digits;
-};
+export { cleanPhoneNumberForWhatsApp, openDirectEmail };
 
 const ContactActionModal = ({ isOpen, onClose, name = 'Employee', phone = '' }) => {
   if (!isOpen || !phone) return null;

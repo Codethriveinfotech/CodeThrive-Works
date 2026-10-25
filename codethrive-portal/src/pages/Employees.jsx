@@ -14,7 +14,7 @@ import {
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
-import ContactActionModal from '../components/common/ContactActionModal';
+import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
 import './Employees.css';
 
 const Employees = () => {
@@ -254,9 +254,9 @@ const Employees = () => {
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginTop: '2px' }}>
               <a 
                 href={`mailto:${row.personalEmailAddress || ''}`}
-                onClick={(e) => e.stopPropagation()}
-                style={{ color: '#38bdf8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
-                title="Send email"
+                onClick={(e) => openDirectEmail(row.personalEmailAddress, e)}
+                style={{ color: '#38bdf8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.2rem', cursor: 'pointer' }}
+                title="Directly open email to compose message"
               >
                 <Mail size={11} /> {row.personalEmailAddress}
               </a>

@@ -18,7 +18,7 @@ import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
 import DataTable from '../components/common/DataTable';
 import { formatDate, formatDateWithDay } from '../utils/dateUtils';
-import ContactActionModal from '../components/common/ContactActionModal';
+import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
 import './EmployeeDetail.css';
 
 const AUDIT_MONTH_OPTIONS = [
@@ -768,8 +768,9 @@ const EmployeeDetail = () => {
             <div className="hero-meta-tags">
               <a 
                 href={`mailto:${employee.personalEmailAddress || ''}`}
+                onClick={(e) => openDirectEmail(employee.personalEmailAddress, e)}
                 className="hero-meta-item clickable-link"
-                title="Send an email"
+                title="Directly open email to compose message"
               >
                 <Mail size={13} /> {employee.personalEmailAddress || 'No Email'}
               </a>
@@ -868,8 +869,9 @@ const EmployeeDetail = () => {
                     <span>Email Address:</span> 
                     <a 
                       href={`mailto:${employee.personalEmailAddress || ''}`}
-                      style={{ color: '#38bdf8', textDecoration: 'underline', fontWeight: 600 }}
-                      title="Send Email"
+                      onClick={(e) => openDirectEmail(employee.personalEmailAddress, e)}
+                      style={{ color: '#38bdf8', textDecoration: 'underline', fontWeight: 600, cursor: 'pointer' }}
+                      title="Directly open email to compose message"
                     >
                       {employee.personalEmailAddress || 'N/A'}
                     </a>

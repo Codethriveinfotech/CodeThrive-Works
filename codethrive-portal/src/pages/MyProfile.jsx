@@ -12,7 +12,7 @@ import {
   RotateCw, ZoomIn, Building2, Globe, Users
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
-import ContactActionModal from '../components/common/ContactActionModal';
+import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
 import './MyProfile.css';
 
 const MyProfile = () => {
@@ -826,7 +826,7 @@ const MyProfile = () => {
             <h1 className="profile-user-name">{profile.fullName}</h1>
 
             <div className="profile-user-title">
-              <span className="profile-badge-id">
+              <span className="profile-badge-id" title="Employee ID">
                 <CreditCard size={13} /> {profile.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-001')}
               </span>
               <span className="title-highlight">{profile.designation || 'Specialist'}</span>
@@ -835,25 +835,29 @@ const MyProfile = () => {
             <div className="profile-meta-tags">
               <a 
                 href={`mailto:${profile.personalEmailAddress || user?.email || ''}`}
-                className="profile-meta-tag clickable-link"
-                title="Send an email"
+                onClick={(e) => openDirectEmail(profile.personalEmailAddress || user?.email, e)}
+                className="profile-meta-tag clickable-link email-tag"
+                title="Directly open email to compose message"
               >
-                <Mail size={13} /> {profile.personalEmailAddress || user?.email || 'N/A'}
+                <Mail size={13} className="tag-icon-mail" /> 
+                <span>{profile.personalEmailAddress || user?.email || 'N/A'}</span>
               </a>
               <button 
                 type="button"
-                className="profile-meta-tag clickable-btn"
+                className="profile-meta-tag clickable-btn phone-tag"
                 onClick={() => setContactModal({
                   isOpen: true,
                   name: profile.fullName || 'Employee',
                   phone: profile.personalPhoneNumber || '9876543210'
                 })}
-                title="Connect via WhatsApp or Phone Call"
+                title="Connect via WhatsApp or Direct Call"
               >
-                <Phone size={13} /> {profile.personalPhoneNumber || '9876543210'}
+                <Phone size={13} className="tag-icon-phone" /> 
+                <span>{profile.personalPhoneNumber || '9876543210'}</span>
               </button>
-              <span className="profile-meta-tag">
-                <Calendar size={13} /> Joined {profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/24'}
+              <span className="profile-meta-tag date-tag">
+                <Calendar size={13} className="tag-icon-calendar" /> 
+                <span>Joined {profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/24'}</span>
               </span>
             </div>
           </div>
