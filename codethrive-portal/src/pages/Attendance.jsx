@@ -328,24 +328,105 @@ const Attendance = () => {
     }
   };
 
-  const exportPDF = async () => {
+  const toLocalDateStr = (d) => {
+    const dt = d || new Date();
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const day = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  // PDF Date Range Export State
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfStartDate, setPdfStartDate] = useState(() => {
+    const d = new Date();
+    return toLocalDateStr(new Date(d.getFullYear(), d.getMonth(), 1));
+  });
+  const [pdfEndDate, setPdfEndDate] = useState(() => toLocalDateStr(new Date()));
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  const setRangePreset = (type) => {
+    const today = new Date();
+    if (type === 'thisMonth') {
+      setPdfStartDate(toLocalDateStr(new Date(today.getFullYear(), today.getMonth(), 1)));
+      setPdfEndDate(toLocalDateStr(today));
+    } else if (type === 'lastMonth') {
+      const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const last = new Date(today.getFullYear(), today.getMonth(), 0);
+      setPdfStartDate(toLocalDateStr(first));
+      setPdfEndDate(toLocalDateStr(last));
+    } else if (type === 'last30Days') {
+      const past30 = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      setPdfStartDate(toLocalDateStr(past30));
+      setPdfEndDate(toLocalDateStr(today));
+    } else if (type === 'thisYear') {
+      setPdfStartDate(toLocalDateStr(new Date(today.getFullYear(), 0, 1)));
+      setPdfEndDate(toLocalDateStr(today));
+    }
+  };
+
+  const handleDownloadPdfByRange = async () => {
+    if (!pdfStartDate || !pdfEndDate) {
+      alert('Please select both From Date and To Date');
+      return;
+    }
+    if (new Date(pdfStartDate) > new Date(pdfEndDate)) {
+      alert('From Date cannot be later than To Date');
+      return;
+    }
+
     try {
+      setIsExportingPdf(true);
       const empName = selectedEmp 
         ? employees.find(e => e._id === selectedEmp)?.fullName || 'Employee User'
         : (user?.fullName || user?.name || 'All Active Staff');
+
+      let recordsToExport = [];
+      try {
+        const params = {
+          startDate: pdfStartDate,
+          endDate: `${pdfEndDate}T23:59:59.999Z`,
+          ...(selectedEmp ? { employeeId: selectedEmp } : {})
+        };
+        const res = await api.get('/attendance/history', { params });
+        const fetched = res?.data?.data || res?.data;
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          recordsToExport = fetched;
+        }
+      } catch (err) {
+        console.warn('API error fetching date range history, filtering local history', err);
+      }
+
+      if (recordsToExport.length === 0) {
+        const startTs = new Date(pdfStartDate).setHours(0, 0, 0, 0);
+        const endTs = new Date(pdfEndDate).setHours(23, 59, 59, 999);
+        recordsToExport = (Array.isArray(history) ? history : []).filter(row => {
+          const rowTs = new Date(row.date).getTime();
+          return rowTs >= startTs && rowTs <= endTs;
+        });
+      }
+
+      // Chronological sort
+      recordsToExport.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const presentCount = recordsToExport.filter(r => 
+        ['Present', 'Working', 'Checked Out'].includes(r.status) || (r.totalWorkDurationInSeconds > 0)
+      ).length;
+      const totalDays = recordsToExport.length;
+      const score = totalDays > 0 ? Math.round((presentCount / totalDays) * 100) : 0;
 
       const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
         title: 'ATTENDANCE REGISTER REPORT',
         metaFields: [
           { label: 'Employee / Scope', value: empName },
-          { label: 'Reporting Period', value: monthNameFormatted },
-          { label: 'Total Logs', value: `${filteredHistory.length} Days Recorded` },
-          { label: 'Attendance Score', value: `${attendancePercentage}% (Present: ${presentDaysCount} Days)` }
+          { label: 'Reporting Period', value: `${formatDate(pdfStartDate)} to ${formatDate(pdfEndDate)}` },
+          { label: 'Total Logs', value: `${recordsToExport.length} Days Recorded` },
+          { label: 'Attendance Score', value: `${score}% (Present: ${presentCount} Days)` }
         ]
       });
 
       const tableColumn = ["Date & Day", "Check In", "Check Out", "Breaks", "Net Work Hours", "Status"];
-      const tableRows = filteredHistory.map(row => {
+      const tableRows = recordsToExport.map(row => {
         const dateObj = row.date ? new Date(row.date) : new Date();
         const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
         const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
@@ -364,7 +445,7 @@ const Attendance = () => {
       if (typeof autoTableFn === 'function') {
         autoTableFn(doc, {
           head: [tableColumn],
-          body: tableRows,
+          body: tableRows.length > 0 ? tableRows : [["No records found in selected range", "--", "--", "--", "--", "--"]],
           startY: startY,
           ...getCorporateTableStyles()
         });
@@ -372,48 +453,12 @@ const Attendance = () => {
         throw new Error('PDF autoTable renderer could not be initialized');
       }
 
-      finalizeDoc(`Attendance_Register_${selectedMonth}_${selectedYear}.pdf`);
+      finalizeDoc(`Attendance_Report_${pdfStartDate}_to_${pdfEndDate}.pdf`);
+      setShowPdfModal(false);
     } catch (e) {
       alert('Could not export PDF: ' + e.message);
-    }
-  };
-
-  const exportWord = () => {
-    try {
-      const empName = selectedEmp 
-        ? employees.find(e => e._id === selectedEmp)?.fullName || 'Employee User'
-        : (user?.fullName || user?.name || 'All Active Staff');
-
-      const tableColumn = ["Date & Day", "Check In", "Check Out", "Breaks", "Net Work Hours", "Status"];
-      const tableRows = filteredHistory.map(row => {
-        const dateObj = row.date ? new Date(row.date) : new Date();
-        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
-        const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
-
-        return [
-          `${formatDate(row.date)} (${dayName})`,
-          row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
-          row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
-          breakTotal > 0 ? formatHours(breakTotal) : '0m',
-          formatHours(row.totalWorkDurationInSeconds),
-          row.status || 'Present'
-        ];
-      });
-
-      exportOfficialWordDoc({
-        title: 'ATTENDANCE REGISTER REPORT',
-        metaFields: [
-          { label: 'Employee / Scope', value: empName },
-          { label: 'Reporting Period', value: monthNameFormatted },
-          { label: 'Total Logs', value: `${filteredHistory.length} Days Recorded` },
-          { label: 'Attendance Score', value: `${attendancePercentage}% (Present: ${presentDaysCount} Days)` }
-        ],
-        tableHeaders: tableColumn,
-        tableRows: tableRows,
-        fileName: `Attendance_Register_${selectedMonth}_${selectedYear}.doc`
-      });
-    } catch (e) {
-      alert('Could not export Word document: ' + e.message);
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -512,6 +557,38 @@ const Attendance = () => {
   }, [history, historySearch, historyStatusFilter]);
 
   // Key Attendance Stats
+  const formatDuration = (seconds) => {
+    const totalSec = Math.max(0, Math.floor(seconds || 0));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) {
+      return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
+    }
+    return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+  };
+
+  const currentStatus = todayAttendance?.status || 'Not Checked In';
+  const isWorking = currentStatus === 'Working' || currentStatus === 'Present';
+  const isOnBreak = currentStatus === 'On Break';
+  const isOnLunch = currentStatus === 'On Lunch';
+  const isCheckedOut = currentStatus === 'Checked Out';
+  const isNotStarted = currentStatus === 'Not Checked In' || (!todayAttendance?.firstLoginTime && !isWorking && !isOnBreak && !isOnLunch && !isCheckedOut);
+
+  let displayMainTimer = liveWorkDuration;
+  let timerLabelText = "Work Duration";
+  if (isOnBreak) {
+    displayMainTimer = liveBreakDuration;
+    timerLabelText = "On Break Time";
+  } else if (isOnLunch) {
+    displayMainTimer = liveLunchDuration;
+    timerLabelText = "Lunch Break Time";
+  } else if (isCheckedOut) {
+    displayMainTimer = liveWorkDuration;
+    timerLabelText = "Total Work Logged";
+  }
+
+  // Key Attendance Stats
   const attendancePercentage = summary?.attendancePercentage || 0;
   const presentDaysCount = summary?.presentDays || 0;
   const totalWorkingDays = summary?.totalWorkingDays || 22;
@@ -522,38 +599,6 @@ const Attendance = () => {
 
   const monthNameFormatted = new Date(selectedYear, selectedMonth - 1, 1).toLocaleString('en', { month: 'long', year: 'numeric' });
   const todayFormatted = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-
-  const getStatusPillClass = () => {
-    switch (todayAttendance?.status) {
-      case 'Working':
-      case 'Present':
-        return 'working';
-      case 'On Break':
-        return 'break';
-      case 'On Lunch':
-        return 'lunch';
-      case 'Checked Out':
-        return 'checked-out';
-      default:
-        return 'not-started';
-    }
-  };
-
-  const getStatusLabel = () => {
-    switch (todayAttendance?.status) {
-      case 'Working':
-      case 'Present':
-        return '🟢 Active Shift (Working)';
-      case 'On Break':
-        return '☕ On Break';
-      case 'On Lunch':
-        return '🍱 On Lunch';
-      case 'Checked Out':
-        return '🏁 Shift Completed';
-      default:
-        return '⚪ Ready to Check In';
-    }
-  };
 
   if (loading && !summary && history.length === 0) {
     return (
@@ -611,12 +656,9 @@ const Attendance = () => {
             </button>
           </div>
 
-          {/* Quick Exports: PDF, Word & Excel */}
-          <button className="att-export-btn" onClick={exportPDF} title="Download Official PDF Report">
-            <Printer size={15} /> PDF
-          </button>
-          <button className="att-export-btn" onClick={exportWord} title="Download Official Word Document">
-            <FileText size={15} /> Word (.doc)
+          {/* Quick Exports: PDF (With Date Range Selection) & Excel (Word removed) */}
+          <button className="att-export-btn" onClick={() => setShowPdfModal(true)} title="Select date range and download official PDF">
+            <Printer size={15} /> PDF Report
           </button>
           <button className="att-export-btn" onClick={exportExcel} title="Download Excel Sheet">
             <Download size={15} /> Excel
@@ -625,154 +667,138 @@ const Attendance = () => {
       </div>
 
       {/* --------------------------------------------------------------------------
-          2. TOP ROW: LIVE SHIFT PUNCH HUB & MONTHLY PERFORMANCE KPIS
+          2. TOP ROW: DASHBOARD-IDENTICAL WORK SESSION WIDGET & COMPACT KPIS
           -------------------------------------------------------------------------- */}
       <div className="att-top-grid">
         
-        {/* Left: Live Session Control Center */}
-        <div className="att-live-card">
-          <div className="att-live-header">
-            <span className={`att-live-status-pill ${getStatusPillClass()}`}>
-              {getStatusLabel()}
-            </span>
-            <span className="att-today-date-badge">
-              <CalIcon size={14} /> Today's Session
-            </span>
-          </div>
-
-          <div className="att-timer-center">
-            <div className={`att-timer-glow ${getStatusPillClass()}`}>
-              {todayAttendance?.status === 'On Break'
-                ? formatDurationHMS(liveBreakDuration)
-                : (todayAttendance?.status === 'On Lunch' 
-                    ? formatDurationHMS(liveLunchDuration) 
-                    : formatDurationHMS(liveWorkDuration))}
+        {/* Left: Work Session (Dashboard-identical structure & controls) */}
+        <div className="timer-widget">
+          <div className="timer-header">
+            <div>
+              <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', color: '#f8fafc', fontWeight: 700 }}>Work Session</h3>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Track today's activity & breaks</span>
             </div>
-            <div className="att-timer-label">
-              {todayAttendance?.status === 'On Break' 
-                ? '☕ Break Elapsed Time' 
-                : (todayAttendance?.status === 'On Lunch' 
-                    ? '🍱 Lunch Elapsed Time' 
-                    : (todayAttendance?.status === 'Checked Out' 
-                        ? '🏁 Shift Concluded' 
-                        : (todayAttendance?.status === 'Working' ? '⚡ Net Productive Working Time' : 'Waiting for check-in')))}
+            <div className="timer-status">
+              {isWorking && <><span className="status-dot active"></span> <span style={{ color: '#10b981', fontWeight: 600 }}>Working</span></>}
+              {isOnBreak && <><span className="status-dot break"></span> <span style={{ color: '#fbbf24', fontWeight: 600 }}>On Break</span></>}
+              {isOnLunch && <><span className="status-dot lunch"></span> <span style={{ color: '#3b82f6', fontWeight: 600 }}>On Lunch</span></>}
+              {isNotStarted && <><span className="status-dot"></span> <span style={{ color: '#94a3b8', fontWeight: 600 }}>Not Started</span></>}
+              {isCheckedOut && <><CheckCircle2 size={16} color="#10b981"/> <span style={{ color: '#10b981', fontWeight: 600 }}>Completed</span></>}
             </div>
           </div>
 
-          {/* 3-Pill Breakdown */}
-          <div className="att-breakdown-bar">
-            <div className="att-breakdown-col">
-              <div className="att-breakdown-title">
-                <Clock size={12} /> Work
-              </div>
-              <div className="att-breakdown-val work">
-                {formatDurationHMS(liveWorkDuration)}
-              </div>
+          <div className="timer-display">
+            {isWorking && <div className="timer-ring"></div>}
+            {isOnBreak && <div className="timer-ring ring-break"></div>}
+            {isOnLunch && <div className="timer-ring ring-lunch"></div>}
+            <span className="timer-value">{formatDuration(displayMainTimer)}</span>
+            <span className="timer-label">{timerLabelText}</span>
+          </div>
+
+          {/* 3-Way Duration Breakdown */}
+          <div className="timer-breakdown-grid">
+            <div className="timer-breakdown-item">
+              <span className="tb-label"><Clock size={12} /> Work</span>
+              <span className="tb-value" style={{ color: '#38bdf8' }}>{formatDuration(liveWorkDuration)}</span>
             </div>
-            <div className="att-breakdown-col">
-              <div className="att-breakdown-title">
-                <Coffee size={12} /> Break
-              </div>
-              <div className="att-breakdown-val break">
-                {formatDurationHMS(liveBreakDuration)}
-              </div>
+            <div className="timer-breakdown-item">
+              <span className="tb-label"><Coffee size={12} /> Break</span>
+              <span className="tb-value" style={{ color: '#fbbf24' }}>{formatDuration(liveBreakDuration)}</span>
             </div>
-            <div className="att-breakdown-col">
-              <div className="att-breakdown-title">
-                <Utensils size={12} /> Lunch
-              </div>
-              <div className="att-breakdown-val lunch">
-                {formatDurationHMS(liveLunchDuration)}
-              </div>
+            <div className="timer-breakdown-item">
+              <span className="tb-label"><Utensils size={12} /> Lunch</span>
+              <span className="tb-value" style={{ color: '#60a5fa' }}>{formatDuration(liveLunchDuration)}</span>
             </div>
           </div>
 
-          {/* Check-In / Out Timestamps */}
-          <div className="att-timestamps-row">
-            <div className="att-timestamp-item">
-              <div className="att-timestamp-label">First Check-In</div>
-              <div className="att-timestamp-time">
+          <div className="timer-details">
+            <div className="timer-detail-item">
+              <span className="timer-detail-label">Check-In Time</span>
+              <span className="timer-detail-value">
                 {todayAttendance?.firstLoginTime 
                   ? new Date(todayAttendance.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
                   : '--:--'}
-              </div>
+              </span>
             </div>
-            <div className="att-timestamp-item">
-              <div className="att-timestamp-label">Last Check-Out</div>
-              <div className="att-timestamp-time">
-                {todayAttendance?.lastLogoutTime 
+            <div className="timer-detail-item">
+              <span className="timer-detail-label">Check-Out Time</span>
+              <span className="timer-detail-value">
+                {isCheckedOut && todayAttendance?.lastLogoutTime 
                   ? new Date(todayAttendance.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
                   : '--:--'}
-              </div>
+              </span>
             </div>
           </div>
 
-          {/* Punch Actions */}
-          <div className="att-actions-container">
-            {(!todayAttendance || todayAttendance?.status === 'Not Checked In') && (
-              <button 
-                className="att-punch-btn checkin" 
-                disabled={isActionLoading} 
-                onClick={() => handleAction('start-work')}
-              >
-                {isActionLoading ? <span className="loader-small"></span> : <><LogIn size={18} /> Check In Now</>}
-              </button>
+          {/* Action Buttons depending on status */}
+          <div className="timer-actions-wrapper">
+            {isNotStarted && (
+              <div className="btn-session-group">
+                <button 
+                  onClick={() => handleAction('start-work')} 
+                  disabled={isActionLoading} 
+                  className={`btn-huge btn-primary ${!isActionLoading ? 'pulse-btn' : ''}`}
+                >
+                  {isActionLoading ? <span className="loader-small"></span> : <><LogIn size={20} style={{ marginRight: '0.5rem' }} /> START WORK (CHECK IN)</>}
+                </button>
+                <div className="btn-session-row">
+                  <button onClick={() => handleAction('start-break')} disabled={isActionLoading} className="btn-session btn-break">
+                    <Coffee size={18} /> Break
+                  </button>
+                  <button onClick={() => handleAction('start-lunch')} disabled={isActionLoading} className="btn-session btn-lunch">
+                    <Utensils size={18} /> Lunch
+                  </button>
+                </div>
+              </div>
             )}
 
-            {(todayAttendance?.status === 'Working' || todayAttendance?.status === 'Present') && (
-              <>
-                <button 
-                  className="att-punch-btn break-btn" 
-                  disabled={isActionLoading} 
-                  onClick={() => handleAction('start-break')}
-                >
-                  <Coffee size={16} /> Take Break
+            {isWorking && (
+              <div className="btn-session-group">
+                <div className="btn-session-row">
+                  <button onClick={() => handleAction('start-break')} disabled={isActionLoading} className="btn-session btn-break">
+                    <Coffee size={18} /> Break
+                  </button>
+                  <button onClick={() => handleAction('start-lunch')} disabled={isActionLoading} className="btn-session btn-lunch">
+                    <Utensils size={18} /> Lunch
+                  </button>
+                </div>
+                <button onClick={() => handleAction('checkout')} disabled={isActionLoading} className="btn-huge btn-danger">
+                  {isActionLoading ? <span className="loader-small"></span> : <><LogOut size={20} style={{ marginRight: '0.5rem' }} /> CHECK OUT</>}
                 </button>
-                <button 
-                  className="att-punch-btn lunch-btn" 
-                  disabled={isActionLoading} 
-                  onClick={() => handleAction('start-lunch')}
-                >
-                  <Utensils size={16} /> Lunch Break
-                </button>
-                <button 
-                  className="att-punch-btn checkout-btn" 
-                  disabled={isActionLoading} 
-                  onClick={() => handleAction('checkout')}
-                >
-                  <LogOut size={16} /> Check Out
-                </button>
-              </>
+              </div>
             )}
 
-            {(todayAttendance?.status === 'On Break' || todayAttendance?.status === 'On Lunch') && (
-              <>
-                <button 
-                  className="att-punch-btn resume-btn" 
-                  disabled={isActionLoading} 
-                  onClick={() => handleAction('resume-work')}
-                >
-                  {isActionLoading ? <span className="loader-small"></span> : <><Play size={16} /> Resume Work</>}
+            {(isOnBreak || isOnLunch) && (
+              <div className="btn-session-group">
+                <button onClick={() => handleAction('resume-work')} disabled={isActionLoading} className="btn-huge btn-resume">
+                  {isActionLoading ? <span className="loader-small"></span> : <><Play size={20} style={{ marginRight: '0.5rem' }} /> RESUME WORK</>}
                 </button>
-                <button 
-                  className="att-punch-btn checkout-btn" 
-                  disabled={isActionLoading} 
-                  onClick={() => handleAction('checkout')}
-                >
-                  <LogOut size={16} /> Check Out
-                </button>
-              </>
+                <div className="btn-session-row">
+                  {isOnBreak ? (
+                    <button onClick={() => handleAction('start-lunch')} disabled={isActionLoading} className="btn-session btn-lunch">
+                      <Utensils size={18} /> Lunch
+                    </button>
+                  ) : (
+                    <button onClick={() => handleAction('start-break')} disabled={isActionLoading} className="btn-session btn-break">
+                      <Coffee size={18} /> Break
+                    </button>
+                  )}
+                  <button onClick={() => handleAction('checkout')} disabled={isActionLoading} className="btn-session btn-danger">
+                    <LogOut size={18} /> Check Out
+                  </button>
+                </div>
+              </div>
             )}
 
-            {todayAttendance?.status === 'Checked Out' && (
-              <div className="att-session-done-badge">
-                <CheckCircle2 size={18} /> Today's Shift Completed &bull; {formatHours(liveWorkDuration)} Logged
+            {isCheckedOut && (
+              <div className="btn-huge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', cursor: 'default' }}>
+                Today's Session Completed
               </div>
             )}
           </div>
         </div>
 
-        {/* Right: Monthly Performance KPIs (4 Cards) */}
+        {/* Right: Monthly Performance KPIs (Compact & Professional) */}
         <div className="att-kpi-grid">
           
           {/* Card 1: Attendance Rate */}
@@ -781,7 +807,7 @@ const Attendance = () => {
             <div className="att-kpi-header">
               <span className="att-kpi-title">Attendance Rate</span>
               <div className="att-kpi-icon-wrap">
-                <ShieldCheck size={20} />
+                <ShieldCheck size={16} />
               </div>
             </div>
             <div className="att-kpi-value">{attendancePercentage}%</div>
@@ -794,7 +820,7 @@ const Attendance = () => {
             <div className="att-kpi-header">
               <span className="att-kpi-title">Present Days</span>
               <div className="att-kpi-icon-wrap">
-                <CheckCircle2 size={20} />
+                <CheckCircle2 size={16} />
               </div>
             </div>
             <div className="att-kpi-value">{presentDaysCount}</div>
@@ -807,7 +833,7 @@ const Attendance = () => {
             <div className="att-kpi-header">
               <span className="att-kpi-title">Late / Absent</span>
               <div className="att-kpi-icon-wrap">
-                <AlertTriangle size={20} />
+                <AlertTriangle size={16} />
               </div>
             </div>
             <div className="att-kpi-value">{lateDaysCount} / {absentDaysCount}</div>
@@ -820,7 +846,7 @@ const Attendance = () => {
             <div className="att-kpi-header">
               <span className="att-kpi-title">Avg Work Hours</span>
               <div className="att-kpi-icon-wrap">
-                <Clock size={20} />
+                <Clock size={16} />
               </div>
             </div>
             <div className="att-kpi-value">{avgHoursDisplay}</div>
@@ -1115,8 +1141,96 @@ const Attendance = () => {
         </form>
       </Modal>
 
+      {/* --------------------------------------------------------------------------
+          6. PDF DATE RANGE EXPORT MODAL
+          -------------------------------------------------------------------------- */}
+      <Modal 
+        isOpen={showPdfModal} 
+        onClose={() => setShowPdfModal(false)} 
+        title="Download Official Attendance PDF Report"
+      >
+        <div className="pdf-modal-container">
+          <p className="pdf-modal-desc">
+            Select the reporting date range to generate the official CodeThrive Infotech attendance register document with letterhead and authorised footer.
+          </p>
+
+          {/* Quick Range Presets */}
+          <div className="pdf-presets-section">
+            <span className="pdf-presets-label">Quick Presets</span>
+            <div className="pdf-presets-row">
+              <button type="button" className="pdf-preset-chip" onClick={() => setRangePreset('thisMonth')}>This Month</button>
+              <button type="button" className="pdf-preset-chip" onClick={() => setRangePreset('lastMonth')}>Last Month</button>
+              <button type="button" className="pdf-preset-chip" onClick={() => setRangePreset('last30Days')}>Last 30 Days</button>
+              <button type="button" className="pdf-preset-chip" onClick={() => setRangePreset('thisYear')}>This Year</button>
+            </div>
+          </div>
+
+          {/* From & To Date Pickers */}
+          <div className="pdf-date-grid">
+            <div className="pdf-date-field">
+              <label>From Date</label>
+              <input 
+                type="date" 
+                className="pdf-date-input" 
+                value={pdfStartDate}
+                onChange={e => setPdfStartDate(e.target.value)}
+              />
+            </div>
+            <div className="pdf-date-field">
+              <label>To Date</label>
+              <input 
+                type="date" 
+                className="pdf-date-input" 
+                value={pdfEndDate}
+                onChange={e => setPdfEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Scope Card */}
+          <div className="pdf-scope-card">
+            <span className="pdf-scope-label">Reporting Scope:</span>
+            <span className="pdf-scope-val">
+              {selectedEmp 
+                ? employees.find(e => e._id === selectedEmp)?.fullName || 'Selected Employee'
+                : (user?.fullName || user?.name || 'All Active Staff')}
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="pdf-modal-actions">
+            <button 
+              type="button" 
+              className="btn btn-outline" 
+              onClick={() => setShowPdfModal(false)}
+              disabled={isExportingPdf}
+            >
+              Cancel
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-primary" 
+              onClick={handleDownloadPdfByRange}
+              disabled={isExportingPdf}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              {isExportingPdf ? (
+                <>
+                  <span className="loader-small"></span> Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Printer size={16} /> Download PDF Report
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 };
 
 export default Attendance;
+
