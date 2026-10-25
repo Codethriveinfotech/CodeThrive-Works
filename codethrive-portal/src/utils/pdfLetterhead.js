@@ -313,8 +313,16 @@ export const getCorporateTableStyles = () => ({
  * e.g., Kirubakaran_Payslip_1.pdf, Kirubakaran_Payslip_2.pdf
  */
 export const generateOfficialPdfFilename = (userName = 'Employee', reportType = 'Report') => {
-  let cleanName = String(userName || 'User')
-    .trim()
+  let cleanName = String(userName || 'User').trim();
+
+  // Attach trailing single-letter initial without underscore: e.g. "Kirubakaran V", "Kirubakaran_V", "Kirubakaran V." -> "KirubakaranV"
+  cleanName = cleanName.replace(/[\s_.]+([A-Za-z])\.?$/, '$1');
+
+  // Attach leading single-letter initial without underscore: e.g. "V Kirubakaran", "V. Kirubakaran" -> "VKirubakaran"
+  cleanName = cleanName.replace(/^([A-Za-z])[\s_.]+/, '$1');
+
+  // Clean any remaining non-alphanumeric characters
+  cleanName = cleanName
     .replace(/[^a-zA-Z0-9]/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_+|_+$/g, '');

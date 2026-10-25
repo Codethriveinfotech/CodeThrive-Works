@@ -25,6 +25,13 @@ const Payroll = () => {
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  // Date confirmation modal state for employee payslip download
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [downloadTargetPayslip, setDownloadTargetPayslip] = useState(null);
+  const [confirmedMonth, setConfirmedMonth] = useState('');
+  const [confirmedDate, setConfirmedDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
@@ -64,8 +71,19 @@ const Payroll = () => {
     setIsModalOpen(true);
   };
 
-  const downloadPayslip = async (payslip) => {
+  const initiateDownloadConfirm = (payslip) => {
+    setDownloadTargetPayslip(payslip);
+    setConfirmedMonth(payslip.month || 'October 2026');
+    setConfirmedDate(new Date().toISOString().split('T')[0]);
+    setDownloadModalOpen(true);
+  };
+
+  const downloadPayslip = async (payslip, overrideMonth, overrideDate) => {
     try {
+      setIsDownloading(true);
+      const targetMonth = overrideMonth || payslip.month || 'October 2026';
+      const targetDate = overrideDate ? new Date(overrideDate).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+
       const empName = user?.fullName || user?.name || payslip.employee?.fullName || 'Kirubakaran';
       const empId = user?.employeeId || payslip.employee?.employeeId || 'CTI-EMP-001';
       const empRole = user?.role || user?.designation || payslip.employee?.designation || 'Software Engineer';
@@ -79,7 +97,8 @@ const Payroll = () => {
           { label: 'Employee Name', value: empName },
           { label: 'Employee ID', value: empId },
           { label: 'Designation', value: empRole },
-          { label: 'Pay Period', value: payslip.month },
+          { label: 'Pay Period', value: targetMonth },
+          { label: 'Statement Date', value: targetDate },
           { label: 'Email ID', value: empEmail },
           { label: 'Payslip Number', value: payslip.payslipId || 'PAY-2026' },
           { label: 'Disbursement Status', value: payslip.status || 'Paid' }
@@ -149,9 +168,12 @@ const Payroll = () => {
       doc.text(`Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 192, finalY + 11, { align: 'right' });
 
       finalizeDoc();
+      setDownloadModalOpen(false);
     } catch (err) {
       console.error('PDF Generation Failed', err);
       alert('Could not generate PDF: ' + err.message);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -367,7 +389,7 @@ const Payroll = () => {
                             <FileText size={15} />
                             <span>View</span>
                           </button>
-                          <button className="action-btn-glass" title="Download PDF" onClick={() => downloadPayslip(ps)}>
+                          <button className="action-btn-glass" title="Download PDF" onClick={() => initiateDownloadConfirm(ps)}>
                             <Download size={15} />
                           </button>
                         </div>
@@ -497,8 +519,85 @@ const Payroll = () => {
               <button className="btn-outline-glass" onClick={() => downloadPayslipWord(selectedPayslip)} title="Download Official Word Document">
                 <FileText size={16} /> Word (.doc)
               </button>
-              <button className="btn-primary-glow" onClick={() => downloadPayslip(selectedPayslip)} title="Download Official PDF Statement">
+              <button className="btn-primary-glow" onClick={() => initiateDownloadConfirm(selectedPayslip)} title="Confirm Date & Download PDF">
                 <Download size={16} /> Download Official PDF
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* --------------------------------------------------------------------------
+          6. PAYSLIP DATE CONFIRMATION MODAL
+         -------------------------------------------------------------------------- */}
+      {downloadTargetPayslip && (
+        <Modal
+          isOpen={downloadModalOpen}
+          onClose={() => setDownloadModalOpen(false)}
+          title="Confirm Pay Period & Download"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '0.4rem 0' }}>
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '0.8rem 1rem', borderRadius: '12px', fontSize: '0.85rem', color: '#93c5fd', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Calendar size={18} color="#60a5fa" />
+              <span>Confirm your salary pay period and statement issue date before downloading.</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group">
+                <label style={{ fontSize: '0.825rem', color: '#94a3b8', marginBottom: '0.4rem', display: 'block' }}>
+                  Pay Period / Month:
+                </label>
+                <input 
+                  type="text" 
+                  className="input-field"
+                  value={confirmedMonth} 
+                  onChange={e => setConfirmedMonth(e.target.value)}
+                  placeholder="e.g. October 2026"
+                />
+              </div>
+
+              <div className="form-group">
+                <label style={{ fontSize: '0.825rem', color: '#94a3b8', marginBottom: '0.4rem', display: 'block' }}>
+                  Statement Issue Date:
+                </label>
+                <input 
+                  type="date" 
+                  className="input-field"
+                  value={confirmedDate} 
+                  onChange={e => setConfirmedDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '10px', padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
+              <div>
+                <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>Payslip ID</span>
+                <strong style={{ color: '#f8fafc' }}>{downloadTargetPayslip.payslipId || 'PAY-2026'}</strong>
+              </div>
+              <div>
+                <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.75rem' }}>Net Amount</span>
+                <strong style={{ color: '#34d399' }}>₹{(downloadTargetPayslip.netPayable || 0).toLocaleString()}</strong>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button 
+                type="button" 
+                className="btn-outline-glass" 
+                onClick={() => setDownloadModalOpen(false)}
+                disabled={isDownloading}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary-glow"
+                onClick={() => downloadPayslip(downloadTargetPayslip, confirmedMonth, confirmedDate)}
+                disabled={isDownloading}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <Download size={16} />
+                {isDownloading ? 'Generating...' : 'Confirm & Download PDF'}
               </button>
             </div>
           </div>

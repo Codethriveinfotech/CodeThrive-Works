@@ -573,84 +573,18 @@ const Documents = () => {
           </div>
 
           <div className="form-group">
-            <label style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.4rem', display: 'block' }}>Document Title</label>
+            <label style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.4rem', display: 'block' }}>Document Title / Folder Name</label>
             <input 
               type="text" 
               className="input-field" 
               required 
               value={formData.title} 
               onChange={e => setFormData({ ...formData, title: e.target.value })} 
-              placeholder="e.g. Aadhaar Card Front & Back, B.Tech Degree Certificate" 
+              placeholder="e.g. Degree Certificate, HSC Marksheet, Relieving Letter, ID Proof" 
             />
-
-            {/* Quick preset selector tags based on selected category */}
-            {formData.documentType === 'ID Proof' && (
-              <div style={{ marginTop: '0.4rem' }}>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.3rem' }}>Quick select document name:</span>
-                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  {['Aadhaar Card', 'PAN Card', 'Passport', 'Voter ID', 'Driving License'].map(preset => (
-                    <button 
-                      key={preset} 
-                      type="button" 
-                      onClick={() => setFormData({ ...formData, title: preset })}
-                      style={{ background: formData.title === preset ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer' }}
-                    >
-                      + {preset}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {formData.documentType === 'Certificate' && (
-              <div style={{ marginTop: '0.4rem' }}>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.3rem' }}>Quick select certificate name:</span>
-                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  {['Degree Certificate', 'HSC Marksheet', 'SSLC Marksheet', 'Relieving Letter', 'Experience Certificate'].map(preset => (
-                    <button 
-                      key={preset} 
-                      type="button" 
-                      onClick={() => setFormData({ ...formData, title: preset })}
-                      style={{ background: formData.title === preset ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer' }}
-                    >
-                      + {preset}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {formData.documentType === 'Policy' && (
-              <div style={{ marginTop: '0.4rem' }}>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '0.3rem' }}>Quick select policy document name:</span>
-                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                  {['HR Policy Handbook', 'IT & Security Policy', 'Code of Conduct', 'Leave & Attendance Policy'].map(preset => (
-                    <button 
-                      key={preset} 
-                      type="button" 
-                      onClick={() => setFormData({ ...formData, title: preset })}
-                      style={{ background: formData.title === preset ? 'rgba(6, 182, 212, 0.4)' : 'rgba(6, 182, 212, 0.15)', color: '#22d3ee', border: '1px solid rgba(6, 182, 212, 0.3)', padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', cursor: 'pointer' }}
-                    >
-                      + {preset}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Category Helper Info */}
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', padding: '0.75rem 1rem', borderRadius: '12px', fontSize: '0.825rem', color: '#93c5fd', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <strong>Recommended format for {formData.documentType}:</strong>
-              <div style={{ color: '#cbd5e1', marginTop: '2px' }}>
-                {SUPPORTED_CATEGORIES.find(c => c.id === formData.documentType)?.description || 'PDF or High Quality Image (JPG/PNG)'}
-              </div>
-            </div>
-          </div>
-
-          {/* Custom Drag & Drop / File Dropzone with Auto-Compression */}
+          {/* Custom Drag & Drop / File Dropzone */}
           <div className="form-group">
             <label style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '0.4rem', display: 'block' }}>
               Choose or Drag File Attachment
@@ -694,7 +628,7 @@ const Documents = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                   <div className="loader" style={{ width: '28px', height: '28px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
                   <span style={{ color: '#60a5fa', fontSize: '0.875rem', fontWeight: 600 }}>
-                    ⚡ Auto-Compressing & Optimizing File Size...
+                    Processing file attachment...
                   </span>
                 </div>
               ) : compressionInfo ? (
@@ -702,19 +636,9 @@ const Documents = () => {
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16, 185, 129, 0.15)', padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
                     <CheckCircle2 size={18} color="#34d399" />
                     <span style={{ color: '#34d399', fontWeight: 700, fontSize: '0.875rem' }}>
-                      {compressionInfo.originalName}
+                      {compressionInfo.originalName} ({formatBytes(compressionInfo.compressedSize || compressionInfo.originalSize)})
                     </span>
                   </div>
-
-                  {compressionInfo.ratio > 0 ? (
-                    <div style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '0.4rem 0.85rem', borderRadius: '8px', fontSize: '0.825rem', color: '#93c5fd' }}>
-                      ⚡ <strong>Auto-Compressed & Accepted:</strong> {formatBytes(compressionInfo.originalSize)} ➔ <strong style={{ color: '#34d399' }}>{formatBytes(compressionInfo.compressedSize)}</strong> ({compressionInfo.ratio}% MB Size Saved!)
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '0.825rem', color: '#a7f3d0', background: 'rgba(16, 185, 129, 0.1)', padding: '0.35rem 0.75rem', borderRadius: '8px' }}>
-                      ✅ <strong>File Accepted & Ready for Vault</strong> ({formatBytes(compressionInfo.originalSize)})
-                    </div>
-                  )}
                   <span style={{ fontSize: '0.75rem', color: '#94a3b8', textDecoration: 'underline', marginTop: '0.1rem' }}>
                     Click or drop another file to replace
                   </span>
@@ -726,7 +650,7 @@ const Documents = () => {
                     Click to Choose File or Drag & Drop Here
                   </span>
                   <span style={{ fontSize: '0.775rem', color: '#94a3b8' }}>
-                    Supported formats: PDF, JPG, PNG, DOCX, XLSX (Large MB files auto-compressed)
+                    Supported formats: PDF, JPG, PNG, DOCX, XLSX
                   </span>
                 </div>
               )}
