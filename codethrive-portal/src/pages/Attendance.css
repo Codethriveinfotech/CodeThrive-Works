@@ -188,34 +188,284 @@
    2. TOP ROW: LIVE PUNCH HUB & MONTHLY KPI CARDS
    -------------------------------------------------------------------------- */
 /* --------------------------------------------------------------------------
-   2. TOP ROW: LIVE WORK SESSION WIDGET & COMPACT MONTHLY KPIS
+   2. METRIC CARDS GRID (4-COLUMN ROW - EXACT SAME AS OTHER PAGES & DASHBOARD)
    -------------------------------------------------------------------------- */
-.att-top-grid {
+.attendance-workspace .metrics-grid {
   display: grid;
-  grid-template-columns: 1.18fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .attendance-workspace .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .attendance-workspace .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.attendance-workspace .metric-card {
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 1.4rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.attendance-workspace .metric-card:hover {
+  transform: translateY(-3px);
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.45);
+}
+
+.attendance-workspace .metric-glow-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  opacity: 0.85;
+}
+
+.attendance-workspace .metric-glow-accent.primary { background: linear-gradient(90deg, #6366f1, #818cf8); box-shadow: 0 0 10px #6366f1; }
+.attendance-workspace .metric-glow-accent.warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); box-shadow: 0 0 10px #f59e0b; }
+.attendance-workspace .metric-glow-accent.success { background: linear-gradient(90deg, #10b981, #34d399); box-shadow: 0 0 10px #10b981; }
+.attendance-workspace .metric-glow-accent.info    { background: linear-gradient(90deg, #06b6d4, #38bdf8); box-shadow: 0 0 10px #06b6d4; }
+
+.attendance-workspace .metric-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.attendance-workspace .metric-icon-wrapper.primary {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(79, 70, 229, 0.08) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #818cf8;
+}
+
+.attendance-workspace .metric-icon-wrapper.warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.08) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.attendance-workspace .metric-icon-wrapper.success {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.08) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.attendance-workspace .metric-icon-wrapper.info {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(2, 132, 199, 0.08) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #38bdf8;
+}
+
+.attendance-workspace .metric-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.attendance-workspace .metric-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.attendance-workspace .metric-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.15rem;
+}
+
+.attendance-workspace .metric-subtext {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   3. WORK SESSION & POLICIES ROW (DASHBOARD-IDENTICAL SIZING)
+   -------------------------------------------------------------------------- */
+.att-session-section {
+  display: grid;
+  grid-template-columns: 440px 1fr;
   gap: 1.5rem;
   align-items: stretch;
 }
 
 @media (max-width: 1024px) {
-  .att-top-grid {
+  .att-session-section {
     grid-template-columns: 1fr;
   }
 }
 
-/* Dashboard-identical Work Session Widget */
 .attendance-workspace .timer-widget {
-  background: linear-gradient(145deg, rgba(17, 24, 39, 0.85) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, var(--bg-card) 0%, rgba(30, 41, 59, 0.5) 100%);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 1.4rem 1.5rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: 1.25rem;
+  height: auto;
+  width: 100%;
+  max-width: 440px;
+  box-sizing: border-box;
+}
+
+.att-shift-policy-card {
+  background: linear-gradient(145deg, rgba(17, 24, 39, 0.85) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
+
+.att-policy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.att-policy-title-group h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0.35rem 0 0.2rem 0;
+}
+
+.att-policy-title-group p {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.att-policy-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.att-policy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.1rem;
+  margin: 1.25rem 0;
+}
+
+@media (max-width: 640px) {
+  .att-policy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.att-policy-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.att-policy-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.att-policy-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.att-policy-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.att-policy-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0.1rem 0;
+}
+
+.att-policy-desc {
+  font-size: 0.74rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.att-policy-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.att-policy-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 
 .attendance-workspace .timer-header {
   display: flex;
@@ -506,169 +756,7 @@
   100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
-/* --------------------------------------------------------------------------
-   3. COMPACT & PROFESSIONAL MONTHLY PERFORMANCE KPIS (RIGHT SIDE)
-   -------------------------------------------------------------------------- */
-.att-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.85rem;
-  align-content: stretch;
-}
 
-@media (max-width: 640px) {
-  .att-kpi-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.att-kpi-card {
-  background: linear-gradient(145deg, rgba(17, 24, 39, 0.8) 0%, rgba(15, 23, 42, 0.85) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 13px;
-  padding: 0.9rem 1.05rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  backdrop-filter: blur(12px);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  min-height: 0;
-}
-
-.att-kpi-card:hover {
-  transform: translateY(-2px);
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.4);
-}
-
-.att-kpi-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-}
-
-.att-kpi-card.indigo .att-kpi-glow { background: #6366f1; }
-.att-kpi-card.emerald .att-kpi-glow { background: #10b981; }
-.att-kpi-card.amber .att-kpi-glow { background: #f59e0b; }
-.att-kpi-card.cyan .att-kpi-glow { background: #06b6d4; }
-
-.att-kpi-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-}
-
-.att-kpi-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #94a3b8;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.att-kpi-icon-wrap {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.att-kpi-card.indigo .att-kpi-icon-wrap { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
-.att-kpi-card.emerald .att-kpi-icon-wrap { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-.att-kpi-card.amber .att-kpi-icon-wrap { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-.att-kpi-card.cyan .att-kpi-icon-wrap { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
-
-.att-kpi-value {
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: #f8fafc;
-  line-height: 1.15;
-  margin-bottom: 0.2rem;
-  letter-spacing: -0.02em;
-}
-
-.att-kpi-subtext {
-  font-size: 0.72rem;
-  color: #64748b;
-  margin: 0;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* --------------------------------------------------------------------------
-   4. MIDDLE SECTION: WEEKLY HOURS TREND CHART
-   -------------------------------------------------------------------------- */
-.att-chart-section {
-  background: rgba(17, 24, 39, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 1.5rem 1.75rem;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.35);
-}
-
-.att-chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.att-chart-header h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #f8fafc;
-  margin: 0 0 0.25rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.att-chart-header p {
-  font-size: 0.82rem;
-  color: #94a3b8;
-  margin: 0;
-}
-
-.att-chart-legend {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  font-size: 0.82rem;
-  color: #94a3b8;
-}
-
-.att-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.att-legend-color {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-}
-
-.att-chart-container {
-  height: 270px;
-  width: 100%;
-}
 
 /* --------------------------------------------------------------------------
    5. ATTENDANCE HISTORY LOG / TABLE

@@ -5,9 +5,6 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area
-} from 'recharts';
-import { 
   Clock, Coffee, Utensils, LogIn, Play, LogOut, CheckCircle2, AlertTriangle, 
   Download, Printer, Search, Calendar as CalIcon, User, 
   ChevronLeft, ChevronRight, AlertCircle, ShieldCheck, Sparkles, TrendingUp, FileText
@@ -15,7 +12,7 @@ import {
 import { formatDate } from '../utils/dateUtils';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
-import { createOfficialCodeThriveDoc, getCorporateTableStyles, exportOfficialWordDoc } from '../utils/pdfLetterhead';
+import { createOfficialCodeThriveDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
 import './Attendance.css';
 
 const Attendance = () => {
@@ -509,34 +506,6 @@ const Attendance = () => {
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
   };
 
-  // Dynamic Weekly Hours computation directly from real attendance history
-  const weeklyHoursData = useMemo(() => {
-    const weeks = { 'Week 1': 0, 'Week 2': 0, 'Week 3': 0, 'Week 4': 0 };
-    if (Array.isArray(history) && history.length > 0) {
-      history.forEach(row => {
-        const d = new Date(row.date);
-        const day = d.getDate();
-        const weekNum = Math.min(4, Math.ceil(day / 7));
-        const hours = (row.totalWorkDurationInSeconds || 0) / 3600;
-        const key = `Week ${weekNum}`;
-        if (weeks[key] !== undefined) {
-          weeks[key] += hours;
-        }
-      });
-    } else {
-      // Default initial baseline if no logs exist yet
-      weeks['Week 1'] = 40;
-      weeks['Week 2'] = 42.5;
-      weeks['Week 3'] = 39;
-      weeks['Week 4'] = 41;
-    }
-
-    return Object.entries(weeks).map(([name, hours]) => ({
-      name,
-      hours: Math.round(hours * 10) / 10,
-      target: 40
-    }));
-  }, [history]);
 
   // Filtered attendance history table records
   const filteredHistory = useMemo(() => {
@@ -667,11 +636,68 @@ const Attendance = () => {
       </div>
 
       {/* --------------------------------------------------------------------------
-          2. TOP ROW: DASHBOARD-IDENTICAL WORK SESSION WIDGET & COMPACT KPIS
+          2. METRIC CARDS GRID (4-COLUMN ROW - EXACT SAME AS DASHBOARD & OTHER PAGES)
           -------------------------------------------------------------------------- */}
-      <div className="att-top-grid">
+      <div className="metrics-grid">
+        {/* Card 1: Attendance Rate */}
+        <div className="metric-card">
+          <div className="metric-glow-accent primary"></div>
+          <div className="metric-icon-wrapper primary">
+            <ShieldCheck size={24} />
+          </div>
+          <div className="metric-content">
+            <span className="metric-label">Attendance Rate</span>
+            <span className="metric-value">{attendancePercentage}%</span>
+            <span className="metric-subtext">Overall monthly reliability</span>
+          </div>
+        </div>
+
+        {/* Card 2: Present Days */}
+        <div className="metric-card">
+          <div className="metric-glow-accent success"></div>
+          <div className="metric-icon-wrapper success">
+            <CheckCircle2 size={24} />
+          </div>
+          <div className="metric-content">
+            <span className="metric-label">Present Days</span>
+            <span className="metric-value">{presentDaysCount}</span>
+            <span className="metric-subtext">Out of {totalWorkingDays} working days</span>
+          </div>
+        </div>
+
+        {/* Card 3: Late / Absent */}
+        <div className="metric-card">
+          <div className="metric-glow-accent warning"></div>
+          <div className="metric-icon-wrapper warning">
+            <AlertTriangle size={24} />
+          </div>
+          <div className="metric-content">
+            <span className="metric-label">Late / Absent</span>
+            <span className="metric-value">{lateDaysCount} / {absentDaysCount}</span>
+            <span className="metric-subtext">{lateDaysCount === 0 ? 'Punctuality on track' : `${lateDaysCount} late arrival(s)`}</span>
+          </div>
+        </div>
+
+        {/* Card 4: Avg Work Hours */}
+        <div className="metric-card">
+          <div className="metric-glow-accent info"></div>
+          <div className="metric-icon-wrapper info">
+            <Clock size={24} />
+          </div>
+          <div className="metric-content">
+            <span className="metric-label">Avg Work Hours</span>
+            <span className="metric-value">{avgHoursDisplay}</span>
+            <span className="metric-subtext">Total logged: {totalHoursDisplay}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* --------------------------------------------------------------------------
+          3. WORK SESSION & POLICY OVERVIEW (DASHBOARD-IDENTICAL SIZE & STRUCTURE)
+          -------------------------------------------------------------------------- */}
+      <div className="att-session-section">
         
-        {/* Left: Work Session (Dashboard-identical structure & controls) */}
+        {/* Left: Work Session (Dashboard-identical sizing & controls) */}
         <div className="timer-widget">
           <div className="timer-header">
             <div>
@@ -798,123 +824,80 @@ const Attendance = () => {
           </div>
         </div>
 
-        {/* Right: Monthly Performance KPIs (Compact & Professional) */}
-        <div className="att-kpi-grid">
-          
-          {/* Card 1: Attendance Rate */}
-          <div className="att-kpi-card indigo">
-            <div className="att-kpi-glow"></div>
-            <div className="att-kpi-header">
-              <span className="att-kpi-title">Attendance Rate</span>
-              <div className="att-kpi-icon-wrap">
-                <ShieldCheck size={16} />
+        {/* Right: Shift Schedule & Corporate Policy */}
+        <div className="att-shift-policy-card">
+          <div className="att-policy-header">
+            <div className="att-policy-title-group">
+              <span className="att-policy-badge">Standard Shift</span>
+              <h3>Work Schedule & Guidelines</h3>
+              <p>Official shift timings, break allowances and attendance policies</p>
+            </div>
+            <button 
+              className="btn btn-outline" 
+              onClick={() => setShowCorrectionModal(true)}
+              style={{ fontSize: '0.82rem', padding: '0.5rem 0.9rem', borderRadius: '10px' }}
+            >
+              Request Correction
+            </button>
+          </div>
+
+          <div className="att-policy-grid">
+            <div className="att-policy-item">
+              <div className="att-policy-icon" style={{ color: '#818cf8' }}>
+                <Clock size={18} />
+              </div>
+              <div className="att-policy-details">
+                <span className="att-policy-label">Standard Shift</span>
+                <span className="att-policy-val">09:30 AM – 06:30 PM</span>
+                <span className="att-policy-desc">9 hours total daily schedule</span>
               </div>
             </div>
-            <div className="att-kpi-value">{attendancePercentage}%</div>
-            <p className="att-kpi-subtext">Overall monthly reliability</p>
-          </div>
 
-          {/* Card 2: Present Days */}
-          <div className="att-kpi-card emerald">
-            <div className="att-kpi-glow"></div>
-            <div className="att-kpi-header">
-              <span className="att-kpi-title">Present Days</span>
-              <div className="att-kpi-icon-wrap">
-                <CheckCircle2 size={16} />
+            <div className="att-policy-item">
+              <div className="att-policy-icon" style={{ color: '#34d399' }}>
+                <ShieldCheck size={18} />
+              </div>
+              <div className="att-policy-details">
+                <span className="att-policy-label">Grace Window</span>
+                <span className="att-policy-val">15 Minutes (09:45 AM)</span>
+                <span className="att-policy-desc">Marked late if checked in after grace</span>
               </div>
             </div>
-            <div className="att-kpi-value">{presentDaysCount}</div>
-            <p className="att-kpi-subtext">Out of {totalWorkingDays} working days</p>
-          </div>
 
-          {/* Card 3: Late / Absent */}
-          <div className="att-kpi-card amber">
-            <div className="att-kpi-glow"></div>
-            <div className="att-kpi-header">
-              <span className="att-kpi-title">Late / Absent</span>
-              <div className="att-kpi-icon-wrap">
-                <AlertTriangle size={16} />
+            <div className="att-policy-item">
+              <div className="att-policy-icon" style={{ color: '#fbbf24' }}>
+                <Coffee size={18} />
+              </div>
+              <div className="att-policy-details">
+                <span className="att-policy-label">Break Allowance</span>
+                <span className="att-policy-val">60 Min Total / Day</span>
+                <span className="att-policy-desc">Tea & lunch break intervals combined</span>
               </div>
             </div>
-            <div className="att-kpi-value">{lateDaysCount} / {absentDaysCount}</div>
-            <p className="att-kpi-subtext">{lateDaysCount === 0 ? 'Punctuality on track' : `${lateDaysCount} late arrival(s)`}</p>
-          </div>
 
-          {/* Card 4: Average Work Hours */}
-          <div className="att-kpi-card cyan">
-            <div className="att-kpi-glow"></div>
-            <div className="att-kpi-header">
-              <span className="att-kpi-title">Avg Work Hours</span>
-              <div className="att-kpi-icon-wrap">
-                <Clock size={16} />
+            <div className="att-policy-item">
+              <div className="att-policy-icon" style={{ color: '#38bdf8' }}>
+                <CalIcon size={18} />
+              </div>
+              <div className="att-policy-details">
+                <span className="att-policy-label">Working Days</span>
+                <span className="att-policy-val">Monday – Friday</span>
+                <span className="att-policy-desc">Weekends off / standard holiday schedule</span>
               </div>
             </div>
-            <div className="att-kpi-value">{avgHoursDisplay}</div>
-            <p className="att-kpi-subtext">Total logged: {totalHoursDisplay}</p>
           </div>
 
-        </div>
-
-      </div>
-
-      {/* --------------------------------------------------------------------------
-          3. MIDDLE SECTION: WEEKLY HOURS TREND CHART
-          -------------------------------------------------------------------------- */}
-      <div className="att-chart-section">
-        <div className="att-chart-header">
-          <div>
-            <h3>
-              <TrendingUp size={18} color="#818cf8" />
-              Weekly Productive Hours
-            </h3>
-            <p>Net hours logged per week across {monthNameFormatted}</p>
-          </div>
-
-          <div className="att-chart-legend">
-            <div className="att-legend-item">
-              <span className="att-legend-color" style={{ background: '#6366f1' }}></span>
-              <span>Logged Hours</span>
+          <div className="att-policy-footer">
+            <div className="att-policy-stat">
+              <Sparkles size={15} color="#818cf8" />
+              <span>Timely check-ins maintain 100% compliance record</span>
             </div>
-            <div className="att-legend-item">
-              <span className="att-legend-color" style={{ background: 'rgba(255, 255, 255, 0.2)' }}></span>
-              <span>40h Standard Benchmark</span>
+            <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+              HR Policy v2.4 &bull; CodeThrive Infotech
             </div>
           </div>
         </div>
 
-        <div className="att-chart-container">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={weeklyHoursData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="hoursGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.45}/>
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-              <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-              <RechartsTooltip 
-                contentStyle={{ 
-                  backgroundColor: 'rgba(15, 23, 42, 0.95)', 
-                  borderColor: 'rgba(255, 255, 255, 0.12)', 
-                  borderRadius: '12px',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                  color: '#f8fafc' 
-                }} 
-              />
-              <Area 
-                type="monotone" 
-                dataKey="hours" 
-                name="Hours Logged"
-                stroke="#818cf8" 
-                strokeWidth={3} 
-                fillOpacity={1} 
-                fill="url(#hoursGrad)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
       </div>
 
       {/* --------------------------------------------------------------------------
