@@ -77,15 +77,15 @@ const AdminSidebar = () => {
     { name: 'Company Profile', path: '/admin/profile', icon: <Building2 size={20} /> }
   ];
 
-  // Specific Sub-pages for the currently opened employee (compact font & icons)
+  // Specific Sub-pages for the currently opened employee (standard font & icons matching main nav)
   const employeeSubPages = [
-    { id: 'profile', name: 'Profile & HR', icon: <UserCircle size={18} /> },
-    { id: 'tasks', name: 'Tasks', icon: <CheckSquare size={18} /> },
-    { id: 'reports', name: 'Daily Reports', icon: <FileText size={18} /> },
-    { id: 'leaves', name: 'Leave Applications', icon: <CalendarOff size={18} /> },
-    { id: 'attendance', name: 'Attendance Audit', icon: <ClipboardList size={18} /> },
-    { id: 'documents', name: 'Documents', icon: <FolderOpen size={18} /> },
-    { id: 'management', name: 'Payroll & Access', icon: <Banknote size={18} /> }
+    { id: 'profile', name: 'Profile & HR', icon: <UserCircle size={20} /> },
+    { id: 'tasks', name: 'Tasks', icon: <CheckSquare size={20} /> },
+    { id: 'reports', name: 'Daily Reports', icon: <FileText size={20} /> },
+    { id: 'leaves', name: 'Leave Applications', icon: <CalendarOff size={20} /> },
+    { id: 'attendance', name: 'Attendance Audit', icon: <ClipboardList size={20} /> },
+    { id: 'documents', name: 'Documents', icon: <FolderOpen size={20} /> },
+    { id: 'management', name: 'Payroll & Access', icon: <Banknote size={20} /> }
   ];
 
   const handleLogout = () => {
@@ -135,12 +135,13 @@ const AdminSidebar = () => {
                 fontWeight: 600,
                 marginBottom: '0.75rem',
                 cursor: 'pointer',
-                position: 'relative'
+                position: 'relative',
+                width: 'calc(100% - 1.5rem)'
               }}
               title={collapsed ? "Back to Employees" : ""}
             >
               <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <ArrowLeft size={18} />
+                <ArrowLeft size={20} />
                 {!collapsed && <span>Back to Employees</span>}
               </span>
             </button>
@@ -185,8 +186,7 @@ const AdminSidebar = () => {
                     border: 'none',
                     textAlign: 'left',
                     cursor: 'pointer',
-                    fontSize: '0.81rem',
-                    padding: '0.52rem 0.85rem'
+                    width: 'calc(100% - 1.5rem)'
                   }}
                 >
                   {isActive && (
@@ -207,7 +207,7 @@ const AdminSidebar = () => {
                       }}
                     />
                   )}
-                  <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     {page.icon}
                     {!collapsed && <span>{page.name}</span>}
                   </span>
