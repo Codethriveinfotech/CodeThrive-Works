@@ -14,16 +14,12 @@ import {
 import { formatDate } from '../utils/dateUtils';
 import './MyTasks.css';
 
-const DEMO_TASKS = [];
-
-
 const MyTasks = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [usingDemoData, setUsingDemoData] = useState(false);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,18 +63,10 @@ const MyTasks = () => {
       setLoading(true);
       const res = await api.get('/tasks/my-tasks');
       const fetched = res.data?.data || [];
-      
-      if (fetched.length > 0) {
-        setTasks(fetched);
-        setUsingDemoData(false);
-      } else {
-        setTasks(DEMO_TASKS);
-        setUsingDemoData(true);
-      }
+      setTasks(fetched);
     } catch (err) {
       console.warn('API fetch failed or offline, initializing tasks state', err);
-      setTasks(DEMO_TASKS);
-      setUsingDemoData(true);
+      setTasks([]);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -88,16 +76,6 @@ const MyTasks = () => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await fetchTasks();
-  };
-
-  const loadDemoTasks = () => {
-    setTasks(DEMO_TASKS);
-    setUsingDemoData(true);
-  };
-
-  const clearDemoTasks = () => {
-    setUsingDemoData(false);
-    fetchTasks();
   };
 
   const openViewDetailsModal = (task) => {
@@ -123,17 +101,6 @@ const MyTasks = () => {
   const handleUpdateTask = async (e) => {
     e.preventDefault();
     if (!selectedTask) return;
-
-    if (usingDemoData) {
-      // Local update for demo tasks
-      setTasks(prev => prev.map(t => t._id === selectedTask._id ? {
-        ...t,
-        progressPercentage: updateData.progressPercentage,
-        status: updateData.status
-      } : t));
-      setIsUpdateModalOpen(false);
-      return;
-    }
 
     try {
       const res = await api.put(`/tasks/${selectedTask._id}/progress`, updateData);
@@ -378,8 +345,16 @@ const MyTasks = () => {
               </select>
             </div>
 
-            {/* View Mode Switch */}
+            {/* View Mode Switch & Refresh */}
             <div className="view-toggle-btns">
+              <button 
+                className="view-btn"
+                onClick={handleRefresh}
+                title="Refresh Tasks"
+                disabled={isRefreshing}
+              >
+                <RefreshCw size={17} className={isRefreshing ? 'spin' : ''} />
+              </button>
               <button 
                 className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
                 onClick={() => setViewMode('grid')}
@@ -445,21 +420,6 @@ const MyTasks = () => {
           <p className="tasks-empty-desc">
             You currently have no tasks assigned in your queue. When project leads or administrators assign tasks to you, they will appear right here with full tracking capabilities.
           </p>
-
-          <div className="empty-action-btns">
-            {!usingDemoData ? (
-              <button onClick={loadDemoTasks} className="btn btn-primary" style={{ padding: '0.75rem 1.6rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Sparkles size={18} /> Preview Sample Tasks
-              </button>
-            ) : (
-              <button onClick={clearDemoTasks} className="btn btn-outline" style={{ padding: '0.75rem 1.6rem', borderRadius: '12px' }}>
-                Clear Sample Preview
-              </button>
-            )}
-            <button onClick={handleRefresh} className="btn btn-outline" style={{ padding: '0.75rem 1.6rem', borderRadius: '12px' }}>
-              Check Server Updates
-            </button>
-          </div>
         </motion.div>
       ) : filteredTasks.length === 0 ? (
         <motion.div className="tasks-empty-container" variants={itemVariants}>

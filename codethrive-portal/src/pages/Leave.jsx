@@ -521,11 +521,6 @@ _Submitted automatically via CodeThrive HR Portal_`;
             </div>
           )}
 
-          <div style={{ background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.25)', padding: '0.65rem 0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#4ade80', fontSize: '0.8rem' }}>
-            <MessageSquare size={16} style={{ flexShrink: 0 }} />
-            <span>Submitting will dispatch leave details directly to HR WhatsApp (+91 9489510499) with your full employee profile.</span>
-          </div>
-
           <div className="form-row-2col">
             <div className="form-group-pro">
               <label className="form-label-pro">Start Date</label>
