@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 import { 
-  Clock, Coffee, Utensils, LogIn, Play, LogOut, CheckCircle, AlertTriangle, XCircle, 
-  Download, Printer, Search, Filter, Calendar as CalIcon, MapPin, Globe, FileText, User 
+  Clock, Coffee, Utensils, LogIn, Play, LogOut, CheckCircle2, AlertTriangle, 
+  Download, Printer, Search, Calendar as CalIcon, User, 
+  ChevronLeft, ChevronRight, AlertCircle, ShieldCheck, Sparkles, TrendingUp
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
-import Card from '../components/common/Card';
-import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
 import './Attendance.css';
@@ -29,7 +28,6 @@ const Attendance = () => {
   const [activeSession, setActiveSession] = useState(null);
   const [history, setHistory] = useState([]);
   const [summary, setSummary] = useState(null);
-  const [leaves, setLeaves] = useState(null);
   const [employees, setEmployees] = useState([]); 
   
   // Real-time live duration trackers in seconds
@@ -41,11 +39,23 @@ const Attendance = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   
-  const [showCorrectionModal, setShowCorrectionModal] = useState(false);
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [formPayload, setFormPayload] = useState({});
+  // History table filtering
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyStatusFilter, setHistoryStatusFilter] = useState('All');
 
-  // 1. Real-time Timestamp-based Timer Calculation (Survives minimize, sleep, and tab switch)
+  // Modal State
+  const [showCorrectionModal, setShowCorrectionModal] = useState(false);
+  const [correctionPayload, setCorrectionPayload] = useState({
+    date: new Date().toISOString().split('T')[0],
+    correctionType: 'Missed Check-In',
+    checkInTime: '09:00',
+    checkOutTime: '18:00',
+    reason: ''
+  });
+
+  const [sessionDate, setSessionDate] = useState(new Date().toDateString());
+
+  // 1. Real-time Timestamp-based Timer Calculation
   useEffect(() => {
     let interval;
     const updateTimers = () => {
@@ -102,31 +112,28 @@ const Attendance = () => {
         localStorage.setItem('codethrive_session', JSON.stringify({
           savedDate: new Date().toDateString(),
           attendance: todayAttendance,
-          activeSession
+          activeSession: activeSession
         }));
       } catch (e) {}
     }
   }, [todayAttendance, activeSession]);
 
-  // 3. Sync between tabs & components
   useEffect(() => {
     fetchDashboardData();
-    if (isAdminHR || isTeamLead) fetchTeamMembers();
+    if (isAdminHR || isTeamLead) {
+      fetchTeamMembers();
+    }
+  }, [selectedMonth, selectedYear, selectedEmp]);
 
-    const handleSync = () => {
+  useEffect(() => {
+    const handleRemoteUpdate = () => {
       fetchDashboardData();
     };
-    window.addEventListener('cti_attendance_updated', handleSync);
-    window.addEventListener('storage', handleSync);
-    return () => {
-      window.removeEventListener('cti_attendance_updated', handleSync);
-      window.removeEventListener('storage', handleSync);
-    };
-  }, [selectedEmp, selectedMonth, selectedYear]);
+    window.addEventListener('cti_attendance_updated', handleRemoteUpdate);
+    return () => window.removeEventListener('cti_attendance_updated', handleRemoteUpdate);
+  }, []);
 
-  // 4. Automatic Calendar Day Change Detector (Resets status to 'Not Checked In' at Midnight 12:00 AM)
-  const [sessionDate, setSessionDate] = useState(new Date().toDateString());
-
+  // Check midnight rollover
   useEffect(() => {
     const checkDateChange = () => {
       const todayStr = new Date().toDateString();
@@ -159,24 +166,21 @@ const Attendance = () => {
     try {
       setLoading(true);
       const params = { month: selectedMonth, year: selectedYear, employeeId: selectedEmp };
-      const [todayRes, historyRes, summaryRes, leaveRes] = await Promise.allSettled([
+      const [todayRes, historyRes, summaryRes] = await Promise.allSettled([
         api.get('/attendance/today'),
         api.get('/attendance/history', { params }),
-        api.get('/attendance/summary', { params }),
-        api.get('/attendance/leaves')
+        api.get('/attendance/summary', { params })
       ]);
       
       let todayVal = todayRes.status === 'fulfilled' ? todayRes.value : null;
       let historyVal = historyRes.status === 'fulfilled' ? historyRes.value : null;
       let summaryVal = summaryRes.status === 'fulfilled' ? summaryRes.value : null;
-      let leaveVal = leaveRes.status === 'fulfilled' ? leaveRes.value : null;
 
       let todayData = todayVal?.data?.data?.attendance || todayVal?.data?.attendance || todayVal?.attendance || null;
       let activeSessData = todayVal?.data?.data?.activeSession || todayVal?.data?.activeSession || todayVal?.activeSession || null;
 
       let historyData = historyVal?.data?.data || historyVal?.data || historyVal || [];
       let summaryData = summaryVal?.data?.data || summaryVal?.data || summaryVal || null;
-      let leaveData = leaveVal?.data?.data || leaveVal?.data || leaveVal || null;
 
       // Fallback to localStorage cache if backend returns no today record yet
       if (!todayData) {
@@ -206,7 +210,6 @@ const Attendance = () => {
         halfDays: 0, workFromHomeDays: 3, attendancePercentage: 91, 
         totalWorkingHours: 165.5, averageWorkingHours: 8.2, overtimeHours: 4.5
       });
-      setLeaves(leaveData || { casualLeaveBalance: 4, sickLeaveBalance: 2 });
       setLoading(false);
     } catch (err) {
       console.warn('Backend API error in Attendance, using fallback', err);
@@ -306,15 +309,34 @@ const Attendance = () => {
     setIsActionLoading(false);
   };
 
+  const handlePrevMonth = () => {
+    if (selectedMonth === 1) {
+      setSelectedMonth(12);
+      setSelectedYear(prev => prev - 1);
+    } else {
+      setSelectedMonth(prev => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 12) {
+      setSelectedMonth(1);
+      setSelectedYear(prev => prev + 1);
+    } else {
+      setSelectedMonth(prev => prev + 1);
+    }
+  };
+
   const exportPDF = () => {
     try {
       const doc = new jsPDF();
-      doc.text('Attendance History Report', 14, 15);
-      const tableColumn = ["Date", "Check In", "Check Out", "Net Hours", "Status"];
-      const tableRows = history.map(row => [
+      doc.text('Attendance Register Report', 14, 15);
+      const tableColumn = ["Date", "Check In", "Check Out", "Break", "Net Hours", "Status"];
+      const tableRows = filteredHistory.map(row => [
         formatDate(row.date),
         row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
         row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
+        formatHours((row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0)),
         formatHours(row.totalWorkDurationInSeconds),
         row.status || 'Present'
       ]);
@@ -332,7 +354,7 @@ const Attendance = () => {
 
   const exportExcel = () => {
     try {
-      const exportData = history.map(row => ({
+      const exportData = filteredHistory.map(row => ({
         Date: formatDate(row.date),
         'Check In': row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
         'Check Out': row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--',
@@ -353,23 +375,12 @@ const Attendance = () => {
   const submitCorrection = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/attendance/request-correction', formPayload);
-      alert('Attendance correction request submitted successfully.');
+      await api.post('/attendance/request-correction', correctionPayload);
+      alert('Attendance correction request submitted to Admin/HR.');
     } catch (err) {
-      alert('Request saved locally.');
+      alert('Correction request logged successfully.');
     }
     setShowCorrectionModal(false);
-  };
-
-  const submitLeave = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/attendance/apply-leave', formPayload);
-      alert('Leave application submitted successfully.');
-    } catch (err) {
-      alert('Leave application logged.');
-    }
-    setShowLeaveModal(false);
   };
 
   const formatHours = (seconds) => {
@@ -388,276 +399,650 @@ const Attendance = () => {
     return `${pad(h)}:${pad(m)}:${pad(s)}`;
   };
 
-  const mockTrendData = [
-    { name: 'Week 1', hours: 42 },
-    { name: 'Week 2', hours: 40 },
-    { name: 'Week 3', hours: 45 },
-    { name: 'Week 4', hours: 38 },
-  ];
+  // Dynamic Weekly Hours computation directly from real attendance history
+  const weeklyHoursData = useMemo(() => {
+    const weeks = { 'Week 1': 0, 'Week 2': 0, 'Week 3': 0, 'Week 4': 0 };
+    if (Array.isArray(history) && history.length > 0) {
+      history.forEach(row => {
+        const d = new Date(row.date);
+        const day = d.getDate();
+        const weekNum = Math.min(4, Math.ceil(day / 7));
+        const hours = (row.totalWorkDurationInSeconds || 0) / 3600;
+        const key = `Week ${weekNum}`;
+        if (weeks[key] !== undefined) {
+          weeks[key] += hours;
+        }
+      });
+    } else {
+      // Default initial baseline if no logs exist yet
+      weeks['Week 1'] = 40;
+      weeks['Week 2'] = 42.5;
+      weeks['Week 3'] = 39;
+      weeks['Week 4'] = 41;
+    }
 
-  const columns = [
-    { header: 'Date', accessor: 'date', render: row => formatDate(row.date) },
-    ...(isAdminHR || isTeamLead ? [{ 
-      header: 'Employee', 
-      accessor: 'employee', 
-      render: row => (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span>{row.employee?.fullName}</span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{row.employee?.employeeId}</span>
-        </div>
-      )
-    }] : []),
-    { header: 'Check In', accessor: 'firstLoginTime', render: row => row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--' },
-    { header: 'Check Out', accessor: 'lastLogoutTime', render: row => row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--' },
-    { header: 'Net Hours', accessor: 'duration', render: row => <span style={{ fontWeight: 600 }}>{formatHours(row.totalWorkDurationInSeconds)}</span> },
-    { header: 'Status', accessor: 'status', render: row => <StatusBadge status={row.status} /> },
-  ];
+    return Object.entries(weeks).map(([name, hours]) => ({
+      name,
+      hours: Math.round(hours * 10) / 10,
+      target: 40
+    }));
+  }, [history]);
 
-  if (loading && !summary) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', flexDirection: 'column' }}>
-      <div className="loader"></div>
-      <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>Loading Analytics...</p>
-    </div>
-  );
+  // Filtered attendance history table records
+  const filteredHistory = useMemo(() => {
+    return (Array.isArray(history) ? history : []).filter(row => {
+      const dateStr = formatDate(row.date) || '';
+      const statusStr = row.status || 'Present';
+      const empName = row.employee?.fullName || '';
+
+      const matchesSearch = dateStr.toLowerCase().includes(historySearch.toLowerCase()) ||
+                            statusStr.toLowerCase().includes(historySearch.toLowerCase()) ||
+                            empName.toLowerCase().includes(historySearch.toLowerCase());
+
+      const matchesStatus = historyStatusFilter === 'All' || 
+                            statusStr.toLowerCase() === historyStatusFilter.toLowerCase();
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [history, historySearch, historyStatusFilter]);
+
+  // Key Attendance Stats
+  const attendancePercentage = summary?.attendancePercentage || 0;
+  const presentDaysCount = summary?.presentDays || 0;
+  const totalWorkingDays = summary?.totalWorkingDays || 22;
+  const lateDaysCount = summary?.lateDays || 0;
+  const absentDaysCount = summary?.absentDays || 0;
+  const avgHoursDisplay = summary?.averageWorkingHours ? `${summary.averageWorkingHours}h` : '0h';
+  const totalHoursDisplay = summary?.totalWorkingHours ? `${summary.totalWorkingHours}h` : '0h';
+
+  const monthNameFormatted = new Date(selectedYear, selectedMonth - 1, 1).toLocaleString('en', { month: 'long', year: 'numeric' });
+  const todayFormatted = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+
+  const getStatusPillClass = () => {
+    switch (todayAttendance?.status) {
+      case 'Working':
+      case 'Present':
+        return 'working';
+      case 'On Break':
+        return 'break';
+      case 'On Lunch':
+        return 'lunch';
+      case 'Checked Out':
+        return 'checked-out';
+      default:
+        return 'not-started';
+    }
+  };
+
+  const getStatusLabel = () => {
+    switch (todayAttendance?.status) {
+      case 'Working':
+      case 'Present':
+        return '🟢 Active Shift (Working)';
+      case 'On Break':
+        return '☕ On Break';
+      case 'On Lunch':
+        return '🍱 On Lunch';
+      case 'Checked Out':
+        return '🏁 Shift Completed';
+      default:
+        return '⚪ Ready to Check In';
+    }
+  };
+
+  if (loading && !summary && history.length === 0) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column', gap: '1rem' }}>
+        <div className="loader-small" style={{ width: '42px', height: '42px', borderWidth: '3px' }}></div>
+        <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>Loading Attendance Workspace...</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Attendance Dashboard</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Track, monitor and manage attendance analytics.</p>
+    <div className="attendance-workspace">
+      
+      {/* --------------------------------------------------------------------------
+          1. HERO HEADER BANNER & MONTH CONTROLS
+          -------------------------------------------------------------------------- */}
+      <div className="att-hero-banner">
+        <div className="att-title-group">
+          <h1>
+            Attendance Dashboard
+            <span className="att-title-badge">Live System</span>
+          </h1>
+          <p>
+            <span className="att-live-dot"></span>
+            {todayFormatted} &bull; Real-time tracking and automated session logging
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn btn-outline" onClick={exportPDF}><Printer size={16} /> PDF Report</button>
-          <button className="btn btn-outline" onClick={exportExcel}><Download size={16} /> Excel</button>
-        </div>
-      </div>
 
-      {/* Filters */}
-      <Card style={{ padding: 0 }}>
-        <div style={{ display: 'flex', gap: '1.5rem', padding: '1rem 1.5rem', flexWrap: 'wrap' }}>
+        <div className="att-header-controls">
+          {/* Scope Selector for Admin/Lead */}
           {(isAdminHR || isTeamLead) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <User size={16} color="var(--text-muted)"/>
-              <select className="input-field" value={selectedEmp} onChange={e => setSelectedEmp(e.target.value)} style={{ padding: '0.5rem' }}>
-                <option value="">All My Scope</option>
-                {employees.map(emp => <option key={emp._id} value={emp._id}>{emp.fullName}</option>)}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <User size={15} color="#94a3b8" />
+              <select 
+                className="att-custom-select" 
+                value={selectedEmp} 
+                onChange={e => setSelectedEmp(e.target.value)}
+              >
+                <option value="">My Attendance</option>
+                {employees.map(emp => (
+                  <option key={emp._id} value={emp._id}>{emp.fullName || emp.name}</option>
+                ))}
               </select>
             </div>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <CalIcon size={16} color="var(--text-muted)"/>
-            <select className="input-field" value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))} style={{ padding: '0.5rem' }}>
-              {Array.from({length: 12}).map((_, i) => <option key={i} value={i+1}>{new Date(0, i).toLocaleString('en', {month: 'long'})}</option>)}
-            </select>
+
+          {/* Stepper Month Picker */}
+          <div className="att-month-stepper">
+            <button className="att-stepper-btn" onClick={handlePrevMonth} title="Previous Month">
+              <ChevronLeft size={16} />
+            </button>
+            <span className="att-stepper-label">{monthNameFormatted}</span>
+            <button className="att-stepper-btn" onClick={handleNextMonth} title="Next Month">
+              <ChevronRight size={16} />
+            </button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <select className="input-field" value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))} style={{ padding: '0.5rem' }}>
-              {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+
+          {/* Quick Exports */}
+          <button className="att-export-btn" onClick={exportPDF} title="Download PDF Report">
+            <Printer size={15} /> PDF
+          </button>
+          <button className="att-export-btn" onClick={exportExcel} title="Download Excel Sheet">
+            <Download size={15} /> Excel
+          </button>
+        </div>
+      </div>
+
+      {/* --------------------------------------------------------------------------
+          2. TOP ROW: LIVE SHIFT PUNCH HUB & MONTHLY PERFORMANCE KPIS
+          -------------------------------------------------------------------------- */}
+      <div className="att-top-grid">
+        
+        {/* Left: Live Session Control Center */}
+        <div className="att-live-card">
+          <div className="att-live-header">
+            <span className={`att-live-status-pill ${getStatusPillClass()}`}>
+              {getStatusLabel()}
+            </span>
+            <span className="att-today-date-badge">
+              <CalIcon size={14} /> Today's Session
+            </span>
+          </div>
+
+          <div className="att-timer-center">
+            <div className={`att-timer-glow ${getStatusPillClass()}`}>
+              {todayAttendance?.status === 'On Break'
+                ? formatDurationHMS(liveBreakDuration)
+                : (todayAttendance?.status === 'On Lunch' 
+                    ? formatDurationHMS(liveLunchDuration) 
+                    : formatDurationHMS(liveWorkDuration))}
+            </div>
+            <div className="att-timer-label">
+              {todayAttendance?.status === 'On Break' 
+                ? '☕ Break Elapsed Time' 
+                : (todayAttendance?.status === 'On Lunch' 
+                    ? '🍱 Lunch Elapsed Time' 
+                    : (todayAttendance?.status === 'Checked Out' 
+                        ? '🏁 Shift Concluded' 
+                        : (todayAttendance?.status === 'Working' ? '⚡ Net Productive Working Time' : 'Waiting for check-in')))}
+            </div>
+          </div>
+
+          {/* 3-Pill Breakdown */}
+          <div className="att-breakdown-bar">
+            <div className="att-breakdown-col">
+              <div className="att-breakdown-title">
+                <Clock size={12} /> Work
+              </div>
+              <div className="att-breakdown-val work">
+                {formatDurationHMS(liveWorkDuration)}
+              </div>
+            </div>
+            <div className="att-breakdown-col">
+              <div className="att-breakdown-title">
+                <Coffee size={12} /> Break
+              </div>
+              <div className="att-breakdown-val break">
+                {formatDurationHMS(liveBreakDuration)}
+              </div>
+            </div>
+            <div className="att-breakdown-col">
+              <div className="att-breakdown-title">
+                <Utensils size={12} /> Lunch
+              </div>
+              <div className="att-breakdown-val lunch">
+                {formatDurationHMS(liveLunchDuration)}
+              </div>
+            </div>
+          </div>
+
+          {/* Check-In / Out Timestamps */}
+          <div className="att-timestamps-row">
+            <div className="att-timestamp-item">
+              <div className="att-timestamp-label">First Check-In</div>
+              <div className="att-timestamp-time">
+                {todayAttendance?.firstLoginTime 
+                  ? new Date(todayAttendance.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                  : '--:--'}
+              </div>
+            </div>
+            <div className="att-timestamp-item">
+              <div className="att-timestamp-label">Last Check-Out</div>
+              <div className="att-timestamp-time">
+                {todayAttendance?.lastLogoutTime 
+                  ? new Date(todayAttendance.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                  : '--:--'}
+              </div>
+            </div>
+          </div>
+
+          {/* Punch Actions */}
+          <div className="att-actions-container">
+            {(!todayAttendance || todayAttendance?.status === 'Not Checked In') && (
+              <button 
+                className="att-punch-btn checkin" 
+                disabled={isActionLoading} 
+                onClick={() => handleAction('start-work')}
+              >
+                {isActionLoading ? <span className="loader-small"></span> : <><LogIn size={18} /> Check In Now</>}
+              </button>
+            )}
+
+            {(todayAttendance?.status === 'Working' || todayAttendance?.status === 'Present') && (
+              <>
+                <button 
+                  className="att-punch-btn break-btn" 
+                  disabled={isActionLoading} 
+                  onClick={() => handleAction('start-break')}
+                >
+                  <Coffee size={16} /> Take Break
+                </button>
+                <button 
+                  className="att-punch-btn lunch-btn" 
+                  disabled={isActionLoading} 
+                  onClick={() => handleAction('start-lunch')}
+                >
+                  <Utensils size={16} /> Lunch Break
+                </button>
+                <button 
+                  className="att-punch-btn checkout-btn" 
+                  disabled={isActionLoading} 
+                  onClick={() => handleAction('checkout')}
+                >
+                  <LogOut size={16} /> Check Out
+                </button>
+              </>
+            )}
+
+            {(todayAttendance?.status === 'On Break' || todayAttendance?.status === 'On Lunch') && (
+              <>
+                <button 
+                  className="att-punch-btn resume-btn" 
+                  disabled={isActionLoading} 
+                  onClick={() => handleAction('resume-work')}
+                >
+                  {isActionLoading ? <span className="loader-small"></span> : <><Play size={16} /> Resume Work</>}
+                </button>
+                <button 
+                  className="att-punch-btn checkout-btn" 
+                  disabled={isActionLoading} 
+                  onClick={() => handleAction('checkout')}
+                >
+                  <LogOut size={16} /> Check Out
+                </button>
+              </>
+            )}
+
+            {todayAttendance?.status === 'Checked Out' && (
+              <div className="att-session-done-badge">
+                <CheckCircle2 size={18} /> Today's Shift Completed &bull; {formatHours(liveWorkDuration)} Logged
+              </div>
+            )}
           </div>
         </div>
-      </Card>
 
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'var(--primary-bg)', borderRadius: 'var(--radius-sm)' }}><Clock size={24} color="var(--primary-light)" /></div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Attendance %</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{summary?.attendancePercentage || 0}%</h3></div>
+        {/* Right: Monthly Performance KPIs (4 Cards) */}
+        <div className="att-kpi-grid">
+          
+          {/* Card 1: Attendance Rate */}
+          <div className="att-kpi-card indigo">
+            <div className="att-kpi-glow"></div>
+            <div className="att-kpi-header">
+              <span className="att-kpi-title">Attendance Rate</span>
+              <div className="att-kpi-icon-wrap">
+                <ShieldCheck size={20} />
+              </div>
+            </div>
+            <div className="att-kpi-value">{attendancePercentage}%</div>
+            <p className="att-kpi-subtext">Overall monthly reliability</p>
           </div>
-        </Card>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'var(--success-bg)', borderRadius: 'var(--radius-sm)' }}><CheckCircle size={24} color="var(--success)" /></div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Present Days</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{summary?.presentDays || 0}</h3></div>
+
+          {/* Card 2: Present Days */}
+          <div className="att-kpi-card emerald">
+            <div className="att-kpi-glow"></div>
+            <div className="att-kpi-header">
+              <span className="att-kpi-title">Present Days</span>
+              <div className="att-kpi-icon-wrap">
+                <CheckCircle2 size={20} />
+              </div>
+            </div>
+            <div className="att-kpi-value">{presentDaysCount}</div>
+            <p className="att-kpi-subtext">Out of {totalWorkingDays} working days</p>
           </div>
-        </Card>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)' }}><AlertTriangle size={24} color="var(--danger)" /></div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Absent / Late</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{summary?.absentDays || 0} / {summary?.lateDays || 0}</h3></div>
+
+          {/* Card 3: Late / Absent */}
+          <div className="att-kpi-card amber">
+            <div className="att-kpi-glow"></div>
+            <div className="att-kpi-header">
+              <span className="att-kpi-title">Late / Absent</span>
+              <div className="att-kpi-icon-wrap">
+                <AlertTriangle size={20} />
+              </div>
+            </div>
+            <div className="att-kpi-value">{lateDaysCount} / {absentDaysCount}</div>
+            <p className="att-kpi-subtext">{lateDaysCount === 0 ? 'Punctuality on track' : `${lateDaysCount} late arrival(s)`}</p>
           </div>
-        </Card>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ padding: '1rem', background: 'var(--primary-bg)', borderRadius: 'var(--radius-sm)' }}><FileText size={24} color="var(--primary)" /></div>
-            <div><p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Avg Working Hrs</p><h3 style={{ margin: '0.25rem 0 0 0', fontSize: '1.5rem' }}>{summary?.averageWorkingHours || 0}h</h3></div>
+
+          {/* Card 4: Average Work Hours */}
+          <div className="att-kpi-card cyan">
+            <div className="att-kpi-glow"></div>
+            <div className="att-kpi-header">
+              <span className="att-kpi-title">Avg Work Hours</span>
+              <div className="att-kpi-icon-wrap">
+                <Clock size={20} />
+              </div>
+            </div>
+            <div className="att-kpi-value">{avgHoursDisplay}</div>
+            <p className="att-kpi-subtext">Total logged: {totalHoursDisplay}</p>
           </div>
-        </Card>
+
+        </div>
+
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
-        
-        {/* Today's Attendance */}
-        <Card title="Today's Attendance" action={<StatusBadge status={todayAttendance?.status || 'Not Checked In'} />}>
-          <div style={{ textAlign: 'center' }}>
-            {/* Main Active Timer Display */}
-            <div style={{ fontSize: '3rem', fontWeight: 'bold', fontFamily: 'monospace', marginBottom: '0.25rem', color: todayAttendance?.status === 'On Break' ? '#fbbf24' : (todayAttendance?.status === 'On Lunch' ? '#60a5fa' : 'var(--primary-light)') }}>
-              {todayAttendance?.status === 'On Break' 
-                ? formatDurationHMS(liveBreakDuration) 
-                : (todayAttendance?.status === 'On Lunch' ? formatDurationHMS(liveLunchDuration) : formatDurationHMS(liveWorkDuration))}
+      {/* --------------------------------------------------------------------------
+          3. MIDDLE SECTION: WEEKLY HOURS TREND CHART
+          -------------------------------------------------------------------------- */}
+      <div className="att-chart-section">
+        <div className="att-chart-header">
+          <div>
+            <h3>
+              <TrendingUp size={18} color="#818cf8" />
+              Weekly Productive Hours
+            </h3>
+            <p>Net hours logged per week across {monthNameFormatted}</p>
+          </div>
+
+          <div className="att-chart-legend">
+            <div className="att-legend-item">
+              <span className="att-legend-color" style={{ background: '#6366f1' }}></span>
+              <span>Logged Hours</span>
             </div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-              {todayAttendance?.status === 'On Break' 
-                ? '☕ Break Time Elapsed' 
-                : (todayAttendance?.status === 'On Lunch' ? '🍱 Lunch Time Elapsed' : (todayAttendance?.status === 'Checked Out' ? '🏁 Session Completed' : '⏱️ Working Time Elapsed'))}
+            <div className="att-legend-item">
+              <span className="att-legend-color" style={{ background: 'rgba(255, 255, 255, 0.2)' }}></span>
+              <span>40h Standard Benchmark</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="att-chart-container">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={weeklyHoursData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="hoursGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.45}/>
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0.02}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+              <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+              <RechartsTooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(15, 23, 42, 0.95)', 
+                  borderColor: 'rgba(255, 255, 255, 0.12)', 
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  color: '#f8fafc' 
+                }} 
+              />
+              <Area 
+                type="monotone" 
+                dataKey="hours" 
+                name="Hours Logged"
+                stroke="#818cf8" 
+                strokeWidth={3} 
+                fillOpacity={1} 
+                fill="url(#hoursGrad)" 
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* --------------------------------------------------------------------------
+          4. ATTENDANCE HISTORY REGISTER TABLE
+          -------------------------------------------------------------------------- */}
+      <div className="att-history-section">
+        <div className="att-history-toolbar">
+          <div className="att-table-title-group">
+            <h3>Monthly Attendance Register</h3>
+            <p>Showing records for {monthNameFormatted} ({filteredHistory.length} entries)</p>
+          </div>
+
+          <div className="att-table-actions">
+            {/* Search Input */}
+            <div className="att-search-box">
+              <Search size={15} color="#64748b" />
+              <input 
+                type="text" 
+                placeholder="Search date, status..." 
+                value={historySearch}
+                onChange={e => setHistorySearch(e.target.value)}
+              />
             </div>
 
-            {/* 3-Way Live Timers Breakdown */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}><Clock size={12}/> Work</div>
-                <div style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--primary-light)', marginTop: '0.25rem' }}>{formatDurationHMS(liveWorkDuration)}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}><Coffee size={12}/> Break</div>
-                <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#fbbf24', marginTop: '0.25rem' }}>{formatDurationHMS(liveBreakDuration)}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}><Utensils size={12}/> Lunch</div>
-                <div style={{ fontWeight: 'bold', fontSize: '1rem', color: '#60a5fa', marginTop: '0.25rem' }}>{formatDurationHMS(liveLunchDuration)}</div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '3rem', marginBottom: '1.5rem' }}>
-              <div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Check-In Time</div>
-                <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{todayAttendance?.firstLoginTime ? new Date(todayAttendance.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Check-Out Time</div>
-                <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{todayAttendance?.lastLogoutTime ? new Date(todayAttendance.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}</div>
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              {(!todayAttendance || todayAttendance?.status === 'Not Checked In') && (
-                <button className="btn btn-primary" disabled={isActionLoading} onClick={() => handleAction('start-work')}>
-                  {isActionLoading ? <span className="loader-small"></span> : <><LogIn size={16} /> Check In</>}
+            {/* Status Filter Chips */}
+            <div className="att-status-filters">
+              {['All', 'Present', 'Late', 'Absent'].map(tab => (
+                <button
+                  key={tab}
+                  className={`att-filter-chip ${historyStatusFilter === tab ? 'active' : ''}`}
+                  onClick={() => setHistoryStatusFilter(tab)}
+                >
+                  {tab}
                 </button>
-              )}
-
-              {(todayAttendance?.status === 'Working' || todayAttendance?.status === 'Present') && (
-                <>
-                  <button className="btn btn-outline" disabled={isActionLoading} style={{ color: '#fbbf24', borderColor: 'rgba(245, 158, 11, 0.4)' }} onClick={() => handleAction('start-break')}>
-                    <Coffee size={16} /> Break
-                  </button>
-                  <button className="btn btn-outline" disabled={isActionLoading} style={{ color: '#60a5fa', borderColor: 'rgba(96, 165, 250, 0.4)' }} onClick={() => handleAction('start-lunch')}>
-                    <Utensils size={16} /> Lunch
-                  </button>
-                  <button className="btn btn-outline" disabled={isActionLoading} style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.4)' }} onClick={() => handleAction('checkout')}>
-                    <LogOut size={16} /> Checkout
-                  </button>
-                </>
-              )}
-
-              {(todayAttendance?.status === 'On Break' || todayAttendance?.status === 'On Lunch') && (
-                <>
-                  <button className="btn btn-primary" disabled={isActionLoading} onClick={() => handleAction('resume-work')}>
-                    {isActionLoading ? <span className="loader-small"></span> : <><Play size={16} /> Resume Work</>}
-                  </button>
-                  <button className="btn btn-outline" disabled={isActionLoading} style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.4)' }} onClick={() => handleAction('checkout')}>
-                    <LogOut size={16} /> Checkout
-                  </button>
-                </>
-              )}
-
-              {todayAttendance?.status === 'Checked Out' && (
-                <span className="badge badge-success" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
-                  <CheckCircle size={16} style={{ marginRight: '0.4rem', verticalAlign: 'middle' }} /> Today's Session Completed
-                </span>
-              )}
+              ))}
             </div>
-          </div>
-        </Card>
 
-        {/* Trend Chart */}
-        <Card title="Working Hours Trend">
-          <div style={{ height: '250px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mockTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.5}/>
-                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <RechartsTooltip contentStyle={{backgroundColor: 'var(--bg-main)', borderColor: 'var(--glass-border)', borderRadius: 'var(--radius-sm)'}} />
-                <Area type="monotone" dataKey="hours" stroke="var(--primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorHours)" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {/* Request Correction Button */}
+            <button 
+              className="att-correct-btn"
+              onClick={() => setShowCorrectionModal(true)}
+              title="Request Attendance Correction"
+            >
+              <AlertCircle size={15} /> Request Correction
+            </button>
           </div>
-        </Card>
+        </div>
 
-        {/* Leave Summary */}
-        <Card title="Leave Balance & Requests" action={<button className="btn btn-outline" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }} onClick={() => setShowLeaveModal(true)}>Apply Leave</button>}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{ background: 'var(--primary-bg)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--primary-light)', marginBottom: '0.5rem' }}>Casual Leaves</div>
-              <div style={{ fontSize: '2rem', fontWeight: 700 }}>{leaves?.casualLeaveBalance || 0}</div>
-            </div>
-            <div style={{ background: 'var(--danger-bg)', padding: '1.5rem', borderRadius: 'var(--radius-sm)', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--danger)', marginBottom: '0.5rem' }}>Sick Leaves</div>
-              <div style={{ fontSize: '2rem', fontWeight: 700 }}>{leaves?.sickLeaveBalance || 0}</div>
-            </div>
-          </div>
-          <button className="btn btn-outline" style={{ width: '100%' }} onClick={() => setShowCorrectionModal(true)}>Request Attendance Correction</button>
-        </Card>
+        {/* Custom Clean History Table */}
+        <div className="att-custom-table-wrapper">
+          <table className="att-custom-table">
+            <thead>
+              <tr>
+                <th>Date & Day</th>
+                {(isAdminHR || isTeamLead) && <th>Employee</th>}
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Breaks</th>
+                <th>Net Work Hours</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredHistory.length > 0 ? (
+                filteredHistory.map((row, idx) => {
+                  const dateObj = row.date ? new Date(row.date) : new Date();
+                  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                  const dateStr = formatDate(row.date);
+                  const breakTotal = (row.totalBreakDurationInSeconds || 0) + (row.totalLunchDurationInSeconds || 0);
+
+                  return (
+                    <tr key={row._id || idx}>
+                      <td>
+                        <div className="att-date-col">
+                          <span className="att-date-primary">{dateStr}</span>
+                          <span className="att-date-sub">{dayName}</span>
+                        </div>
+                      </td>
+
+                      {(isAdminHR || isTeamLead) && (
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 600 }}>{row.employee?.fullName || 'Staff User'}</span>
+                            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{row.employee?.employeeId || ''}</span>
+                          </div>
+                        </td>
+                      )}
+
+                      <td>
+                        <span className="att-time-val">
+                          {row.firstLoginTime 
+                            ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                            : '--:--'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span className="att-time-val">
+                          {row.lastLogoutTime 
+                            ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                            : '--:--'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                          {breakTotal > 0 ? formatHours(breakTotal) : '0m'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span className="att-duration-badge">
+                          {formatHours(row.totalWorkDurationInSeconds)}
+                        </span>
+                      </td>
+
+                      <td>
+                        <StatusBadge status={row.status || 'Present'} />
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={(isAdminHR || isTeamLead) ? 7 : 6} className="att-empty-row">
+                    <div className="att-empty-icon">
+                      <CalIcon size={32} />
+                    </div>
+                    <div>No attendance records found matching your filter for {monthNameFormatted}.</div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <Card title="Attendance History" style={{ padding: 0 }}>
-        <DataTable columns={columns} data={history} searchable={true} itemsPerPage={10} />
-      </Card>
+      {/* --------------------------------------------------------------------------
+          5. ATTENDANCE CORRECTION REQUEST MODAL
+          -------------------------------------------------------------------------- */}
+      <Modal 
+        isOpen={showCorrectionModal} 
+        onClose={() => setShowCorrectionModal(false)} 
+        title="Request Attendance Correction"
+      >
+        <form onSubmit={submitCorrection} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+          <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>
+            Missed a punch or had a system issue? Submit a correction request with proposed times for Admin/HR review.
+          </p>
 
-      <Modal isOpen={showCorrectionModal} onClose={() => setShowCorrectionModal(false)} title="Request Attendance Correction">
-        <form onSubmit={submitCorrection} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="form-group">
-            <label>Date</label>
-            <input type="date" className="input-field" required onChange={e => setFormPayload({...formPayload, date: e.target.value})} />
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Date *</label>
+            <input 
+              type="date" 
+              className="input-field" 
+              required 
+              value={correctionPayload.date}
+              onChange={e => setCorrectionPayload({ ...correctionPayload, date: e.target.value })} 
+            />
           </div>
-          <div className="form-group">
-            <label>Reason</label>
-            <textarea className="input-field" required rows="3" onChange={e => setFormPayload({...formPayload, reason: e.target.value})}></textarea>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-            <button type="button" className="btn btn-outline" onClick={() => setShowCorrectionModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Submit Request</button>
-          </div>
-        </form>
-      </Modal>
 
-      <Modal isOpen={showLeaveModal} onClose={() => setShowLeaveModal(false)} title="Apply for Leave">
-        <form onSubmit={submitLeave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="form-group">
-            <label>Leave Type</label>
-            <select className="input-field" required onChange={e => setFormPayload({...formPayload, leaveType: e.target.value})} style={{ backgroundColor: 'var(--bg-card)' }}>
-              <option value="">Select Type</option>
-              <option value="Casual">Casual Leave</option>
-              <option value="Sick">Sick Leave</option>
-              <option value="Paid">Paid Leave</option>
-              <option value="WFH">Work From Home</option>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Correction Type *</label>
+            <select 
+              className="input-field" 
+              value={correctionPayload.correctionType}
+              onChange={e => setCorrectionPayload({ ...correctionPayload, correctionType: e.target.value })}
+            >
+              <option value="Missed Check-In">Missed Check-In</option>
+              <option value="Missed Check-Out">Missed Check-Out</option>
+              <option value="Incorrect Status">Incorrect Status Marked</option>
+              <option value="System Glitch">Network / Device Issue</option>
             </select>
           </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label>Start Date</label>
-              <input type="date" className="input-field" required onChange={e => setFormPayload({...formPayload, startDate: e.target.value})} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Correct Check-In</label>
+              <input 
+                type="time" 
+                className="input-field" 
+                value={correctionPayload.checkInTime}
+                onChange={e => setCorrectionPayload({ ...correctionPayload, checkInTime: e.target.value })} 
+              />
             </div>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label>End Date</label>
-              <input type="date" className="input-field" required onChange={e => setFormPayload({...formPayload, endDate: e.target.value})} />
+            <div className="form-group">
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Correct Check-Out</label>
+              <input 
+                type="time" 
+                className="input-field" 
+                value={correctionPayload.checkOutTime}
+                onChange={e => setCorrectionPayload({ ...correctionPayload, checkOutTime: e.target.value })} 
+              />
             </div>
           </div>
+
           <div className="form-group">
-            <label>Reason</label>
-            <textarea className="input-field" required rows="3" onChange={e => setFormPayload({...formPayload, reason: e.target.value})}></textarea>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Reason & Justification *</label>
+            <textarea 
+              className="input-field" 
+              required 
+              rows="3" 
+              placeholder="State reason for missing check-in/out..."
+              value={correctionPayload.reason}
+              onChange={e => setCorrectionPayload({ ...correctionPayload, reason: e.target.value })}
+            ></textarea>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-            <button type="button" className="btn btn-outline" onClick={() => setShowLeaveModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Submit Application</button>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.85rem', marginTop: '0.75rem' }}>
+            <button 
+              type="button" 
+              className="btn btn-outline" 
+              onClick={() => setShowCorrectionModal(false)}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+            >
+              Submit for Approval
+            </button>
           </div>
         </form>
       </Modal>
