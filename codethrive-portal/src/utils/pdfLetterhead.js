@@ -299,6 +299,7 @@ export const createOfficialCodeThriveDoc = async ({
     unit: 'mm',
     format: 'a4'
   });
+  doc.setFont('times', 'normal');
 
   const pageW = orientation === 'landscape' ? 297 : 210;
   const pageH = orientation === 'landscape' ? 210 : 297;

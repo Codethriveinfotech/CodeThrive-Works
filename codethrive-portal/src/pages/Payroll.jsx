@@ -138,12 +138,12 @@ const Payroll = () => {
 
       doc.setTextColor(6, 78, 59);
       doc.setFontSize(9.5);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.text('NET SALARY PAYABLE:', 18, finalY + 10.5);
 
       doc.setTextColor(16, 185, 129);
       doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.text(`Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 192, finalY + 11, { align: 'right' });
 
       const fileName = `Official_Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.pdf`;

@@ -499,7 +499,7 @@ const EmployeeDetail = () => {
 
       // Section 1: Tasks
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.setTextColor(15, 23, 42);
       doc.text(`1. ASSIGNED TASKS & DELIVERABLES AUDIT (${filteredTasks.length})`, 14, currentY);
 
@@ -517,7 +517,7 @@ const EmployeeDetail = () => {
 
       // Section 2: Daily Reports
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.setTextColor(15, 23, 42);
       doc.text(`2. DAILY WORK REPORTS AUDIT (${filteredReports.length})`, 14, currentY);
 
@@ -534,7 +534,7 @@ const EmployeeDetail = () => {
 
       // Section 3: Leave Applications
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.setTextColor(15, 23, 42);
       doc.text(`3. LEAVE APPLICATIONS AUDIT (${filteredLeaves.length})`, 14, currentY);
 
@@ -551,7 +551,7 @@ const EmployeeDetail = () => {
 
       // Section 4: Monthly Payslips
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('times', 'bold');
       doc.setTextColor(15, 23, 42);
       doc.text(`4. PAYSLIP & SALARY FINANCIAL STATEMENT (${filteredPayslips.length})`, 14, currentY);
 
