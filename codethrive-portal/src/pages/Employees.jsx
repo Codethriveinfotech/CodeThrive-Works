@@ -14,6 +14,7 @@ import {
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
+import ContactActionModal from '../components/common/ContactActionModal';
 import './Employees.css';
 
 const Employees = () => {
@@ -22,6 +23,7 @@ const Employees = () => {
 
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [contactModal, setContactModal] = useState({ isOpen: false, name: '', phone: '' });
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -249,7 +251,38 @@ const Employees = () => {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.95rem' }}>{row.fullName}</span>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{row.personalEmailAddress} | <strong style={{ color: 'var(--primary-light)' }}>{row.employeeId}</strong></span>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', marginTop: '2px' }}>
+              <a 
+                href={`mailto:${row.personalEmailAddress || ''}`}
+                onClick={(e) => e.stopPropagation()}
+                style={{ color: '#38bdf8', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
+                title="Send email"
+              >
+                <Mail size={11} /> {row.personalEmailAddress}
+              </a>
+              {row.personalPhoneNumber && (
+                <>
+                  <span>•</span>
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setContactModal({
+                        isOpen: true,
+                        name: row.fullName,
+                        phone: row.personalPhoneNumber
+                      });
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#34d399', textDecoration: 'none', cursor: 'pointer', padding: 0, font: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
+                    title="Connect on WhatsApp or Phone Call"
+                  >
+                    <Phone size={11} /> {row.personalPhoneNumber}
+                  </button>
+                </>
+              )}
+              <span>•</span>
+              <strong style={{ color: 'var(--primary-light)' }}>{row.employeeId}</strong>
+            </div>
           </div>
         </div>
       )
@@ -643,6 +676,14 @@ const Employees = () => {
           </div>
         </div>
       )}
+
+      {/* Contact Options Modal (WhatsApp vs Call) */}
+      <ContactActionModal 
+        isOpen={contactModal.isOpen} 
+        onClose={() => setContactModal(prev => ({ ...prev, isOpen: false }))} 
+        name={contactModal.name} 
+        phone={contactModal.phone} 
+      />
     </div>
   );
 };

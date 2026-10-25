@@ -12,6 +12,7 @@ import {
   RotateCw, ZoomIn, Building2, Globe, Users
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import ContactActionModal from '../components/common/ContactActionModal';
 import './MyProfile.css';
 
 const MyProfile = () => {
@@ -23,6 +24,7 @@ const MyProfile = () => {
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [contactModal, setContactModal] = useState({ isOpen: false, name: '', phone: '' });
   const isAdminPath = window.location.pathname.startsWith('/admin');
   const [activeProfileTab, setActiveProfileTab] = useState(isAdminPath ? 'company' : 'personal');
 
@@ -819,40 +821,37 @@ const MyProfile = () => {
               <span className="profile-badge-status">
                 <span className="pulse-dot"></span> Active
               </span>
-              <span className="profile-badge-id">
-                <CreditCard size={13} /> {profile.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-001')}
-              </span>
-              <span 
-                className="profile-badge-role"
-                style={isAdmin ? {
-                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.25))',
-                  border: '1px solid rgba(245, 158, 11, 0.4)',
-                  color: '#fbbf24',
-                  fontWeight: 700
-                } : {}}
-              >
-                <ShieldCheck size={13} /> {isAdmin ? 'EXECUTIVE SYSTEM ADMINISTRATOR' : (user?.role ? user.role.toUpperCase() : 'MANAGEMENT')}
-              </span>
             </div>
 
             <h1 className="profile-user-name">{profile.fullName}</h1>
 
             <div className="profile-user-title">
+              <span className="profile-badge-id">
+                <CreditCard size={13} /> {profile.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-001')}
+              </span>
               <span className="title-highlight">{profile.designation || 'Specialist'}</span>
-              <span className="bullet">•</span>
-              <span>{profile.department || 'Quality Assurance'}</span>
             </div>
 
             <div className="profile-meta-tags">
-              <span className="profile-meta-tag">
+              <a 
+                href={`mailto:${profile.personalEmailAddress || user?.email || ''}`}
+                className="profile-meta-tag clickable-link"
+                title="Send an email"
+              >
                 <Mail size={13} /> {profile.personalEmailAddress || user?.email || 'N/A'}
-              </span>
-              <span className="profile-meta-tag">
+              </a>
+              <button 
+                type="button"
+                className="profile-meta-tag clickable-btn"
+                onClick={() => setContactModal({
+                  isOpen: true,
+                  name: profile.fullName || 'Employee',
+                  phone: profile.personalPhoneNumber || '9876543210'
+                })}
+                title="Connect via WhatsApp or Phone Call"
+              >
                 <Phone size={13} /> {profile.personalPhoneNumber || '9876543210'}
-              </span>
-              <span className="profile-meta-tag">
-                <MapPin size={13} /> {profile.workLocation || 'Office'}
-              </span>
+              </button>
               <span className="profile-meta-tag">
                 <Calendar size={13} /> Joined {profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/24'}
               </span>
@@ -866,53 +865,6 @@ const MyProfile = () => {
             <Edit3 size={16} />
             <span>Edit Profile</span>
           </button>
-        </div>
-      </div>
-
-      {/* --------------------------------------------------------------------------
-          2. EXECUTIVE QUICK STATS BANNER
-         -------------------------------------------------------------------------- */}
-      <div className="header-stats-strip">
-        <div className="header-stat-box">
-          <div className="quick-stat-icon">
-            <CreditCard size={20} />
-          </div>
-          <div>
-            <div className="quick-stat-label">Employee ID</div>
-            <div className="quick-stat-value">{profile.employeeId || 'CTI-EMP-001'}</div>
-          </div>
-        </div>
-
-        <div className="header-stat-box">
-          <div className="quick-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#34d399' }}>
-            <Mail size={20} />
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <div className="quick-stat-label">Work Email</div>
-            <div className="quick-stat-value" style={{ wordBreak: 'break-all', fontSize: '0.85rem' }}>
-              {profile.personalEmailAddress || user?.email || 'N/A'}
-            </div>
-          </div>
-        </div>
-
-        <div className="header-stat-box">
-          <div className="quick-stat-icon" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24' }}>
-            <Phone size={20} />
-          </div>
-          <div>
-            <div className="quick-stat-label">Phone Contact</div>
-            <div className="quick-stat-value">{profile.personalPhoneNumber || '9876543210'}</div>
-          </div>
-        </div>
-
-        <div className="header-stat-box">
-          <div className="quick-stat-icon" style={{ background: 'rgba(168, 85, 247, 0.12)', color: '#c084fc' }}>
-            <MapPin size={20} />
-          </div>
-          <div>
-            <div className="quick-stat-label">Work Location</div>
-            <div className="quick-stat-value">{profile.workLocation || 'Corporate HQ (Office)'}</div>
-          </div>
         </div>
       </div>
 
@@ -1969,6 +1921,14 @@ const MyProfile = () => {
           </form>
         </Modal>
       )}
+
+      {/* Contact Options Modal (WhatsApp vs Call) */}
+      <ContactActionModal 
+        isOpen={contactModal.isOpen} 
+        onClose={() => setContactModal(prev => ({ ...prev, isOpen: false }))} 
+        name={contactModal.name} 
+        phone={contactModal.phone} 
+      />
 
     </motion.div>
   );

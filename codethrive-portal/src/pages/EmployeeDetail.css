@@ -188,6 +188,25 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.hero-meta-item.clickable-link,
+.hero-meta-item.clickable-btn {
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+  text-decoration: none;
+  font: inherit;
+  transition: all 0.2s ease;
+}
+
+.hero-meta-item.clickable-link:hover,
+.hero-meta-item.clickable-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
 .hero-retention-badge {
   background: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.25);

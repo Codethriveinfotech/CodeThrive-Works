@@ -12,12 +12,13 @@ import {
 } from '../utils/pdfLetterhead';
 import { 
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
-  KeyRound, Plus, Download, Save, ArrowLeft, Mail, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils
+  KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
 import DataTable from '../components/common/DataTable';
 import { formatDate, formatDateWithDay } from '../utils/dateUtils';
+import ContactActionModal from '../components/common/ContactActionModal';
 import './EmployeeDetail.css';
 
 const AUDIT_MONTH_OPTIONS = [
@@ -175,6 +176,7 @@ const EmployeeDetail = () => {
   const [allEmployees, setAllEmployees] = useState(DEFAULT_DEMO_EMPLOYEES);
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [contactModal, setContactModal] = useState({ isOpen: false, name: '', phone: '' });
 
   // Month Audit Filter State: Default 'All' (All-Time Continuous History)
   const [selectedAuditMonth, setSelectedAuditMonth] = useState('All');
@@ -764,7 +766,29 @@ const EmployeeDetail = () => {
               </span>
             </div>
             <div className="hero-meta-tags">
-              <span className="hero-meta-item"><Mail size={13} /> {employee.personalEmailAddress}</span>
+              <a 
+                href={`mailto:${employee.personalEmailAddress || ''}`}
+                className="hero-meta-item clickable-link"
+                title="Send an email"
+              >
+                <Mail size={13} /> {employee.personalEmailAddress || 'No Email'}
+              </a>
+
+              {employee.personalPhoneNumber && (
+                <button 
+                  type="button"
+                  className="hero-meta-item clickable-btn"
+                  onClick={() => setContactModal({
+                    isOpen: true,
+                    name: employee.fullName,
+                    phone: employee.personalPhoneNumber
+                  })}
+                  title="Connect via WhatsApp or Phone Call"
+                >
+                  <Phone size={13} /> {employee.personalPhoneNumber}
+                </button>
+              )}
+
               <span className="hero-meta-item"><Briefcase size={13} /> {employee.department} &bull; {employee.designation}</span>
               <span className="hero-meta-item"><Calendar size={13} /> ID: <strong style={{ color: 'var(--primary-light)' }}>{employee.employeeId}</strong></span>
             </div>
@@ -840,8 +864,35 @@ const EmployeeDetail = () => {
               <Card title={<><User size={16} style={{ marginRight: '0.5rem' }} /> Personal Information</>}>
                 <div className="info-list">
                   <div className="info-item"><span>Full Name:</span> <strong>{employee.fullName}</strong></div>
-                  <div className="info-item"><span>Email Address:</span> <strong>{employee.personalEmailAddress}</strong></div>
-                  <div className="info-item"><span>Phone Number:</span> <strong>{employee.personalPhoneNumber || 'N/A'}</strong></div>
+                  <div className="info-item">
+                    <span>Email Address:</span> 
+                    <a 
+                      href={`mailto:${employee.personalEmailAddress || ''}`}
+                      style={{ color: '#38bdf8', textDecoration: 'underline', fontWeight: 600 }}
+                      title="Send Email"
+                    >
+                      {employee.personalEmailAddress || 'N/A'}
+                    </a>
+                  </div>
+                  <div className="info-item">
+                    <span>Phone Number:</span> 
+                    {employee.personalPhoneNumber ? (
+                      <button 
+                        type="button"
+                        onClick={() => setContactModal({
+                          isOpen: true,
+                          name: employee.fullName,
+                          phone: employee.personalPhoneNumber
+                        })}
+                        style={{ background: 'none', border: 'none', color: '#38bdf8', textDecoration: 'underline', cursor: 'pointer', padding: 0, font: 'inherit', fontWeight: 700 }}
+                        title="Connect via WhatsApp or Call"
+                      >
+                        {employee.personalPhoneNumber}
+                      </button>
+                    ) : (
+                      <strong>N/A</strong>
+                    )}
+                  </div>
                   <div className="info-item"><span>Gender / Blood:</span> <strong>{employee.gender || 'Male'} ({employee.bloodGroup || 'O+'})</strong></div>
                 </div>
               </Card>
@@ -1286,6 +1337,14 @@ const EmployeeDetail = () => {
         )}
 
       </div>
+
+      {/* Contact Options Modal (WhatsApp vs Call) */}
+      <ContactActionModal 
+        isOpen={contactModal.isOpen} 
+        onClose={() => setContactModal(prev => ({ ...prev, isOpen: false }))} 
+        name={contactModal.name} 
+        phone={contactModal.phone} 
+      />
     </div>
   );
 };
