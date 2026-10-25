@@ -497,15 +497,41 @@ const Documents = () => {
                   <div className="doc-info-main">
                     <h4 className="doc-title-text" title={doc.title}>{doc.title}</h4>
 
+                    <p className="doc-desc-text">
+                      {doc.description || (
+                        doc.documentType === 'Policy' 
+                          ? 'Official company policy & operational guideline for employee compliance.'
+                          : doc.documentType === 'Certificate'
+                          ? 'Verified educational or professional credential stored in corporate vault.'
+                          : doc.documentType === 'ID Proof'
+                          ? 'Government verified identity proof for employment compliance & records.'
+                          : 'Official corporate document registered in CodeThrive secure records.'
+                      )}
+                    </p>
+
+                    <div className="doc-specs-row">
+                      <span className="spec-badge format">
+                        <FileText size={11} />
+                        {(doc.fileUrl || doc.fileName || doc.title || '').toLowerCase().endsWith('.pdf') ? 'PDF' : 
+                         (doc.fileUrl || doc.fileName || '').toLowerCase().match(/\.(jpg|jpeg|png)$/) ? 'IMAGE' : 
+                         (doc.fileUrl || doc.fileName || '').toLowerCase().match(/\.(doc|docx)$/) ? 'DOCX' : 'DOCUMENT'}
+                      </span>
+                      <span className="spec-badge scope">
+                        {doc.isPublic ? <Globe size={11} /> : <Lock size={11} />}
+                        {doc.isPublic ? 'Public Policy' : 'Confidential'}
+                      </span>
+                      <span className="spec-badge status">
+                        <span className="status-dot"></span> Active & Verified
+                      </span>
+                    </div>
+
                     <div className="doc-meta-row">
                       <span className="doc-date-pill">
-                        <Calendar size={13} color="#818cf8" /> {formatDate(doc.createdAt)}
+                        <Calendar size={12} color="#818cf8" /> {formatDate(doc.createdAt)}
                       </span>
-                      {doc.owner && (
-                        <span className="doc-owner-pill">
-                          <ShieldCheck size={13} color="#60a5fa" /> {doc.owner.fullName || 'Employee'}
-                        </span>
-                      )}
+                      <span className="doc-owner-pill">
+                        <ShieldCheck size={12} color="#34d399" /> {doc.owner?.fullName || 'CodeThrive Admin'}
+                      </span>
                     </div>
                   </div>
                 </div>
