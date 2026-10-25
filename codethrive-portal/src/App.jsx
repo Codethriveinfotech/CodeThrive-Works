@@ -301,9 +301,10 @@ function AppContent() {
         </Route>
 
         {/* Protected Admin Routes */}
-        <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'hr']} loginPath="/admin/login" defaultRedirect="/admin/dashboard" />}>
+        <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'hr']} loginPath="/admin/login" defaultRedirect="/admin/employees" />}>
           <Route element={<AdminLayout />}>
-            <Route path="/admin/dashboard" element={<Admin />} />
+            <Route path="/admin" element={<Navigate to="/admin/employees" replace />} />
+            <Route path="/admin/dashboard" element={<Navigate to="/admin/employees" replace />} />
             <Route path="/admin/employees" element={<Employees />} />
             <Route path="/admin/employees/:id" element={<EmployeeDetail />} />
             <Route path="/admin/tasks" element={<AdminTasks />} />

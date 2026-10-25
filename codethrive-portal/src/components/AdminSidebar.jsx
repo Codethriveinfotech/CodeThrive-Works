@@ -1,17 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { 
-  LayoutDashboard, Users, CheckSquare, 
+  Users, CheckSquare, 
   FileText, Banknote, FolderOpen, UserCircle, Building2,
-  CalendarOff, LogOut, ChevronLeft, ChevronRight, ClipboardList
+  CalendarOff, LogOut, ChevronLeft, ChevronRight, ClipboardList, ArrowLeft, User
 } from 'lucide-react';
 import './Sidebar.css';
 
 const AdminSidebar = () => {
   const { logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  const [activeEmployeeInfo, setActiveEmployeeInfo] = useState(null);
+
+  // Check if current view is an Employee Detail page (/admin/employees/:id)
+  const isEmployeeDetail = location.pathname.startsWith('/admin/employees/') && location.pathname !== '/admin/employees';
+  const empIdMatch = isEmployeeDetail ? location.pathname.replace('/admin/employees/', '').split('/')[0] : null;
+
+  const searchParams = new URLSearchParams(location.search);
+  const currentTab = searchParams.get('tab') || 'profile';
 
   useEffect(() => {
     if (collapsed) {
@@ -34,12 +44,29 @@ const AdminSidebar = () => {
     return () => window.removeEventListener('click', handleOutsideClick);
   }, []);
 
+  // Update active employee banner from sessionStorage if viewing an employee
+  useEffect(() => {
+    if (isEmployeeDetail) {
+      try {
+        const cached = sessionStorage.getItem('cti_current_viewed_emp');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && (parsed.id === empIdMatch || parsed._id === empIdMatch)) {
+            setActiveEmployeeInfo(parsed);
+          }
+        }
+      } catch (err) {}
+    } else {
+      setActiveEmployeeInfo(null);
+    }
+  }, [isEmployeeDetail, empIdMatch]);
+
   const handleNavClick = () => {
     document.body.classList.remove('mobile-sidebar-open');
   };
 
+  // Standard Admin Links - Dashboard completely removed, Employees is #1
   const adminLinks = [
-    { name: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Employees', path: '/admin/employees', icon: <Users size={20} /> },
     { name: 'Attendance', path: '/admin/attendance', icon: <ClipboardList size={20} /> },
     { name: 'Tasks', path: '/admin/tasks', icon: <CheckSquare size={20} /> },
@@ -48,6 +75,17 @@ const AdminSidebar = () => {
     { name: 'Payroll', path: '/admin/payroll', icon: <Banknote size={20} /> },
     { name: 'Documents', path: '/admin/documents', icon: <FolderOpen size={20} /> },
     { name: 'Company Profile', path: '/admin/profile', icon: <Building2 size={20} /> }
+  ];
+
+  // Specific Sub-pages for the currently opened employee
+  const employeeSubPages = [
+    { id: 'profile', name: 'Profile & HR', icon: <UserCircle size={19} /> },
+    { id: 'tasks', name: 'Tasks', icon: <CheckSquare size={19} /> },
+    { id: 'reports', name: 'Daily Reports', icon: <FileText size={19} /> },
+    { id: 'leaves', name: 'Leave Applications', icon: <CalendarOff size={19} /> },
+    { id: 'attendance', name: 'Attendance Audit', icon: <ClipboardList size={19} /> },
+    { id: 'documents', name: 'Documents', icon: <FolderOpen size={19} /> },
+    { id: 'management', name: 'Payroll & Access', icon: <Banknote size={19} /> }
   ];
 
   const handleLogout = () => {
@@ -80,22 +118,83 @@ const AdminSidebar = () => {
       </div>
 
       <nav className="sidebar-nav">
-        <div className="nav-section">
-          {!collapsed && <span className="nav-section-title">ADMIN PORTAL</span>}
-          {adminLinks.map((link) => (
-            <NavLink 
-              key={link.name} 
-              to={link.path} 
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-              title={collapsed ? link.name : ''}
-              onClick={handleNavClick}
-              style={{ position: 'relative' }}
+        {/* If inside an Employee Page: General Admin menu closes, and only that employee's pages appear */}
+        {isEmployeeDetail ? (
+          <div className="nav-section">
+            <button
+              type="button"
+              onClick={() => {
+                handleNavClick();
+                navigate('/admin/employees');
+              }}
+              className="nav-item back-btn-nav"
+              style={{
+                background: 'rgba(99, 102, 241, 0.12)',
+                border: '1px solid rgba(99, 102, 241, 0.35)',
+                color: '#a5b4fc',
+                fontWeight: 700,
+                marginBottom: '1rem',
+                cursor: 'pointer',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                borderRadius: '10px',
+                padding: '0.65rem 0.85rem'
+              }}
+              title={collapsed ? "Back to All Employees" : ""}
             >
-              {({ isActive }) => (
-                <>
+              <ArrowLeft size={18} />
+              {!collapsed && <span>← Back to Employees</span>}
+            </button>
+
+            {!collapsed && activeEmployeeInfo && (
+              <div style={{
+                padding: '0.75rem',
+                borderRadius: '12px',
+                background: 'rgba(15, 23, 42, 0.65)',
+                border: '1px solid rgba(96, 165, 250, 0.25)',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ fontSize: '0.68rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
+                  Active Employee
+                </div>
+                <div style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 700, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {activeEmployeeInfo.fullName}
+                </div>
+                <div style={{ fontSize: '0.76rem', color: '#38bdf8', fontWeight: 600 }}>
+                  {activeEmployeeInfo.employeeId}
+                </div>
+              </div>
+            )}
+
+            {!collapsed && <span className="nav-section-title">EMPLOYEE PAGES</span>}
+
+            {employeeSubPages.map((page) => {
+              const isActive = currentTab === page.id;
+              return (
+                <button
+                  key={page.id}
+                  type="button"
+                  onClick={() => {
+                    handleNavClick();
+                    navigate(`/admin/employees/${empIdMatch}?tab=${page.id}`);
+                  }}
+                  className={`nav-item ${isActive ? 'active' : ''}`}
+                  title={collapsed ? page.name : ''}
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    font: 'inherit'
+                  }}
+                >
                   {isActive && (
                     <motion.div
-                      layoutId="admin-sidebar-active"
+                      layoutId="emp-sidebar-active"
                       className="sidebar-active-bg"
                       initial={false}
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -105,21 +204,63 @@ const AdminSidebar = () => {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: 'linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%)',
-                        borderLeft: '4px solid var(--primary)',
+                        background: 'linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, transparent 100%)',
+                        borderLeft: '4px solid #38bdf8',
                         zIndex: 0,
                       }}
                     />
                   )}
-                  <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    {link.icon}
-                    {!collapsed && <span>{link.name}</span>}
+                  <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem', color: isActive ? '#38bdf8' : 'inherit', fontWeight: isActive ? 700 : 500 }}>
+                    {page.icon}
+                    {!collapsed && <span>{page.name}</span>}
                   </span>
-                </>
-              )}
-            </NavLink>
-          ))}
-        </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          /* General Admin Portal Navigation (When not viewing an individual employee) */
+          <div className="nav-section">
+            {!collapsed && <span className="nav-section-title">ADMIN PORTAL</span>}
+            {adminLinks.map((link) => (
+              <NavLink 
+                key={link.name} 
+                to={link.path} 
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                title={collapsed ? link.name : ''}
+                onClick={handleNavClick}
+                style={{ position: 'relative' }}
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <motion.div
+                        layoutId="admin-sidebar-active"
+                        className="sidebar-active-bg"
+                        initial={false}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: 'linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%)',
+                          borderLeft: '4px solid var(--primary)',
+                          zIndex: 0,
+                        }}
+                      />
+                    )}
+                    <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      {link.icon}
+                      {!collapsed && <span>{link.name}</span>}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
+        )}
       </nav>
 
       <div className="sidebar-footer">

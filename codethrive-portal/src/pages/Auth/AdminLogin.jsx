@@ -36,7 +36,7 @@ const AdminLogin = () => {
     setIsLoading(false);
 
     if (result.success) {
-      navigate('/admin/dashboard');
+      navigate('/admin/employees');
     } else {
       setError(result.message || 'Login failed.');
     }

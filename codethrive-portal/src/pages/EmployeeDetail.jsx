@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../utils/api';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -172,6 +172,7 @@ const DEFAULT_DEMO_EMPLOYEES = [
 const EmployeeDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [allEmployees, setAllEmployees] = useState(DEFAULT_DEMO_EMPLOYEES);
   const [employee, setEmployee] = useState(null);
@@ -181,9 +182,12 @@ const EmployeeDetail = () => {
   // Month Audit Filter State: Default 'All' (All-Time Continuous History)
   const [selectedAuditMonth, setSelectedAuditMonth] = useState('All');
 
-  // Dedicated Top-level Tabs:
+  // Dedicated Top-level Tabs synchronized with URL search params:
   // 'profile', 'tasks', 'reports', 'leaves', 'documents', 'attendance', 'management'
-  const [activeTab, setActiveTab] = useState('profile');
+  const activeTab = searchParams.get('tab') || 'profile';
+  const setActiveTab = (newTab) => {
+    setSearchParams({ tab: newTab });
+  };
 
   // Management State
   const [editRole, setEditRole] = useState('employee');
@@ -407,11 +411,29 @@ const EmployeeDetail = () => {
 
       const target = list.find(e => e._id === id || e.employeeId === id) || list[0];
       setEmployee(target);
+      if (target) {
+        sessionStorage.setItem('cti_current_viewed_emp', JSON.stringify({
+          id: target._id || target.employeeId,
+          _id: target._id,
+          employeeId: target.employeeId,
+          fullName: target.fullName
+        }));
+        window.dispatchEvent(new Event('storage'));
+      }
       initFormState(target);
     } catch (err) {
       console.warn('API Offline. Using default employee data.', err);
       const target = DEFAULT_DEMO_EMPLOYEES.find(e => e._id === id || e.employeeId === id) || DEFAULT_DEMO_EMPLOYEES[0];
       setEmployee(target);
+      if (target) {
+        sessionStorage.setItem('cti_current_viewed_emp', JSON.stringify({
+          id: target._id || target.employeeId,
+          _id: target._id,
+          employeeId: target.employeeId,
+          fullName: target.fullName
+        }));
+        window.dispatchEvent(new Event('storage'));
+      }
       initFormState(target);
     } finally {
       setLoading(false);

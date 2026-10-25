@@ -291,60 +291,32 @@ const Employees = () => {
       header: 'Department / Designation',
       render: (row) => (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '0.88rem', color: 'var(--text-main)' }}>{row.department}</span>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{row.designation}</span>
+          <span style={{ fontSize: '0.92rem', color: 'var(--text-main)', fontWeight: 600 }}>{row.department || 'Engineering'}</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{row.designation || 'Staff'}</span>
         </div>
       )
     },
     {
-      header: 'Access Role',
-      render: (row) => {
-        const role = row.user?.role || row.role || 'employee';
-        const roleColors = {
-          admin: { bg: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: 'rgba(239, 68, 68, 0.3)' },
-          hr: { bg: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: 'rgba(168, 85, 247, 0.3)' },
-          teamlead: { bg: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.3)' },
-          employee: { bg: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: 'rgba(16, 185, 129, 0.3)' },
-          intern: { bg: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.3)' }
-        };
-        const style = roleColors[role] || roleColors.employee;
-        return (
-          <span style={{ 
-            background: style.bg, color: style.color, border: `1px solid ${style.border}`,
-            padding: '3px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, textTransform: 'capitalize' 
-          }}>
-            {role}
-          </span>
-        );
-      }
-    },
-    {
-      header: 'Status',
-      accessor: 'status',
-      render: (row) => <StatusBadge status={row.status} />
-    },
-    {
-      header: 'Monthly Salary',
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--success)' }}>₹{row.salaryAmount ? Number(row.salaryAmount).toLocaleString('en-IN') : '60,000'}</span>
-    },
-    {
       header: 'Actions',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <button 
             onClick={() => handleOpenEmployeePage(row._id)}
             className="btn btn-primary"
-            style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            style={{ 
+              padding: '0.45rem 1.15rem', 
+              fontSize: '0.82rem', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.45rem',
+              borderRadius: '20px',
+              fontWeight: 600,
+              background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
+              boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
+              cursor: 'pointer'
+            }}
           >
             <Eye size={14} /> Open Employee Page
-          </button>
-          <button 
-            onClick={() => handleDeleteEmployee(row._id)}
-            className="btn-icon-danger"
-            title="Delete Employee"
-            style={{ padding: '0.4rem', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', cursor: 'pointer' }}
-          >
-            <Trash2 size={14} />
           </button>
         </div>
       )
