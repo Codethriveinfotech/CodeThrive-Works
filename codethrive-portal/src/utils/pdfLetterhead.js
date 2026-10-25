@@ -55,103 +55,111 @@ export const drawPageBorder = (doc, pageW = 210, pageH = 297, margin = 10) => {
 };
 
 /**
- * Draw Official Company Letterhead Header (Matching First Screenshot)
- * - Logo on left
- * - CODETHRIVE INFOTECH (Times, Bold, Teal/Navy Branding)
- * - Address line (Times, Normal)
- * - Email | Website (Times, Normal)
- * - Horizontal Divider Line across width
+ * Draw Official Company Letterhead Header (Matching Exact Second Screenshot Reference)
+ * - Entire Block (Logo + Company Name + Address + Contact) is HORIZONTALLY CENTERED
+ * - "CODETHRIVE" in Royal Blue (#0052a5), "INFOTECH" in Vibrant Green (#059669)
+ * - Address & Contact lines in serif Times
+ * - Clean spacing, NO harsh black divider line
  */
-export const drawCompanyHeader = (doc, logoData, pageW = 210, startY = 14) => {
-  const margin = 10;
-  const logoW = 20;
-  const logoH = 20;
-  const logoX = 14;
-  const logoY = startY;
+export const drawCompanyHeader = (doc, logoData, pageW = 210, startY = 16) => {
+  const logoW = 22;
+  const logoH = 22;
+  const gap = 5;
 
-  // 1. Logo on top-left
+  doc.setFont('times', 'bold');
+  doc.setFontSize(21);
+  const codeThriveW = doc.getTextWidth('CODETHRIVE ');
+  const infoTechW = doc.getTextWidth('INFOTECH');
+  const titleTotalW = codeThriveW + infoTechW;
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(9.5);
+  const addressW = doc.getTextWidth(COMPANY_INFO.address);
+
+  doc.setFontSize(9);
+  const contactText = `Email: ${COMPANY_INFO.email} | Website: ${COMPANY_INFO.website.replace('www.', '')}`;
+  const contactW = doc.getTextWidth(contactText);
+
+  // Compute total width of the centered unit
+  const maxTextW = Math.max(titleTotalW, addressW, contactW);
+  const totalHeaderW = logoW + gap + maxTextW;
+
+  // Horizontally center the block on the page
+  const startX = (pageW - totalHeaderW) / 2;
+  const logoX = startX;
+  const logoY = startY;
+  const textX = startX + logoW + gap;
+
+  // 1. Logo
   if (logoData) {
     try {
       doc.addImage(logoData, 'PNG', logoX, logoY, logoW, logoH, undefined, 'FAST');
     } catch (e) {
-      // Fallback geometric emblem
-      doc.setFillColor(0, 91, 148);
+      doc.setFillColor(0, 82, 165);
       doc.roundedRect(logoX, logoY, logoW, logoH, 2.5, 2.5, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(10);
       doc.setFont('times', 'bold');
-      doc.text('CTI', logoX + logoW / 2, logoY + 12, { align: 'center' });
+      doc.text('CTI', logoX + logoW / 2, logoY + 13, { align: 'center' });
     }
   }
 
-  // 2. Company Name & Credentials in Serif Times font
-  const textX = 38;
-
-  // "CODETHRIVE INFOTECH"
+  // 2. Company Name: "CODETHRIVE" in Royal Blue, "INFOTECH" in Green (matching Screenshot 2!)
   doc.setFont('times', 'bold');
-  doc.setFontSize(18);
-  doc.setTextColor(0, 91, 148); // Corporate Deep Teal / Blue
-  doc.text('CODETHRIVE INFOTECH', textX, startY + 6);
+  doc.setFontSize(21);
+  doc.setTextColor(0, 82, 165); // Corporate Blue #0052a5
+  doc.text('CODETHRIVE ', textX, startY + 7);
 
-  // Address
+  doc.setTextColor(5, 150, 105); // Vibrant Green #059669
+  doc.text('INFOTECH', textX + codeThriveW, startY + 7);
+
+  // 3. Address Line
   doc.setFont('times', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(30, 41, 59);
-  doc.text(COMPANY_INFO.address, textX, startY + 12.5);
+  doc.text(COMPANY_INFO.address, textX, startY + 13.5);
 
-  // Contact line
+  // 4. Contact Line
   doc.setFontSize(9);
   doc.setTextColor(51, 65, 85);
-  doc.text(`Email: ${COMPANY_INFO.email} | Website: ${COMPANY_INFO.website.replace('www.', '')}`, textX, startY + 18);
+  doc.text(contactText, textX, startY + 19);
 
-  // 3. Header Divider Line
-  const dividerY = startY + 23;
-  doc.setDrawColor(20, 20, 20);
-  doc.setLineWidth(0.5);
-  doc.line(margin, dividerY, pageW - margin, dividerY);
-
-  return dividerY + 4;
+  return startY + logoH + 5;
 };
 
 /**
  * Draw Document Title & Meta Grid
  */
-export const drawDocumentTitleAndMeta = (doc, title, metaFields = [], startY = 42, pageW = 210) => {
-  let currentY = startY + 5;
+export const drawDocumentTitleAndMeta = (doc, title, metaFields = [], startY = 44, pageW = 210) => {
+  let currentY = startY + 4;
 
-  // Document Title (Centered, Bold, Underlined, Times)
+  // Document Title (Centered, Bold, Royal Blue matching "EXPERIENCE CERTIFICATE" in Screenshot 2)
   doc.setFont('times', 'bold');
-  doc.setFontSize(13.5);
-  doc.setTextColor(15, 23, 42);
+  doc.setFontSize(14);
+  doc.setTextColor(0, 82, 165); // #0052a5 Navy / Royal Blue
   doc.text(title.toUpperCase(), pageW / 2, currentY, { align: 'center' });
 
-  // Underline title
-  const titleWidth = doc.getTextWidth(title.toUpperCase());
-  doc.setDrawColor(0, 91, 148);
-  doc.setLineWidth(0.8);
-  doc.line(pageW / 2 - titleWidth / 2 - 2, currentY + 2, pageW / 2 + titleWidth / 2 + 2, currentY + 2);
-
-  currentY += 8;
+  currentY += 7;
 
   // Metadata Box (if fields provided)
   if (metaFields && metaFields.length > 0) {
-    const boxX = 12;
-    const boxW = pageW - 24;
-    const rowHeight = 6;
+    const boxX = 14;
+    const boxW = pageW - 28;
+    const rowHeight = 6.8;
     const numRows = Math.ceil(metaFields.length / 2);
-    const boxH = numRows * rowHeight + 6;
+    const boxH = numRows * rowHeight + 5;
 
     doc.setFillColor(248, 250, 252);
-    doc.setDrawColor(226, 232, 240);
+    doc.setDrawColor(203, 213, 225);
     doc.setLineWidth(0.35);
     doc.roundedRect(boxX, currentY, boxW, boxH, 2, 2, 'FD');
 
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.8);
     metaFields.forEach((field, idx) => {
       const isLeft = idx % 2 === 0;
       const rowIndex = Math.floor(idx / 2);
       const fieldX = isLeft ? boxX + 6 : boxX + boxW / 2 + 6;
-      const fieldY = currentY + 5 + rowIndex * rowHeight;
+      const fieldY = currentY + 5.5 + rowIndex * rowHeight;
 
       doc.setFont('times', 'bold');
       doc.setTextColor(71, 85, 105);
@@ -172,41 +180,24 @@ export const drawDocumentTitleAndMeta = (doc, title, metaFields = [], startY = 4
 };
 
 /**
- * Draw Authorised Signatory Block (Right-aligned, from Experience Certificate)
- */
-export const drawSignatoryBlock = (doc, pageW = 210, y = 230) => {
-  doc.setFont('times', 'normal');
-  doc.setFontSize(9.5);
-  doc.setTextColor(30, 41, 59);
-  doc.text('Sincerely,', pageW - 22, y, { align: 'right' });
-
-  doc.setFont('times', 'bold');
-  doc.setFontSize(10);
-  doc.text('For CodeThrive Infotech', pageW - 22, y + 6, { align: 'right' });
-
-  doc.setFont('times', 'bold');
-  doc.setFontSize(10);
-  doc.text('Authorised Signatory', pageW - 22, y + 24, { align: 'right' });
-};
-
-/**
  * Draw Official Footer Bar (Matching EXACT Second Screenshot)
  * - Solid Royal Blue Horizontal Bar Line (#0052a5)
  * - 🌐 www.codethriveinfotech.in
  * - 📞 9150781685 (with dark badge + cyan phone)
  * - ✉️ codethriveinfotech@gmail.com (with blue envelope)
+ * - Clean page number and verification note
  */
-export const drawCompanyFooter = (doc, pageW = 210, pageH = 297) => {
+export const drawCompanyFooter = (doc, pageW = 210, pageH = 297, currentPage = 1, totalPages = 1) => {
   const margin = 10;
-  const footerLineY = pageH - 20;
+  const footerLineY = pageH - 18;
 
   // 1. Solid Royal Blue Bar Line across the entire width inside margin
   doc.setDrawColor(0, 82, 165); // #0052a5
-  doc.setLineWidth(1.3);
-  doc.line(margin, footerLineY, pageW - margin, footerLineY);
+  doc.setLineWidth(1.2);
+  doc.line(margin + 2, footerLineY, pageW - margin - 2, footerLineY);
 
   // 2. Contact Items below the line (y-center)
-  const contentY = footerLineY + 6.5;
+  const contentY = footerLineY + 6;
 
   // Item 1 (Left): 🌐 www.codethriveinfotech.in
   const globeX = margin + 5;
@@ -218,7 +209,7 @@ export const drawCompanyFooter = (doc, pageW = 210, pageH = 297) => {
   doc.ellipse(globeX, contentY - 1, 1.35, 2.7);
 
   doc.setFont('times', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(51, 65, 85);
   doc.text(COMPANY_INFO.website, globeX + 4.8, contentY);
 
@@ -236,7 +227,7 @@ export const drawCompanyFooter = (doc, pageW = 210, pageH = 297) => {
   doc.line(phoneX + 0.5, contentY + 0.3, phoneX + 1.1, contentY - 0.3);
 
   doc.setFont('times', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(51, 65, 85);
   doc.text(COMPANY_INFO.phone, phoneX + 4.8, contentY);
 
@@ -250,35 +241,50 @@ export const drawCompanyFooter = (doc, pageW = 210, pageH = 297) => {
   doc.line(mailX + 2.7, contentY - 2.8, mailX, contentY - 0.7);
 
   doc.setFont('times', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(51, 65, 85);
   doc.text(COMPANY_INFO.email, mailX + 4.8, contentY);
+
+  // Sub-footer verification & page counter
+  const subY = contentY + 5;
+  doc.setFont('times', 'italic');
+  doc.setFontSize(7.5);
+  doc.setTextColor(148, 163, 184);
+  doc.text('This is an official computer-generated document from CodeThrive Infotech Portal.', margin + 5, subY);
+  if (totalPages > 0) {
+    doc.text(`Page ${currentPage} of ${totalPages}`, pageW - margin - 5, subY, { align: 'right' });
+  }
 };
 
 /**
  * Standard CodeThrive Corporate Table Theme in Times New Roman
+ * Sharp, crisp lines, comfortable cell padding, and executive styling
  */
 export const getCorporateTableStyles = () => ({
-  margin: { left: 12, right: 12 },
+  margin: { left: 14, right: 14 },
+  tableLineWidth: 0.35,
+  tableLineColor: [0, 82, 165],
   headStyles: {
     fillColor: [0, 82, 165], // Royal Blue
     textColor: [255, 255, 255],
-    fontSize: 9,
+    fontSize: 9.5,
     font: 'times',
     fontStyle: 'bold',
     halign: 'left',
-    cellPadding: 3
+    cellPadding: 4,
+    lineColor: [0, 82, 165],
+    lineWidth: 0.35
   },
   alternateRowStyles: {
     fillColor: [248, 250, 252]
   },
   bodyStyles: {
     textColor: [30, 41, 59],
-    fontSize: 8.5,
+    fontSize: 9,
     font: 'times',
-    cellPadding: 2.8,
+    cellPadding: 3.5,
     lineColor: [226, 232, 240],
-    lineWidth: 0.2
+    lineWidth: 0.25
   },
   styles: {
     font: 'times',
@@ -310,13 +316,13 @@ export const createOfficialCodeThriveDoc = async ({
   // 2. Draw border frame on Page 1
   drawPageBorder(doc, pageW, pageH, 10);
 
-  // 3. Draw Header
-  const afterHeaderY = drawCompanyHeader(doc, logoData, pageW, 14);
+  // 3. Draw Centered Header
+  const afterHeaderY = drawCompanyHeader(doc, logoData, pageW, 16);
 
   // 4. Draw Title & Meta
   const startY = drawDocumentTitleAndMeta(doc, title, metaFields, afterHeaderY, pageW);
 
-  // Helper to seal multi-page documents with border & footer
+  // Helper to seal multi-page documents with border & footer (No signature block)
   const finalizeDoc = (filename) => {
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
@@ -324,15 +330,7 @@ export const createOfficialCodeThriveDoc = async ({
       // Ensure border on every page
       drawPageBorder(doc, pageW, pageH, 10);
       // Ensure exact footer on every page
-      drawCompanyFooter(doc, pageW, pageH);
-      // On the final page, draw the Signatory Block if there is space
-      if (i === totalPages) {
-        const finalContentY = doc.lastAutoTable?.finalY || 160;
-        const sigY = Math.min(Math.max(finalContentY + 12, 226), pageH - 48);
-        if (sigY <= pageH - 35) {
-          drawSignatoryBlock(doc, pageW, sigY);
-        }
-      }
+      drawCompanyFooter(doc, pageW, pageH, i, totalPages);
     }
     doc.save(filename);
   };

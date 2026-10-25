@@ -445,8 +445,56 @@ const Attendance = () => {
           head: [tableColumn],
           body: tableRows.length > 0 ? tableRows : [["No records found in selected range", "--", "--"]],
           startY: startY,
-          ...getCorporateTableStyles()
+          ...getCorporateTableStyles(),
+          didDrawCell: (data) => {
+            if (data.section === 'body' && data.column.index === 1) {
+              const val = String(data.cell.raw || '').toLowerCase();
+              if (val.includes('present') || val.includes('working') || val.includes('checked out')) {
+                data.cell.styles.textColor = [5, 150, 105];
+                data.cell.styles.fontStyle = 'bold';
+              } else if (val.includes('late')) {
+                data.cell.styles.textColor = [217, 119, 6];
+                data.cell.styles.fontStyle = 'bold';
+              } else if (val.includes('absent') || val.includes('leave')) {
+                data.cell.styles.textColor = [220, 38, 38];
+                data.cell.styles.fontStyle = 'bold';
+              } else if (val.includes('permission') || val.includes('half')) {
+                data.cell.styles.textColor = [37, 99, 235];
+                data.cell.styles.fontStyle = 'bold';
+              }
+            }
+          }
         });
+
+        // If table doesn't occupy whole page, add Corporate Attendance Guidelines card to prevent empty page space
+        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : startY + 50;
+        if (finalY < 210) {
+          const cardY = finalY + 8;
+          const cardW = 182; // 210 - 28mm margin
+          
+          doc.setFillColor(248, 250, 252);
+          doc.setDrawColor(203, 213, 225);
+          doc.setLineWidth(0.3);
+          doc.roundedRect(14, cardY, cardW, 46, 2, 2, 'FD');
+
+          // Left vertical brand bar
+          doc.setFillColor(0, 82, 165);
+          doc.rect(14, cardY, 3, 46, 'F');
+
+          doc.setFont('times', 'bold');
+          doc.setFontSize(9.5);
+          doc.setTextColor(0, 82, 165);
+          doc.text('CodeThrive Infotech - Attendance Policy & Guidelines Summary', 21, cardY + 7);
+
+          doc.setFont('times', 'normal');
+          doc.setFontSize(8.5);
+          doc.setTextColor(51, 65, 85);
+          doc.text('• Standard Working Shift: 10:00 AM to 06:00 PM (Monday to Saturday)', 21, cardY + 15);
+          doc.text('• Total Break Allowance: 1 Hour 20 Minutes (Lunch Break + Refreshments)', 21, cardY + 22);
+          doc.text('• Grace Period & Late Login: Check-ins past 10:15 AM are automatically marked as Late.', 21, cardY + 29);
+          doc.text('• Non-Working Days: Sundays and Tamil Nadu Gazetted Public Holidays are fully exempted.', 21, cardY + 36);
+          doc.text('• Verification: Attendance records are officially validated and managed by CodeThrive HR/Admin Portal.', 21, cardY + 43);
+        }
       } else {
         throw new Error('PDF autoTable renderer could not be initialized');
       }
