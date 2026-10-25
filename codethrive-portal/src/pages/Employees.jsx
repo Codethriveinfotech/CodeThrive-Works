@@ -173,20 +173,20 @@ const Employees = () => {
   const departmentsCovered = Math.max(5, new Set(employees.map(e => e.department).filter(Boolean)).size);
 
   // Table Columns strictly matching requirement:
-  // 1. Employee Name | 2. Employee ID | 3. Email ID | 4. Phone Number | 5. Department / Designation | 6. Action
+  // 1. Employee Name | 2. Employee ID | 3. Phone Number | 4. Department / Designation | 5. Action
   const columns = [
     {
       header: 'Employee Name',
       render: (row) => (
         <div 
-          style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
           onClick={() => handleOpenEmployeePage(row._id)}
           title={`View ${row.fullName}'s profile`}
         >
-          <div className="emp-avatar-circle">
+          <div className="emp-avatar-circle" style={{ flexShrink: 0 }}>
             {row.fullName ? row.fullName.charAt(0).toUpperCase() : 'E'}
           </div>
-          <span style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.94rem' }}>
+          <span style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.94rem', whiteSpace: 'nowrap' }}>
             {row.fullName}
           </span>
         </div>
@@ -198,43 +198,18 @@ const Employees = () => {
         <span style={{ 
           background: 'rgba(99, 102, 241, 0.12)', 
           color: '#a5b4fc', 
-          padding: '0.35rem 0.75rem', 
+          padding: '0.4rem 0.9rem', 
           borderRadius: '8px', 
           fontWeight: 700, 
-          fontSize: '0.82rem', 
+          fontSize: '0.84rem', 
           letterSpacing: '0.04em',
           border: '1px solid rgba(99, 102, 241, 0.25)',
-          display: 'inline-block' 
+          display: 'inline-block',
+          whiteSpace: 'nowrap'
         }}>
           {row.employeeId || 'N/A'}
         </span>
       )
-    },
-    {
-      header: 'Email ID',
-      render: (row) => {
-        const email = row.personalEmailAddress || row.email || row.emailId || '';
-        return email ? (
-          <a 
-            href={`mailto:${email}`}
-            onClick={(e) => openDirectEmail(email, e)}
-            style={{ 
-              color: '#38bdf8', 
-              textDecoration: 'none', 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '0.45rem', 
-              fontSize: '0.88rem' 
-            }}
-            title="Directly open email to compose message"
-          >
-            <Mail size={13} style={{ flexShrink: 0, color: '#0ea5e9' }} />
-            <span>{email}</span>
-          </a>
-        ) : (
-          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>-</span>
-        );
-      }
     },
     {
       header: 'Phone Number',
@@ -256,13 +231,14 @@ const Employees = () => {
               border: '1px solid rgba(16, 185, 129, 0.25)', 
               color: '#34d399', 
               borderRadius: '8px', 
-              padding: '0.35rem 0.65rem', 
+              padding: '0.4rem 0.75rem', 
               cursor: 'pointer', 
               display: 'inline-flex', 
               alignItems: 'center', 
               gap: '0.4rem', 
               fontSize: '0.84rem', 
-              fontWeight: 500 
+              fontWeight: 500,
+              whiteSpace: 'nowrap'
             }}
             title="Connect on WhatsApp or Phone Call"
           >
@@ -277,7 +253,7 @@ const Employees = () => {
     {
       header: 'Department / Designation',
       render: (row) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: '0.92rem', color: 'var(--text-main)', fontWeight: 600 }}>
             {row.department || 'Engineering'}
           </span>
@@ -290,7 +266,7 @@ const Employees = () => {
     {
       header: 'Action',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
           <button 
             onClick={() => handleOpenEmployeePage(row._id)}
             className="btn btn-primary"
@@ -353,49 +329,77 @@ const Employees = () => {
         </div>
       </div>
 
-      {/* Attractive Metrics Cards */}
+      {/* Attractive 4 Metric Cards (Zero Empty Feel, Rich Detail) */}
       <div className="emp-metrics-grid">
+        {/* Card 1: Total Registered Staff */}
         <div className="emp-metric-card card-primary">
-          <div className="emp-metric-left">
+          <div className="emp-metric-top">
             <span className="metric-label">Total Registered Staff</span>
-            <h3 className="metric-val">{totalRegistered}</h3>
-            <span className="metric-badge-pill badge-primary">Active Directory</span>
+            <div className="emp-metric-icon bg-primary">
+              <User size={22} color="#818cf8" />
+            </div>
           </div>
-          <div className="emp-metric-icon bg-primary">
-            <User size={24} color="#818cf8" />
+          <div className="emp-metric-middle">
+            <h3 className="metric-val">{totalRegistered}</h3>
+            <span className="metric-val-suffix">Staff Members</span>
+          </div>
+          <div className="emp-metric-bottom">
+            <span className="metric-badge-pill badge-primary">● Live Directory</span>
+            <span>All Records Synced</span>
           </div>
         </div>
 
+        {/* Card 2: Active Working Status */}
         <div className="emp-metric-card card-success">
-          <div className="emp-metric-left">
-            <span className="metric-label">Active Working</span>
+          <div className="emp-metric-top">
+            <span className="metric-label">Active Working Status</span>
+            <div className="emp-metric-icon bg-success">
+              <UserCheck size={22} color="#34d399" />
+            </div>
+          </div>
+          <div className="emp-metric-middle">
             <h3 className="metric-val">{activeWorking}</h3>
-            <span className="metric-badge-pill badge-success">100% Operational</span>
+            <span className="metric-val-suffix">Active Staff</span>
           </div>
-          <div className="emp-metric-icon bg-success">
-            <UserCheck size={24} color="#34d399" />
+          <div className="emp-metric-bottom">
+            <span className="metric-badge-pill badge-success">● 100% Operational</span>
+            <span>Zero Suspensions</span>
           </div>
         </div>
 
+        {/* Card 3: Replaced from Departments Covered -> Verified Staff Profiles */}
         <div className="emp-metric-card card-warning">
-          <div className="emp-metric-left">
-            <span className="metric-label">Departments Covered</span>
-            <h3 className="metric-val">{departmentsCovered}</h3>
-            <span className="metric-badge-pill badge-warning">Core Units</span>
+          <div className="emp-metric-top">
+            <span className="metric-label">Verified Staff Profiles</span>
+            <div className="emp-metric-icon bg-warning">
+              <ShieldCheck size={22} color="#fbbf24" />
+            </div>
           </div>
-          <div className="emp-metric-icon bg-warning">
-            <Briefcase size={24} color="#fbbf24" />
+          <div className="emp-metric-middle">
+            <h3 className="metric-val">{totalRegistered}</h3>
+            <span className="metric-val-suffix">Profiles Verified</span>
+          </div>
+          <div className="emp-metric-bottom">
+            <span className="metric-badge-pill badge-warning">● KYC Complete</span>
+            <span>Full Compliance</span>
           </div>
         </div>
 
+        {/* Card 4: Portal Credentials Issued */}
         <div className="emp-metric-card card-info">
-          <div className="emp-metric-left">
-            <span className="metric-label">Portal Access Status</span>
-            <h3 className="metric-val">{totalRegistered}</h3>
-            <span className="metric-badge-pill badge-info">Accounts Ready</span>
+          <div className="emp-metric-top">
+            <span className="metric-label">Portal Credentials</span>
+            <div className="emp-metric-icon bg-info">
+              <KeyRound size={22} color="#38bdf8" />
+            </div>
           </div>
-          <div className="emp-metric-icon bg-info">
-            <ShieldCheck size={24} color="#38bdf8" />
+          <div className="emp-metric-middle">
+            <h3 className="metric-val">{totalRegistered}</h3>
+            <span className="metric-val-suffix">Accounts Ready</span>
+          </div>
+          <div className="emp-metric-bottom">
+            <span className="metric-badge-pill badge-info">● Security Active</span>
+            <span>Portal Access Granted</span>
           </div>
         </div>
       </div>

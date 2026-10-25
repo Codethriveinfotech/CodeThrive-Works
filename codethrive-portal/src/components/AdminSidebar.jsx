@@ -77,15 +77,15 @@ const AdminSidebar = () => {
     { name: 'Company Profile', path: '/admin/profile', icon: <Building2 size={20} /> }
   ];
 
-  // Specific Sub-pages for the currently opened employee
+  // Specific Sub-pages for the currently opened employee (standard size 20 icons)
   const employeeSubPages = [
-    { id: 'profile', name: 'Profile & HR', icon: <UserCircle size={19} /> },
-    { id: 'tasks', name: 'Tasks', icon: <CheckSquare size={19} /> },
-    { id: 'reports', name: 'Daily Reports', icon: <FileText size={19} /> },
-    { id: 'leaves', name: 'Leave Applications', icon: <CalendarOff size={19} /> },
-    { id: 'attendance', name: 'Attendance Audit', icon: <ClipboardList size={19} /> },
-    { id: 'documents', name: 'Documents', icon: <FolderOpen size={19} /> },
-    { id: 'management', name: 'Payroll & Access', icon: <Banknote size={19} /> }
+    { id: 'profile', name: 'Profile & HR', icon: <UserCircle size={20} /> },
+    { id: 'tasks', name: 'Tasks', icon: <CheckSquare size={20} /> },
+    { id: 'reports', name: 'Daily Reports', icon: <FileText size={20} /> },
+    { id: 'leaves', name: 'Leave Applications', icon: <CalendarOff size={20} /> },
+    { id: 'attendance', name: 'Attendance Audit', icon: <ClipboardList size={20} /> },
+    { id: 'documents', name: 'Documents', icon: <FolderOpen size={20} /> },
+    { id: 'management', name: 'Payroll & Access', icon: <Banknote size={20} /> }
   ];
 
   const handleLogout = () => {
@@ -127,42 +127,39 @@ const AdminSidebar = () => {
                 handleNavClick();
                 navigate('/admin/employees');
               }}
-              className="nav-item back-btn-nav"
+              className="nav-item"
               style={{
                 background: 'rgba(99, 102, 241, 0.12)',
-                border: '1px solid rgba(99, 102, 241, 0.35)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
                 color: '#a5b4fc',
-                fontWeight: 700,
-                marginBottom: '1rem',
+                fontWeight: 600,
+                marginBottom: '0.75rem',
                 cursor: 'pointer',
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.6rem',
-                borderRadius: '10px',
-                padding: '0.65rem 0.85rem'
+                position: 'relative'
               }}
-              title={collapsed ? "Back to All Employees" : ""}
+              title={collapsed ? "Back to Employees" : ""}
             >
-              <ArrowLeft size={18} />
-              {!collapsed && <span>← Back to Employees</span>}
+              <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <ArrowLeft size={18} />
+                {!collapsed && <span>Back to Employees</span>}
+              </span>
             </button>
 
             {!collapsed && activeEmployeeInfo && (
               <div style={{
-                padding: '0.75rem',
-                borderRadius: '12px',
+                margin: '0 0.75rem 0.75rem 0.75rem',
+                padding: '0.6rem 0.85rem',
+                borderRadius: '10px',
                 background: 'rgba(15, 23, 42, 0.65)',
-                border: '1px solid rgba(96, 165, 250, 0.25)',
-                marginBottom: '1rem'
+                border: '1px solid rgba(99, 102, 241, 0.25)',
               }}>
-                <div style={{ fontSize: '0.68rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
+                <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
                   Active Employee
                 </div>
-                <div style={{ fontSize: '0.95rem', color: '#ffffff', fontWeight: 700, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: '0.88rem', color: '#ffffff', fontWeight: 600, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {activeEmployeeInfo.fullName}
                 </div>
-                <div style={{ fontSize: '0.76rem', color: '#38bdf8', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.74rem', color: '#818cf8', fontWeight: 600 }}>
                   {activeEmployeeInfo.employeeId}
                 </div>
               </div>
@@ -184,7 +181,6 @@ const AdminSidebar = () => {
                   title={collapsed ? page.name : ''}
                   style={{
                     position: 'relative',
-                    width: '100%',
                     background: 'transparent',
                     border: 'none',
                     textAlign: 'left',
@@ -194,7 +190,7 @@ const AdminSidebar = () => {
                 >
                   {isActive && (
                     <motion.div
-                      layoutId="emp-sidebar-active"
+                      layoutId="admin-sidebar-active"
                       className="sidebar-active-bg"
                       initial={false}
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -204,13 +200,13 @@ const AdminSidebar = () => {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        background: 'linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, transparent 100%)',
-                        borderLeft: '4px solid #38bdf8',
+                        background: 'linear-gradient(90deg, rgba(99, 102, 241, 0.12) 0%, transparent 100%)',
+                        borderLeft: '4px solid var(--primary)',
                         zIndex: 0,
                       }}
                     />
                   )}
-                  <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem', color: isActive ? '#38bdf8' : 'inherit', fontWeight: isActive ? 700 : 500 }}>
+                  <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     {page.icon}
                     {!collapsed && <span>{page.name}</span>}
                   </span>
