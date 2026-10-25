@@ -270,7 +270,7 @@ const MyTasks = () => {
             <span className="stat-count">{totalTasks}</span>
           </div>
           <div className="stat-action-icon">
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
 
@@ -288,7 +288,7 @@ const MyTasks = () => {
             <span className="stat-count">{pendingTasks}</span>
           </div>
           <div className="stat-action-icon">
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
 
@@ -306,7 +306,7 @@ const MyTasks = () => {
             <span className="stat-count">{inProgressTasks}</span>
           </div>
           <div className="stat-action-icon">
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
 
@@ -324,7 +324,7 @@ const MyTasks = () => {
             <span className="stat-count">{completedTasks}</span>
           </div>
           <div className="stat-action-icon">
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
       </div>

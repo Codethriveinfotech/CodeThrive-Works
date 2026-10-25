@@ -200,24 +200,28 @@
 
 .stat-action-icon {
   margin-left: auto;
-  color: #64748b;
-  opacity: 0.4;
-  transition: all 0.2s ease;
+  color: #cbd5e1;
+  opacity: 1;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
 }
 
 .task-stat-card.clickable:hover .stat-action-icon,
 .task-stat-card.clickable.active .stat-action-icon {
   color: #818cf8;
   opacity: 1;
-  background: rgba(99, 102, 241, 0.25);
+  background: rgba(99, 102, 241, 0.28);
+  border-color: rgba(99, 102, 241, 0.55);
   transform: translate(2px, -2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .stat-icon-wrapper {

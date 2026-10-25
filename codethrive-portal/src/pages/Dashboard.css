@@ -338,16 +338,53 @@
   margin: 0;
 }
 
-.hub-arrow {
-  color: var(--text-muted);
-  opacity: 0.4;
-  transition: all 0.25s ease;
+.hub-arrow-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
-.quick-hub-card:hover .hub-arrow {
-  opacity: 1;
-  color: #ffffff;
+.hub-arrow {
+  color: inherit;
+  transition: transform 0.25s ease;
+}
+
+.quick-hub-card:hover .hub-arrow-badge {
   transform: translate(2px, -2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.quick-hub-card.hub-report:hover .hub-arrow-badge {
+  background: rgba(99, 102, 241, 0.28);
+  border-color: rgba(99, 102, 241, 0.55);
+  color: #a5b4fc;
+}
+
+.quick-hub-card.hub-attendance:hover .hub-arrow-badge {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #7dd3fc;
+}
+
+.quick-hub-card.hub-leave:hover .hub-arrow-badge {
+  background: rgba(245, 158, 11, 0.28);
+  border-color: rgba(245, 158, 11, 0.55);
+  color: #fde047;
+}
+
+.quick-hub-card.hub-payroll:hover .hub-arrow-badge {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: rgba(16, 185, 129, 0.55);
+  color: #6ee7b7;
 }
 
 @media (max-width: 768px) {
@@ -424,23 +461,25 @@
     box-sizing: border-box !important;
   }
 
-  .metric-action-arrow {
+  .metric-action-arrow,
+  .hub-arrow-badge {
     display: flex !important;
     width: 30px !important;
     height: 30px !important;
-    opacity: 0.85 !important;
-    background: rgba(255, 255, 255, 0.06) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
     border-radius: 8px !important;
     margin-left: auto !important;
-    color: var(--text-muted) !important;
+    color: #cbd5e1 !important;
   }
 
-  .metric-card.clickable:active .metric-action-arrow {
+  .metric-card.clickable:active .metric-action-arrow,
+  .quick-hub-card:active .hub-arrow-badge {
     opacity: 1 !important;
     background: rgba(99, 102, 241, 0.25) !important;
-    border-color: rgba(99, 102, 241, 0.4) !important;
-    color: #818cf8 !important;
+    border-color: rgba(99, 102, 241, 0.45) !important;
+    color: #a5b4fc !important;
   }
 }
 
@@ -524,23 +563,47 @@
 
 .metric-action-arrow {
   margin-left: auto;
-  color: #64748b;
-  opacity: 0.4;
-  transition: all 0.2s ease;
+  color: #cbd5e1;
+  opacity: 1;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
 }
 
 .metric-card.clickable:hover .metric-action-arrow {
-  color: #818cf8;
-  opacity: 1;
-  background: rgba(99, 102, 241, 0.25);
   transform: translate(2px, -2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.metric-card.metric-tasks:hover .metric-action-arrow {
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.28);
+  border-color: rgba(99, 102, 241, 0.55);
+}
+
+.metric-card.metric-pending:hover .metric-action-arrow {
+  color: #fde047;
+  background: rgba(245, 158, 11, 0.28);
+  border-color: rgba(245, 158, 11, 0.55);
+}
+
+.metric-card.metric-completed:hover .metric-action-arrow {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.28);
+  border-color: rgba(16, 185, 129, 0.55);
+}
+
+.metric-card.metric-work:hover .metric-action-arrow {
+  color: #67e8f9;
+  background: rgba(6, 182, 212, 0.28);
+  border-color: rgba(6, 182, 212, 0.55);
 }
 
 .task-breakdown-list {

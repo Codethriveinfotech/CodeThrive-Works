@@ -568,7 +568,9 @@ const Dashboard = () => {
             <h4>Daily Report</h4>
             <p>Log work & tasks</p>
           </div>
-          <ArrowUpRight size={16} className="hub-arrow" />
+          <div className="hub-arrow-badge">
+            <ArrowUpRight size={16} className="hub-arrow" />
+          </div>
         </Link>
 
         <Link to="/employee/attendance" className="quick-hub-card hub-attendance">
@@ -579,7 +581,9 @@ const Dashboard = () => {
             <h4>Attendance</h4>
             <p>Sessions & history</p>
           </div>
-          <ArrowUpRight size={16} className="hub-arrow" />
+          <div className="hub-arrow-badge">
+            <ArrowUpRight size={16} className="hub-arrow" />
+          </div>
         </Link>
 
         <Link to="/employee/leave" className="quick-hub-card hub-leave">
@@ -590,7 +594,9 @@ const Dashboard = () => {
             <h4>Leave Request</h4>
             <p>Apply time-off</p>
           </div>
-          <ArrowUpRight size={16} className="hub-arrow" />
+          <div className="hub-arrow-badge">
+            <ArrowUpRight size={16} className="hub-arrow" />
+          </div>
         </Link>
 
         <Link to="/employee/payroll" className="quick-hub-card hub-payroll">
@@ -601,7 +607,9 @@ const Dashboard = () => {
             <h4>My Payroll</h4>
             <p>Payslips & salary</p>
           </div>
-          <ArrowUpRight size={16} className="hub-arrow" />
+          <div className="hub-arrow-badge">
+            <ArrowUpRight size={16} className="hub-arrow" />
+          </div>
         </Link>
       </motion.div>
 
@@ -624,7 +632,7 @@ const Dashboard = () => {
             <span className="metric-subtext">All assigned tasks</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
 
@@ -643,7 +651,7 @@ const Dashboard = () => {
             <span className="metric-subtext">Requires action</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
 
@@ -662,7 +670,7 @@ const Dashboard = () => {
             <span className="metric-subtext">Done & verified</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
 
@@ -681,7 +689,7 @@ const Dashboard = () => {
             <span className="metric-subtext">Today's total session</span>
           </div>
           <div className="metric-action-arrow">
-            <ArrowUpRight size={14} />
+            <ArrowUpRight size={16} />
           </div>
         </motion.div>
       </div>
