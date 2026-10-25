@@ -509,30 +509,35 @@ const Documents = () => {
                       )}
                     </p>
 
-                    <div className="doc-specs-row">
-                      <span className="spec-badge format">
-                        <FileText size={11} />
-                        {(doc.fileUrl || doc.fileName || doc.title || '').toLowerCase().endsWith('.pdf') ? 'PDF' : 
-                         (doc.fileUrl || doc.fileName || '').toLowerCase().match(/\.(jpg|jpeg|png)$/) ? 'IMAGE' : 
-                         (doc.fileUrl || doc.fileName || '').toLowerCase().match(/\.(doc|docx)$/) ? 'DOCX' : 'DOCUMENT'}
-                      </span>
-                      <span className="spec-badge scope">
-                        {doc.isPublic ? <Globe size={11} /> : <Lock size={11} />}
-                        {doc.isPublic ? 'Public Policy' : 'Confidential'}
-                      </span>
-                      <span className="spec-badge status">
-                        <span className="status-dot"></span> Active & Verified
-                      </span>
-                    </div>
+                    {/* Useful & Clean File Info Box (Replaces filler chips with real file data) */}
+                    {(() => {
+                      const formatTag = (doc.fileUrl || doc.fileName || doc.title || '').toLowerCase().endsWith('.pdf') ? 'PDF' : 
+                                        (doc.fileUrl || doc.fileName || '').toLowerCase().match(/\.(jpg|jpeg|png|webp)$/) ? 'IMAGE' : 
+                                        (doc.fileUrl || doc.fileName || '').toLowerCase().match(/\.(doc|docx)$/) ? 'DOCX' : 'DOCUMENT';
 
-                    <div className="doc-meta-row">
-                      <span className="doc-date-pill">
-                        <Calendar size={12} color="#818cf8" /> {formatDate(doc.createdAt)}
-                      </span>
-                      <span className="doc-owner-pill">
-                        <ShieldCheck size={12} color="#34d399" /> {doc.owner?.fullName || 'CodeThrive Admin'}
-                      </span>
-                    </div>
+                      const rawName = doc.fileName || (doc.fileUrl ? doc.fileUrl.split('/').pop().replace(/^\d+[-_]/, '') : '');
+                      const displayFileName = rawName || `${doc.title || 'Document'}.${formatTag === 'PDF' ? 'pdf' : 'doc'}`;
+
+                      return (
+                        <div className="doc-file-info-tile">
+                          <div className={`doc-file-type-icon ${formatTag.toLowerCase()}`}>
+                            <FileText size={18} />
+                          </div>
+                          <div className="doc-file-meta-content">
+                            <span className="doc-file-name-text" title={displayFileName}>
+                              {displayFileName}
+                            </span>
+                            <div className="doc-file-sub-meta">
+                              <span className={`doc-file-format-badge ${formatTag.toLowerCase()}`}>{formatTag}</span>
+                              <span className="doc-meta-dot">•</span>
+                              <span className="doc-file-date">
+                                <Calendar size={11} color="#818cf8" /> Uploaded {formatDate(doc.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 

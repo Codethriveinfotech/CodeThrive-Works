@@ -581,103 +581,108 @@
   min-height: 2.45rem;
 }
 
-.doc-specs-row {
+/* Clean & Useful File Attachment Tile */
+.doc-file-info-tile {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.85rem;
-}
-
-.spec-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.32rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 0.22rem 0.55rem;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
-  letter-spacing: 0.2px;
-}
-
-.spec-badge.format {
-  background: rgba(244, 63, 94, 0.12);
-  border: 1px solid rgba(244, 63, 94, 0.28);
-  color: #fda4af;
-}
-
-.spec-badge.scope {
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  color: #93c5fd;
-}
-
-.spec-badge.status {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  color: #6ee7b7;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #34d399;
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
-  display: inline-block;
-  animation: pulse-status-dot 2s infinite ease-in-out;
-}
-
-@keyframes pulse-status-dot {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.85);
-  }
-}
-
-.doc-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
   margin-top: auto;
+  margin-bottom: 0.25rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.doc-date-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.28rem 0.6rem;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.76rem;
-  color: #94a3b8;
-  font-weight: 500;
+.document-item-card:hover .doc-file-info-tile {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(99, 102, 241, 0.35);
 }
 
-.doc-owner-pill {
-  display: inline-flex;
+.doc-file-type-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.28rem 0.6rem;
-  border-radius: 7px;
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  font-size: 0.76rem;
-  color: #93c5fd;
-  font-weight: 500;
-  max-width: 170px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.doc-file-type-icon.pdf {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.doc-file-type-icon.image {
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+.doc-file-type-icon.docx,
+.doc-file-type-icon.document {
+  background: rgba(99, 102, 241, 0.14);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #818cf8;
+}
+
+.doc-file-meta-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.doc-file-name-text {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #f1f5f9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.doc-file-sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.725rem;
+  color: #94a3b8;
+}
+
+.doc-file-format-badge {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  font-size: 0.7rem;
+}
+
+.doc-file-format-badge.pdf {
+  color: #f87171;
+}
+
+.doc-file-format-badge.image {
+  color: #38bdf8;
+}
+
+.doc-file-format-badge.docx,
+.doc-file-format-badge.document {
+  color: #818cf8;
+}
+
+.doc-meta-dot {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.doc-file-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .doc-actions-footer {
