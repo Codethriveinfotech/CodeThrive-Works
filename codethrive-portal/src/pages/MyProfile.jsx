@@ -764,13 +764,30 @@ const MyProfile = () => {
       {activeProfileTab === 'personal' && (
         <>
       {/* --------------------------------------------------------------------------
-          1. SLEEK EXECUTIVE PROFILE HEADER (DARK GLASS)
+          1. SLEEK EXECUTIVE PROFILE HEADER - DISTINGUISHED BOARDROOM DESIGN
          -------------------------------------------------------------------------- */}
       <div className="profile-executive-header">
         <div className="header-glow-bg"></div>
 
-        <div className="profile-header-left">
-          {/* Avatar with Ring & Online Status */}
+        {/* Corporate Header Ribbon / Top Micro Bar */}
+        <div className="executive-header-ribbon">
+          <div className="ribbon-brand">
+            <span className="ribbon-corp-name">CodeThrive Infotech</span>
+            <span className="ribbon-bullet">◆</span>
+            <span className="ribbon-title">Executive Personnel Vault</span>
+          </div>
+          <div className="ribbon-status-group">
+            <span className="profile-badge-status">
+              <span className="pulse-dot"></span> Active
+            </span>
+            <span className="profile-badge-verified" title="Verified Corporate Profile">
+              <ShieldCheck size={13} /> Verified
+            </span>
+          </div>
+        </div>
+
+        <div className="profile-header-main-row">
+          {/* Avatar with Metallic Ring & Online Status */}
           <div className="profile-avatar-wrapper">
             <div className="profile-avatar-img-box">
               {profile.profilePhoto ? (
@@ -791,7 +808,7 @@ const MyProfile = () => {
                 onClick={() => fileInputRef.current && fileInputRef.current.click()}
                 title="Upload & Adjust New Photo"
               >
-                <Camera size={16} />
+                <Camera size={15} />
               </button>
 
               {profile.profilePhoto && (
@@ -801,7 +818,7 @@ const MyProfile = () => {
                   onClick={handleAdjustCurrentPhoto}
                   title="Adjust & Position Current Photo"
                 >
-                  <Sliders size={14} />
+                  <Sliders size={13} />
                 </button>
               )}
             </div>
@@ -819,42 +836,39 @@ const MyProfile = () => {
           <div className="profile-identity-info">
             <div className="profile-name-row">
               <h1 className="profile-user-name">{profile.fullName}</h1>
-              <div className="profile-name-badges">
-                <span className="profile-badge-status">
-                  <span className="pulse-dot"></span> Active
-                </span>
-                <span className="profile-badge-verified" title="Verified Corporate Profile">
-                  <ShieldCheck size={13} /> Verified
-                </span>
-              </div>
             </div>
 
-            <div className="profile-user-title">
-              <span className="profile-badge-id" title="Employee ID">
-                <CreditCard size={13} /> {profile.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-001')}
+            <div className="profile-executive-title-row">
+              <span className="profile-designation-serif">{profile.designation || 'Managing Director'}</span>
+              <span className="title-sep">|</span>
+              <span className="profile-emp-id-tag" title="Official Employee Identification">
+                <CreditCard size={14} /> {profile.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-001')}
               </span>
-              <span className="title-bullet">•</span>
-              <span className="title-highlight">{profile.designation || 'Specialist'}</span>
-              <span className="title-company-badge">CodeThrive Infotech</span>
+              <span className="title-sep">|</span>
+              <span className="profile-company-name">CodeThrive Infotech Pvt Ltd</span>
             </div>
 
-            <div className="profile-meta-tags">
+            {/* Direct Communication & Tenure Bar */}
+            <div className="profile-contact-tenure-bar">
               <a 
                 href={`mailto:${profile.personalEmailAddress || user?.email || ''}`}
                 onClick={(e) => openDirectEmail(profile.personalEmailAddress || user?.email, e)}
-                className="profile-meta-tag clickable-link email-tag"
+                className="executive-contact-pill email-pill"
                 title="Directly open email to compose message"
               >
-                <span className="meta-icon-bubble email">
-                  <Mail size={13} />
-                </span>
-                <span className="meta-tag-text">{profile.personalEmailAddress || user?.email || 'N/A'}</span>
-                <span className="meta-tag-arrow">↗</span>
+                <div className="pill-icon-box">
+                  <Mail size={14} />
+                </div>
+                <div className="pill-text-col">
+                  <span className="pill-label">Official Email</span>
+                  <span className="pill-val">{profile.personalEmailAddress || user?.email || 'N/A'}</span>
+                </div>
+                <span className="pill-arrow">↗</span>
               </a>
 
               <button 
                 type="button"
-                className="profile-meta-tag clickable-btn phone-tag"
+                className="executive-contact-pill phone-pill"
                 onClick={() => setContactModal({
                   isOpen: true,
                   name: profile.fullName || 'Employee',
@@ -862,29 +876,35 @@ const MyProfile = () => {
                 })}
                 title="Connect via WhatsApp or Direct Call"
               >
-                <span className="meta-icon-bubble phone">
-                  <Phone size={13} />
-                </span>
-                <span className="meta-tag-text">{profile.personalPhoneNumber || '9876543210'}</span>
-                <span className="meta-tag-arrow">↗</span>
+                <div className="pill-icon-box">
+                  <Phone size={14} />
+                </div>
+                <div className="pill-text-col">
+                  <span className="pill-label">Direct Contact</span>
+                  <span className="pill-val">{profile.personalPhoneNumber || '9876543210'}</span>
+                </div>
+                <span className="pill-arrow">↗</span>
               </button>
 
-              <span className="profile-meta-tag date-tag">
-                <span className="meta-icon-bubble date">
-                  <Calendar size={13} />
-                </span>
-                <span className="meta-tag-text">Joined {profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '01/08/24'}</span>
-              </span>
+              <div className="executive-contact-pill tenure-pill">
+                <div className="pill-icon-box">
+                  <Calendar size={14} />
+                </div>
+                <div className="pill-text-col">
+                  <span className="pill-label">Date of Joining</span>
+                  <span className="pill-val">{profile.dateOfJoining ? formatDate(profile.dateOfJoining) : '23/10/2026'}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Header Action Buttons */}
-        <div className="profile-header-actions">
-          <button className="btn-primary-glow" onClick={() => setIsEditModalOpen(true)}>
-            <Edit3 size={16} />
-            <span>Edit Profile</span>
-          </button>
+          {/* Header Action Buttons */}
+          <div className="profile-header-actions">
+            <button className="btn-executive-edit" onClick={() => setIsEditModalOpen(true)}>
+              <Edit3 size={16} />
+              <span>Edit Profile</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1022,7 +1042,7 @@ const MyProfile = () => {
               <div className="field-tile-val">{profile.nationality || 'Indian'}</div>
             </div>
 
-            <div className="profile-field-tile">
+            <div className="profile-field-tile email-field-tile">
               <span className="field-tile-label">Personal Email</span>
               <div className="field-tile-val">
                 {profile.personalEmailAddress || user?.email ? (
@@ -1115,83 +1135,9 @@ const MyProfile = () => {
               </div>
             </div>
           </div>
-
-          {/* Attendance Summary */}
-          {attendanceSummary && (
-            <div className="attendance-summary-section">
-              <h4 className="section-subheading">
-                <Calendar size={16} /> Monthly Attendance Summary
-              </h4>
-              <div className="attendance-summary-cards">
-                <div className="att-summary-card">
-                  <span className="att-card-label">Total Days</span>
-                  <span className="att-card-val">{attendanceSummary.totalWorkingDays || 22}</span>
-                </div>
-                <div className="att-summary-card emerald">
-                  <span className="att-card-label">Days Present</span>
-                  <span className="att-card-val">{attendanceSummary.presentDays || 20}</span>
-                </div>
-                <div className="att-summary-card blue">
-                  <span className="att-card-label">Avg Hours / Day</span>
-                  <span className="att-card-val">{attendanceSummary.averageWorkingHours || 8.5}h</span>
-                </div>
-              </div>
-            </div>
-          )}
         </Card>
 
-        {/* Card 3: Bank Account & Tax Credentials */}
-        <Card title={
-          <div className="card-custom-header">
-            <div className="card-header-icon-bubble emerald">
-              <Landmark size={20} />
-            </div>
-            <div>
-              <span className="card-header-title">Bank Account & Tax Credentials</span>
-              <span className="card-header-subtitle">Secure Payroll Disbursement Vault</span>
-            </div>
-          </div>
-        }>
-          <div className="profile-tiles-grid">
-            <div className="profile-field-tile">
-              <span className="field-tile-label">Bank Account Holder</span>
-              <div className="field-tile-val">{profile.bankAccountHolderName || profile.fullName || <span className="val-not-set">Not Provided</span>}</div>
-            </div>
-
-            <div className="profile-field-tile">
-              <span className="field-tile-label">Bank Name</span>
-              <div className="field-tile-val">{profile.bankName || <span className="val-not-set">Not Provided</span>}</div>
-            </div>
-
-            <div className="profile-field-tile">
-              <span className="field-tile-label">Account Number</span>
-              <div className="field-tile-val mono highlight-blue">
-                {profile.accountNumber ? profile.accountNumber : <span className="val-not-set">Not Provided</span>}
-              </div>
-            </div>
-
-            <div className="profile-field-tile">
-              <span className="field-tile-label">IFSC Code</span>
-              <div className="field-tile-val mono">
-                {profile.ifscCode || <span className="val-not-set">Not Provided</span>}
-              </div>
-            </div>
-
-            <div className="profile-field-tile">
-              <span className="field-tile-label">Branch Name</span>
-              <div className="field-tile-val">{profile.branchName || <span className="val-not-set">Not Provided</span>}</div>
-            </div>
-
-            <div className="profile-field-tile">
-              <span className="field-tile-label">UPI ID</span>
-              <div className="field-tile-val highlight-emerald">
-                {profile.upiId || <span className="val-not-set">Not Provided</span>}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Card 4: Education & Technical Skills */}
+        {/* Card 3: Education & Technical Skills (Moved above Bank Account as requested) */}
         <Card title={
           <div className="card-custom-header">
             <div className="card-header-icon-bubble amber">
@@ -1248,55 +1194,53 @@ const MyProfile = () => {
           </div>
         </Card>
 
-        {/* Card 5: Career Achievements & Milestones */}
+        {/* Card 4: Bank Account & Tax Credentials */}
         <Card title={
           <div className="card-custom-header">
-            <div className="card-header-icon-bubble purple">
-              <Trophy size={20} />
+            <div className="card-header-icon-bubble emerald">
+              <Landmark size={20} />
             </div>
             <div>
-              <span className="card-header-title">Career Achievements & Milestones</span>
-              <span className="card-header-subtitle">Corporate Recognition & Timeline</span>
+              <span className="card-header-title">Bank Account & Tax Credentials</span>
+              <span className="card-header-subtitle">Secure Payroll Disbursement Vault</span>
             </div>
           </div>
         }>
-          <div className="achievements-cards-row">
-            <div className="achievement-badge-card amber">
-              <div className="badge-icon-box amber">
-                <Trophy size={20} />
-              </div>
-              <div className="badge-info-box">
-                <span className="badge-title">Quality Champion</span>
-                <span className="badge-sub">Excellence & Leadership</span>
+          <div className="profile-tiles-grid">
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Bank Account Holder</span>
+              <div className="field-tile-val">{profile.bankAccountHolderName || profile.fullName || <span className="val-not-set">Not Provided</span>}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Bank Name</span>
+              <div className="field-tile-val">{profile.bankName || <span className="val-not-set">Not Provided</span>}</div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Account Number</span>
+              <div className="field-tile-val mono highlight-blue">
+                {profile.accountNumber ? profile.accountNumber : <span className="val-not-set">Not Provided</span>}
               </div>
             </div>
 
-            <div className="achievement-badge-card blue">
-              <div className="badge-icon-box blue">
-                <Zap size={20} />
-              </div>
-              <div className="badge-info-box">
-                <span className="badge-title">Top Performer</span>
-                <span className="badge-sub">High Delivery Standard</span>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">IFSC Code</span>
+              <div className="field-tile-val mono">
+                {profile.ifscCode || <span className="val-not-set">Not Provided</span>}
               </div>
             </div>
 
-            <div className="achievement-badge-card emerald">
-              <div className="badge-icon-box emerald">
-                <ShieldCheck size={20} />
-              </div>
-              <div className="badge-info-box">
-                <span className="badge-title">Vault Verified</span>
-                <span className="badge-sub">Identity & Credentials Checked</span>
-              </div>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Branch Name</span>
+              <div className="field-tile-val">{profile.branchName || <span className="val-not-set">Not Provided</span>}</div>
             </div>
-          </div>
 
-          <div className="career-timeline-card">
-            <div className="timeline-node">
-              <span className="timeline-date-tag">August 2024 - Present</span>
-              <h5 className="timeline-node-title">{profile.designation || 'Managing Director'}</h5>
-              <p className="timeline-node-desc">Executive Leadership at CodeThrive Infotech Pvt Ltd.</p>
+            <div className="profile-field-tile">
+              <span className="field-tile-label">UPI ID</span>
+              <div className="field-tile-val highlight-emerald">
+                {profile.upiId || <span className="val-not-set">Not Provided</span>}
+              </div>
             </div>
           </div>
         </Card>
