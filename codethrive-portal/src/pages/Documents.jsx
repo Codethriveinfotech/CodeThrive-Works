@@ -17,24 +17,24 @@ const SUPPORTED_CATEGORIES = [
     name: 'Identity Proofs',
     icon: UserCheck,
     colorClass: 'identity',
-    description: 'Aadhaar Card, PAN Card, Passport, Voter ID, Driving License',
-    examples: 'Aadhaar, PAN, Passport'
+    description: 'Government verified identity proofs for compliance & employee verification.',
+    tags: ['Aadhaar Card', 'PAN Card', 'Passport', 'Voter ID']
   },
   {
     id: 'Certificate',
     name: 'Educational Certificates',
     icon: GraduationCap,
     colorClass: 'education',
-    description: 'Degree Certificates, Marksheets, Relieving & Experience Letters',
-    examples: 'Degree, Marksheets, Experience'
+    description: 'Academic degree certificates, semester marksheets & experience letters.',
+    tags: ['Degree', 'Marksheets', 'Relieving Letter', 'Certificates']
   },
   {
     id: 'Policy',
     name: 'Company Policies',
     icon: FolderOpen,
     colorClass: 'policy',
-    description: 'HR Handbook, Code of Conduct, IT Policy, Travel Guidelines',
-    examples: 'HR Handbook, IT Policy'
+    description: 'Official corporate operational guidelines, HR handbook & IT security policies.',
+    tags: ['HR Handbook', 'IT Security', 'Code of Conduct', 'Guidelines']
   }
 ];
 
@@ -375,23 +375,57 @@ const Documents = () => {
           {SUPPORTED_CATEGORIES.map(cat => {
             const IconComp = cat.icon;
             const isActive = activeCategory === cat.id;
+            const catCount = documents.filter(d => d.documentType === cat.id).length;
+
             return (
               <div 
                 key={cat.id}
                 className={`doc-type-chip ${cat.colorClass} ${isActive ? 'active' : ''}`}
-                onClick={() => handleOpenUploadWithCategory(cat.id)}
+                onClick={() => setActiveCategory(activeCategory === cat.id ? 'All' : cat.id)}
               >
+                {/* Chip Top Row: Icon, Title & Live Count */}
                 <div className="chip-top-row">
-                  <div className={`type-chip-icon ${cat.colorClass}`}>
-                    <IconComp size={22} />
+                  <div className="chip-header-info">
+                    <div className={`type-chip-icon ${cat.colorClass}`}>
+                      <IconComp size={22} />
+                    </div>
+                    <div>
+                      <span className="type-chip-name">{cat.name}</span>
+                      <span className={`chip-count-badge ${cat.colorClass}`}>
+                        {catCount} {catCount === 1 ? 'Document' : 'Documents'}
+                      </span>
+                    </div>
                   </div>
-                  <span className="chip-upload-btn">
-                    <Plus size={13} /> Quick Upload
-                  </span>
                 </div>
-                <div className="chip-body">
-                  <span className="type-chip-name">{cat.name}</span>
-                  <span className="type-chip-examples">{cat.examples}</span>
+
+                {/* Chip Description */}
+                <p className="type-chip-desc">{cat.description}</p>
+
+                {/* Example Quick Tags */}
+                <div className="chip-tags-container">
+                  {cat.tags.map((tag, tIdx) => (
+                    <span key={tIdx} className={`chip-pill-tag ${cat.colorClass}`}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Chip Bottom Action Row */}
+                <div className="chip-bottom-action-row">
+                  <span className="chip-vault-indicator">
+                    <ShieldCheck size={13} color="#94a3b8" /> Secure Vault
+                  </span>
+                  <button 
+                    type="button"
+                    className={`chip-upload-btn ${cat.colorClass}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenUploadWithCategory(cat.id);
+                    }}
+                    title={`Upload ${cat.name}`}
+                  >
+                    <Plus size={13} /> Quick Upload
+                  </button>
                 </div>
               </div>
             );
