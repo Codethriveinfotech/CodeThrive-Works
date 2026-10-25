@@ -495,19 +495,16 @@ const Documents = () => {
                 {/* Card Main Body */}
                 <div className="doc-card-body">
                   <div className="doc-info-main">
-                    <h4 className="doc-title-text" title={doc.title} style={{ margin: '0 0 0.35rem 0' }}>{doc.title}</h4>
+                    <h4 className="doc-title-text" title={doc.title}>{doc.title}</h4>
 
-                    <div className="doc-meta-row" style={{ fontSize: '0.775rem', color: '#94a3b8' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                        <Calendar size={12} color="#818cf8" /> {formatDate(doc.createdAt)}
+                    <div className="doc-meta-row">
+                      <span className="doc-date-pill">
+                        <Calendar size={13} color="#818cf8" /> {formatDate(doc.createdAt)}
                       </span>
                       {doc.owner && (
-                        <>
-                          <span>•</span>
-                          <span style={{ color: '#cbd5e1', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <ShieldCheck size={13} color="#60a5fa" /> {doc.owner.fullName || 'Employee'}
-                          </span>
-                        </>
+                        <span className="doc-owner-pill">
+                          <ShieldCheck size={13} color="#60a5fa" /> {doc.owner.fullName || 'Employee'}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -518,28 +515,28 @@ const Documents = () => {
                   <button 
                     type="button"
                     onClick={() => handleViewDoc(doc)}
-                    className="btn-outline-glass btn-card-action"
+                    className="btn-card-action btn-view-action"
                     title="View Document"
                   >
-                    <Eye size={14} /> View
+                    <Eye size={15} /> View
                   </button>
 
                   <button 
                     type="button"
                     onClick={() => handleDownloadDoc(doc)}
-                    className="btn-primary-gradient btn-card-action"
+                    className="btn-card-action btn-download-action"
                     title="Download File to Device"
                   >
-                    <Download size={14} /> Download
+                    <Download size={15} /> Download
                   </button>
 
                   <button 
                     type="button"
                     onClick={() => handleDelete(doc._id || doc.id)}
-                    className="btn-card-action btn-danger-glass"
+                    className="btn-card-action btn-delete-action"
                     title="Delete Document"
                   >
-                    <Trash2 size={14} /> Delete
+                    <Trash2 size={15} /> Delete
                   </button>
                 </div>
               </motion.div>
