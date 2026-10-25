@@ -1513,8 +1513,8 @@ const MyProfile = () => {
           {[
             { id: 'personal', label: '1. Personal & Identity' },
             { id: 'work', label: '2. Work & Corporate' },
-            { id: 'payroll', label: '3. Bank & Tax' },
-            { id: 'education', label: '4. Education & Skills' },
+            { id: 'education', label: '3. Education & Skills' },
+            { id: 'payroll', label: '4. Bank & Tax' },
             { id: 'contact', label: '5. Address & Emergency' }
           ].map(tab => (
             <button
@@ -1653,42 +1653,7 @@ const MyProfile = () => {
             </div>
           )}
 
-          {/* TAB 3: Bank & Tax Details */}
-          {modalFormTab === 'payroll' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                <label>Account Holder Name *</label>
-                <input type="text" className="input-field" placeholder="Full name as in bank account" value={formData.bankAccountHolderName} onChange={e => setFormData({ ...formData, bankAccountHolderName: e.target.value })} required />
-              </div>
-
-              <div className="form-group">
-                <label>Bank Name *</label>
-                <input type="text" className="input-field" placeholder="e.g. HDFC Bank, ICICI Bank, SBI" value={formData.bankName} onChange={e => setFormData({ ...formData, bankName: e.target.value })} required />
-              </div>
-
-              <div className="form-group">
-                <label>Bank Account Number *</label>
-                <input type="text" className="input-field" placeholder="e.g. 50100234567890" value={formData.accountNumber} onChange={e => setFormData({ ...formData, accountNumber: e.target.value })} required />
-              </div>
-
-              <div className="form-group">
-                <label>IFSC Code *</label>
-                <input type="text" className="input-field" placeholder="e.g. HDFC0001234" value={formData.ifscCode} onChange={e => setFormData({ ...formData, ifscCode: e.target.value })} required />
-              </div>
-
-              <div className="form-group">
-                <label>Branch Name *</label>
-                <input type="text" className="input-field" placeholder="e.g. Main Branch, Chennai" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} required />
-              </div>
-
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                <label>UPI ID *</label>
-                <input type="text" className="input-field" placeholder="e.g. user@upi" value={formData.upiId} onChange={e => setFormData({ ...formData, upiId: e.target.value })} required />
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: Education & Skills */}
+          {/* TAB 3: Education & Skills (Moved above Bank & Tax to match external order) */}
           {modalFormTab === 'education' && (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -1723,6 +1688,41 @@ const MyProfile = () => {
                 <textarea className="input-field" rows="2" placeholder="e.g. React, Node.js, Python, Automation Testing, JIRA, Cypress" value={formData.skills} onChange={e => setFormData({ ...formData, skills: e.target.value })} required></textarea>
               </div>
             </>
+          )}
+
+          {/* TAB 4: Bank & Tax Details */}
+          {modalFormTab === 'payroll' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>Account Holder Name *</label>
+                <input type="text" className="input-field" placeholder="Full name as in bank account" value={formData.bankAccountHolderName} onChange={e => setFormData({ ...formData, bankAccountHolderName: e.target.value })} required />
+              </div>
+
+              <div className="form-group">
+                <label>Bank Name *</label>
+                <input type="text" className="input-field" placeholder="e.g. HDFC Bank, ICICI Bank, SBI" value={formData.bankName} onChange={e => setFormData({ ...formData, bankName: e.target.value })} required />
+              </div>
+
+              <div className="form-group">
+                <label>Bank Account Number *</label>
+                <input type="text" className="input-field" placeholder="e.g. 50100234567890" value={formData.accountNumber} onChange={e => setFormData({ ...formData, accountNumber: e.target.value })} required />
+              </div>
+
+              <div className="form-group">
+                <label>IFSC Code *</label>
+                <input type="text" className="input-field" placeholder="e.g. HDFC0001234" value={formData.ifscCode} onChange={e => setFormData({ ...formData, ifscCode: e.target.value })} required />
+              </div>
+
+              <div className="form-group">
+                <label>Branch Name *</label>
+                <input type="text" className="input-field" placeholder="e.g. Main Branch, Chennai" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} required />
+              </div>
+
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>UPI ID *</label>
+                <input type="text" className="input-field" placeholder="e.g. user@upi" value={formData.upiId} onChange={e => setFormData({ ...formData, upiId: e.target.value })} required />
+              </div>
+            </div>
           )}
 
           {/* TAB 5: Address & Emergency Contact */}
