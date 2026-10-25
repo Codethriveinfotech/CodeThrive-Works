@@ -1,13 +1,10 @@
 /* ==========================================================================
-   MY PROFILE & DIGITAL VAULT - TIMES NEW ROMAN EXECUTIVE STYLES
+   MY PROFILE & DIGITAL VAULT - EXECUTIVE STYLES
    ========================================================================== */
 
-.profile-workspace-container,
-.profile-workspace-container *,
-.profile-modal,
-.profile-modal *,
-.contact-dialog-modal,
-.contact-dialog-modal * {
+/* Header explicitly styled with Times New Roman as requested */
+.profile-executive-header,
+.profile-executive-header * {
   font-family: 'Times New Roman', Times, Georgia, serif !important;
 }
 
@@ -87,7 +84,7 @@
 .ribbon-title {
   color: #cbd5e1;
   font-weight: 600;
-  font-style: italic;
+  font-style: normal;
 }
 
 .ribbon-status-group {
@@ -343,7 +340,7 @@
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  font-style: italic;
+  font-style: normal;
   text-shadow: 0 0 12px rgba(96, 165, 250, 0.35);
 }
 
@@ -783,7 +780,7 @@
 }
 
 .field-tile-val.mono {
-  font-family: 'Times New Roman', Times, serif;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
   letter-spacing: 0.03em;
 }
 
