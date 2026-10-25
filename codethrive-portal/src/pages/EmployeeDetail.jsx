@@ -12,13 +12,14 @@ import {
 } from '../utils/pdfLetterhead';
 import { 
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
-  KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils
+  KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
 import DataTable from '../components/common/DataTable';
 import { formatDate, formatDateWithDay } from '../utils/dateUtils';
 import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
+import './MyProfile.css';
 import './EmployeeDetail.css';
 
 const AUDIT_MONTH_OPTIONS = [
@@ -761,59 +762,111 @@ const EmployeeDetail = () => {
           >
             <Download size={15} /> Export Audit (PDF)
           </button>
-          <button 
-            className="btn-export-dossier" 
-            onClick={handleDownloadMonthlyAuditWord}
-            title="Download Monthly Employee Audit Dossier Word"
-            style={{ background: 'linear-gradient(135deg, #1d4ed8, #2563eb)' }}
-          >
-            <FileText size={15} /> Export Audit (Word)
-          </button>
-
         </div>
       </div>
 
-      {/* Hero Header Card */}
-      <div className="employee-hero-card">
-        <div className="hero-left">
-          <div className="hero-avatar">
-            {employee.fullName ? employee.fullName.charAt(0).toUpperCase() : 'E'}
+      {/* Sleek Executive Profile Header (Matching Employee Portal) */}
+      <div className="profile-executive-header" style={{ marginBottom: '1.5rem' }}>
+        <div className="header-glow-bg"></div>
+
+        {/* Corporate Header Ribbon / Top Micro Bar */}
+        <div className="executive-header-ribbon">
+          <div className="ribbon-brand">
+            <span className="ribbon-corp-name">CodeThrive Infotech</span>
+            <span className="ribbon-bullet">◆</span>
+            <span className="ribbon-title">Executive Personnel Vault</span>
           </div>
-          <div className="hero-info">
-            <div className="hero-title-row">
-              <h1 className="hero-name">{employee.fullName}</h1>
-              <StatusBadge status={employee.status} />
-              <span className={`role-badge ${employee.user?.role || 'employee'}`}>
-                {employee.user?.role || 'employee'}
-              </span>
+          <div className="ribbon-status-group">
+            <span className="profile-badge-status">
+              <span className="pulse-dot"></span> {employee.status || 'Active'}
+            </span>
+            <span className="profile-badge-verified" title="Verified Corporate Profile">
+              <ShieldCheck size={13} /> Verified
+            </span>
+          </div>
+        </div>
+
+        <div className="profile-header-main-row">
+          {/* Avatar with Metallic Ring & Online Status */}
+          <div className="profile-avatar-wrapper">
+            <div className="profile-avatar-img-box">
+              {employee.profilePhoto ? (
+                <img src={employee.profilePhoto} alt={employee.fullName} />
+              ) : (
+                <span className="profile-avatar-initials">
+                  {employee.fullName ? employee.fullName.charAt(0).toUpperCase() : 'E'}
+                </span>
+              )}
             </div>
-            <div className="hero-meta-tags">
+
+            <span className="profile-online-indicator" title="Active Account"></span>
+          </div>
+
+          {/* User Primary Identity Details */}
+          <div className="profile-identity-info">
+            <div className="profile-name-row">
+              <h1 className="profile-user-name">{employee.fullName}</h1>
+            </div>
+
+            <div className="profile-executive-title-row">
+              <span className="profile-designation-serif">{employee.designation || 'Software Engineer'}</span>
+              <span className="title-sep">|</span>
+              <span className="profile-emp-id-tag" title="Official Employee Identification">
+                <CreditCard size={14} /> {employee.employeeId || 'CTI-EMP-001'}
+              </span>
+              <span className="title-sep">|</span>
+              <span className="profile-company-name">CodeThrive Infotech Pvt Ltd</span>
+            </div>
+
+            {/* Direct Communication & Tenure Bar */}
+            <div className="profile-contact-tenure-bar">
               <a 
-                href={`mailto:${employee.personalEmailAddress || ''}`}
-                onClick={(e) => openDirectEmail(employee.personalEmailAddress, e)}
-                className="hero-meta-item clickable-link"
+                href={`mailto:${employee.personalEmailAddress || employee.email || ''}`}
+                onClick={(e) => openDirectEmail(employee.personalEmailAddress || employee.email, e)}
+                className="executive-contact-pill email-pill"
                 title="Directly open email to compose message"
               >
-                <Mail size={13} /> {employee.personalEmailAddress || 'No Email'}
+                <div className="pill-icon-box">
+                  <Mail size={14} />
+                </div>
+                <div className="pill-text-col">
+                  <span className="pill-label">Official Email</span>
+                  <span className="pill-val">{employee.personalEmailAddress || employee.email || 'N/A'}</span>
+                </div>
+                <span className="pill-arrow">↗</span>
               </a>
 
               {employee.personalPhoneNumber && (
                 <button 
                   type="button"
-                  className="hero-meta-item clickable-btn"
+                  className="executive-contact-pill phone-pill"
                   onClick={() => setContactModal({
                     isOpen: true,
-                    name: employee.fullName,
+                    name: employee.fullName || 'Employee',
                     phone: employee.personalPhoneNumber
                   })}
-                  title="Connect via WhatsApp or Phone Call"
+                  title="Connect via WhatsApp or Direct Call"
                 >
-                  <Phone size={13} /> {employee.personalPhoneNumber}
+                  <div className="pill-icon-box">
+                    <Phone size={14} />
+                  </div>
+                  <div className="pill-text-col">
+                    <span className="pill-label">Direct Contact</span>
+                    <span className="pill-val">{employee.personalPhoneNumber}</span>
+                  </div>
+                  <span className="pill-arrow">↗</span>
                 </button>
               )}
 
-              <span className="hero-meta-item"><Briefcase size={13} /> {employee.department} &bull; {employee.designation}</span>
-              <span className="hero-meta-item"><Calendar size={13} /> ID: <strong style={{ color: 'var(--primary-light)' }}>{employee.employeeId}</strong></span>
+              <div className="executive-contact-pill tenure-pill">
+                <div className="pill-icon-box">
+                  <Calendar size={14} />
+                </div>
+                <div className="pill-text-col">
+                  <span className="pill-label">Date of Joining</span>
+                  <span className="pill-val">{employee.dateOfJoining ? formatDate(employee.dateOfJoining) : 'Active Roster'}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -849,18 +902,20 @@ const EmployeeDetail = () => {
           <Calendar size={16} /> Leave Applications <span className="tab-count-badge">{filteredLeaves.length}</span>
         </button>
 
-        <button 
-          className={`tab-btn ${activeTab === 'documents' ? 'active' : ''}`}
-          onClick={() => setActiveTab('documents')}
-        >
-          <FileCheck size={16} /> Documents <span className="tab-count-badge">{employee.sentByEmployee?.uploadedDocs?.length || 0}</span>
-        </button>
-
+        {/* 5. Attendance Audit (Now placed BEFORE Documents as requested) */}
         <button 
           className={`tab-btn ${activeTab === 'attendance' ? 'active' : ''}`}
           onClick={() => setActiveTab('attendance')}
         >
           <Clock size={16} /> Attendance Audit
+        </button>
+
+        {/* 6. Documents */}
+        <button 
+          className={`tab-btn ${activeTab === 'documents' ? 'active' : ''}`}
+          onClick={() => setActiveTab('documents')}
+        >
+          <FileCheck size={16} /> Documents <span className="tab-count-badge">{employee.sentByEmployee?.uploadedDocs?.length || 0}</span>
         </button>
 
         <button 

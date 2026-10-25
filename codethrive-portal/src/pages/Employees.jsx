@@ -345,7 +345,7 @@ const Employees = () => {
           </div>
           <div className="emp-metric-bottom">
             <span className="metric-badge-pill badge-primary">● Live Directory</span>
-            <span>All Records Synced</span>
+            <span className="emp-metric-subtext">All Synced</span>
           </div>
         </div>
 
@@ -362,8 +362,8 @@ const Employees = () => {
             <span className="metric-val-suffix">Active Staff</span>
           </div>
           <div className="emp-metric-bottom">
-            <span className="metric-badge-pill badge-success">● 100% Operational</span>
-            <span>Zero Suspensions</span>
+            <span className="metric-badge-pill badge-success">● 100% Active</span>
+            <span className="emp-metric-subtext">Operational</span>
           </div>
         </div>
 
@@ -381,7 +381,7 @@ const Employees = () => {
           </div>
           <div className="emp-metric-bottom">
             <span className="metric-badge-pill badge-warning">● KYC Complete</span>
-            <span>Full Compliance</span>
+            <span className="emp-metric-subtext">Compliant</span>
           </div>
         </div>
 
@@ -399,7 +399,7 @@ const Employees = () => {
           </div>
           <div className="emp-metric-bottom">
             <span className="metric-badge-pill badge-info">● Security Active</span>
-            <span>Portal Access Granted</span>
+            <span className="emp-metric-subtext">Access Ready</span>
           </div>
         </div>
       </div>

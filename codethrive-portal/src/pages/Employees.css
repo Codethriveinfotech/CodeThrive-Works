@@ -126,9 +126,11 @@
   justify-content: space-between;
   padding-top: 0.65rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: #94a3b8;
   margin-top: 0.15rem;
+  white-space: nowrap !important;
+  gap: 0.5rem;
 }
 
 .metric-badge-pill {
@@ -137,9 +139,19 @@
   gap: 0.35rem;
   font-size: 0.7rem;
   font-weight: 600;
-  padding: 0.2rem 0.55rem;
+  padding: 0.22rem 0.6rem;
   border-radius: 20px;
   letter-spacing: 0.02em;
+  white-space: nowrap !important;
+  flex-shrink: 0;
+}
+
+.emp-metric-subtext {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  font-weight: 500;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .metric-badge-pill.badge-primary { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
