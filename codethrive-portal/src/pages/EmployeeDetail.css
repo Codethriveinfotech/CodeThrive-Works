@@ -336,6 +336,15 @@
   height: 42px;
 }
 
+select.input-box,
+select.filter-select {
+  height: 40px !important;
+  padding: 0 2.5rem 0 0.9rem !important;
+  line-height: normal !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
 .input-box:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);

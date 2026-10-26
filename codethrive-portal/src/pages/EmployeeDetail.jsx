@@ -13,7 +13,8 @@ import {
 import { 
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
   KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard,
-  GraduationCap, Sparkles, Landmark, CheckCircle2, Search, Eye, FileCode, CheckSquare, Layers, AlertCircle, FileArchive
+  GraduationCap, Sparkles, Landmark, CheckCircle2, Search, Eye, FileCode, CheckSquare, Layers, AlertCircle, FileArchive,
+  Trash2, AlignLeft
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import Modal from '../components/common/Modal';
@@ -696,7 +697,7 @@ const EmployeeDetail = () => {
       _id: 'task_' + Date.now(),
       taskId: 'TSK-' + Math.floor(100 + Math.random() * 900),
       title: taskTitle.trim(),
-      description: taskDesc.trim() || 'Deliver specified module milestones according to corporate technical specifications.',
+      description: taskDesc.trim(),
       priority: taskPriority,
       status: 'Assigned',
       dueDate: taskDueDate || new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
@@ -738,6 +739,41 @@ const EmployeeDetail = () => {
       setIsTaskSubmitting(false);
       alert(`Task "${newTask.title}" successfully assigned to ${employee.fullName} and saved to database!`);
     }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    if (!taskId || !employee) return;
+    const taskToDelete = (employee.assignedByAdmin?.tasks || []).find(t => t._id === taskId || t.taskId === taskId);
+    const taskTitleDisplay = taskToDelete?.title || taskId;
+
+    if (!window.confirm(`Are you sure you want to permanently delete task "${taskTitleDisplay}"?`)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/tasks/${taskId}`);
+    } catch (err) {
+      console.warn('Task deleted locally or server note:', err);
+    }
+
+    const updatedTasks = (employee.assignedByAdmin?.tasks || []).filter(t => t._id !== taskId && t.taskId !== taskId);
+    setEmployee(prev => ({
+      ...prev,
+      assignedByAdmin: { ...prev.assignedByAdmin, tasks: updatedTasks }
+    }));
+
+    try {
+      const cachedTasksKey = `cti_tasks_${employee._id || employee.employeeId}`;
+      const savedTasks = JSON.parse(localStorage.getItem(cachedTasksKey) || '[]');
+      const filtered = savedTasks.filter(t => t._id !== taskId && t.taskId !== taskId);
+      localStorage.setItem(cachedTasksKey, JSON.stringify(filtered));
+    } catch (e) {}
+
+    if (selectedTaskForModal && (selectedTaskForModal._id === taskId || selectedTaskForModal.taskId === taskId)) {
+      setSelectedTaskForModal(null);
+    }
+
+    alert(`Task "${taskTitleDisplay}" deleted successfully.`);
   };
 
   const handleReportAction = async (reportId, newStatus) => {
@@ -1633,7 +1669,8 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
               (t.title && t.title.toLowerCase().includes(searchLower)) ||
               (t.taskId && t.taskId.toLowerCase().includes(searchLower)) ||
               (t.description && t.description.toLowerCase().includes(searchLower));
-            const matchesStatus = taskStatusFilter === 'All' || t.status === taskStatusFilter;
+            const matchesStatus = taskStatusFilter === 'All' || 
+              (t.status && t.status.toLowerCase() === taskStatusFilter.toLowerCase());
             return matchesSearch && matchesStatus;
           });
 
@@ -1664,22 +1701,34 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 {/* Search & Filter Toolbar */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <div style={{ position: 'relative', minWidth: '220px' }}>
-                    <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                    <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input 
                       type="text"
                       placeholder="Search tasks or ID..."
                       value={taskSearchTerm}
                       onChange={e => setTaskSearchTerm(e.target.value)}
                       className="input-box"
-                      style={{ paddingLeft: '2.2rem', height: '38px', fontSize: '0.84rem' }}
+                      style={{ paddingLeft: '2.4rem', height: '40px', fontSize: '0.86rem', background: 'rgba(15, 23, 42, 0.85)', borderRadius: '10px' }}
                     />
                   </div>
 
                   <select 
                     value={taskStatusFilter}
                     onChange={e => setTaskStatusFilter(e.target.value)}
-                    className="input-box"
-                    style={{ width: 'auto', minWidth: '130px', height: '38px', fontSize: '0.84rem' }}
+                    className="input-box filter-select"
+                    style={{ 
+                      width: 'auto', 
+                      minWidth: '145px', 
+                      height: '40px', 
+                      padding: '0 2.4rem 0 0.9rem', 
+                      fontSize: '0.86rem', 
+                      lineHeight: '38px',
+                      background: 'rgba(15, 23, 42, 0.85)',
+                      borderRadius: '10px',
+                      color: '#ffffff',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      cursor: 'pointer'
+                    }}
                   >
                     <option value="All">All Statuses</option>
                     <option value="Assigned">Assigned</option>
@@ -1701,6 +1750,8 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
                   {displayedTasks.map(t => {
                     const formattedAssignedTime = t.assignedAtText || (t.createdAt ? `${formatDate(t.createdAt)}, ${new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '24/10/26, 10:00 AM');
+                    const assignedByDisplay = t.assignedBy?.fullName || t.assignedBy?.name || (typeof t.assignedBy === 'string' && t.assignedBy.length > 20 ? 'Admin / Management' : t.assignedBy) || 'Admin / Management';
+
                     return (
                       <div 
                         key={t._id} 
@@ -1733,13 +1784,17 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                             </span>
                           </div>
 
-                          <h4 style={{ margin: '0.2rem 0 0.4rem 0', fontSize: '1rem', color: '#ffffff', fontWeight: 600 }}>
+                          <h4 style={{ margin: '0.2rem 0 0.4rem 0', fontSize: '1.05rem', color: '#ffffff', fontWeight: 600 }}>
                             {t.title}
                           </h4>
 
-                          {t.description && (
-                            <p style={{ margin: '0 0 0.6rem 0', fontSize: '0.84rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                          {t.description ? (
+                            <p style={{ margin: '0 0 0.6rem 0', fontSize: '0.86rem', color: '#cbd5e1', lineHeight: 1.55, background: 'rgba(255,255,255,0.02)', padding: '0.5rem 0.75rem', borderRadius: '8px', borderLeft: '3px solid #6366f1' }}>
                               {t.description}
+                            </p>
+                          ) : (
+                            <p style={{ margin: '0 0 0.6rem 0', fontSize: '0.82rem', color: '#64748b', fontStyle: 'italic' }}>
+                              No detailed instructions specified for this task.
                             </p>
                           )}
 
@@ -1754,31 +1809,55 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                               <strong>Due Date:</strong> {formatDate(t.dueDate)}
                             </span>
                             <span style={{ color: '#94a3b8' }}>
-                              <strong>Assigned By:</strong> {t.assignedBy || 'Admin / Management'}
+                              <strong>Assigned By:</strong> {assignedByDisplay}
                             </span>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.6rem' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.65rem' }}>
                           <StatusBadge status={t.status || 'Assigned'} />
-                          <button 
-                            type="button"
-                            onClick={() => setSelectedTaskForModal(t)}
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              border: '1px solid rgba(255, 255, 255, 0.15)',
-                              color: '#e2e8f0',
-                              padding: '0.35rem 0.75rem',
-                              borderRadius: '8px',
-                              fontSize: '0.76rem',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.35rem'
-                            }}
-                          >
-                            <Eye size={12} /> Inspect Dossier
-                          </button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                            <button 
+                              type="button"
+                              onClick={() => setSelectedTaskForModal(t)}
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                color: '#e2e8f0',
+                                padding: '0.4rem 0.8rem',
+                                borderRadius: '8px',
+                                fontSize: '0.78rem',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              <Eye size={13} /> Inspect Dossier
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => handleDeleteTask(t._id || t.taskId)}
+                              title="Delete Task"
+                              style={{
+                                background: 'rgba(239, 68, 68, 0.12)',
+                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                color: '#f87171',
+                                padding: '0.4rem 0.8rem',
+                                borderRadius: '8px',
+                                fontSize: '0.78rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              <Trash2 size={13} /> Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1788,12 +1867,16 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
 
               {/* Assign New Task Panel */}
               <div className="form-panel" style={{ background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '16px', padding: '1.5rem' }}>
-                <h4 style={{ margin: '0 0 1.25rem 0', fontSize: '1rem', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h4 style={{ margin: '0 0 1.25rem 0', fontSize: '1.05rem', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Plus size={18} /> Assign New Task to {employee.fullName} (Stores into Database)
                 </h4>
-                <form onSubmit={handleAssignTask} className="task-assign-form">
-                  <div className="form-field" style={{ gridColumn: 'span 2' }}>
-                    <label className="field-label">Task Title / Milestone</label>
+                <form onSubmit={handleAssignTask} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  {/* Row 1: Task Title */}
+                  <div className="form-field" style={{ width: '100%' }}>
+                    <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem', color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem' }}>
+                      <CheckSquare size={15} color="#818cf8" />
+                      <span>Task Title / Milestone *</span>
+                    </label>
                     <input 
                       type="text" 
                       placeholder="e.g. Implement Neon PostgreSQL SSL Connection Pooling & Auto-Reconnect" 
@@ -1801,39 +1884,87 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                       value={taskTitle} 
                       onChange={e => setTaskTitle(e.target.value)} 
                       required 
+                      style={{ width: '100%', height: '42px', fontSize: '0.9rem' }}
                     />
                   </div>
 
-                  <div className="form-field" style={{ gridColumn: 'span 2' }}>
-                    <label className="field-label">Task Description / Technical Specifications</label>
+                  {/* Row 2: Task Description directly below Title */}
+                  <div className="form-field" style={{ width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                      <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0, color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem' }}>
+                        <AlignLeft size={15} color="#818cf8" />
+                        <span>Task Description / Specifications (Visible to Employee)</span>
+                      </label>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                        {taskDesc.length} characters
+                      </span>
+                    </div>
                     <textarea 
-                      placeholder="Provide exact deliverables, code standards, expected completion criteria, and repository branches..."
+                      placeholder="Provide clear task deliverables, requirements, reference URLs, and instructions. The employee will see this exact description on their tasks portal..."
                       className="input-box"
-                      style={{ minHeight: '80px', height: 'auto', padding: '0.65rem 0.9rem', resize: 'vertical' }}
+                      style={{ width: '100%', minHeight: '95px', height: 'auto', padding: '0.75rem 1rem', resize: 'vertical', fontSize: '0.88rem', lineHeight: 1.5 }}
                       value={taskDesc}
                       onChange={e => setTaskDesc(e.target.value)}
+                      rows={3}
                     />
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.35rem' }}>
+                      💡 This description will be displayed directly on the employee's &quot;My Tasks&quot; portal and dashboard.
+                    </span>
                   </div>
 
-                  <div className="form-field">
-                    <label className="field-label">Priority Level</label>
-                    <select className="input-box" value={taskPriority} onChange={e => setTaskPriority(e.target.value)}>
-                      <option value="Low">Low Priority</option>
-                      <option value="Medium">Medium Priority</option>
-                      <option value="High">High Priority</option>
-                      <option value="Urgent">Urgent Critical</option>
-                    </select>
-                  </div>
+                  {/* Row 3: Priority, Due Date & Assign Button */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'end' }}>
+                    <div className="form-field">
+                      <label className="field-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontWeight: 600, fontSize: '0.84rem' }}>
+                        Priority Level
+                      </label>
+                      <select 
+                        className="input-box filter-select" 
+                        value={taskPriority} 
+                        onChange={e => setTaskPriority(e.target.value)}
+                        style={{ height: '42px', padding: '0 2.2rem 0 0.9rem', fontSize: '0.86rem' }}
+                      >
+                        <option value="Low">Low Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="High">High Priority</option>
+                        <option value="Urgent">🔥 Urgent Priority</option>
+                      </select>
+                    </div>
 
-                  <div className="form-field">
-                    <label className="field-label">Target Completion Due Date</label>
-                    <input type="date" className="input-box" value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} />
-                  </div>
+                    <div className="form-field">
+                      <label className="field-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontWeight: 600, fontSize: '0.84rem' }}>
+                        Target Completion Due Date
+                      </label>
+                      <input 
+                        type="date" 
+                        className="input-box" 
+                        value={taskDueDate} 
+                        onChange={e => setTaskDueDate(e.target.value)} 
+                        style={{ height: '42px', fontSize: '0.86rem' }}
+                      />
+                    </div>
 
-                  <div className="form-field btn-container" style={{ gridColumn: 'span 2', marginTop: '0.5rem' }}>
-                    <button type="submit" disabled={isTaskSubmitting} className="assign-btn" style={{ padding: '0.75rem 1.75rem', fontSize: '0.9rem' }}>
-                      {isTaskSubmitting ? 'Saving to Database...' : 'Assign Task & Save to Database'}
-                    </button>
+                    <div className="form-field">
+                      <button 
+                        type="submit" 
+                        disabled={isTaskSubmitting} 
+                        className="assign-btn" 
+                        style={{ 
+                          height: '42px', 
+                          padding: '0 1.5rem', 
+                          fontSize: '0.88rem', 
+                          fontWeight: 700,
+                          width: '100%',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem'
+                        }}
+                      >
+                        <Plus size={16} />
+                        {isTaskSubmitting ? 'Saving to Database...' : 'Assign Task & Save to DB'}
+                      </button>
+                    </div>
                   </div>
                 </form>
               </div>
@@ -2394,9 +2525,14 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
 
             <div>
               <h3 style={{ margin: '0 0 0.5rem 0', color: '#fff', fontSize: '1.15rem' }}>{selectedTaskForModal.title}</h3>
-              <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.6 }}>
-                {selectedTaskForModal.description || 'Deliver specified module milestones according to corporate technical specifications.'}
-              </p>
+              <div style={{ background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '10px', padding: '0.85rem 1rem' }}>
+                <span style={{ fontSize: '0.74rem', color: '#818cf8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '0.35rem' }}>
+                  Task Description & Requirements:
+                </span>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                  {selectedTaskForModal.description || 'No detailed instructions specified for this task.'}
+                </p>
+              </div>
             </div>
 
             <div style={{ background: 'rgba(15, 23, 42, 0.6)', borderRadius: '12px', padding: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
@@ -2424,9 +2560,37 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
               <div>
                 <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Assigned By</span>
                 <div style={{ fontSize: '0.88rem', color: '#fff', fontWeight: 600, marginTop: '2px' }}>
-                  {selectedTaskForModal.assignedBy || 'Admin / Management'}
+                  {selectedTaskForModal.assignedBy?.fullName || selectedTaskForModal.assignedBy?.name || (typeof selectedTaskForModal.assignedBy === 'string' && selectedTaskForModal.assignedBy.length > 20 ? 'Admin / Management' : selectedTaskForModal.assignedBy) || 'Admin / Management'}
                 </div>
               </div>
+            </div>
+
+            {/* Admin Task Actions Footer */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Status: <strong style={{ color: '#fff' }}>{selectedTaskForModal.status || 'Assigned'}</strong>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => handleDeleteTask(selectedTaskForModal._id || selectedTaskForModal.taskId)}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  color: '#f87171',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Trash2 size={14} /> Delete This Task
+              </button>
             </div>
           </div>
         )}

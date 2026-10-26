@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   UserCheck, Search, X, Briefcase, FileText, Calendar, Clock, Banknote,
   KeyRound, ShieldAlert, ArrowDownLeft, ArrowUpRight,
-  Send, Eye, Download, Save
+  Send, Eye, Download, Save, Trash2
 } from 'lucide-react';
 import api from '../utils/api';
 import StatusBadge from './common/StatusBadge';
@@ -20,6 +20,7 @@ const RegistrationHubModal = ({ isOpen, onClose }) => {
 
   // Forms
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDesc, setNewTaskDesc] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState('Medium');
   const [newTaskDueDate, setNewTaskDueDate] = useState('');
   
@@ -82,6 +83,7 @@ const RegistrationHubModal = ({ isOpen, onClose }) => {
       _id: 'task_' + Date.now(),
       taskId: 'TSK-' + Math.floor(100 + Math.random() * 900),
       title: newTaskTitle,
+      description: newTaskDesc.trim(),
       priority: newTaskPriority,
       status: 'Assigned',
       dueDate: newTaskDueDate || new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0]
@@ -98,8 +100,24 @@ const RegistrationHubModal = ({ isOpen, onClose }) => {
     setSelectedEmp(updatedEmp);
     setEmployees(prev => prev.map(e => e._id === selectedEmp._id ? updatedEmp : e));
     setNewTaskTitle('');
+    setNewTaskDesc('');
     setNewTaskDueDate('');
     alert('Task assigned to employee successfully!');
+  };
+
+  const handleDeleteTask = (taskId) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    const updatedTasks = (selectedEmp.assignedByAdmin?.tasks || []).filter(t => t._id !== taskId && t.taskId !== taskId);
+    const updatedEmp = {
+      ...selectedEmp,
+      assignedByAdmin: {
+        ...selectedEmp.assignedByAdmin,
+        tasks: updatedTasks
+      }
+    };
+    setSelectedEmp(updatedEmp);
+    setEmployees(prev => prev.map(e => e._id === selectedEmp._id ? updatedEmp : e));
+    alert('Task deleted successfully!');
   };
 
   const handleSendNotification = (e) => {
@@ -415,40 +433,57 @@ const RegistrationHubModal = ({ isOpen, onClose }) => {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                         <h4 style={{ margin: 0, color: 'var(--primary-light)' }}>Assigned Tasks ({selectedEmp.assignedByAdmin?.tasks?.length || 0})</h4>
                         {selectedEmp.assignedByAdmin?.tasks?.map(t => (
-                          <div key={t._id} className="task-card-row">
-                            <div>
+                          <div key={t._id} className="task-card-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '1rem', background: 'rgba(30, 41, 59, 0.45)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ flex: 1 }}>
                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{t.taskId}</span>
-                              <h4 style={{ margin: '0.2rem 0', fontSize: '0.95rem' }}>{t.title}</h4>
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Due: {t.dueDate}</span>
+                              <h4 style={{ margin: '0.2rem 0', fontSize: '0.95rem', color: '#fff' }}>{t.title}</h4>
+                              {t.description && (
+                                <p style={{ margin: '0.2rem 0 0.4rem 0', fontSize: '0.82rem', color: '#cbd5e1', lineHeight: 1.4 }}>{t.description}</p>
+                              )}
+                              <span style={{ fontSize: '0.75rem', color: '#fbbf24' }}>Due: {t.dueDate}</span>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                               <span className={`priority-tag ${t.priority?.toLowerCase()}`}>{t.priority}</span>
                               <StatusBadge status={t.status} />
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteTask(t._id || t.taskId)}
+                                title="Delete Task"
+                                style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171', padding: '0.35rem 0.6rem', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
                             </div>
                           </div>
                         ))}
 
-                        <div className="form-box">
-                          <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.95rem' }}>Assign New Task to {selectedEmp.fullName}</h4>
-                          <form onSubmit={handleAssignTask} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
+                        <div className="form-box" style={{ background: 'rgba(15, 23, 42, 0.65)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                          <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.95rem', color: 'var(--primary-light)' }}>Assign New Task to {selectedEmp.fullName}</h4>
+                          <form onSubmit={handleAssignTask} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                             <div>
-                              <label className="form-label">Task Title</label>
-                              <input type="text" placeholder="e.g. Build Backend Auth Middleware" className="form-input" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} required />
+                              <label className="form-label" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.82rem', color: '#cbd5e1' }}>Task Title *</label>
+                              <input type="text" placeholder="e.g. Build Backend Auth Middleware" className="form-input" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} required style={{ width: '100%' }} />
                             </div>
                             <div>
-                              <label className="form-label">Priority</label>
-                              <select className="form-input" value={newTaskPriority} onChange={e => setNewTaskPriority(e.target.value)}>
-                                <option value="Low">Low</option>
-                                <option value="Medium">Medium</option>
-                                <option value="High">High</option>
-                                <option value="Urgent">Urgent</option>
-                              </select>
+                              <label className="form-label" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.82rem', color: '#cbd5e1' }}>Task Description / Requirements</label>
+                              <textarea placeholder="Provide detailed instructions for the employee..." className="form-input" rows="2" value={newTaskDesc} onChange={e => setNewTaskDesc(e.target.value)} style={{ width: '100%', resize: 'vertical' }} />
                             </div>
-                            <div>
-                              <label className="form-label">Due Date</label>
-                              <input type="date" className="form-input" value={newTaskDueDate} onChange={e => setNewTaskDueDate(e.target.value)} />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.75rem', alignItems: 'end' }}>
+                              <div>
+                                <label className="form-label" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.82rem', color: '#cbd5e1' }}>Priority</label>
+                                <select className="form-input" value={newTaskPriority} onChange={e => setNewTaskPriority(e.target.value)} style={{ width: '100%' }}>
+                                  <option value="Low">Low</option>
+                                  <option value="Medium">Medium</option>
+                                  <option value="High">High</option>
+                                  <option value="Urgent">Urgent</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="form-label" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.82rem', color: '#cbd5e1' }}>Due Date</label>
+                                <input type="date" className="form-input" value={newTaskDueDate} onChange={e => setNewTaskDueDate(e.target.value)} style={{ width: '100%' }} />
+                              </div>
+                              <button type="submit" className="btn btn-primary" style={{ padding: '0.65rem 1.25rem' }}>Assign Task</button>
                             </div>
-                            <button type="submit" className="btn btn-primary">Assign Task</button>
                           </form>
                         </div>
                       </div>

@@ -62,11 +62,24 @@ const MyTasks = () => {
     try {
       setLoading(true);
       const res = await api.get('/tasks/my-tasks');
-      const fetched = res.data?.data || [];
+      let fetched = res.data?.data || [];
+
+      // Merge with any cached tasks stored locally for this employee
+      const empIdKey = user?._id || user?.id || user?.employeeId;
+      if (empIdKey) {
+        const cached = JSON.parse(localStorage.getItem(`cti_tasks_${empIdKey}`) || '[]');
+        if (cached.length > 0) {
+          const existingIds = new Set(fetched.map(t => t._id || t.taskId));
+          const merged = [...fetched, ...cached.filter(c => !existingIds.has(c._id || c.taskId))];
+          fetched = merged;
+        }
+      }
       setTasks(fetched);
     } catch (err) {
       console.warn('API fetch failed or offline, initializing tasks state', err);
-      setTasks([]);
+      const empIdKey = user?._id || user?.id || user?.employeeId;
+      const cached = empIdKey ? JSON.parse(localStorage.getItem(`cti_tasks_${empIdKey}`) || '[]') : [];
+      setTasks(cached);
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -642,10 +655,15 @@ const MyTasks = () => {
             </div>
 
             <div>
-              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.3rem', color: '#fff' }}>{selectedTaskDetail.title}</h3>
-              <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-muted)', lineHeight: 1.6, background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
-                {selectedTaskDetail.description || 'No detailed instructions specified for this deliverable.'}
-              </p>
+              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', color: '#fff' }}>{selectedTaskDetail.title}</h3>
+              <div style={{ background: 'rgba(15,23,42,0.85)', padding: '1.1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <span style={{ fontSize: '0.74rem', color: '#818cf8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '0.4rem' }}>
+                  Task Description & Instructions:
+                </span>
+                <p style={{ margin: 0, fontSize: '0.92rem', color: '#cbd5e1', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                  {selectedTaskDetail.description || 'No detailed instructions specified for this deliverable.'}
+                </p>
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(15,23,42,0.8)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
