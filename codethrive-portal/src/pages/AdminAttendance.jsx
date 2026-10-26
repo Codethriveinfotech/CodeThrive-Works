@@ -4,13 +4,15 @@ import {
   Search, Save, CheckCircle2, RefreshCw,
   ChevronLeft, ChevronRight, CalendarDays, AlertCircle
 } from 'lucide-react';
-import DateInput from '../components/common/DateInput';
+import DateInput, { toIsoDate } from '../components/common/DateInput';
 import './AdminAttendance.css';
 
 
 // ─── Helpers ────────────────────────────────────────────────
 const toLocalDateStr = (d) => {
-  const dt = d || new Date();
+  if (!d) return new Date().toISOString().split('T')[0];
+  const dt = typeof d === 'string' && d.includes('/') ? new Date(toIsoDate(d)) : new Date(d);
+  if (isNaN(dt.getTime())) return new Date().toISOString().split('T')[0];
   const y = dt.getFullYear();
   const m = String(dt.getMonth() + 1).padStart(2, '0');
   const day = String(dt.getDate()).padStart(2, '0');
@@ -220,7 +222,9 @@ const AdminAttendance = () => {
 
   // ─── Nav date ──────────────────────────────────────────────
   const shiftDate = (days) => {
-    const d = new Date(selectedDate);
+    const iso = (selectedDate && typeof selectedDate === 'string' && selectedDate.includes('/')) ? toIsoDate(selectedDate) : selectedDate;
+    const d = new Date(iso || new Date());
+    if (isNaN(d.getTime())) return;
     d.setDate(d.getDate() + days);
     setSelectedDate(toLocalDateStr(d));
   };
@@ -367,7 +371,11 @@ const AdminAttendance = () => {
             <div className="aa-table-header-bar">
               <h3>
                 <CalendarDays size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
-                {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                {(() => {
+                  const iso = (selectedDate && typeof selectedDate === 'string' && selectedDate.includes('/')) ? toIsoDate(selectedDate) : selectedDate;
+                  const d = new Date((iso || today) + 'T00:00:00');
+                  return (!isNaN(d.getTime()) ? d : new Date()).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                })()}
               </h3>
               <span className="aa-count-badge">{filteredRegister.length} employees</span>
             </div>

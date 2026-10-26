@@ -12,7 +12,7 @@ import {
 } from '../utils/pdfLetterhead';
 import { 
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
-  KeyRound, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard,
+  KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard,
   GraduationCap, Sparkles, Landmark, CheckCircle2, Search, Eye, FileCode, CheckSquare, Layers, AlertCircle, FileArchive,
   Trash2, AlignLeft
 } from 'lucide-react';
@@ -1869,7 +1869,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
               {/* Assign New Task Panel */}
               <div className="form-panel" style={{ background: 'rgba(15, 23, 42, 0.85)', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '16px', padding: '1.5rem' }}>
                 <h4 style={{ margin: '0 0 1.25rem 0', fontSize: '1.05rem', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Plus size={18} /> Assign New Task to {employee.fullName} (Stores into Database)
+                  <CheckSquare size={18} color="#818cf8" /> Assign New Task to {employee.fullName}
                 </h4>
                 <form onSubmit={handleAssignTask} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {/* Row 1: Task Title */}

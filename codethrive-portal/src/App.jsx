@@ -88,12 +88,12 @@ class ErrorBoundary extends React.Component {
           <button 
             className="btn btn-primary"
             onClick={() => {
-              this.setState({ hasError: false });
-              window.location.href = '/employee/dashboard';
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
             }}
             style={{ padding: '0.75rem 1.5rem', borderRadius: '8px' }}
           >
-            Reload Dashboard
+            Reload Page
           </button>
         </div>
       );
