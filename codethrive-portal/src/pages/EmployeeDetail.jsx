@@ -12,7 +12,7 @@ import {
 } from '../utils/pdfLetterhead';
 import { 
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
-  KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard,
+  KeyRound, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard,
   GraduationCap, Sparkles, Landmark, CheckCircle2, Search, Eye, FileCode, CheckSquare, Layers, AlertCircle, FileArchive,
   Trash2, AlignLeft
 } from 'lucide-react';
@@ -22,6 +22,7 @@ import StatusBadge from '../components/common/StatusBadge';
 import DataTable from '../components/common/DataTable';
 import { formatDate, formatDateWithDay } from '../utils/dateUtils';
 import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
+import DateInput from '../components/common/DateInput';
 import './MyProfile.css';
 import './EmployeeDetail.css';
 
@@ -1893,7 +1894,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                       <label className="field-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0, color: '#cbd5e1', fontWeight: 600, fontSize: '0.88rem' }}>
                         <AlignLeft size={15} color="#818cf8" />
-                        <span>Task Description / Specifications (Visible to Employee)</span>
+                        <span>Task Description / Specifications</span>
                       </label>
                       <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
                         {taskDesc.length} characters
@@ -1935,8 +1936,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                       <label className="field-label" style={{ display: 'block', marginBottom: '0.4rem', color: '#cbd5e1', fontWeight: 600, fontSize: '0.84rem' }}>
                         Target Completion Due Date
                       </label>
-                      <input 
-                        type="date" 
+                      <DateInput 
                         className="input-box" 
                         value={taskDueDate} 
                         onChange={e => setTaskDueDate(e.target.value)} 
@@ -1961,8 +1961,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                           gap: '0.5rem'
                         }}
                       >
-                        <Plus size={16} />
-                        {isTaskSubmitting ? 'Saving to Database...' : 'Assign Task & Save to DB'}
+                        {isTaskSubmitting ? 'Assigning Task...' : 'Assign Task'}
                       </button>
                     </div>
                   </div>

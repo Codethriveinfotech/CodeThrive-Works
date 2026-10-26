@@ -10,6 +10,7 @@ import {
   ChevronLeft, ChevronRight, AlertCircle, ShieldCheck, Sparkles, TrendingUp, FileText
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import DateInput from '../components/common/DateInput';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
 import { createOfficialCodeThriveDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
@@ -1144,8 +1145,7 @@ const Attendance = () => {
 
           <div className="form-group">
             <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Date *</label>
-            <input 
-              type="date" 
+            <DateInput 
               className="input-field" 
               required 
               value={correctionPayload.date}
@@ -1246,8 +1246,7 @@ const Attendance = () => {
           <div className="pdf-date-grid">
             <div className="pdf-date-field">
               <label>From Date</label>
-              <input 
-                type="date" 
+              <DateInput 
                 className="pdf-date-input" 
                 value={pdfStartDate}
                 onChange={e => setPdfStartDate(e.target.value)}
@@ -1255,8 +1254,7 @@ const Attendance = () => {
             </div>
             <div className="pdf-date-field">
               <label>To Date</label>
-              <input 
-                type="date" 
+              <DateInput 
                 className="pdf-date-input" 
                 value={pdfEndDate}
                 onChange={e => setPdfEndDate(e.target.value)}

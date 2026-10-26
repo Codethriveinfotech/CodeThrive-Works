@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { zipSync } from 'fflate';
 import { formatDate } from '../utils/dateUtils';
+import DateInput from '../components/common/DateInput';
 import './DailyReports.css';
 
 const DEMO_REPORTS = [];
@@ -959,8 +960,7 @@ const DailyReports = () => {
           <div className="form-row-2col">
             <div className="form-group-pro">
               <label className="form-label-pro">2. Submitting Date *</label>
-              <input 
-                type="date" 
+              <DateInput 
                 className="input-field-pro" 
                 value={formData.date}
                 onChange={e => setFormData({...formData, date: e.target.value})}
@@ -1261,8 +1261,7 @@ const DailyReports = () => {
           <div className="form-row-2col">
             <div className="form-group-pro">
               <label className="form-label-pro">2. Submitting Date *</label>
-              <input 
-                type="date" 
+              <DateInput 
                 className="input-field-pro" 
                 value={srcFormData.date}
                 onChange={e => setSrcFormData({...srcFormData, date: e.target.value})}

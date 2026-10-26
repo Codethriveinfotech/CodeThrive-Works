@@ -73,14 +73,16 @@
   color: rgba(255,255,255,0.55);
   white-space: nowrap;
 }
-.aa-date-picker input[type="date"] {
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 0.875rem;
-  font-family: 'Inter', sans-serif;
-  outline: none;
-  cursor: pointer;
+.aa-date-picker input[type="date"],
+.aa-date-picker .aa-date-input-field {
+  background: transparent !important;
+  border: none !important;
+  color: #fff !important;
+  font-size: 0.875rem !important;
+  font-family: 'Inter', sans-serif !important;
+  outline: none !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
 }
 .aa-date-picker input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1) opacity(0.6);

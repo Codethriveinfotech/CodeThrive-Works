@@ -4,6 +4,7 @@ import {
   Search, Save, CheckCircle2, RefreshCw,
   ChevronLeft, ChevronRight, CalendarDays, AlertCircle
 } from 'lucide-react';
+import DateInput from '../components/common/DateInput';
 import './AdminAttendance.css';
 
 
@@ -265,12 +266,15 @@ const AdminAttendance = () => {
                 <ChevronLeft size={16} />
               </button>
               <label>Date</label>
-              <input
-                type="date"
+              <DateInput
                 value={selectedDate}
                 max={today}
                 onChange={e => setSelectedDate(e.target.value)}
                 id="aa-date-input"
+                className="aa-date-input-field"
+                wrapperStyle={{ width: '135px' }}
+                style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '0.875rem', padding: '0.2rem 0' }}
+                showIcon={false}
               />
               <button
                 style={{ background: 'none', border: 'none', color: selectedDate >= today ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)', cursor: selectedDate >= today ? 'default' : 'pointer', display: 'flex', alignItems: 'center' }}

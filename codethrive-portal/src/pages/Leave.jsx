@@ -10,6 +10,7 @@ import {
   FileText, ArrowUpRight, Search, RefreshCw, UserCheck, ShieldCheck, MessageSquare
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import DateInput from '../components/common/DateInput';
 import './Admin.css';
 import './Leave.css';
 
@@ -524,8 +525,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
           <div className="form-row-2col">
             <div className="form-group-pro">
               <label className="form-label-pro">Start Date</label>
-              <input 
-                type="date" 
+              <DateInput 
                 className="input-field-pro" 
                 required 
                 value={formData.startDate} 
@@ -534,8 +534,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
             </div>
             <div className="form-group-pro">
               <label className="form-label-pro">End Date</label>
-              <input 
-                type="date" 
+              <DateInput 
                 className="input-field-pro" 
                 required 
                 value={formData.endDate} 

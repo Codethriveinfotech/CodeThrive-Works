@@ -9,6 +9,7 @@ import {
   Briefcase, AlertCircle, CheckCircle2, TrendingUp, Sparkles, Filter, FileText, AlignLeft, UserCheck 
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import DateInput from '../components/common/DateInput';
 import './Admin.css';
 
 const DEFAULT_DEMO_TASKS = [];
@@ -446,7 +447,7 @@ const AdminTasks = () => {
                 <Calendar size={15} color="#818cf8" />
                 <span>Target Due Date</span>
               </label>
-              <input type="date" className="input-box" name="dueDate" value={formData.dueDate} onChange={handleChange} />
+              <DateInput className="input-box" name="dueDate" value={formData.dueDate} onChange={handleChange} />
             </div>
           </div>
 

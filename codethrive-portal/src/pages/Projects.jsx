@@ -6,6 +6,8 @@ import {
   FolderGit2, Plus, MoreVertical, LayoutGrid, List,
   Users, Calendar, CheckCircle2, Circle
 } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils';
+import DateInput from '../components/common/DateInput';
 import './Modules.css';
 
 const Projects = () => {
@@ -133,7 +135,7 @@ const Projects = () => {
                         <span style={{ fontSize: '0.75rem', width: '30px', textAlign: 'right' }}>{proj.progress}%</span>
                       </div>
                     </td>
-                    <td><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{proj.deadline}</span></td>
+                    <td><span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{proj.deadline ? formatDate(proj.deadline) : '-'}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -163,7 +165,7 @@ const Projects = () => {
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label>Deadline</label>
-              <input type="date" className="input-field" required value={newProject.deadline} onChange={e => setNewProject({...newProject, deadline: e.target.value})} />
+              <DateInput className="input-field" required value={newProject.deadline} onChange={e => setNewProject({...newProject, deadline: e.target.value})} />
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>

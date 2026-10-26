@@ -1,6 +1,6 @@
 /**
  * Standardized Date Formatting Utility
- * Enforces DD/MM/YY (Date/Month/2-Digit Year) format strictly across the entire portal.
+ * Enforces DD/MM/YYYY (Date/Month/4-Digit Year) format strictly across the entire portal.
  */
 
 export const formatDate = (dateInput) => {
@@ -10,7 +10,7 @@ export const formatDate = (dateInput) => {
   
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = String(d.getFullYear()).slice(-2);
+  const year = d.getFullYear();
   return `${day}/${month}/${year}`;
 };
 

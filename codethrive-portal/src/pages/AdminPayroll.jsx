@@ -8,6 +8,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { formatDate } from '../utils/dateUtils';
+import DateInput from '../components/common/DateInput';
 import { 
   createOfficialCodeThriveDoc, 
   exportOfficialWordDoc, 
@@ -1324,8 +1325,8 @@ const AdminPayroll = () => {
 
               <div className="form-group">
                 <label className="field-label">Disbursement Date *</label>
-                <input 
-                  type="date" className="input-box" 
+                <DateInput 
+                  className="input-box" 
                   value={bulkFormData.paymentDate} 
                   onChange={(e) => setBulkFormData({...bulkFormData, paymentDate: e.target.value})}
                   required 
@@ -1462,8 +1463,7 @@ const AdminPayroll = () => {
 
                 <div className="form-group">
                   <label className="field-label" style={{ color: '#e2e8f0', fontWeight: 600, marginBottom: '0.4rem', display: 'block', fontSize: '0.85rem' }}>Disbursement Date *</label>
-                  <input 
-                    type="date" 
+                  <DateInput 
                     name="paymentDate"
                     className="input-box" 
                     value={formData.paymentDate} 

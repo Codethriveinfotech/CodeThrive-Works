@@ -7,6 +7,8 @@ import {
 import api from '../utils/api';
 import StatusBadge from './common/StatusBadge';
 import Card from './common/Card';
+import DateInput from './common/DateInput';
+import { formatDate } from '../utils/dateUtils';
 
 const RegistrationHubModal = ({ isOpen, onClose }) => {
   const [employees, setEmployees] = useState([]);
@@ -440,7 +442,7 @@ const RegistrationHubModal = ({ isOpen, onClose }) => {
                               {t.description && (
                                 <p style={{ margin: '0.2rem 0 0.4rem 0', fontSize: '0.82rem', color: '#cbd5e1', lineHeight: 1.4 }}>{t.description}</p>
                               )}
-                              <span style={{ fontSize: '0.75rem', color: '#fbbf24' }}>Due: {t.dueDate}</span>
+                              <span style={{ fontSize: '0.75rem', color: '#fbbf24' }}>Due: {t.dueDate ? formatDate(t.dueDate) : 'N/A'}</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                               <span className={`priority-tag ${t.priority?.toLowerCase()}`}>{t.priority}</span>
@@ -480,7 +482,7 @@ const RegistrationHubModal = ({ isOpen, onClose }) => {
                               </div>
                               <div>
                                 <label className="form-label" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.82rem', color: '#cbd5e1' }}>Due Date</label>
-                                <input type="date" className="form-input" value={newTaskDueDate} onChange={e => setNewTaskDueDate(e.target.value)} style={{ width: '100%' }} />
+                                <DateInput className="form-input" value={newTaskDueDate} onChange={e => setNewTaskDueDate(e.target.value)} style={{ width: '100%' }} />
                               </div>
                               <button type="submit" className="btn btn-primary" style={{ padding: '0.65rem 1.25rem' }}>Assign Task</button>
                             </div>

@@ -12,6 +12,7 @@ import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
 import { formatDate } from '../utils/dateUtils';
+import DateInput from '../components/common/DateInput';
 import './Admin.css';
 import './Dashboard.css';
 
@@ -577,8 +578,7 @@ const Admin = () => {
 
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Due Date</label>
-                <input 
-                  type="date" 
+                <DateInput 
                   value={quickTaskDueDate}
                   onChange={e => setQuickTaskDueDate(e.target.value)}
                   style={{ width: '100%', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.6rem 0.85rem', borderRadius: '10px', outline: 'none' }}

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
+import DateInput from '../components/common/DateInput';
 import './MyProfile.css';
 
 const MyProfile = () => {
@@ -1583,7 +1584,7 @@ const MyProfile = () => {
 
               <div className="form-group">
                 <label>Date of Birth *</label>
-                <input type="date" className="input-field" value={formData.dateOfBirth} onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })} required />
+                <DateInput className="input-field" value={formData.dateOfBirth} onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })} required />
               </div>
 
               <div className="form-group">
@@ -1648,7 +1649,7 @@ const MyProfile = () => {
 
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label>Date of Joining *</label>
-                <input type="date" className="input-field" value={formData.dateOfJoining} onChange={e => setFormData({ ...formData, dateOfJoining: e.target.value })} required />
+                <DateInput className="input-field" value={formData.dateOfJoining} onChange={e => setFormData({ ...formData, dateOfJoining: e.target.value })} required />
               </div>
             </div>
           )}

@@ -8,6 +8,7 @@ import {
   MapPin, Users, PlusCircle, CheckCircle2 
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import DateInput from '../components/common/DateInput';
 import './Modules.css';
 
 const Meetings = () => {
@@ -192,7 +193,7 @@ const Meetings = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="form-group">
               <label>Date</label>
-              <input type="date" className="input-field" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+              <DateInput className="input-field" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
             </div>
             <div className="form-group">
               <label>Time (HH:MM)</label>

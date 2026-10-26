@@ -12,6 +12,7 @@ import {
   Sparkles, RefreshCw, Eye, Landmark, ArrowUpRight, Award
 } from 'lucide-react';
 import { createOfficialCodeThriveDoc, exportOfficialWordDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
+import DateInput from '../components/common/DateInput';
 import './Payroll.css';
 
 const DEMO_PAYSLIPS = [];
@@ -560,11 +561,10 @@ const Payroll = () => {
                 <label style={{ fontSize: '0.825rem', color: '#94a3b8', marginBottom: '0.4rem', display: 'block' }}>
                   Statement Issue Date:
                 </label>
-                <input 
-                  type="date" 
+                <DateInput 
                   className="input-field"
                   value={confirmedDate} 
-                  onChange={e => setConfirmedDate(e.target.value)}
+                  onChange={e => setConfirmedDate(e.target.value)} 
                 />
               </div>
             </div>

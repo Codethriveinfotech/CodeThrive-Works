@@ -1,0 +1,41 @@
+.date-input-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+}
+
+.date-input-text {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.date-input-container .date-input-calendar-icon {
+  position: absolute;
+  right: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+}
+
+.date-input-container:hover .date-input-calendar-icon {
+  color: #818cf8;
+}
+
+.date-input-native-hidden {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 2.5rem;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  margin: 0;
+  z-index: 2;
+}
