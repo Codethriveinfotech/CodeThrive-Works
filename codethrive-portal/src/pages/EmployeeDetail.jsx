@@ -2061,28 +2061,18 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                     return (
                       <div 
                         key={r._id} 
-                        className="item-row"
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '1.15rem',
-                          padding: '1.4rem 1.6rem',
-                          borderRadius: '16px',
-                          background: 'rgba(30, 41, 59, 0.55)',
-                          border: '1px solid rgba(255, 255, 255, 0.08)',
-                          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-                          transition: 'all 0.2s ease'
-                        }}
+                        className="report-deliverable-card"
                       >
-                        {/* 1. TOP HEADER: Title on left, Status & Actions on right */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1.25rem', flexWrap: 'wrap' }}>
+                        {/* 1. TOP HEADER: Title on left with icon (matching Image 2 header), Status & Actions on right */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1.25rem', flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }}>
                           <div style={{ flex: '1 1 500px', minWidth: '280px' }}>
-                            <h4 style={{ margin: '0 0 0.55rem 0', fontSize: '1.12rem', color: '#ffffff', fontWeight: 700, lineHeight: 1.4, letterSpacing: '-0.01em' }}>
+                            <h4 style={{ margin: 0, fontSize: '1.15rem', color: '#ffffff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.55rem', lineHeight: 1.4 }}>
+                              <FileCode size={19} color="var(--primary-light)" style={{ flexShrink: 0 }} />
                               {r.title || r.tasksWorked || 'Daily Sprint Deliverable'}
                             </h4>
 
-                            {/* Metadata Badges row */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                            {/* Metadata Badges row - starting flush from the left */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginTop: '0.6rem' }}>
                               <span style={{ 
                                 display: 'inline-flex', 
                                 alignItems: 'center', 
@@ -2133,7 +2123,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                           </div>
 
                           {/* Approval / Status Controls */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
                             <StatusBadge status={r.status || 'Submitted'} />
                             {r.status !== 'Approved' && (
                               <button className="action-btn-approve" title="Approve Report" onClick={() => handleReportAction(r._id, 'Approved')}>
@@ -2148,15 +2138,17 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                           </div>
                         </div>
 
-                        {/* 2. WORK BREAKDOWN DETAILS (2-Column Grid) */}
+                        {/* 2. WORK BREAKDOWN DETAILS (Full width 2-Column Grid starting flush from left, no gaps on either side) */}
                         <div style={{
-                          background: 'rgba(15, 23, 42, 0.65)',
+                          width: '100%',
+                          boxSizing: 'border-box',
+                          background: 'rgba(15, 23, 42, 0.55)',
                           borderRadius: '12px',
                           padding: '1.1rem 1.25rem',
                           display: 'grid',
                           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
                           gap: '1.25rem',
-                          border: '1px solid rgba(255, 255, 255, 0.06)'
+                          border: '1px solid rgba(255, 255, 255, 0.05)'
                         }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                             <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -2177,8 +2169,10 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                           </div>
                         </div>
 
-                        {/* 3. FOOTER ROW: Vault Verification on Left, Action Buttons on Right */}
+                        {/* 3. FOOTER ROW: Vault Verification on Left, Action Buttons on Right (Full width flush left) */}
                         <div style={{ 
+                          width: '100%',
+                          boxSizing: 'border-box',
                           display: 'flex', 
                           justifyContent: 'space-between', 
                           alignItems: 'center', 
