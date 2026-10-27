@@ -2050,137 +2050,203 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {displayedReports.map(r => (
-                    <div 
-                      key={r._id} 
-                      className="item-row"
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '1rem',
-                        padding: '1.4rem',
-                        borderRadius: '16px',
-                        background: 'rgba(30, 41, 59, 0.55)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
-                            <span style={{ fontSize: '0.76rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 9px', borderRadius: '6px', fontWeight: 700 }}>
-                              📅 {formatDate(r.date || r.createdAt)}
-                            </span>
-                            <span style={{ fontSize: '0.76rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '3px 9px', borderRadius: '6px', fontWeight: 600 }}>
-                              ⏰ Hours Logged: {r.hoursWorked || r.hoursLogged || '8h 00m'}
-                            </span>
-                            {r.srcFileName && (
-                              <span style={{ fontSize: '0.74rem', background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
-                                📦 {r.srcFileName} ({r.srcFileSize || 'SRC Ready'})
+                  {displayedReports.map(r => {
+                    const blockerText = (r.issuesFaced || r.blockers || '').trim();
+                    const isBlocker = blockerText && 
+                      !['none', 'none.', 'no', 'nil', 'n/a', 'no blockers', 'nothing'].some(p => blockerText.toLowerCase() === p || blockerText.toLowerCase().startsWith(p + ' ') || blockerText.toLowerCase().startsWith(p + '.')) &&
+                      !blockerText.toLowerCase().includes('all unit tests passed') &&
+                      !blockerText.toLowerCase().includes('no issues') &&
+                      !blockerText.toLowerCase().includes('smooth execution');
+
+                    return (
+                      <div 
+                        key={r._id} 
+                        className="item-row"
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '1.15rem',
+                          padding: '1.4rem 1.6rem',
+                          borderRadius: '16px',
+                          background: 'rgba(30, 41, 59, 0.55)',
+                          border: '1px solid rgba(255, 255, 255, 0.08)',
+                          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {/* 1. TOP HEADER: Title on left, Status & Actions on right */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1.25rem', flexWrap: 'wrap' }}>
+                          <div style={{ flex: '1 1 500px', minWidth: '280px' }}>
+                            <h4 style={{ margin: '0 0 0.55rem 0', fontSize: '1.12rem', color: '#ffffff', fontWeight: 700, lineHeight: 1.4, letterSpacing: '-0.01em' }}>
+                              {r.title || r.tasksWorked || 'Daily Sprint Deliverable'}
+                            </h4>
+
+                            {/* Metadata Badges row */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                              <span style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '0.35rem', 
+                                fontSize: '0.76rem', 
+                                background: 'rgba(56, 189, 248, 0.12)', 
+                                color: '#38bdf8', 
+                                border: '1px solid rgba(56, 189, 248, 0.25)', 
+                                padding: '3px 10px', 
+                                borderRadius: '6px', 
+                                fontWeight: 600 
+                              }}>
+                                <Calendar size={13} /> {formatDate(r.date || r.createdAt)}
                               </span>
+
+                              <span style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '0.35rem', 
+                                fontSize: '0.76rem', 
+                                background: 'rgba(16, 185, 129, 0.12)', 
+                                color: '#34d399', 
+                                border: '1px solid rgba(16, 185, 129, 0.25)', 
+                                padding: '3px 10px', 
+                                borderRadius: '6px', 
+                                fontWeight: 600 
+                              }}>
+                                <Clock size={13} /> Hours Logged: {r.hoursWorked || r.hoursLogged || '8h 00m'}
+                              </span>
+
+                              {r.srcFileName && (
+                                <span style={{ 
+                                  display: 'inline-flex', 
+                                  alignItems: 'center', 
+                                  gap: '0.35rem', 
+                                  fontSize: '0.76rem', 
+                                  background: 'rgba(168, 85, 247, 0.12)', 
+                                  color: '#c084fc', 
+                                  border: '1px solid rgba(168, 85, 247, 0.25)', 
+                                  padding: '3px 10px', 
+                                  borderRadius: '6px', 
+                                  fontWeight: 600 
+                                }}>
+                                  <FileArchive size={13} /> {r.srcFileName} ({r.srcFileSize || 'SRC Ready'})
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Approval / Status Controls */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <StatusBadge status={r.status || 'Submitted'} />
+                            {r.status !== 'Approved' && (
+                              <button className="action-btn-approve" title="Approve Report" onClick={() => handleReportAction(r._id, 'Approved')}>
+                                <Check size={14} /> Approve
+                              </button>
+                            )}
+                            {r.status !== 'Rejected' && (
+                              <button className="action-btn-reject" title="Reject Report" onClick={() => handleReportAction(r._id, 'Rejected')}>
+                                <X size={14} /> Reject
+                              </button>
                             )}
                           </div>
-
-                          <h4 style={{ margin: '0.2rem 0 0.4rem 0', fontSize: '1.05rem', color: '#fff', fontWeight: 600 }}>
-                            {r.title || r.tasksWorked || 'Daily Sprint Deliverable'}
-                          </h4>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                          <StatusBadge status={r.status || 'Submitted'} />
-                          {r.status !== 'Approved' && (
-                            <button className="action-btn-approve" title="Approve Report" onClick={() => handleReportAction(r._id, 'Approved')}>
-                              <Check size={14} /> Approve
-                            </button>
-                          )}
-                          {r.status !== 'Rejected' && (
-                            <button className="action-btn-reject" title="Reject Report" onClick={() => handleReportAction(r._id, 'Rejected')}>
-                              <X size={14} /> Reject
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                        {/* 2. WORK BREAKDOWN DETAILS (2-Column Grid) */}
+                        <div style={{
+                          background: 'rgba(15, 23, 42, 0.65)',
+                          borderRadius: '12px',
+                          padding: '1.1rem 1.25rem',
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                          gap: '1.25rem',
+                          border: '1px solid rgba(255, 255, 255, 0.06)'
+                        }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                            <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <CheckSquare size={13} color="#38bdf8" /> Tasks & Completed Modules
+                            </span>
+                            <div style={{ fontSize: '0.88rem', color: '#e2e8f0', lineHeight: 1.55 }}>
+                              {r.workSummary || r.tasksWorked || r.completedWork || 'Implemented daily sprint goals and code reviews.'}
+                            </div>
+                          </div>
 
-                      {/* Work Breakdown Details */}
-                      <div style={{
-                        background: 'rgba(15, 23, 42, 0.6)',
-                        borderRadius: '12px',
-                        padding: '1rem 1.2rem',
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                        gap: '1rem',
-                        border: '1px solid rgba(255, 255, 255, 0.05)'
-                      }}>
-                        <div>
-                          <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
-                            Tasks & Completed Modules
-                          </span>
-                          <div style={{ fontSize: '0.86rem', color: '#e2e8f0', marginTop: '0.3rem', lineHeight: 1.5 }}>
-                            {r.workSummary || r.tasksWorked || r.completedWork || 'Implemented daily sprint goals and code reviews.'}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                            <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              {isBlocker ? <AlertCircle size={13} color="#f87171" /> : <CheckCircle2 size={13} color="#34d399" />} Blockers & Challenges
+                            </span>
+                            <div style={{ fontSize: '0.88rem', color: isBlocker ? '#f87171' : '#34d399', lineHeight: 1.55, fontWeight: isBlocker ? 600 : 500 }}>
+                              {r.issuesFaced || r.blockers || 'None reported. All sprint milestones on track.'}
+                            </div>
                           </div>
                         </div>
 
-                        <div>
-                          <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
-                            Blockers & Challenges
+                        {/* 3. FOOTER ROW: Vault Verification on Left, Action Buttons on Right */}
+                        <div style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center', 
+                          flexWrap: 'wrap', 
+                          gap: '0.75rem', 
+                          paddingTop: '0.4rem',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+                        }}>
+                          <span style={{ 
+                            fontSize: '0.78rem', 
+                            color: 'var(--text-muted)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem'
+                          }}>
+                            <ShieldCheck size={14} color="#10b981" />
+                            Verified by: <strong style={{ color: '#cbd5e1' }}>CodeThrive Infotech Enterprise Vault</strong>
                           </span>
-                          <div style={{ fontSize: '0.86rem', color: r.issuesFaced && r.issuesFaced !== 'None' ? '#f87171' : '#34d399', marginTop: '0.3rem', lineHeight: 1.5 }}>
-                            {r.issuesFaced || r.blockers || 'None reported. All sprint milestones on track.'}
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedReportForModal(r)}
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                color: '#e2e8f0',
+                                padding: '0.52rem 0.95rem',
+                                borderRadius: '10px',
+                                fontSize: '0.82rem',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                fontWeight: 600,
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              <Eye size={14} /> View Report Details
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadSRC(r)}
+                              style={{
+                                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                                border: 'none',
+                                color: '#ffffff',
+                                padding: '0.52rem 1.15rem',
+                                borderRadius: '10px',
+                                fontSize: '0.82rem',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.45rem',
+                                fontWeight: 700,
+                                boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
+                                transition: 'all 0.2s'
+                              }}
+                              title="Download the employee's submitted source code & work deliverable file"
+                            >
+                              <Download size={14} /> Download SRC / Deliverable
+                            </button>
                           </div>
                         </div>
                       </div>
-
-                      {/* Action Toolbar with Prominent SRC Download */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', paddingTop: '0.2rem' }}>
-                        <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
-                          Verified by: <strong>CodeThrive Infotech Enterprise Vault</strong>
-                        </span>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedReportForModal(r)}
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              border: '1px solid rgba(255, 255, 255, 0.15)',
-                              color: '#e2e8f0',
-                              padding: '0.5rem 0.9rem',
-                              borderRadius: '10px',
-                              fontSize: '0.82rem',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.4rem',
-                              fontWeight: 600
-                            }}
-                          >
-                            <Eye size={14} /> View Report Details
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadSRC(r)}
-                            style={{
-                              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                              border: 'none',
-                              color: '#ffffff',
-                              padding: '0.5rem 1.1rem',
-                              borderRadius: '10px',
-                              fontSize: '0.82rem',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.45rem',
-                              fontWeight: 700,
-                              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)'
-                            }}
-                            title="Download the employee's submitted source code & work deliverable file"
-                          >
-                            <Download size={14} /> Download SRC / Deliverable
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -2628,10 +2694,25 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
               </div>
 
               <div>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700 }}>Blockers / Issues Faced</span>
-                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.88rem', color: selectedReportForModal.issuesFaced && selectedReportForModal.issuesFaced !== 'None' ? '#f87171' : '#34d399', lineHeight: 1.5 }}>
-                  {selectedReportForModal.issuesFaced || selectedReportForModal.blockers || 'None reported.'}
-                </p>
+                {(() => {
+                  const modalBlocker = (selectedReportForModal.issuesFaced || selectedReportForModal.blockers || '').trim();
+                  const modalHasBlocker = modalBlocker && 
+                    !['none', 'none.', 'no', 'nil', 'n/a', 'no blockers', 'nothing'].some(p => modalBlocker.toLowerCase() === p || modalBlocker.toLowerCase().startsWith(p + ' ') || modalBlocker.toLowerCase().startsWith(p + '.')) &&
+                    !modalBlocker.toLowerCase().includes('all unit tests passed') &&
+                    !modalBlocker.toLowerCase().includes('no issues') &&
+                    !modalBlocker.toLowerCase().includes('smooth execution');
+
+                  return (
+                    <>
+                      <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        {modalHasBlocker ? <AlertCircle size={13} color="#f87171" /> : <CheckCircle2 size={13} color="#34d399" />} Blockers / Issues Faced
+                      </span>
+                      <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.88rem', color: modalHasBlocker ? '#f87171' : '#34d399', lineHeight: 1.5, fontWeight: modalHasBlocker ? 600 : 500 }}>
+                        {selectedReportForModal.issuesFaced || selectedReportForModal.blockers || 'None reported.'}
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
 
               {selectedReportForModal.tomorrowsPlan && (
