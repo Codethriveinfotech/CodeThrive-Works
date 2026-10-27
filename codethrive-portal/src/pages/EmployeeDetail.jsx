@@ -109,7 +109,40 @@ const DEFAULT_DEMO_EMPLOYEES = [
       leaveApplications: [],
       uploadedDocs: [],
       attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '8h 00m', breakTime: '20m' },
-      payslips: []
+      payslips: [
+        {
+          _id: 'psl_demo_001',
+          payslipId: 'PSL-2026-001',
+          month: 'September 2026',
+          monthCode: '2026-09',
+          paymentDate: '2026-09-30',
+          status: 'Paid',
+          basicSalary: 42500,
+          grossSalary: 85000,
+          bonus: 0,
+          allowanceDetails: { hra: 17000, travel: 3000, medical: 2000, other: 20500 },
+          deductionDetails: { pf: 5100, esi: 0, professionalTax: 200, incomeTax: 4250, leaveDeduction: 0, loanAdvance: 0, other: 0 },
+          deductions: 9550,
+          netPayable: 75450,
+          createdAt: '2026-09-30T10:00:00.000Z'
+        },
+        {
+          _id: 'psl_demo_002',
+          payslipId: 'PSL-2026-002',
+          month: 'August 2026',
+          monthCode: '2026-08',
+          paymentDate: '2026-08-31',
+          status: 'Paid',
+          basicSalary: 42500,
+          grossSalary: 85000,
+          bonus: 0,
+          allowanceDetails: { hra: 17000, travel: 3000, medical: 2000, other: 20500 },
+          deductionDetails: { pf: 5100, esi: 0, professionalTax: 200, incomeTax: 4250, leaveDeduction: 0, loanAdvance: 0, other: 0 },
+          deductions: 9550,
+          netPayable: 75450,
+          createdAt: '2026-08-31T10:00:00.000Z'
+        }
+      ]
     },
     assignedByAdmin: {
       tasks: [
@@ -336,6 +369,15 @@ const EmployeeDetail = () => {
   const [editBank, setEditBank] = useState('');
   const [editAccNo, setEditAccNo] = useState('');
   const [editIfsc, setEditIfsc] = useState('');
+
+  // Issue Payslip State
+  const [issuePayMonth, setIssuePayMonth] = useState('October 2026');
+  const [issuePayDate, setIssuePayDate] = useState(new Date().toISOString().split('T')[0]);
+  const [issuePayStatus, setIssuePayStatus] = useState('Paid');
+  const [issueBonus, setIssueBonus] = useState(0);
+  const [issueLeaveDeduction, setIssueLeaveDeduction] = useState(0);
+  const [isIssuingPayslip, setIsIssuingPayslip] = useState(false);
+  const [selectedPayslipForModal, setSelectedPayslipForModal] = useState(null);
 
   // Assign Task State
   const [taskTitle, setTaskTitle] = useState('');
@@ -746,6 +788,38 @@ const EmployeeDetail = () => {
         console.warn('Could not fetch daily reports from server', repErr);
       }
 
+      // Fetch payslips for this employee from backend
+      try {
+        const payRes = await api.get('/payroll');
+        const allPayslips = payRes?.data?.data || payRes?.data || [];
+        if (Array.isArray(allPayslips) && allPayslips.length > 0) {
+          const empPayslips = allPayslips.filter(p => 
+            p.employee?._id === enrichedTarget._id || 
+            p.employee?.employeeId === enrichedTarget.employeeId || 
+            p.employee === enrichedTarget._id ||
+            p.employee === enrichedTarget.employeeId
+          );
+          if (empPayslips.length > 0) {
+            const existingMonths = new Set((enrichedTarget.sentByEmployee?.payslips || []).map(p => p.month || p.payslipId));
+            const merged = [...empPayslips, ...(enrichedTarget.sentByEmployee?.payslips || []).filter(p => !existingMonths.has(p.month || p.payslipId))];
+            enrichedTarget.sentByEmployee = { ...enrichedTarget.sentByEmployee, payslips: merged };
+          }
+        }
+      } catch (payErr) {
+        console.warn('Could not fetch payroll from server', payErr);
+      }
+
+      // Merge localStorage payslips
+      try {
+        const cachedPayKey = `cti_payslips_${enrichedTarget._id || enrichedTarget.employeeId}`;
+        const localPayslips = JSON.parse(localStorage.getItem(cachedPayKey) || '[]');
+        if (localPayslips.length > 0) {
+          const existingMonths = new Set((enrichedTarget.sentByEmployee?.payslips || []).map(p => p.month || p.payslipId));
+          const merged = [...localPayslips.filter(p => !existingMonths.has(p.month || p.payslipId)), ...(enrichedTarget.sentByEmployee?.payslips || [])];
+          enrichedTarget.sentByEmployee = { ...enrichedTarget.sentByEmployee, payslips: merged };
+        }
+      } catch (e) {}
+
       // Merge localStorage tasks
       try {
         const cachedTasksKey = `cti_tasks_${enrichedTarget._id || enrichedTarget.employeeId}`;
@@ -771,6 +845,17 @@ const EmployeeDetail = () => {
     } catch (err) {
       console.warn('API Offline. Using default employee data.', err);
       const target = DEFAULT_DEMO_EMPLOYEES.find(e => e._id === id || e.employeeId === id) || DEFAULT_DEMO_EMPLOYEES[0];
+      // Merge localStorage payslips if offline
+      try {
+        const cachedPayKey = `cti_payslips_${target._id || target.employeeId}`;
+        const localPayslips = JSON.parse(localStorage.getItem(cachedPayKey) || '[]');
+        if (localPayslips.length > 0) {
+          const existingMonths = new Set((target.sentByEmployee?.payslips || []).map(p => p.month || p.payslipId));
+          const merged = [...localPayslips.filter(p => !existingMonths.has(p.month || p.payslipId)), ...(target.sentByEmployee?.payslips || [])];
+          target.sentByEmployee = { ...target.sentByEmployee, payslips: merged };
+        }
+      } catch (e) {}
+
       setEmployee(target);
       if (target) {
         sessionStorage.setItem('cti_current_viewed_emp', JSON.stringify({
@@ -1167,6 +1252,269 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
       ifscCode: editIfsc
     }));
     alert(`Salary structure and bank details saved for ${employee.fullName}!`);
+  };
+
+  const computeSalaryBreakdown = (monthlySalary) => {
+    const gross = Number(monthlySalary) || 0;
+    if (gross <= 0) {
+      return {
+        basic: 0,
+        hra: 0,
+        travel: 0,
+        medical: 0,
+        other: 0,
+        gross: 0,
+        pf: 0,
+        profTax: 0,
+        incomeTax: 0,
+        totalDeductions: 0,
+        netPayable: 0
+      };
+    }
+
+    const basic = Math.round(gross * 0.50);
+    const hra = Math.round(basic * 0.40);
+    const travel = gross > 30000 ? 3000 : 1600;
+    const medical = gross > 30000 ? 2000 : 1250;
+    const other = Math.max(0, gross - (basic + hra + travel + medical));
+
+    const pf = Math.round(basic * 0.12);
+    const profTax = gross >= 15000 ? 200 : 0;
+    const incomeTax = gross > 60000 ? Math.round(gross * 0.05) : 0;
+    const totalDeductions = pf + profTax + incomeTax;
+    const netPayable = gross - totalDeductions;
+
+    return {
+      basic,
+      hra,
+      travel,
+      medical,
+      other,
+      gross,
+      pf,
+      profTax,
+      incomeTax,
+      totalDeductions,
+      netPayable
+    };
+  };
+
+  const handleGenerateAndIssuePayslip = async () => {
+    if (!employee) return;
+    const grossVal = Number(editSalary || employee.salaryAmount) || 0;
+    if (grossVal <= 0) {
+      alert('Please set and save a valid Monthly Salary before generating a payslip.');
+      return;
+    }
+
+    const breakdown = computeSalaryBreakdown(grossVal);
+    const bonus = Number(issueBonus) || 0;
+    const leaveDed = Number(issueLeaveDeduction) || 0;
+    
+    const totalAllowances = breakdown.hra + breakdown.travel + breakdown.medical + breakdown.other;
+    const totalDeductions = breakdown.pf + breakdown.profTax + breakdown.incomeTax + leaveDed;
+    const finalGross = breakdown.basic + totalAllowances + bonus;
+    const finalNet = finalGross - totalDeductions;
+
+    const payslipId = `PSL-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+
+    const newPayslip = {
+      _id: 'psl_' + Date.now(),
+      payslipId,
+      month: issuePayMonth,
+      monthCode: issuePayMonth,
+      paymentDate: issuePayDate,
+      status: issuePayStatus,
+      basicSalary: breakdown.basic,
+      bonus,
+      allowanceDetails: {
+        hra: breakdown.hra,
+        travel: breakdown.travel,
+        medical: breakdown.medical,
+        other: breakdown.other
+      },
+      allowances: totalAllowances,
+      deductionDetails: {
+        pf: breakdown.pf,
+        esi: 0,
+        professionalTax: breakdown.profTax,
+        incomeTax: breakdown.incomeTax,
+        leaveDeduction: leaveDed,
+        loanAdvance: 0,
+        other: 0
+      },
+      deductions: totalDeductions,
+      grossSalary: finalGross,
+      netPayable: finalNet,
+      employee: {
+        _id: employee._id,
+        fullName: employee.fullName,
+        employeeId: employee.employeeId,
+        department: employee.department,
+        designation: employee.designation,
+        bankName: editBank || employee.bankName,
+        accountNumber: editAccNo || employee.accountNumber,
+        ifscCode: editIfsc || employee.ifscCode,
+        panNumber: employee.panNumber
+      },
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      setIsIssuingPayslip(true);
+      await api.post('/payroll', {
+        employeeId: employee._id,
+        month: issuePayMonth,
+        basicSalary: breakdown.basic,
+        bonus,
+        allowanceDetails: newPayslip.allowanceDetails,
+        deductionDetails: newPayslip.deductionDetails,
+        status: issuePayStatus,
+        paymentDate: issuePayDate
+      });
+    } catch (err) {
+      console.warn('Payslip stored locally or API offline:', err);
+    } finally {
+      const currentPayslips = employee.sentByEmployee?.payslips || [];
+      const filtered = currentPayslips.filter(p => (p.month || p.monthCode) !== issuePayMonth);
+      const updatedPayslips = [newPayslip, ...filtered];
+
+      setEmployee(prev => ({
+        ...prev,
+        sentByEmployee: {
+          ...prev.sentByEmployee,
+          payslips: updatedPayslips
+        }
+      }));
+
+      try {
+        const cachedPayKey = `cti_payslips_${employee._id || employee.employeeId}`;
+        localStorage.setItem(cachedPayKey, JSON.stringify(updatedPayslips));
+      } catch (e) {}
+
+      setIsIssuingPayslip(false);
+      alert(`Payslip for "${issuePayMonth}" successfully issued to ${employee.fullName}! The employee can now view & download it from the portal.`);
+    }
+  };
+
+  const downloadSinglePayslipPDF = async (payslip) => {
+    if (!employee || !payslip) return;
+    try {
+      const targetMonth = payslip.month || payslip.monthCode || 'October 2026';
+      const targetDate = payslip.paymentDate ? formatDate(payslip.paymentDate) : new Date().toLocaleDateString('en-GB');
+
+      const empName = employee.fullName || 'Employee';
+      const empId = employee.employeeId || 'CTI-EMP-001';
+      const empRole = employee.designation || 'Software Engineer';
+      const empDept = employee.department || 'Engineering';
+      const bankName = employee.bankName || payslip.employee?.bankName || 'Canara Bank';
+      const accNo = employee.accountNumber || payslip.employee?.accountNumber || '50200088991122';
+      const ifsc = employee.ifscCode || payslip.employee?.ifscCode || 'CNRB0001234';
+      const pan = employee.panNumber || payslip.employee?.panNumber || 'ABCDE1234F';
+
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'OFFICIAL SALARY STATEMENT / PAYSLIP',
+        userName: empName,
+        reportType: 'Payslip',
+        metaFields: [
+          { label: 'Employee Name', value: empName },
+          { label: 'Employee ID', value: empId },
+          { label: 'Department / Role', value: `${empDept} • ${empRole}` },
+          { label: 'Pay Period', value: targetMonth },
+          { label: 'Disbursement Date', value: targetDate },
+          { label: 'Bank Name & A/C', value: `${bankName} (${accNo})` },
+          { label: 'IFSC / PAN', value: `${ifsc} • ${pan}` },
+          { label: 'Payslip Number', value: payslip.payslipId || 'PSL-2026' },
+          { label: 'Disbursement Status', value: (payslip.status || 'Paid').toUpperCase() }
+        ]
+      });
+
+      const hra = payslip.allowanceDetails?.hra || 0;
+      const travel = payslip.allowanceDetails?.travel || 0;
+      const medical = payslip.allowanceDetails?.medical || 0;
+      const otherAllowance = payslip.allowanceDetails?.other || 0;
+      const bonus = payslip.bonus || 0;
+
+      const pf = payslip.deductionDetails?.pf || 0;
+      const esi = payslip.deductionDetails?.esi || 0;
+      const profTax = payslip.deductionDetails?.professionalTax || 200;
+      const incomeTax = payslip.deductionDetails?.incomeTax || 0;
+      const leaveDed = payslip.deductionDetails?.leaveDeduction || 0;
+
+      const salaryTableBody = [
+        ['Basic Salary', `Rs. ${(payslip.basicSalary || 0).toLocaleString()}`, 'Provident Fund (PF)', `Rs. ${pf.toLocaleString()}`],
+        ['House Rent Allowance (HRA)', `Rs. ${hra.toLocaleString()}`, 'Professional Tax (PT)', `Rs. ${profTax.toLocaleString()}`],
+        ['Conveyance & Travel', `Rs. ${travel.toLocaleString()}`, 'Income Tax (TDS)', `Rs. ${incomeTax.toLocaleString()}`],
+        ['Medical Allowance', `Rs. ${medical.toLocaleString()}`, 'Leave / LOP Deduction', `Rs. ${leaveDed.toLocaleString()}`],
+        ['Special Allowances', `Rs. ${otherAllowance.toLocaleString()}`, 'ESI Deduction', `Rs. ${esi.toLocaleString()}`],
+        ['Performance Bonus', `Rs. ${bonus.toLocaleString()}`, '', ''],
+        [
+          'GROSS EARNINGS', 
+          `Rs. ${(payslip.grossSalary || 0).toLocaleString()}`, 
+          'TOTAL DEDUCTIONS', 
+          `Rs. ${(payslip.deductions || 0).toLocaleString()}`
+        ]
+      ];
+
+      const autoTableFn = autoTable || doc.autoTable;
+      if (typeof autoTableFn === 'function') {
+        autoTableFn(doc, {
+          startY: startY,
+          head: [['EARNINGS COMPONENT', 'AMOUNT (INR)', 'DEDUCTIONS COMPONENT', 'AMOUNT (INR)']],
+          body: salaryTableBody,
+          theme: 'grid',
+          headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8.5 },
+          styles: { fontSize: 8, cellPadding: 3.5, textColor: [30, 41, 59] },
+          columnStyles: {
+            0: { cellWidth: 55 },
+            1: { cellWidth: 38, halign: 'right' },
+            2: { cellWidth: 55 },
+            3: { cellWidth: 38, halign: 'right' }
+          },
+          didParseCell: function(data) {
+            if (data.row.index === 6) {
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [241, 245, 249];
+            }
+          }
+        });
+      }
+
+      const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 8 : startY + 80;
+
+      // Net Salary Callout Box
+      doc.setFillColor(236, 253, 245);
+      doc.setDrawColor(16, 185, 129);
+      doc.roundedRect(12, finalY, 186, 16, 2.5, 2.5, 'FD');
+
+      doc.setTextColor(6, 78, 59);
+      doc.setFontSize(9.5);
+      doc.setFont('times', 'bold');
+      doc.text('NET SALARY DISBURSED (IN-HAND):', 18, finalY + 10.5);
+
+      doc.setTextColor(16, 185, 129);
+      doc.setFontSize(14);
+      doc.setFont('times', 'bold');
+      doc.text(`Rs. ${(payslip.netPayable || 0).toLocaleString()}`, 192, finalY + 11, { align: 'right' });
+
+      finalizeDoc(`Payslip_${empName.replace(/\s+/g, '_')}_${targetMonth.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+    } catch (err) {
+      alert('Error generating payslip PDF: ' + err.message);
+    }
+  };
+
+  const handleDeletePayslip = (payslipId) => {
+    if (!window.confirm('Are you sure you want to delete this payslip record?')) return;
+    const currentPayslips = employee.sentByEmployee?.payslips || [];
+    const updated = currentPayslips.filter(p => (p._id !== payslipId && p.payslipId !== payslipId));
+    setEmployee(prev => ({
+      ...prev,
+      sentByEmployee: { ...prev.sentByEmployee, payslips: updated }
+    }));
+    try {
+      const cachedPayKey = `cti_payslips_${employee._id || employee.employeeId}`;
+      localStorage.setItem(cachedPayKey, JSON.stringify(updated));
+    } catch (e) {}
   };
 
   if (loading || !employee) return (
@@ -2515,7 +2863,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
             </div>
 
             {/* Detailed Per-Day Check-In / Check-Out History Table */}
-            <Card title={`Per-Day Attendance Logs (${employee.fullName})`} style={{ padding: 0 }}>
+            <Card title={`Per-Day Attendance Logs (${employee.fullName})`} className="card-table-wrap" style={{ padding: 0 }}>
               {attendanceLoading ? (
                 <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading attendance logs...</div>
               ) : (
@@ -2596,120 +2944,432 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
         )}
 
         {/* TAB 7: MANAGEMENT, PAYROLL & SYSTEM CREDENTIALS */}
-        {activeTab === 'management' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
-                Payroll & System Credentials for {employee.fullName}
-              </h3>
-            </div>
+        {activeTab === 'management' && (() => {
+          const currentSalaryGross = Number(editSalary || employee.salaryAmount) || 0;
+          const liveBreakdown = computeSalaryBreakdown(currentSalaryGross);
+          const liveBonus = Number(issueBonus) || 0;
+          const liveLeaveDed = Number(issueLeaveDeduction) || 0;
+          const liveTotalAllowances = liveBreakdown.hra + liveBreakdown.travel + liveBreakdown.medical + liveBreakdown.other;
+          const liveFinalGross = liveBreakdown.basic + liveTotalAllowances + liveBonus;
+          const liveTotalDeductions = liveBreakdown.pf + liveBreakdown.profTax + liveBreakdown.incomeTax + liveLeaveDed;
+          const liveNetTakeHome = liveFinalGross - liveTotalDeductions;
 
-            {/* Monthly Payslips Log Table */}
-            <Card title={<><Banknote size={16} style={{ marginRight: '0.5rem' }} /> Monthly Payslip Financial Audit ({filteredPayslips.length} Months)</>}>
-              {filteredPayslips.length === 0 ? (
-                <div className="empty-state">No payslips generated for selected audit period.</div>
-              ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                    <thead>
-                      <tr style={{ background: 'rgba(30, 41, 59, 0.6)', color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.75rem', textAlign: 'left' }}>
-                        <th style={{ padding: '0.75rem 1rem' }}>Pay Month</th>
-                        <th style={{ padding: '0.75rem 1rem' }}>Basic Salary</th>
-                        <th style={{ padding: '0.75rem 1rem' }}>Gross Salary</th>
-                        <th style={{ padding: '0.75rem 1rem' }}>Deductions</th>
-                        <th style={{ padding: '0.75rem 1rem' }}>Net Payable</th>
-                        <th style={{ padding: '0.75rem 1rem' }}>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredPayslips.map((p, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
-                          <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: '#fff' }}>{p.month}</td>
-                          <td style={{ padding: '0.75rem 1rem' }}>₹{(p.basicSalary || 0).toLocaleString()}</td>
-                          <td style={{ padding: '0.75rem 1rem' }}>₹{(p.grossSalary || 0).toLocaleString()}</td>
-                          <td style={{ padding: '0.75rem 1rem', color: '#ef4444' }}>-₹{(p.deductions || 0).toLocaleString()}</td>
-                          <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: 'var(--success)' }}>₹{(p.netPayable || 0).toLocaleString()}</td>
-                          <td style={{ padding: '0.75rem 1rem' }}><StatusBadge status={p.status || 'Paid'} /></td>
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+                    Payroll & System Credentials for {employee.fullName}
+                  </h3>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                    Configure salary structure, inspect statutory benefits breakdown, and issue official monthly payslips
+                  </span>
+                </div>
+              </div>
+
+              {/* Monthly Payslips Log Table */}
+              <Card 
+                title={<><Banknote size={16} style={{ marginRight: '0.5rem' }} /> Monthly Payslip Financial Audit ({filteredPayslips.length} Months)</>}
+                action={
+                  <button 
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ padding: '0.42rem 0.85rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', borderRadius: '8px' }}
+                    onClick={() => {
+                      const el = document.getElementById('issue-payslip-anchor');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    <Sparkles size={13} /> + Issue New Payslip
+                  </button>
+                }
+              >
+                {filteredPayslips.length === 0 ? (
+                  <div className="empty-state" style={{ padding: '2.5rem', textAlign: 'center' }}>
+                    <Banknote size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.75rem auto', display: 'block', opacity: 0.6 }} />
+                    <h4 style={{ margin: '0 0 0.3rem 0', color: '#fff' }}>No Payslips Issued for Selected Audit Scope</h4>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      Set monthly salary below and click "Issue Payslip to Employee" to generate official salary statements.
+                    </span>
+                  </div>
+                ) : (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr style={{ background: 'rgba(30, 41, 59, 0.6)', color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.75rem', textAlign: 'left' }}>
+                          <th style={{ padding: '0.75rem 1rem' }}>Pay Month</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Basic Salary</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Gross Salary</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Deductions</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Net Take-Home</th>
+                          <th style={{ padding: '0.75rem 1rem' }}>Status</th>
+                          <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
-
-            <div className="detail-grid-2">
-              {/* Access Role & Credentials Card */}
-              <Card title={<><KeyRound size={16} style={{ marginRight: '0.5rem' }} /> Access Role & Account Status</>}>
-                <div className="form-grid-2">
-                  <div className="form-field">
-                    <label>System Access Role</label>
-                    <select className="input-box" value={editRole} onChange={e => setEditRole(e.target.value)}>
-                      <option value="admin">System Administrator</option>
-                      <option value="hr">HR Manager</option>
-                      <option value="teamlead">Team Lead</option>
-                      <option value="employee">Software Employee</option>
-                      <option value="intern">Intern</option>
-                    </select>
+                      </thead>
+                      <tbody>
+                        {filteredPayslips.map((p, i) => (
+                          <tr key={p._id || p.payslipId || i} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                            <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: '#fff' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                                <FileText size={14} color="#38bdf8" />
+                                {p.month || p.monthCode}
+                              </div>
+                            </td>
+                            <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace' }}>₹{(p.basicSalary || 0).toLocaleString()}</td>
+                            <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontWeight: 600 }}>₹{(p.grossSalary || 0).toLocaleString()}</td>
+                            <td style={{ padding: '0.75rem 1rem', color: '#ef4444', fontFamily: 'monospace' }}>-₹{(p.deductions || 0).toLocaleString()}</td>
+                            <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: 'var(--success)', fontFamily: 'monospace' }}>₹{(p.netPayable || 0).toLocaleString()}</td>
+                            <td style={{ padding: '0.75rem 1rem' }}><StatusBadge status={p.status || 'Paid'} /></td>
+                            <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', justifyContent: 'flex-end' }}>
+                                <button
+                                  type="button"
+                                  className="payslip-action-btn view"
+                                  onClick={() => setSelectedPayslipForModal(p)}
+                                  title="Inspect Payslip Details"
+                                >
+                                  <Eye size={13} /> View
+                                </button>
+                                <button
+                                  type="button"
+                                  className="payslip-action-btn download"
+                                  onClick={() => downloadSinglePayslipPDF(p)}
+                                  title="Download Official PDF Payslip"
+                                >
+                                  <Printer size={13} /> PDF
+                                </button>
+                                <button
+                                  type="button"
+                                  className="payslip-action-btn delete"
+                                  onClick={() => handleDeletePayslip(p._id || p.payslipId)}
+                                  title="Delete Payslip"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="form-field">
-                    <label>Account Status</label>
-                    <select className="input-box" value={editStatus} onChange={e => setEditStatus(e.target.value)}>
-                      <option value="Active">Active Account</option>
-                      <option value="Inactive">Inactive / Suspended</option>
-                      <option value="Pending">Pending Approval</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-field" style={{ marginTop: '1rem' }}>
-                  <label>Reset Account Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="Type new temporary password..." 
-                    className="input-box" 
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                  />
-                </div>
-
-                <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button className="btn btn-primary" onClick={handleSaveRoleStatus}>
-                    <Save size={15} /> Save Role & Credentials
-                  </button>
-                </div>
+                )}
               </Card>
 
-              {/* Salary & Bank Accounts Card */}
-              <Card title={<><Banknote size={16} style={{ marginRight: '0.5rem' }} /> Salary Structure & Bank Account</>}>
-                <div className="form-grid-2">
-                  <div className="form-field">
-                    <label>Monthly Salary (₹)</label>
-                    <input type="number" className="input-box" value={editSalary} onChange={e => setEditSalary(e.target.value)} />
+              {/* Two Column Section: Credentials & Salary Structure with Live Breakdown */}
+              <div className="detail-grid-2">
+                {/* Access Role & Credentials Card */}
+                <Card title={<><KeyRound size={16} style={{ marginRight: '0.5rem' }} /> Access Role & Account Status</>}>
+                  <div className="form-grid-2">
+                    <div className="form-field">
+                      <label>System Access Role</label>
+                      <select className="input-box" value={editRole} onChange={e => setEditRole(e.target.value)}>
+                        <option value="admin">System Administrator</option>
+                        <option value="hr">HR Manager</option>
+                        <option value="teamlead">Team Lead</option>
+                        <option value="employee">Software Employee</option>
+                        <option value="intern">Intern</option>
+                      </select>
+                    </div>
+                    <div className="form-field">
+                      <label>Account Status</label>
+                      <select className="input-box" value={editStatus} onChange={e => setEditStatus(e.target.value)}>
+                        <option value="Active">Active Account</option>
+                        <option value="Inactive">Inactive / Suspended</option>
+                        <option value="Pending">Pending Approval</option>
+                      </select>
+                    </div>
                   </div>
-                  <div className="form-field">
-                    <label>Bank Name</label>
-                    <input type="text" className="input-box" value={editBank} onChange={e => setEditBank(e.target.value)} />
-                  </div>
-                  <div className="form-field">
-                    <label>Account Number</label>
-                    <input type="text" className="input-box" value={editAccNo} onChange={e => setEditAccNo(e.target.value)} />
-                  </div>
-                  <div className="form-field">
-                    <label>IFSC Code</label>
-                    <input type="text" className="input-box" value={editIfsc} onChange={e => setEditIfsc(e.target.value)} />
-                  </div>
-                </div>
 
-                <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button className="btn btn-primary" onClick={handleSaveSalary}>
-                    <Save size={15} /> Save Salary & Bank Info
-                  </button>
-                </div>
-              </Card>
+                  <div className="form-field" style={{ marginTop: '1rem' }}>
+                    <label>Reset Account Password</label>
+                    <input 
+                      type="password" 
+                      placeholder="Type new temporary password..." 
+                      className="input-box" 
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button className="btn btn-primary" onClick={handleSaveRoleStatus}>
+                      <Save size={15} /> Save Role & Credentials
+                    </button>
+                  </div>
+                </Card>
+
+                {/* Salary & Bank Accounts Card with Instant Statutory Breakdown */}
+                <Card title={<><Banknote size={16} style={{ marginRight: '0.5rem' }} /> Salary Structure & Bank Account</>}>
+                  <div className="form-grid-2">
+                    <div className="form-field">
+                      <label>Monthly Salary (₹)</label>
+                      <input 
+                        type="number" 
+                        placeholder="e.g. 85000"
+                        className="input-box" 
+                        value={editSalary} 
+                        onChange={e => setEditSalary(e.target.value)} 
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Bank Name</label>
+                      <input type="text" className="input-box" value={editBank} onChange={e => setEditBank(e.target.value)} />
+                    </div>
+                    <div className="form-field">
+                      <label>Account Number</label>
+                      <input type="text" className="input-box" value={editAccNo} onChange={e => setEditAccNo(e.target.value)} />
+                    </div>
+                    <div className="form-field">
+                      <label>IFSC Code</label>
+                      <input type="text" className="input-box" value={editIfsc} onChange={e => setEditIfsc(e.target.value)} />
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button className="btn btn-primary" onClick={handleSaveSalary}>
+                      <Save size={15} /> Save Salary & Bank Info
+                    </button>
+                  </div>
+
+                  {/* Automatic Statutory Salary Breakdown Preview */}
+                  {currentSalaryGross > 0 && (
+                    <div className="salary-breakdown-box">
+                      <div className="salary-breakdown-header">
+                        <span style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary-light)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <CheckCircle2 size={14} color="var(--primary-light)" /> Computed Statutory Salary Breakdown
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Indian Payroll Norms</span>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '0.35rem' }}>
+                            Earnings
+                          </span>
+                          <div className="salary-component-row">
+                            <span>Basic Pay (50%)</span>
+                            <strong>₹{liveBreakdown.basic.toLocaleString()}</strong>
+                          </div>
+                          <div className="salary-component-row">
+                            <span>HRA (20%)</span>
+                            <strong>₹{liveBreakdown.hra.toLocaleString()}</strong>
+                          </div>
+                          <div className="salary-component-row">
+                            <span>Allowances</span>
+                            <strong>₹{(liveBreakdown.travel + liveBreakdown.medical + liveBreakdown.other).toLocaleString()}</strong>
+                          </div>
+                        </div>
+
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: '#f87171', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '0.35rem' }}>
+                            Deductions
+                          </span>
+                          <div className="salary-component-row">
+                            <span>PF (12% of Basic)</span>
+                            <strong style={{ color: '#f87171' }}>-₹{liveBreakdown.pf.toLocaleString()}</strong>
+                          </div>
+                          <div className="salary-component-row">
+                            <span>Prof. Tax (PT)</span>
+                            <strong style={{ color: '#f87171' }}>-₹{liveBreakdown.profTax.toLocaleString()}</strong>
+                          </div>
+                          {liveBreakdown.incomeTax > 0 && (
+                            <div className="salary-component-row">
+                              <span>Income Tax (TDS)</span>
+                              <strong style={{ color: '#f87171' }}>-₹{liveBreakdown.incomeTax.toLocaleString()}</strong>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="salary-net-highlight">
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block' }}>Estimated In-Hand Pay</span>
+                          <span style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--success)', fontFamily: 'monospace' }}>
+                            ₹{liveBreakdown.netPayable.toLocaleString()} / month
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '0.72rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                          Ready for Payslip
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              </div>
+
+              {/* Dedicated Card: Generate & Issue Monthly Payslip to Employee */}
+              <div id="issue-payslip-anchor">
+                <Card 
+                  title={<><Sparkles size={16} style={{ marginRight: '0.5rem', color: 'var(--primary-light)' }} /> Issue Official Monthly Payslip to {employee.fullName}</>}
+                >
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.86rem', color: '#cbd5e1', lineHeight: 1.5 }}>
+                      Issuing a payslip publishes the official digital salary statement directly into <strong>{employee.fullName}'s Employee Portal</strong> under the Payroll section, enabling instant employee view and PDF letterhead download.
+                    </p>
+                  </div>
+
+                  <div className="form-grid-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                    <div className="form-field">
+                      <label>Pay Month / Period</label>
+                      <select 
+                        className="input-box"
+                        value={issuePayMonth}
+                        onChange={e => setIssuePayMonth(e.target.value)}
+                      >
+                        <option value="October 2026">October 2026</option>
+                        <option value="September 2026">September 2026</option>
+                        <option value="August 2026">August 2026</option>
+                        <option value="July 2026">July 2026</option>
+                        <option value="November 2026">November 2026</option>
+                        <option value="December 2026">December 2026</option>
+                      </select>
+                    </div>
+
+                    <div className="form-field">
+                      <label>Disbursement Date</label>
+                      <input 
+                        type="date" 
+                        className="input-box" 
+                        value={issuePayDate}
+                        onChange={e => setIssuePayDate(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-field">
+                      <label>Disbursement Status</label>
+                      <select 
+                        className="input-box"
+                        value={issuePayStatus}
+                        onChange={e => setIssuePayStatus(e.target.value)}
+                      >
+                        <option value="Paid">Paid / Disbursed</option>
+                        <option value="Processing">Processing / Pending</option>
+                      </select>
+                    </div>
+
+                    <div className="form-field">
+                      <label>Performance Bonus / Incentive (₹)</label>
+                      <input 
+                        type="number"
+                        placeholder="0"
+                        className="input-box"
+                        value={issueBonus}
+                        onChange={e => setIssueBonus(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="form-field">
+                      <label>Attendance / LOP Deductions (₹)</label>
+                      <input 
+                        type="number"
+                        placeholder="0"
+                        className="input-box"
+                        value={issueLeaveDeduction}
+                        onChange={e => setIssueLeaveDeduction(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Live Calculation Preview Banner */}
+                  <div style={{
+                    marginTop: '1.25rem',
+                    padding: '1rem 1.25rem',
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '1rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                      <div>
+                        <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', display: 'block' }}>Gross Earnings</span>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff', fontFamily: 'monospace' }}>
+                          ₹{liveFinalGross.toLocaleString()}
+                        </span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.72rem', color: '#f87171', textTransform: 'uppercase', display: 'block' }}>Total Deductions</span>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f87171', fontFamily: 'monospace' }}>
+                          -₹{liveTotalDeductions.toLocaleString()}
+                        </span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.72rem', color: '#34d399', textTransform: 'uppercase', display: 'block' }}>Net Take-Home Pay</span>
+                        <span style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--success)', fontFamily: 'monospace' }}>
+                          ₹{liveNetTakeHome.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const previewPayslip = {
+                            month: issuePayMonth,
+                            paymentDate: issuePayDate,
+                            status: issuePayStatus,
+                            basicSalary: liveBreakdown.basic,
+                            bonus: liveBonus,
+                            allowanceDetails: { hra: liveBreakdown.hra, travel: liveBreakdown.travel, medical: liveBreakdown.medical, other: liveBreakdown.other },
+                            deductionDetails: { pf: liveBreakdown.pf, esi: 0, professionalTax: liveBreakdown.profTax, incomeTax: liveBreakdown.incomeTax, leaveDeduction: liveLeaveDed },
+                            grossSalary: liveFinalGross,
+                            deductions: liveTotalDeductions,
+                            netPayable: liveNetTakeHome,
+                            payslipId: 'PREVIEW'
+                          };
+                          downloadSinglePayslipPDF(previewPayslip);
+                        }}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          color: '#e2e8f0',
+                          padding: '0.62rem 1.1rem',
+                          borderRadius: '10px',
+                          fontSize: '0.85rem',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.45rem',
+                          fontWeight: 600
+                        }}
+                      >
+                        <Printer size={15} /> Preview PDF
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleGenerateAndIssuePayslip}
+                        disabled={isIssuingPayslip}
+                        style={{
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          border: 'none',
+                          color: '#ffffff',
+                          padding: '0.65rem 1.4rem',
+                          borderRadius: '10px',
+                          fontSize: '0.88rem',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.45rem',
+                          fontWeight: 700,
+                          boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)'
+                        }}
+                      >
+                        <CheckCircle2 size={16} /> {isIssuingPayslip ? 'Generating...' : `⚡ Issue Payslip for ${issuePayMonth}`}
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
             </div>
-          </div>
-        )}
+          );
+        })()}
 
       </div>
 
@@ -2903,6 +3563,164 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 }}
               >
                 <Download size={15} /> Download SRC / Deliverable
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Payslip Inspection Dossier Modal */}
+      <Modal
+        isOpen={!!selectedPayslipForModal}
+        onClose={() => setSelectedPayslipForModal(null)}
+        title={<><Banknote size={18} style={{ marginRight: '0.5rem', color: '#10b981' }} /> Official Salary Statement — {selectedPayslipForModal?.month || selectedPayslipForModal?.monthCode}</>}
+      >
+        {selectedPayslipForModal && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '0.78rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 8px', borderRadius: '6px', fontFamily: 'monospace', fontWeight: 700 }}>
+                  {selectedPayslipForModal.payslipId || 'PSL-2026'}
+                </span>
+                <span style={{ fontSize: '0.85rem', color: '#cbd5e1', marginLeft: '0.75rem' }}>
+                  {employee.fullName} ({employee.employeeId})
+                </span>
+              </div>
+              <StatusBadge status={selectedPayslipForModal.status || 'Paid'} />
+            </div>
+
+            {/* Bank & Payment Info Box */}
+            <div style={{ background: 'rgba(15, 23, 42, 0.6)', borderRadius: '10px', padding: '0.85rem 1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', fontSize: '0.82rem' }}>
+              <div>
+                <span style={{ color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontSize: '0.72rem' }}>Bank Name</span>
+                <strong style={{ color: '#fff' }}>{employee.bankName || 'Canara Bank'}</strong>
+              </div>
+              <div>
+                <span style={{ color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontSize: '0.72rem' }}>Account Number</span>
+                <strong style={{ color: '#fff', fontFamily: 'monospace' }}>{employee.accountNumber || '50200088991122'}</strong>
+              </div>
+              <div>
+                <span style={{ color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontSize: '0.72rem' }}>IFSC / PAN</span>
+                <strong style={{ color: '#fff', fontFamily: 'monospace' }}>{employee.ifscCode || 'CNRB0001234'} • {employee.panNumber || 'ABCDE1234F'}</strong>
+              </div>
+              <div>
+                <span style={{ color: '#94a3b8', display: 'block', textTransform: 'uppercase', fontSize: '0.72rem' }}>Disbursement Date</span>
+                <strong style={{ color: '#38bdf8' }}>{formatDate(selectedPayslipForModal.paymentDate)}</strong>
+              </div>
+            </div>
+
+            {/* Earnings & Deductions Breakdown Tables */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ background: 'rgba(30, 41, 59, 0.45)', borderRadius: '10px', padding: '0.9rem', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>
+                  Earnings Component
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.82rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                    <span>Basic Salary</span>
+                    <strong style={{ color: '#fff', fontFamily: 'monospace' }}>₹{(selectedPayslipForModal.basicSalary || 0).toLocaleString()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                    <span>House Rent Allowance (HRA)</span>
+                    <strong style={{ color: '#fff', fontFamily: 'monospace' }}>₹{(selectedPayslipForModal.allowanceDetails?.hra || 0).toLocaleString()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                    <span>Travel & Conveyance</span>
+                    <strong style={{ color: '#fff', fontFamily: 'monospace' }}>₹{(selectedPayslipForModal.allowanceDetails?.travel || 0).toLocaleString()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                    <span>Medical Allowance</span>
+                    <strong style={{ color: '#fff', fontFamily: 'monospace' }}>₹{(selectedPayslipForModal.allowanceDetails?.medical || 0).toLocaleString()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                    <span>Special Allowances</span>
+                    <strong style={{ color: '#fff', fontFamily: 'monospace' }}>₹{(selectedPayslipForModal.allowanceDetails?.other || 0).toLocaleString()}</strong>
+                  </div>
+                  {Number(selectedPayslipForModal.bonus) > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#34d399' }}>
+                      <span>Performance Bonus</span>
+                      <strong style={{ fontFamily: 'monospace' }}>+₹{Number(selectedPayslipForModal.bonus).toLocaleString()}</strong>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.45rem', marginTop: '0.35rem', borderTop: '1px solid rgba(255,255,255,0.08)', fontWeight: 700, color: '#fff' }}>
+                    <span>GROSS EARNINGS</span>
+                    <span style={{ fontFamily: 'monospace', color: '#38bdf8' }}>₹{(selectedPayslipForModal.grossSalary || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: 'rgba(30, 41, 59, 0.45)', borderRadius: '10px', padding: '0.9rem', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#f87171', textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>
+                  Deductions Component
+                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.82rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                    <span>Provident Fund (PF)</span>
+                    <strong style={{ color: '#f87171', fontFamily: 'monospace' }}>-₹{(selectedPayslipForModal.deductionDetails?.pf || 0).toLocaleString()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                    <span>Professional Tax (PT)</span>
+                    <strong style={{ color: '#f87171', fontFamily: 'monospace' }}>-₹{(selectedPayslipForModal.deductionDetails?.professionalTax || 200).toLocaleString()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
+                    <span>Income Tax (TDS)</span>
+                    <strong style={{ color: '#f87171', fontFamily: 'monospace' }}>-₹{(selectedPayslipForModal.deductionDetails?.incomeTax || 0).toLocaleString()}</strong>
+                  </div>
+                  {Number(selectedPayslipForModal.deductionDetails?.leaveDeduction) > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#f87171' }}>
+                      <span>Leave / LOP Deduction</span>
+                      <strong style={{ fontFamily: 'monospace' }}>-₹{Number(selectedPayslipForModal.deductionDetails.leaveDeduction).toLocaleString()}</strong>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.45rem', marginTop: '0.35rem', borderTop: '1px solid rgba(255,255,255,0.08)', fontWeight: 700, color: '#fff' }}>
+                    <span>TOTAL DEDUCTIONS</span>
+                    <span style={{ fontFamily: 'monospace', color: '#f87171' }}>-₹{(selectedPayslipForModal.deductions || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Net Salary Highlight Callout */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.12) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              borderRadius: '12px',
+              padding: '1rem 1.25rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Net Take-Home Salary Disbursed</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--success)', fontFamily: 'monospace' }}>
+                  ₹{(selectedPayslipForModal.netPayable || 0).toLocaleString()}
+                </span>
+              </div>
+              <span style={{ fontSize: '0.78rem', background: 'rgba(16, 185, 129, 0.25)', color: '#34d399', padding: '4px 10px', borderRadius: '8px', fontWeight: 700 }}>
+                Verified by CodeThrive Vault
+              </span>
+            </div>
+
+            {/* Modal Footer Controls */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => downloadSinglePayslipPDF(selectedPayslipForModal)}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  color: '#ffffff',
+                  padding: '0.65rem 1.3rem',
+                  borderRadius: '10px',
+                  fontSize: '0.86rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontWeight: 700
+                }}
+              >
+                <Printer size={15} /> Download Official PDF
               </button>
             </div>
           </div>

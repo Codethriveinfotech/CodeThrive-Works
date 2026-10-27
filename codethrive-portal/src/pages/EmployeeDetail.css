@@ -596,19 +596,94 @@ select.filter-select {
   .hero-meta-tags {
     justify-content: center !important;
   }
-  .hero-retention-badge {
-    max-width: 100% !important;
-  }
-  .detail-grid-2,
-  .form-grid-2,
-  .metrics-grid-4 {
-    grid-template-columns: 1fr !important;
-    gap: 0.85rem !important;
-  }
-  .task-assign-form {
-    grid-template-columns: 1fr !important;
-  }
-  .task-assign-form .btn-container {
-    grid-column: span 1 !important;
-  }
+.card-table-wrap .ct-card-body {
+  padding: 0 !important;
+}
+
+/* Salary Structure Breakdown & Payslip Issuance Cards */
+.salary-breakdown-box {
+  margin-top: 1.25rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+}
+
+.salary-breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.salary-component-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0;
+  font-size: 0.84rem;
+  color: #cbd5e1;
+}
+
+.salary-component-row strong {
+  color: #ffffff;
+  font-family: monospace;
+  font-size: 0.88rem;
+}
+
+.salary-net-highlight {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.payslip-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.payslip-action-btn.view {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.payslip-action-btn.view:hover {
+  background: rgba(99, 102, 241, 0.25);
+  color: #fff;
+}
+
+.payslip-action-btn.download {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.payslip-action-btn.download:hover {
+  background: rgba(16, 185, 129, 0.25);
+  color: #fff;
+}
+
+.payslip-action-btn.delete {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.payslip-action-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fff;
 }
