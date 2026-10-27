@@ -93,11 +93,21 @@ exports.startWorkSession = async (req, res) => {
 
     const now = new Date();
 
-    // Shift starts at 10:00 AM with a 15-minute grace window (up to 10:15 AM). Check-in after 10:15 AM automatically marked Late
+    // Attendance Rules:
+    // 1. Check in on or before grace time (10:15 AM) -> Present
+    // 2. Check in after grace time (10:15 AM) and before 1:00 PM -> Late
+    // 3. Check in after 1:00 PM (13:00) -> Half Day
+    // 4. Not checked in -> On Leave
     const istTimeStr = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
     const [h, m] = istTimeStr.split(':').map(Number);
-    const isLate = h > 10 || (h === 10 && m > 15);
-    const initialStatus = isLate ? 'Late' : 'Working';
+    let initialStatus = 'Present';
+    if (h >= 13) {
+      initialStatus = 'Half Day';
+    } else if (h > 10 || (h === 10 && m > 15)) {
+      initialStatus = 'Late';
+    } else {
+      initialStatus = 'Present';
+    }
 
     if (!attendance) {
       attendance = await Attendance.create({
@@ -111,8 +121,8 @@ exports.startWorkSession = async (req, res) => {
         attendance.firstLoginTime = now;
         attendance.status = initialStatus;
       } else {
-        if (!['Late', 'Absent', 'Half Day', 'Permission', 'On Leave'].includes(attendance.status)) {
-          attendance.status = 'Working';
+        if (!['Late', 'Half Day', 'Permission', 'On Leave', 'Absent'].includes(attendance.status)) {
+          attendance.status = initialStatus;
         }
       }
       await attendance.save();
@@ -396,7 +406,19 @@ exports.checkout = async (req, res) => {
       }
 
       attendance.lastLogoutTime = now;
-      attendance.status = 'Checked Out';
+      if (attendance.firstLoginTime) {
+        const istTimeStr = new Date(attendance.firstLoginTime).toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+        const [h, m] = istTimeStr.split(':').map(Number);
+        if (h >= 13) {
+          attendance.status = 'Half Day';
+        } else if (h > 10 || (h === 10 && m > 15)) {
+          attendance.status = 'Late';
+        } else {
+          attendance.status = 'Present';
+        }
+      } else {
+        attendance.status = 'On Leave';
+      }
       await attendance.save();
     }
 

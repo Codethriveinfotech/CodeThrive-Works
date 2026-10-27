@@ -261,8 +261,14 @@ const Attendance = () => {
     if (action === 'start-work') {
       const istTimeStr = now.toLocaleTimeString('en-GB', { hour12: false });
       const [h, m] = istTimeStr.split(':').map(Number);
-      const isLate = h > 10 || (h === 10 && m > 15);
-      const autoStatus = isLate ? 'Late' : 'Working';
+      let autoStatus = 'Present';
+      if (h >= 13) {
+        autoStatus = 'Half Day';
+      } else if (h > 10 || (h === 10 && m > 15)) {
+        autoStatus = 'Late';
+      } else {
+        autoStatus = 'Present';
+      }
 
       const newAtt = { 
         ...todayAttendance,
@@ -290,17 +296,33 @@ const Attendance = () => {
       setActiveSession({ startTime: now.toISOString(), sessionType: 'Lunch' });
     } else if (action === 'resume-work') {
       const currentType = activeSession?.sessionType;
+      const firstLogin = todayAttendance?.firstLoginTime || now.toISOString();
+      const loginDt = new Date(firstLogin);
+      const [lh, lm] = loginDt.toLocaleTimeString('en-GB', { hour12: false }).split(':').map(Number);
+      let resumeStatus = 'Present';
+      if (lh >= 13) resumeStatus = 'Half Day';
+      else if (lh > 10 || (lh === 10 && lm > 15)) resumeStatus = 'Late';
+      else resumeStatus = 'Present';
+
       setTodayAttendance(prev => ({ 
         ...prev, 
-        status: 'Working',
+        status: resumeStatus,
         totalBreakDurationInSeconds: currentType === 'Break' ? liveBreakDuration : (prev?.totalBreakDurationInSeconds || 0),
         totalLunchDurationInSeconds: currentType === 'Lunch' ? liveLunchDuration : (prev?.totalLunchDurationInSeconds || 0)
       }));
       setActiveSession({ startTime: now.toISOString(), sessionType: 'Work' });
     } else if (action === 'checkout') {
+      const firstLogin = todayAttendance?.firstLoginTime || now.toISOString();
+      const loginDt = new Date(firstLogin);
+      const [lh, lm] = loginDt.toLocaleTimeString('en-GB', { hour12: false }).split(':').map(Number);
+      let finalStatus = 'Present';
+      if (lh >= 13) finalStatus = 'Half Day';
+      else if (lh > 10 || (lh === 10 && lm > 15)) finalStatus = 'Late';
+      else finalStatus = 'Present';
+
       setTodayAttendance(prev => ({ 
         ...prev, 
-        status: 'Checked Out', 
+        status: finalStatus, 
         lastLogoutTime: now.toISOString(),
         totalWorkDurationInSeconds: activeSession?.sessionType === 'Work' ? liveWorkDuration : (prev?.totalWorkDurationInSeconds || 0),
         totalBreakDurationInSeconds: activeSession?.sessionType === 'Break' ? liveBreakDuration : (prev?.totalBreakDurationInSeconds || 0),

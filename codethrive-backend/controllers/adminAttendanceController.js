@@ -46,7 +46,17 @@ exports.getAttendanceRegister = async (req, res) => {
         designation: emp.designation || 'Employee',
         profilePhoto: emp.profilePhoto || null,
         attendanceId: att ? att._id : null,
-        status: att ? att.status : 'Absent',
+        status: (() => {
+          if (!att || !att.firstLoginTime) {
+            return att?.status === 'Permission' ? 'Permission' : (att?.status === 'Work From Home' ? 'Work From Home' : 'On Leave');
+          }
+          const dt = new Date(att.firstLoginTime);
+          const istStr = dt.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+          const [h, m] = istStr.split(':').map(Number);
+          if (h >= 13) return 'Half Day';
+          if (h > 10 || (h === 10 && m > 15)) return 'Late';
+          return 'Present';
+        })(),
         firstLoginTime: att ? att.firstLoginTime : null,
         lastLogoutTime: att ? att.lastLogoutTime : null,
         totalWorkDurationInSeconds: att ? att.totalWorkDurationInSeconds : 0,

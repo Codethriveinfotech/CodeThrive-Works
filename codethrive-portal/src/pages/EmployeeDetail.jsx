@@ -390,6 +390,40 @@ const EmployeeDetail = () => {
     }
   };
 
+  // Attendance status business rules:
+  // 1. Check in on or before grace time (10:15 AM) -> Present
+  // 2. Check in after grace time (10:15 AM) and before 1:00 PM -> Late
+  // 3. Check in after 1:00 PM (13:00) -> Half Day
+  // 4. Did not check in -> On Leave
+  const computeAttendanceStatus = (row) => {
+    if (!row) return 'On Leave';
+    const raw = (row.status || '').trim().toLowerCase();
+    if (raw === 'permission') return 'Permission';
+    if (raw === 'wfh' || raw === 'work from home') return 'Work From Home';
+    if (raw === 'leave' || raw === 'on leave') return 'On Leave';
+
+    if (!row.firstLoginTime) {
+      return 'On Leave';
+    }
+
+    const dt = new Date(row.firstLoginTime);
+    if (isNaN(dt.getTime())) return 'On Leave';
+
+    const istStr = dt.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+    const [h, m] = istStr.split(':').map(Number);
+
+    // After 1:00 PM (13:00) -> Half Day
+    if (h >= 13) {
+      return 'Half Day';
+    }
+    // After 10:15 AM (Grace window 15 mins) -> Late
+    if (h > 10 || (h === 10 && m > 15)) {
+      return 'Late';
+    }
+    // Correct time (<= 10:15 AM) -> Present
+    return 'Present';
+  };
+
   const generateMockAttendance = (emp) => {
     const logs = [];
     const today = new Date();
@@ -413,27 +447,61 @@ const EmployeeDetail = () => {
           }
         } catch (e) {}
 
+        const todayLogin = cachedAtt?.firstLoginTime || `${dateStr}T09:15:00.000Z`;
+        const todayStatus = computeAttendanceStatus({ firstLoginTime: todayLogin, status: cachedAtt?.status });
+
         logs.push({
           _id: `att_today_${d.getTime()}`,
           date: dateStr,
-          firstLoginTime: cachedAtt?.firstLoginTime || `${dateStr}T09:15:00.000Z`,
-          lastLogoutTime: cachedAtt?.lastLogoutTime || (cachedAtt?.status === 'Checked Out' ? `${dateStr}T17:30:00.000Z` : null),
+          firstLoginTime: todayLogin,
+          lastLogoutTime: cachedAtt?.lastLogoutTime || null,
           totalWorkDurationInSeconds: cachedAtt?.totalWorkDurationInSeconds || 25200,
           totalBreakDurationInSeconds: cachedAtt?.totalBreakDurationInSeconds || 1800,
           totalLunchDurationInSeconds: cachedAtt?.totalLunchDurationInSeconds || 2700,
-          status: cachedAtt?.status || 'Working'
+          status: todayStatus
         });
       } else {
-        const isLate = i % 7 === 0;
+        // Diverse realistic logs respecting all 4 rules:
+        let loginTime = null;
+        let logoutTime = null;
+        let workDuration = 0;
+        let dayStatus = 'Present';
+
+        if (i % 9 === 0) {
+          // Rule 4: No check in -> On Leave
+          loginTime = null;
+          logoutTime = null;
+          workDuration = 0;
+          dayStatus = 'On Leave';
+        } else if (i % 6 === 0) {
+          // Rule 3: Login after 1:00 PM (13:30) -> Half Day
+          loginTime = `${dateStr}T13:30:00.000Z`;
+          logoutTime = `${dateStr}T18:00:00.000Z`;
+          workDuration = 16200;
+          dayStatus = 'Half Day';
+        } else if (i % 4 === 0) {
+          // Rule 2: Exceed grace time (10:45 AM) -> Late
+          loginTime = `${dateStr}T10:45:00.000Z`;
+          logoutTime = `${dateStr}T18:15:00.000Z`;
+          workDuration = 27000;
+          dayStatus = 'Late';
+        } else {
+          // Rule 1: On-time check in (09:15 AM <= 10:15 AM) -> Present
+          loginTime = `${dateStr}T09:15:00.000Z`;
+          logoutTime = `${dateStr}T18:00:00.000Z`;
+          workDuration = 27900 + (i % 3) * 600;
+          dayStatus = 'Present';
+        }
+
         logs.push({
           _id: `att_${d.getTime()}`,
           date: dateStr,
-          firstLoginTime: `${dateStr}T${isLate ? '09:42' : '09:05'}:00.000Z`,
-          lastLogoutTime: `${dateStr}T18:00:00.000Z`,
-          totalWorkDurationInSeconds: 27900 + (i % 3) * 600,
-          totalBreakDurationInSeconds: 1800,
-          totalLunchDurationInSeconds: 2700,
-          status: isLate ? 'Late' : 'Checked Out'
+          firstLoginTime: loginTime,
+          lastLogoutTime: logoutTime,
+          totalWorkDurationInSeconds: workDuration,
+          totalBreakDurationInSeconds: loginTime ? 1800 : 0,
+          totalLunchDurationInSeconds: loginTime ? 2700 : 0,
+          status: dayStatus
         });
       }
     }
@@ -468,7 +536,7 @@ const EmployeeDetail = () => {
         formatHours(row.totalWorkDurationInSeconds),
         formatHours(row.totalBreakDurationInSeconds || 0),
         formatHours(row.totalLunchDurationInSeconds || 0),
-        row.status || 'Present'
+        computeAttendanceStatus(row)
       ]);
 
       const autoTableFn = autoTable || doc.autoTable;
@@ -530,7 +598,7 @@ const EmployeeDetail = () => {
         'Work Duration': formatHours(row.totalWorkDurationInSeconds),
         'Break Duration': formatHours(row.totalBreakDurationInSeconds || 0),
         'Lunch Duration': formatHours(row.totalLunchDurationInSeconds || 0),
-        Status: row.status || 'Present'
+        Status: computeAttendanceStatus(row)
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -539,6 +607,50 @@ const EmployeeDetail = () => {
       XLSX.writeFile(workbook, `Attendance_Report_${employee.fullName.replace(/\s+/g, '_')}_${selectedAuditMonth}.xlsx`);
     } catch (e) {
       alert('Error generating attendance Excel: ' + e.message);
+    }
+  };
+
+  const exportSingleDailyReportPDF = async (report) => {
+    if (!employee || !report) return;
+    try {
+      const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
+        title: 'DAILY WORK REPORT & SPRINT DELIVERABLE AUDIT',
+        metaFields: [
+          { label: 'Employee Name', value: employee.fullName || 'N/A' },
+          { label: 'Employee ID', value: employee.employeeId || 'N/A' },
+          { label: 'Department / Role', value: `${employee.department || 'General'} • ${employee.designation || 'Staff'}` },
+          { label: 'Report Date', value: formatDate(report.date || report.createdAt) },
+          { label: 'Hours Logged', value: report.hoursWorked || report.hoursLogged || '8h 00m' },
+          { label: 'Approval Status', value: (report.status || 'Submitted').toUpperCase() }
+        ]
+      });
+
+      const autoTableFn = autoTable || doc.autoTable;
+      const tableRows = [
+        ['Deliverable / Sprint Title', report.title || report.tasksWorked || 'Daily Sprint Deliverable'],
+        ['Work Accomplished & Modules', report.workSummary || report.tasksWorked || report.completedWork || 'Completed daily deliverables and module reviews.'],
+        ['Blockers & Challenges', report.issuesFaced || report.blockers || 'None reported. All sprint milestones on track.'],
+        ["Next Day's Sprint Plan", report.tomorrowsPlan || 'Continue scheduled roadmap deliverables.'],
+        ['SRC Deliverable File', report.srcFileName ? `${report.srcFileName} (${report.srcFileSize || 'Verified'})` : 'No archive attached'],
+        ['Verification Authority', 'CodeThrive Infotech Enterprise Vault (Secured Audit)']
+      ];
+
+      if (typeof autoTableFn === 'function') {
+        autoTableFn(doc, {
+          startY: startY,
+          head: [['Report Field', 'Details & Deliverable Notes']],
+          body: tableRows,
+          columnStyles: {
+            0: { cellWidth: 55, fontStyle: 'bold', textColor: [0, 82, 165] },
+            1: { cellWidth: 'auto', textColor: [30, 41, 59] }
+          },
+          ...getCorporateTableStyles()
+        });
+      }
+
+      finalizeDoc(`Daily_Report_${(employee.fullName || 'Employee').replace(/\s+/g, '_')}_${(report.date || 'log').replace(/[^a-zA-Z0-9]/g, '_')}.pdf`);
+    } catch (e) {
+      alert('Error exporting report PDF: ' + e.message);
     }
   };
 
@@ -2123,18 +2235,30 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                           </div>
 
                           {/* Approval / Status Controls */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0 }}>
                             <StatusBadge status={r.status || 'Submitted'} />
-                            {r.status !== 'Approved' && (
-                              <button className="action-btn-approve" title="Approve Report" onClick={() => handleReportAction(r._id, 'Approved')}>
-                                <Check size={14} /> Approve
-                              </button>
-                            )}
-                            {r.status !== 'Rejected' && (
-                              <button className="action-btn-reject" title="Reject Report" onClick={() => handleReportAction(r._id, 'Rejected')}>
-                                <X size={14} /> Reject
-                              </button>
-                            )}
+                            <button 
+                              className="action-btn-approve" 
+                              title="Approve Report" 
+                              onClick={() => handleReportAction(r._id, 'Approved')}
+                              style={{ 
+                                opacity: r.status === 'Approved' ? 0.7 : 1,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <Check size={14} /> Approve
+                            </button>
+                            <button 
+                              className="action-btn-reject" 
+                              title="Reject Report" 
+                              onClick={() => handleReportAction(r._id, 'Rejected')}
+                              style={{ 
+                                opacity: r.status === 'Rejected' ? 0.7 : 1,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <X size={14} /> Reject
+                            </button>
                           </div>
                         </div>
 
@@ -2192,7 +2316,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                             Verified by: <strong style={{ color: '#cbd5e1' }}>CodeThrive Infotech Enterprise Vault</strong>
                           </span>
 
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
                             <button
                               type="button"
                               onClick={() => setSelectedReportForModal(r)}
@@ -2212,6 +2336,28 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                               }}
                             >
                               <Eye size={14} /> View Report Details
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => exportSingleDailyReportPDF(r)}
+                              style={{
+                                background: 'rgba(56, 189, 248, 0.1)',
+                                border: '1px solid rgba(56, 189, 248, 0.3)',
+                                color: '#38bdf8',
+                                padding: '0.52rem 0.95rem',
+                                borderRadius: '10px',
+                                fontSize: '0.82rem',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                fontWeight: 600,
+                                transition: 'all 0.2s'
+                              }}
+                              title="Download this employee's daily work report as an official PDF"
+                            >
+                              <FileText size={14} /> Download Report (PDF)
                             </button>
 
                             <button
@@ -2332,9 +2478,6 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 <button className="btn btn-outline" onClick={exportEmpAttendancePDF} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                   <Printer size={15} /> Download PDF Report
                 </button>
-                <button className="btn btn-outline" onClick={exportEmpAttendanceWord} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', borderColor: '#2563eb', color: '#60a5fa' }}>
-                  <FileText size={15} /> Download Word Report
-                </button>
                 <button className="btn btn-primary" onClick={exportEmpAttendanceExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                   <Download size={15} /> Export Excel (.xlsx)
                 </button>
@@ -2345,7 +2488,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
             <div className="metrics-grid-4">
               <div className="metric-box">
                 <span className="box-title">Today's Live Status</span>
-                <StatusBadge status={empAttendanceHistory[0]?.status || 'Not Checked In'} />
+                <StatusBadge status={computeAttendanceStatus(empAttendanceHistory[0])} />
               </div>
               <div className="metric-box">
                 <span className="box-title">Today Check-In</span>
@@ -2437,7 +2580,10 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                     {
                       header: 'Status',
                       accessor: 'status',
-                      render: row => <StatusBadge status={row.status || 'Present'} />
+                      render: row => {
+                        const computed = computeAttendanceStatus(row);
+                        return <StatusBadge status={computed} text={computed} />;
+                      }
                     }
                   ]}
                   data={empAttendanceHistory}
@@ -2720,6 +2866,25 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => exportSingleDailyReportPDF(selectedReportForModal)}
+                style={{
+                  background: 'rgba(56, 189, 248, 0.1)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: '#38bdf8',
+                  padding: '0.65rem 1.25rem',
+                  borderRadius: '10px',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  fontWeight: 600
+                }}
+              >
+                <FileText size={15} /> Download Report (PDF)
+              </button>
               <button
                 type="button"
                 onClick={() => handleDownloadSRC(selectedReportForModal)}
