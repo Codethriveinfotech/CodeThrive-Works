@@ -7,7 +7,6 @@ import {
   FileText, Banknote, FolderOpen, UserCircle, Building2,
   CalendarOff, LogOut, ChevronLeft, ChevronRight, ClipboardList, ArrowLeft, User, Settings
 } from 'lucide-react';
-import SettingsModal from './SettingsModal';
 import './Sidebar.css';
 
 const AdminSidebar = () => {
@@ -16,7 +15,6 @@ const AdminSidebar = () => {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [activeEmployeeInfo, setActiveEmployeeInfo] = useState(null);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Check if current view is an Employee Detail page (/admin/employees/:id)
   const isEmployeeDetail = location.pathname.startsWith('/admin/employees/') && location.pathname !== '/admin/employees';
@@ -264,26 +262,11 @@ const AdminSidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <button 
-          className="nav-item" 
-          onClick={() => setShowSettingsModal(true)} 
-          title={collapsed ? "Account Settings" : ""}
-          style={{ width: '100%', marginBottom: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-        >
-          <Settings size={20} />
-          {!collapsed && <span>Account Settings</span>}
-        </button>
         <button className="nav-item logout-btn" onClick={handleLogout} title={collapsed ? "Logout" : ""}>
           <LogOut size={20} />
           {!collapsed && <span>Logout</span>}
         </button>
       </div>
-
-      <SettingsModal 
-        isOpen={showSettingsModal} 
-        onClose={() => setShowSettingsModal(false)} 
-        isAdmin={true} 
-      />
     </aside>
   );
 };
