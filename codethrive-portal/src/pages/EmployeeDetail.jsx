@@ -1695,36 +1695,36 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
           className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
-          <User size={16} /> Profile & HR
+          <User size={15} /> Profile & HR
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
           onClick={() => setActiveTab('tasks')}
         >
-          <Briefcase size={16} /> Tasks <span className="tab-count-badge">{filteredTasks.length}</span>
+          <Briefcase size={15} /> Tasks <span className="tab-count-badge">{filteredTasks.length}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
           onClick={() => setActiveTab('reports')}
         >
-          <FileText size={16} /> Daily Reports <span className="tab-count-badge">{filteredReports.length}</span>
+          <FileText size={15} /> Daily Reports <span className="tab-count-badge">{filteredReports.length}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'leaves' ? 'active' : ''}`}
           onClick={() => setActiveTab('leaves')}
         >
-          <Calendar size={16} /> Leave Applications <span className="tab-count-badge">{filteredLeaves.length}</span>
+          <Calendar size={15} /> Leaves <span className="tab-count-badge">{filteredLeaves.length}</span>
         </button>
 
-        {/* 5. Attendance Audit (Now placed BEFORE Documents as requested) */}
+        {/* 5. Attendance Audit */}
         <button 
           className={`tab-btn ${activeTab === 'attendance' ? 'active' : ''}`}
           onClick={() => setActiveTab('attendance')}
         >
-          <Clock size={16} /> Attendance Audit
+          <Clock size={15} /> Attendance
         </button>
 
         {/* 6. Documents */}
@@ -1732,21 +1732,21 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
           className={`tab-btn ${activeTab === 'documents' ? 'active' : ''}`}
           onClick={() => setActiveTab('documents')}
         >
-          <FileCheck size={16} /> Documents <span className="tab-count-badge">{employee.sentByEmployee?.uploadedDocs?.length || 0}</span>
+          <FileCheck size={15} /> Documents <span className="tab-count-badge">{employee.sentByEmployee?.uploadedDocs?.length || 0}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'management' || activeTab === 'payroll' ? 'active' : ''}`}
           onClick={() => setActiveTab('management')}
         >
-          <Banknote size={16} /> Payroll & Payslips <span className="tab-count-badge">{filteredPayslips.length}</span>
+          <Banknote size={15} /> Payroll <span className="tab-count-badge">{filteredPayslips.length}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
           onClick={() => setActiveTab('settings')}
         >
-          <Settings size={16} /> Account Settings
+          <Settings size={15} /> Account Settings
         </button>
       </div>
 

@@ -222,16 +222,16 @@
   backdrop-filter: blur(5px);
 }
 
-/* Tabs Navigation Bar - Responsive Flex Layout (No Badge Overflow) */
+/* Tabs Navigation Bar - Single Line Executive Grid (All in 1 Row) */
 .detail-tabs-nav {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  padding: 0.45rem;
-  gap: 0.45rem;
+  padding: 0.35rem;
+  gap: 0.35rem;
   width: 100%;
   box-sizing: border-box;
 }
@@ -240,19 +240,18 @@
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-muted);
-  padding: 0.65rem 1rem;
+  padding: 0.7rem 0.3rem;
   border-radius: 12px;
-  font-size: 0.84rem;
+  font-size: 0.81rem;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
   white-space: nowrap;
   transition: all 0.25s ease;
-  flex: 1 1 auto;
-  min-width: max-content;
+  width: 100%;
   box-sizing: border-box;
   text-align: center;
 }
@@ -274,11 +273,10 @@
 .tab-count-badge {
   background: rgba(255, 255, 255, 0.22);
   color: #ffffff;
-  padding: 2px 8px;
+  padding: 1px 6px;
   border-radius: 10px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  margin-left: 2px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
