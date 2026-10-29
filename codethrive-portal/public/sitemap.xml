@@ -6,7 +6,7 @@
 
   <!-- CodeThrive Works Portal Root -->
   <url>
-    <loc>https://codethrive.com/</loc>
+    <loc>https://portal.codethriveinfotech.in/</loc>
     <lastmod>2026-10-29</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -14,7 +14,7 @@
 
   <!-- Employee Login -->
   <url>
-    <loc>https://codethrive.com/employee/login</loc>
+    <loc>https://portal.codethriveinfotech.in/employee/login</loc>
     <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -22,7 +22,7 @@
 
   <!-- Admin Login -->
   <url>
-    <loc>https://codethrive.com/admin/login</loc>
+    <loc>https://portal.codethriveinfotech.in/admin/login</loc>
     <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -30,7 +30,7 @@
 
   <!-- Employee Registration -->
   <url>
-    <loc>https://codethrive.com/employee/register</loc>
+    <loc>https://portal.codethriveinfotech.in/employee/register</loc>
     <lastmod>2026-10-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -38,7 +38,7 @@
 
   <!-- Forgot Password -->
   <url>
-    <loc>https://codethrive.com/employee/forgot-password</loc>
+    <loc>https://portal.codethriveinfotech.in/employee/forgot-password</loc>
     <lastmod>2026-10-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>

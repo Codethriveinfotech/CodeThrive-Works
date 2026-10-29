@@ -25,4 +25,4 @@ Disallow: /employee/meetings
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://codethrive.com/sitemap.xml
+Sitemap: https://portal.codethriveinfotech.in/sitemap.xml
