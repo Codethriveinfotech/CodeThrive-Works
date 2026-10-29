@@ -56,59 +56,173 @@ const DEFAULT_EXPENSE_CLAIMS = [
 const _DEFAULT_PAYROLLS = [
   {
     _id: 'ps-1',
-    payslipId: 'PSL-2026-001',
-    month: 'September 2026',
-    paymentDate: '2026-09-01',
+    payslipId: 'CTI-PSL-2026-001',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
     status: 'Paid',
     grossSalary: 85000,
-    netPayable: 76200,
+    netPayable: 73000,
     basicSalary: 55000,
-    bonus: 5000,
-    allowanceDetails: { hra: 22000, travel: 3000, medical: 2000, other: 1500 },
-    deductionDetails: { pf: 6600, esi: 0, professionalTax: 200, incomeTax: 5000, leaveDeduction: 0, loanAdvance: 0, other: 0 },
-    employee: { fullName: 'Mahadevan', employeeId: 'CTI-EMP-001', department: 'Executive Management', designation: 'Chief Executive Officer' }
+    bonus: 0,
+    deductions: 12000,
+    allowanceDetails: { hra: 13750, travel: 3000, medical: 2000, da: 5500, conveyance: 4250, other: 1500 },
+    deductionDetails: { pf: 6600, esi: 0, professionalTax: 200, incomeTax: 5000, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 2, balance: 10 }, el: { eligible: 15, availed: 3, balance: 12 }, ml: { eligible: 0, availed: 0, balance: 0 }, lop: 0 },
+    employeeInfo: { dob: '1990-05-15', doj: '2022-01-10', bankAcNo: 'XXXX-XXXX-4521', pfNo: 'TN/CBE/0012345/001', esiNo: '', pfPercent: 12 },
+    employee: { fullName: 'Mahadevan R', employeeId: 'CTI-2026-CEO', department: 'Executive Management', designation: 'Chief Executive Officer' }
   },
   {
     _id: 'ps-2',
-    payslipId: 'PSL-2026-002',
-    month: 'September 2026',
-    paymentDate: '2026-09-01',
+    payslipId: 'CTI-PSL-2026-002',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
     status: 'Paid',
     grossSalary: 80000,
-    netPayable: 71800,
+    netPayable: 69600,
     basicSalary: 50000,
-    bonus: 4000,
-    allowanceDetails: { hra: 20000, travel: 3000, medical: 2000, other: 1000 },
-    deductionDetails: { pf: 6000, esi: 0, professionalTax: 200, incomeTax: 4000, leaveDeduction: 0, loanAdvance: 0, other: 0 },
-    employee: { fullName: 'Kirubakaran', employeeId: 'CTI-EMP-002', department: 'Executive Board', designation: 'Managing Director' }
+    bonus: 0,
+    deductions: 10400,
+    allowanceDetails: { hra: 12500, travel: 3000, medical: 2000, da: 5000, conveyance: 4500, other: 3000 },
+    deductionDetails: { pf: 6000, esi: 0, professionalTax: 200, incomeTax: 4000, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 1, balance: 11 }, el: { eligible: 15, availed: 0, balance: 15 }, ml: { eligible: 0, availed: 0, balance: 0 }, lop: 0 },
+    employeeInfo: { dob: '1998-03-22', doj: '2024-01-15', bankAcNo: 'XXXX-XXXX-7832', pfNo: 'TN/CBE/0012345/002', esiNo: '', pfPercent: 12 },
+    employee: { fullName: 'Kirubakaran V', employeeId: 'CTI-2026-001', department: 'Engineering & Executive Board', designation: 'Managing Director & Lead Developer' }
   },
   {
     _id: 'ps-3',
-    payslipId: 'PSL-2026-003',
-    month: 'September 2026',
-    paymentDate: '2026-09-01',
+    payslipId: 'CTI-PSL-2026-003',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
     status: 'Paid',
-    grossSalary: 62000,
-    netPayable: 55600,
-    basicSalary: 40000,
-    bonus: 2000,
-    allowanceDetails: { hra: 16000, travel: 2500, medical: 1500, other: 1000 },
-    deductionDetails: { pf: 4800, esi: 0, professionalTax: 200, incomeTax: 2400, leaveDeduction: 0, loanAdvance: 0, other: 0 },
-    employee: { fullName: 'Sarah Jenkins', employeeId: 'CTI-EMP-004', department: 'UI/UX Design', designation: 'Lead Product Designer' }
+    grossSalary: 75000,
+    netPayable: 65100,
+    basicSalary: 45000,
+    bonus: 0,
+    deductions: 9900,
+    allowanceDetails: { hra: 11250, travel: 2500, medical: 1800, da: 4500, conveyance: 3950, other: 6000 },
+    deductionDetails: { pf: 5400, esi: 0, professionalTax: 200, incomeTax: 4100, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 3, balance: 9 }, el: { eligible: 15, availed: 2, balance: 13 }, ml: { eligible: 0, availed: 0, balance: 0 }, lop: 0 },
+    employeeInfo: { dob: '1997-08-14', doj: '2024-03-01', bankAcNo: 'XXXX-XXXX-9156', pfNo: 'TN/CBE/0012345/003', esiNo: '', pfPercent: 12 },
+    employee: { fullName: 'Saravanan R', employeeId: 'CTI-2026-002', department: 'Design & Frontend', designation: 'Frontend UI/UX Specialist' }
   },
   {
     _id: 'ps-4',
-    payslipId: 'PSL-2026-004',
-    month: 'September 2026',
-    paymentDate: '2026-09-01',
-    status: 'Processing',
-    grossSalary: 58000,
-    netPayable: 52100,
+    payslipId: 'CTI-PSL-2026-004',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
+    status: 'Paid',
+    grossSalary: 65000,
+    netPayable: 56800,
+    basicSalary: 40000,
+    bonus: 0,
+    deductions: 8200,
+    allowanceDetails: { hra: 10000, travel: 2500, medical: 1500, da: 4000, conveyance: 3500, other: 3500 },
+    deductionDetails: { pf: 4800, esi: 0, professionalTax: 200, incomeTax: 3000, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 0, balance: 12 }, el: { eligible: 15, availed: 1, balance: 14 }, ml: { eligible: 0, availed: 0, balance: 0 }, lop: 0 },
+    employeeInfo: { dob: '1999-11-03', doj: '2024-05-10', bankAcNo: 'XXXX-XXXX-6478', pfNo: 'TN/CBE/0012345/004', esiNo: '', pfPercent: 12 },
+    employee: { fullName: 'Priya Dharshini M', employeeId: 'CTI-2026-003', department: 'Quality Assurance', designation: 'QA & Automation Engineer' }
+  },
+  {
+    _id: 'ps-5',
+    payslipId: 'CTI-PSL-2026-005',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
+    status: 'Paid',
+    grossSalary: 62000,
+    netPayable: 54200,
     basicSalary: 38000,
-    bonus: 1500,
-    allowanceDetails: { hra: 15200, travel: 2000, medical: 1500, other: 1000 },
-    deductionDetails: { pf: 4560, esi: 0, professionalTax: 200, incomeTax: 1800, leaveDeduction: 0, loanAdvance: 0, other: 0 },
-    employee: { fullName: 'Alex Rivera', employeeId: 'CTI-EMP-007', department: 'Frontend Engineering', designation: 'Senior React Developer' }
+    bonus: 0,
+    deductions: 7800,
+    allowanceDetails: { hra: 9500, travel: 2500, medical: 1500, da: 3800, conveyance: 3200, other: 3500 },
+    deductionDetails: { pf: 4560, esi: 0, professionalTax: 200, incomeTax: 2840, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 4, balance: 8 }, el: { eligible: 15, availed: 5, balance: 10 }, ml: { eligible: 0, availed: 0, balance: 0 }, lop: 0 },
+    employeeInfo: { dob: '1996-01-25', doj: '2024-06-01', bankAcNo: 'XXXX-XXXX-3345', pfNo: 'TN/CBE/0012345/005', esiNo: '', pfPercent: 12 },
+    employee: { fullName: 'Arjun Kumar S', employeeId: 'CTI-2026-004', department: 'Backend Engineering', designation: 'Node.js Backend Developer' }
+  },
+  {
+    _id: 'ps-6',
+    payslipId: 'CTI-PSL-2026-006',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
+    status: 'Paid',
+    grossSalary: 58000,
+    netPayable: 51000,
+    basicSalary: 35000,
+    bonus: 0,
+    deductions: 7000,
+    allowanceDetails: { hra: 8750, travel: 2000, medical: 1500, da: 3500, conveyance: 3250, other: 4000 },
+    deductionDetails: { pf: 4200, esi: 0, professionalTax: 200, incomeTax: 2400, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 2, balance: 10 }, el: { eligible: 15, availed: 0, balance: 15 }, ml: { eligible: 6, availed: 0, balance: 6 }, lop: 0 },
+    employeeInfo: { dob: '2000-06-18', doj: '2025-01-15', bankAcNo: 'XXXX-XXXX-1198', pfNo: 'TN/CBE/0012345/006', esiNo: '', pfPercent: 12 },
+    employee: { fullName: 'Deepika N', employeeId: 'CTI-2026-005', department: 'DevOps & Cloud', designation: 'Cloud Infrastructure Engineer' }
+  },
+  {
+    _id: 'ps-7',
+    payslipId: 'CTI-PSL-2026-007',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
+    status: 'Paid',
+    grossSalary: 55000,
+    netPayable: 48500,
+    basicSalary: 33000,
+    bonus: 0,
+    deductions: 6500,
+    allowanceDetails: { hra: 8250, travel: 2000, medical: 1500, da: 3300, conveyance: 2950, other: 4000 },
+    deductionDetails: { pf: 3960, esi: 0, professionalTax: 200, incomeTax: 2140, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 1, balance: 11 }, el: { eligible: 15, availed: 2, balance: 13 }, ml: { eligible: 0, availed: 0, balance: 0 }, lop: 0 },
+    employeeInfo: { dob: '1998-09-07', doj: '2025-02-01', bankAcNo: 'XXXX-XXXX-8876', pfNo: 'TN/CBE/0012345/007', esiNo: '', pfPercent: 12 },
+    employee: { fullName: 'Karthik Raja P', employeeId: 'CTI-2026-006', department: 'Mobile Development', designation: 'React Native Developer' }
+  },
+  {
+    _id: 'ps-8',
+    payslipId: 'CTI-PSL-2026-008',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
+    status: 'Processing',
+    grossSalary: 52000,
+    netPayable: 46000,
+    basicSalary: 32000,
+    bonus: 0,
+    deductions: 6000,
+    allowanceDetails: { hra: 8000, travel: 2000, medical: 1200, da: 3200, conveyance: 2600, other: 3000 },
+    deductionDetails: { pf: 3840, esi: 0, professionalTax: 200, incomeTax: 1760, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 5, balance: 7 }, el: { eligible: 15, availed: 3, balance: 12 }, ml: { eligible: 0, availed: 0, balance: 0 }, lop: 1 },
+    employeeInfo: { dob: '2001-02-12', doj: '2025-04-01', bankAcNo: 'XXXX-XXXX-5543', pfNo: 'TN/CBE/0012345/008', esiNo: 'TN/CBE/ESI/0008', pfPercent: 12 },
+    employee: { fullName: 'Vishnu Priya R', employeeId: 'CTI-2026-007', department: 'Content & Marketing', designation: 'Digital Marketing Analyst' }
+  },
+  {
+    _id: 'ps-9',
+    payslipId: 'CTI-PSL-2026-009',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
+    status: 'Processing',
+    grossSalary: 48000,
+    netPayable: 42700,
+    basicSalary: 30000,
+    bonus: 0,
+    deductions: 5300,
+    allowanceDetails: { hra: 7500, travel: 1500, medical: 1200, da: 3000, conveyance: 2300, other: 2500 },
+    deductionDetails: { pf: 3600, esi: 0, professionalTax: 200, incomeTax: 1300, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 0, balance: 12 }, el: { eligible: 15, availed: 0, balance: 15 }, ml: { eligible: 0, availed: 0, balance: 0 }, lop: 0 },
+    employeeInfo: { dob: '2000-12-30', doj: '2025-07-15', bankAcNo: 'XXXX-XXXX-2267', pfNo: 'TN/CBE/0012345/009', esiNo: 'TN/CBE/ESI/0009', pfPercent: 12 },
+    employee: { fullName: 'Surya Prakash T', employeeId: 'CTI-2026-008', department: 'Full Stack Engineering', designation: 'Junior MERN Stack Developer' }
+  },
+  {
+    _id: 'ps-10',
+    payslipId: 'CTI-PSL-2026-010',
+    month: 'October 2026',
+    paymentDate: '2026-10-28',
+    status: 'Pending',
+    grossSalary: 42000,
+    netPayable: 37500,
+    basicSalary: 25000,
+    bonus: 0,
+    deductions: 4500,
+    allowanceDetails: { hra: 6250, travel: 1500, medical: 1000, da: 2500, conveyance: 2250, other: 3500 },
+    deductionDetails: { pf: 3000, esi: 0, professionalTax: 200, incomeTax: 1100, leaveDeduction: 0, loanAdvance: 0, other: 200 },
+    leaveStatus: { cl: { eligible: 12, availed: 6, balance: 6 }, el: { eligible: 15, availed: 4, balance: 11 }, ml: { eligible: 0, availed: 0, balance: 0 }, lop: 2 },
+    employeeInfo: { dob: '2002-04-08', doj: '2026-04-03', bankAcNo: 'XXXX-XXXX-9901', pfNo: 'TN/CBE/0012345/010', esiNo: 'TN/CBE/ESI/0010', pfPercent: 12 },
+    employee: { fullName: 'Nandhini S', employeeId: 'CTI-2026-009', department: 'HR & Administration', designation: 'HR Executive & Admin Coordinator' }
   }
 ];
 
@@ -434,53 +548,86 @@ const AdminPayroll = () => {
 
   const downloadPayslipPDF = async (payslip) => {
     try {
-      const hra = payslip.allowanceDetails?.hra || 18000;
-      const travel = payslip.allowanceDetails?.travel || 2500;
-      const medical = payslip.allowanceDetails?.medical || 1500;
-      const otherAllowance = payslip.allowanceDetails?.other || 1000;
+      const basic = payslip.basicSalary || 0;
+      const da = payslip.allowanceDetails?.da || 0;
+      const hra = payslip.allowanceDetails?.hra || 0;
+      const conveyance = payslip.allowanceDetails?.conveyance || 0;
+      const travel = payslip.allowanceDetails?.travel || 0;
+      const medical = payslip.allowanceDetails?.medical || 0;
+      const otherAllowance = payslip.allowanceDetails?.other || 0;
 
-      const pf = payslip.deductionDetails?.pf || 5400;
+      const pf = payslip.deductionDetails?.pf || 0;
       const esi = payslip.deductionDetails?.esi || 0;
-      const profTax = payslip.deductionDetails?.professionalTax || 200;
-      const incomeTax = payslip.deductionDetails?.incomeTax || 1500;
+      const profTax = payslip.deductionDetails?.professionalTax || 0;
+      const incomeTax = payslip.deductionDetails?.incomeTax || 0;
+      const loanAdv = payslip.deductionDetails?.loanAdvance || 0;
+      const leaveDed = payslip.deductionDetails?.leaveDeduction || 0;
+      const otherDed = payslip.deductionDetails?.other || 0;
 
       const empName = payslip.employee?.fullName || 'Staff Member';
       const empId = payslip.employee?.employeeId || 'CTI-EMP-001';
 
       const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
-        title: 'OFFICIAL MONTHLY SALARY STATEMENT',
+        title: 'OFFICIAL MONTHLY PAYSLIP',
         metaFields: [
           { label: 'Employee Name', value: empName },
           { label: 'Employee ID', value: empId },
           { label: 'Pay Period Month', value: payslip.month || 'N/A' },
-          { label: 'Designation / Dept', value: `${payslip.employee?.designation || 'Staff'} • ${payslip.employee?.department || 'Engineering'}` },
-          { label: 'Payslip ID Ref', value: payslip.payslipId || 'PAY-2026' },
+          { label: 'Designation', value: payslip.employee?.designation || 'Staff' },
+          { label: 'Department', value: payslip.employee?.department || 'Engineering' },
+          { label: 'Payslip ID', value: payslip.payslipId || 'PAY-2026' },
+          { label: 'DOB', value: payslip.employeeInfo?.dob ? new Date(payslip.employeeInfo.dob).toLocaleDateString('en-IN') : '-' },
+          { label: 'DOJ', value: payslip.employeeInfo?.doj ? new Date(payslip.employeeInfo.doj).toLocaleDateString('en-IN') : '-' },
+          { label: 'Bank A/C No', value: payslip.employeeInfo?.bankAcNo || '-' },
+          { label: 'PF No', value: payslip.employeeInfo?.pfNo || '-' },
+          { label: 'PF %', value: `${payslip.employeeInfo?.pfPercent || 12}%` },
           { label: 'Payment Status', value: (payslip.status || 'Paid').toUpperCase() }
         ]
       });
 
       const autoTableFn = autoTable || doc.autoTable;
+
+      // Earnings & Deductions Table
       autoTableFn(doc, {
         startY: startY,
-        head: [['EARNINGS & ALLOWANCES', 'AMOUNT (INR)', 'STATUTORY DEDUCTIONS', 'AMOUNT (INR)']],
+        head: [['EARNINGS & ALLOWANCES', 'AMOUNT (₹)', 'STATUTORY DEDUCTIONS', 'AMOUNT (₹)']],
         body: [
-          ['Basic Salary', formatCurrencyINR(payslip.basicSalary || 0), 'Provident Fund (PF)', formatCurrencyINR(pf)],
-          ['House Rent Allowance (HRA)', formatCurrencyINR(hra), 'Professional Tax (PT)', formatCurrencyINR(profTax)],
-          ['Travel & Conveyance', formatCurrencyINR(travel), 'Income Tax (TDS)', formatCurrencyINR(incomeTax)],
-          ['Medical Allowance', formatCurrencyINR(medical), 'ESI Contribution', formatCurrencyINR(esi)],
-          ['Special / Other Allowance', formatCurrencyINR(otherAllowance), 'Other Deductions', formatCurrencyINR(0)],
+          ['Basic Salary', formatCurrencyINR(basic), 'Provident Fund (EPF)', formatCurrencyINR(pf)],
+          ['Dearness Allowance (DA)', formatCurrencyINR(da), 'Professional Tax (PT)', formatCurrencyINR(profTax)],
+          ['House Rent Allowance (HRA)', formatCurrencyINR(hra), 'Income Tax (TDS)', formatCurrencyINR(incomeTax)],
+          ['Conveyance Allowance', formatCurrencyINR(conveyance), 'ESI Contribution', formatCurrencyINR(esi)],
+          ['Travel Allowance', formatCurrencyINR(travel), 'Loan / Advance Recovery', formatCurrencyINR(loanAdv)],
+          ['Medical Allowance', formatCurrencyINR(medical), 'Leave Deduction', formatCurrencyINR(leaveDed)],
+          ['Special / Other Allowance', formatCurrencyINR(otherAllowance), 'Other Deductions', formatCurrencyINR(otherDed)],
           ['GROSS EARNINGS', formatCurrencyINR(payslip.grossSalary || 0), 'TOTAL DEDUCTIONS', formatCurrencyINR(payslip.deductions || 0)],
-          ['NET PAYABLE AMOUNT', formatCurrencyINR(payslip.netPayable || 0), 'PAYMENT DISBURSEMENT', 'DIRECT BANK TRANSFER']
+          ['NET PAYABLE AMOUNT', formatCurrencyINR(payslip.netPayable || 0), 'PAYMENT MODE', 'DIRECT BANK TRANSFER']
         ],
         ...getCorporateTableStyles(),
         didParseCell: function(data) {
-          if (data.row.index === 5 || data.row.index === 6) {
+          if (data.row.index === 7 || data.row.index === 8) {
             data.cell.styles.fontStyle = 'bold';
-            if (data.row.index === 6) {
+            if (data.row.index === 8) {
               data.cell.styles.fillColor = [224, 242, 254];
               data.cell.styles.textColor = [3, 105, 161];
             }
           }
+        }
+      });
+
+      // Leave Status Table
+      const leaveTableStartY = doc.lastAutoTable.finalY + 6;
+      autoTableFn(doc, {
+        startY: leaveTableStartY,
+        head: [['LEAVE STATUS', 'CL', 'EL', 'ML', 'LOP DAYS']],
+        body: [
+          ['Eligible', String(payslip.leaveStatus?.cl?.eligible ?? 12), String(payslip.leaveStatus?.el?.eligible ?? 15), String(payslip.leaveStatus?.ml?.eligible ?? 0), ''],
+          ['Availed', String(payslip.leaveStatus?.cl?.availed ?? 0), String(payslip.leaveStatus?.el?.availed ?? 0), String(payslip.leaveStatus?.ml?.availed ?? 0), String(payslip.leaveStatus?.lop ?? 0)],
+          ['Balance', String(payslip.leaveStatus?.cl?.balance ?? 12), String(payslip.leaveStatus?.el?.balance ?? 15), String(payslip.leaveStatus?.ml?.balance ?? 0), '']
+        ],
+        ...getCorporateTableStyles(),
+        headStyles: {
+          ...getCorporateTableStyles().headStyles,
+          fillColor: [30, 41, 59]
         }
       });
 
@@ -494,38 +641,50 @@ const AdminPayroll = () => {
 
   const downloadPayslipWord = (payslip) => {
     try {
-      const hra = payslip.allowanceDetails?.hra || 18000;
-      const travel = payslip.allowanceDetails?.travel || 2500;
-      const medical = payslip.allowanceDetails?.medical || 1500;
-      const otherAllowance = payslip.allowanceDetails?.other || 1000;
+      const basic = payslip.basicSalary || 0;
+      const da = payslip.allowanceDetails?.da || 0;
+      const hra = payslip.allowanceDetails?.hra || 0;
+      const conveyance = payslip.allowanceDetails?.conveyance || 0;
+      const travel = payslip.allowanceDetails?.travel || 0;
+      const medical = payslip.allowanceDetails?.medical || 0;
+      const otherAllowance = payslip.allowanceDetails?.other || 0;
 
-      const pf = payslip.deductionDetails?.pf || 5400;
+      const pf = payslip.deductionDetails?.pf || 0;
       const esi = payslip.deductionDetails?.esi || 0;
-      const profTax = payslip.deductionDetails?.professionalTax || 200;
-      const incomeTax = payslip.deductionDetails?.incomeTax || 1500;
+      const profTax = payslip.deductionDetails?.professionalTax || 0;
+      const incomeTax = payslip.deductionDetails?.incomeTax || 0;
+      const loanAdv = payslip.deductionDetails?.loanAdvance || 0;
+      const otherDed = payslip.deductionDetails?.other || 0;
 
       const empName = payslip.employee?.fullName || 'Staff Member';
       const empId = payslip.employee?.employeeId || 'CTI-EMP-001';
 
       exportOfficialWordDoc({
-        title: 'OFFICIAL MONTHLY SALARY STATEMENT',
+        title: 'OFFICIAL MONTHLY PAYSLIP',
         metaFields: [
           { label: 'Employee Name', value: empName },
           { label: 'Employee ID', value: empId },
           { label: 'Pay Period Month', value: payslip.month || 'N/A' },
-          { label: 'Designation / Dept', value: `${payslip.employee?.designation || 'Staff'} • ${payslip.employee?.department || 'Engineering'}` },
-          { label: 'Payslip ID Ref', value: payslip.payslipId || 'PAY-2026' },
+          { label: 'Designation', value: payslip.employee?.designation || 'Staff' },
+          { label: 'Department', value: payslip.employee?.department || 'Engineering' },
+          { label: 'Payslip ID', value: payslip.payslipId || 'PAY-2026' },
+          { label: 'DOB', value: payslip.employeeInfo?.dob ? new Date(payslip.employeeInfo.dob).toLocaleDateString('en-IN') : '-' },
+          { label: 'DOJ', value: payslip.employeeInfo?.doj ? new Date(payslip.employeeInfo.doj).toLocaleDateString('en-IN') : '-' },
+          { label: 'Bank A/C No', value: payslip.employeeInfo?.bankAcNo || '-' },
+          { label: 'PF No', value: payslip.employeeInfo?.pfNo || '-' },
           { label: 'Payment Status', value: (payslip.status || 'Paid').toUpperCase() }
         ],
-        tableHeaders: ['EARNINGS / ALLOWANCES', 'AMOUNT (INR)', 'DEDUCTIONS', 'AMOUNT (INR)'],
+        tableHeaders: ['EARNINGS / ALLOWANCES', 'AMOUNT (₹)', 'DEDUCTIONS', 'AMOUNT (₹)'],
         tableRows: [
-          ['Basic Salary', formatCurrencyINR(payslip.basicSalary || 0), 'Provident Fund (PF)', formatCurrencyINR(pf)],
-          ['House Rent Allowance (HRA)', formatCurrencyINR(hra), 'Professional Tax (PT)', formatCurrencyINR(profTax)],
-          ['Travel & Conveyance', formatCurrencyINR(travel), 'Income Tax (TDS)', formatCurrencyINR(incomeTax)],
-          ['Medical Allowance', formatCurrencyINR(medical), 'ESI Contribution', formatCurrencyINR(esi)],
-          ['Special / Other Allowance', formatCurrencyINR(otherAllowance), 'Other Deductions', formatCurrencyINR(0)],
+          ['Basic Salary', formatCurrencyINR(basic), 'Provident Fund (EPF)', formatCurrencyINR(pf)],
+          ['Dearness Allowance (DA)', formatCurrencyINR(da), 'Professional Tax (PT)', formatCurrencyINR(profTax)],
+          ['House Rent Allowance (HRA)', formatCurrencyINR(hra), 'Income Tax (TDS)', formatCurrencyINR(incomeTax)],
+          ['Conveyance Allowance', formatCurrencyINR(conveyance), 'ESI Contribution', formatCurrencyINR(esi)],
+          ['Travel Allowance', formatCurrencyINR(travel), 'Loan / Advance Recovery', formatCurrencyINR(loanAdv)],
+          ['Medical Allowance', formatCurrencyINR(medical), 'Other Deductions', formatCurrencyINR(otherDed)],
+          ['Special / Other Allowance', formatCurrencyINR(otherAllowance), '', ''],
           ['GROSS EARNINGS', formatCurrencyINR(payslip.grossSalary || 0), 'TOTAL DEDUCTIONS', formatCurrencyINR(payslip.deductions || 0)],
-          ['NET PAYABLE SALARY', formatCurrencyINR(payslip.netPayable || 0), 'PAYMENT DISBURSEMENT', 'BANK TRANSFER']
+          ['NET PAYABLE SALARY', formatCurrencyINR(payslip.netPayable || 0), 'PAYMENT MODE', 'BANK TRANSFER']
         ],
         fileName: `Payslip_${payslip.payslipId || '2026'}_${(payslip.month || 'Month').replace(/\s+/g, '_')}.doc`
       });
@@ -1636,7 +1795,7 @@ const AdminPayroll = () => {
         </Card>
       )}
 
-      {/* Digital Payslip Modal */}
+      {/* Digital Payslip Modal - PSG Hospital Style Format */}
       {selectedPayslip && (
         <Modal 
           isOpen={isPayslipModalOpen} 
@@ -1644,122 +1803,185 @@ const AdminPayroll = () => {
           title={
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <ShieldCheck size={22} color="#10b981" />
-              <span>Enterprise Digital Salary Voucher ({selectedPayslip.payslipId})</span>
+              <span>Official Payslip — {selectedPayslip.payslipId}</span>
             </div>
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem', background: '#0f172a', padding: '1.8rem', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0', background: '#0c1222', borderRadius: '16px', border: '1.5px solid rgba(16, 185, 129, 0.4)', overflow: 'hidden', fontFamily: "'Consolas', 'Courier New', monospace" }}>
             
-            {/* Company Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #10b981', paddingBottom: '1rem' }}>
-              <div>
-                <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#10b981', fontWeight: 800 }}>CodeThrive Infotech Pvt Ltd</h2>
-                <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Official Statement of Earnings - {selectedPayslip.month}</p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff', display: 'block' }}>{selectedPayslip.payslipId}</span>
-                <StatusBadge status={selectedPayslip.status || 'Paid'} />
-              </div>
-            </div>
-
-            {/* Employee Info Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(255, 255, 255, 0.04)', padding: '1rem 1.2rem', borderRadius: '12px' }}>
-              <div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Employee Name</span>
-                <div style={{ fontWeight: 700, color: '#fff', marginTop: '0.1rem' }}>{selectedPayslip.employee?.fullName || 'N/A'}</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Staff ID</span>
-                <div style={{ fontWeight: 700, color: '#a7f3d0', marginTop: '0.1rem' }}>{selectedPayslip.employee?.employeeId || 'N/A'}</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Designation / Department</span>
-                <div style={{ color: '#e2e8f0', marginTop: '0.1rem' }}>{selectedPayslip.employee?.designation || 'Software Engineer'}</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Disbursement Date</span>
-                <div style={{ color: '#e2e8f0', marginTop: '0.1rem' }}>{selectedPayslip.paymentDate}</div>
-              </div>
-            </div>
-
-            {/* Earnings & Deductions Tables */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-              
-              {/* Earnings */}
-              <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                <h4 style={{ margin: '0 0 0.8rem 0', color: '#34d399', fontSize: '0.95rem' }}>Gross Earnings</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.88rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Basic Salary</span>
-                    <span style={{ color: '#fff', fontWeight: 600 }}>₹{(selectedPayslip.basicSalary || 0).toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>HRA Allowance</span>
-                    <span style={{ color: '#fff' }}>₹{(selectedPayslip.allowanceDetails?.hra || 0).toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Travel & Medical</span>
-                    <span style={{ color: '#fff' }}>₹{((selectedPayslip.allowanceDetails?.travel || 0) + (selectedPayslip.allowanceDetails?.medical || 0)).toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed rgba(255, 255, 255, 0.1)', paddingTop: '0.4rem', fontWeight: 700 }}>
-                    <span style={{ color: '#34d399' }}>Gross Total</span>
-                    <span style={{ color: '#34d399' }}>₹{(selectedPayslip.grossSalary || 0).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Deductions */}
-              <div style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                <h4 style={{ margin: '0 0 0.8rem 0', color: '#f87171', fontSize: '0.95rem' }}>Statutory Deductions</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.88rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Provident Fund (PF)</span>
-                    <span style={{ color: '#fff' }}>₹{(selectedPayslip.deductionDetails?.pf || 0).toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Professional Tax</span>
-                    <span style={{ color: '#fff' }}>₹{(selectedPayslip.deductionDetails?.professionalTax || 0).toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Income Tax (TDS)</span>
-                    <span style={{ color: '#fff' }}>₹{(selectedPayslip.deductionDetails?.incomeTax || 0).toLocaleString()}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed rgba(255, 255, 255, 0.1)', paddingTop: '0.4rem', fontWeight: 700 }}>
-                    <span style={{ color: '#f87171' }}>Total Deductions</span>
-                    <span style={{ color: '#f87171' }}>-₹{(selectedPayslip.deductions || 8200).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Net Amount Callout */}
-            <div style={{
+            {/* ═══ Top Header Bar ═══ */}
+            <div style={{ 
+              background: 'linear-gradient(135deg, #0f172a, #1e293b)', 
+              padding: '1rem 1.5rem', 
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2))',
-              padding: '1.2rem 1.5rem', borderRadius: '14px', border: '1px solid rgba(16, 185, 129, 0.5)'
+              borderBottom: '2px solid #10b981'
             }}>
               <div>
-                <span style={{ fontSize: '0.85rem', color: '#a7f3d0', textTransform: 'uppercase', fontWeight: 600 }}>Net Take-Home Pay</span>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Directly deposited to registered bank account</div>
+                <h2 style={{ margin: 0, fontSize: '1.15rem', color: '#10b981', fontWeight: 800, letterSpacing: '1px' }}>CODETHRIVE INFOTECH PVT LTD, COIMBATORE</h2>
+                <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.78rem', color: '#94a3b8', letterSpacing: '0.5px' }}>No.1 Srihari Nivas, Indira Nagar, Sungam, Coimbatore - 641045</p>
               </div>
-              <span style={{ fontWeight: 800, fontSize: '2rem', color: '#34d399' }}>
-                ₹{(selectedPayslip.netPayable || 0).toLocaleString()}
-              </span>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '1rem', fontWeight: 800, color: '#f8fafc', letterSpacing: '2px' }}>PAYSLIP</div>
+                <div style={{ fontSize: '0.82rem', color: '#a7f3d0', fontWeight: 600 }}>Month: {selectedPayslip.month}</div>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', fontFamily: 'monospace' }}>S.No: {selectedPayslip.payslipId}</div>
+              </div>
             </div>
 
-            {/* Footer */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-              <button type="button" className="btn btn-outline" onClick={() => downloadPayslipPDF(selectedPayslip)}>
-                <Download size={16} /> Download PDF
+            {/* ═══ Employee Identity Row ═══ */}
+            <div style={{ 
+              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0',
+              background: 'rgba(16, 185, 129, 0.06)', 
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+              padding: '0.8rem 1.5rem'
+            }}>
+              <div>
+                <span style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>EMP NO</span>
+                <div style={{ fontWeight: 800, color: '#10b981', fontSize: '0.92rem' }}>{selectedPayslip.employee?.employeeId || 'N/A'}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>NAME</span>
+                <div style={{ fontWeight: 800, color: '#f8fafc', fontSize: '0.92rem' }}>{selectedPayslip.employee?.fullName || 'N/A'}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>DEPT / DESIGNATION</span>
+                <div style={{ color: '#e2e8f0', fontSize: '0.82rem' }}>{selectedPayslip.employee?.department || '-'}</div>
+                <div style={{ color: '#a7f3d0', fontSize: '0.78rem' }}>{selectedPayslip.employee?.designation || '-'}</div>
+              </div>
+            </div>
+
+            {/* ═══ Personal Details + Leave Status Side by Side ═══ */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              
+              {/* Left: Personal Details */}
+              <div style={{ padding: '0.8rem 1.5rem', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.5rem', borderBottom: '1px solid rgba(59,130,246,0.2)', paddingBottom: '0.3rem' }}>Employee Details</div>
+                {[
+                  { label: 'DOB', value: selectedPayslip.employeeInfo?.dob ? new Date(selectedPayslip.employeeInfo.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-' },
+                  { label: 'DOJ', value: selectedPayslip.employeeInfo?.doj ? new Date(selectedPayslip.employeeInfo.doj).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-' },
+                  { label: 'BASIC', value: `₹${(selectedPayslip.basicSalary || 0).toLocaleString()}` },
+                  { label: 'DA', value: `₹${(selectedPayslip.allowanceDetails?.da || 0).toLocaleString()}` },
+                  { label: 'BK AC No', value: selectedPayslip.employeeInfo?.bankAcNo || '-' },
+                  { label: 'PF %', value: `${selectedPayslip.employeeInfo?.pfPercent || 12}%` },
+                  { label: 'PF No', value: selectedPayslip.employeeInfo?.pfNo || '-' },
+                  { label: 'ESI No', value: selectedPayslip.employeeInfo?.esiNo || '-' }
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.2rem 0', fontSize: '0.8rem' }}>
+                    <span style={{ color: '#94a3b8', fontWeight: 600, minWidth: '80px' }}>{item.label}</span>
+                    <span style={{ color: '#e2e8f0', fontWeight: 500, textAlign: 'right' }}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Right: Leave Status */}
+              <div style={{ padding: '0.8rem 1.5rem' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.5rem', borderBottom: '1px solid rgba(245,158,11,0.2)', paddingBottom: '0.3rem' }}>Leave Status</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr repeat(4, 1fr)', gap: '0', fontSize: '0.72rem', textAlign: 'center' }}>
+                  <div style={{ fontWeight: 700, color: '#64748b', textAlign: 'left' }}></div>
+                  <div style={{ fontWeight: 700, color: '#94a3b8' }}>CL</div>
+                  <div style={{ fontWeight: 700, color: '#94a3b8' }}>EL</div>
+                  <div style={{ fontWeight: 700, color: '#94a3b8' }}>ML</div>
+                  <div style={{ fontWeight: 700, color: '#94a3b8' }}>LOP</div>
+                  
+                  <div style={{ fontWeight: 600, color: '#94a3b8', textAlign: 'left', paddingTop: '0.3rem' }}>Eligible</div>
+                  <div style={{ color: '#e2e8f0', paddingTop: '0.3rem' }}>{selectedPayslip.leaveStatus?.cl?.eligible ?? 12}</div>
+                  <div style={{ color: '#e2e8f0', paddingTop: '0.3rem' }}>{selectedPayslip.leaveStatus?.el?.eligible ?? 15}</div>
+                  <div style={{ color: '#e2e8f0', paddingTop: '0.3rem' }}>{selectedPayslip.leaveStatus?.ml?.eligible ?? 0}</div>
+                  <div style={{ color: '#e2e8f0', paddingTop: '0.3rem' }}></div>
+
+                  <div style={{ fontWeight: 600, color: '#94a3b8', textAlign: 'left', paddingTop: '0.2rem' }}>Availed</div>
+                  <div style={{ color: '#fbbf24', paddingTop: '0.2rem' }}>{selectedPayslip.leaveStatus?.cl?.availed ?? 0}</div>
+                  <div style={{ color: '#fbbf24', paddingTop: '0.2rem' }}>{selectedPayslip.leaveStatus?.el?.availed ?? 0}</div>
+                  <div style={{ color: '#fbbf24', paddingTop: '0.2rem' }}>{selectedPayslip.leaveStatus?.ml?.availed ?? 0}</div>
+                  <div style={{ color: '#f87171', paddingTop: '0.2rem', fontWeight: 700 }}>{selectedPayslip.leaveStatus?.lop ?? 0}</div>
+
+                  <div style={{ fontWeight: 600, color: '#94a3b8', textAlign: 'left', paddingTop: '0.2rem' }}>Balance</div>
+                  <div style={{ color: '#34d399', paddingTop: '0.2rem', fontWeight: 700 }}>{selectedPayslip.leaveStatus?.cl?.balance ?? 12}</div>
+                  <div style={{ color: '#34d399', paddingTop: '0.2rem', fontWeight: 700 }}>{selectedPayslip.leaveStatus?.el?.balance ?? 15}</div>
+                  <div style={{ color: '#34d399', paddingTop: '0.2rem', fontWeight: 700 }}>{selectedPayslip.leaveStatus?.ml?.balance ?? 0}</div>
+                  <div style={{ paddingTop: '0.2rem' }}></div>
+                </div>
+
+                <div style={{ marginTop: '0.75rem', padding: '0.4rem 0.6rem', background: 'rgba(245, 158, 11, 0.08)', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.15)', fontSize: '0.72rem', color: '#fbbf24', fontWeight: 600 }}>
+                  {selectedPayslip.month} — LOP Days: {selectedPayslip.leaveStatus?.lop ?? 0}
+                </div>
+              </div>
+            </div>
+
+            {/* ═══ Earnings & Deductions - PSG Style Grid ═══ */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              
+              {/* Earnings Column */}
+              <div style={{ padding: '0.8rem 1.5rem', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.5rem', borderBottom: '1px solid rgba(16,185,129,0.2)', paddingBottom: '0.3rem' }}>Earnings</div>
+                {[
+                  { label: 'Basic', value: selectedPayslip.basicSalary || 0 },
+                  { label: 'DA', value: selectedPayslip.allowanceDetails?.da || 0 },
+                  { label: 'HRA', value: selectedPayslip.allowanceDetails?.hra || 0 },
+                  { label: 'Conveyance Allow.', value: selectedPayslip.allowanceDetails?.conveyance || 0 },
+                  { label: 'Travel Allow.', value: selectedPayslip.allowanceDetails?.travel || 0 },
+                  { label: 'Medical Allow.', value: selectedPayslip.allowanceDetails?.medical || 0 },
+                  { label: 'Special Allow.', value: selectedPayslip.allowanceDetails?.other || 0 }
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.18rem 0', fontSize: '0.82rem' }}>
+                    <span style={{ color: '#cbd5e1' }}>{item.label}</span>
+                    <span style={{ color: '#f8fafc', fontWeight: 600, fontFamily: 'monospace' }}>₹{item.value.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Deductions Column */}
+              <div style={{ padding: '0.8rem 1.5rem' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#f87171', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.5rem', borderBottom: '1px solid rgba(239,68,68,0.2)', paddingBottom: '0.3rem' }}>Deductions</div>
+                {[
+                  { label: 'EPF (Employee)', value: selectedPayslip.deductionDetails?.pf || 0 },
+                  { label: 'Professional Tax', value: selectedPayslip.deductionDetails?.professionalTax || 0 },
+                  { label: 'Income Tax (TDS)', value: selectedPayslip.deductionDetails?.incomeTax || 0 },
+                  { label: 'ESI', value: selectedPayslip.deductionDetails?.esi || 0 },
+                  { label: 'Loan / Advance', value: selectedPayslip.deductionDetails?.loanAdvance || 0 },
+                  { label: 'Leave Deduction', value: selectedPayslip.deductionDetails?.leaveDeduction || 0 },
+                  { label: 'Other Deductions', value: selectedPayslip.deductionDetails?.other || 0 }
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.18rem 0', fontSize: '0.82rem' }}>
+                    <span style={{ color: '#cbd5e1' }}>{item.label}</span>
+                    <span style={{ color: item.value > 0 ? '#fca5a5' : '#475569', fontWeight: 600, fontFamily: 'monospace' }}>{item.value > 0 ? `₹${item.value.toLocaleString()}` : '—'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ═══ Summary Footer: GROSS | TOT DED | NET ═══ */}
+            <div style={{ 
+              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', 
+              background: 'rgba(16, 185, 129, 0.08)', 
+              borderBottom: '2px dashed rgba(16, 185, 129, 0.3)',
+              padding: '0.8rem 1.5rem'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>GROSS AMT</div>
+                <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#f8fafc', fontFamily: 'monospace' }}>₹{(selectedPayslip.grossSalary || 0).toLocaleString()}</div>
+              </div>
+              <div style={{ textAlign: 'center', borderLeft: '1px solid rgba(255,255,255,0.06)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>TOT DED</div>
+                <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#f87171', fontFamily: 'monospace' }}>₹{(selectedPayslip.deductions || 0).toLocaleString()}</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.68rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>NET AMT</div>
+                <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#34d399', fontFamily: 'monospace', textShadow: '0 0 15px rgba(52,211,153,0.3)' }}>₹{(selectedPayslip.netPayable || 0).toLocaleString()}</div>
+              </div>
+            </div>
+
+            {/* ═══ Action Buttons ═══ */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', padding: '1rem 1.5rem', background: 'rgba(15, 23, 42, 0.5)' }}>
+              <button type="button" className="btn btn-outline" onClick={() => downloadPayslipPDF(selectedPayslip)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem' }}>
+                <Download size={15} /> PDF
               </button>
-              <button type="button" className="btn btn-outline" onClick={() => downloadPayslipWord(selectedPayslip)} style={{ borderColor: '#2563eb', color: '#60a5fa' }}>
-                <FileText size={16} /> Download Word
+              <button type="button" className="btn btn-outline" onClick={() => downloadPayslipWord(selectedPayslip)} style={{ borderColor: '#2563eb', color: '#60a5fa', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem' }}>
+                <FileText size={15} /> Word
               </button>
-              <button type="button" className="btn btn-outline" onClick={() => window.print()}>
-                <Printer size={16} /> Print Voucher
+              <button type="button" className="btn btn-outline" onClick={() => window.print()} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem' }}>
+                <Printer size={15} /> Print
               </button>
-              <button type="button" className="btn btn-primary" onClick={() => setIsPayslipModalOpen(false)}>
+              <button type="button" className="btn btn-primary" onClick={() => setIsPayslipModalOpen(false)} style={{ fontSize: '0.82rem' }}>
                 Done
               </button>
             </div>
