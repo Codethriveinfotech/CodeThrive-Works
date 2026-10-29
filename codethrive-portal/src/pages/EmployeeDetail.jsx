@@ -374,7 +374,6 @@ const EmployeeDetail = () => {
   const [issuePayMonth, setIssuePayMonth] = useState('October 2026');
   const [issuePayDate, setIssuePayDate] = useState(new Date().toISOString().split('T')[0]);
   const [issuePayStatus, setIssuePayStatus] = useState('Paid');
-  const [issueBonus, setIssueBonus] = useState(0);
   const [issueLeaveDeduction, setIssueLeaveDeduction] = useState(0);
   const [isIssuingPayslip, setIsIssuingPayslip] = useState(false);
   const [selectedPayslipForModal, setSelectedPayslipForModal] = useState(null);
@@ -1309,7 +1308,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
     }
 
     const breakdown = computeSalaryBreakdown(grossVal);
-    const bonus = Number(issueBonus) || 0;
+    const bonus = 0;
     const leaveDed = Number(issueLeaveDeduction) || 0;
     
     const totalAllowances = breakdown.hra + breakdown.travel + breakdown.medical + breakdown.other;
@@ -2954,7 +2953,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
         {activeTab === 'management' && (() => {
           const currentSalaryGross = Number(editSalary || employee.salaryAmount || (employee.fullName?.toLowerCase().includes('kirubakaran') ? 85000 : 75000));
           const liveBreakdown = computeSalaryBreakdown(currentSalaryGross);
-          const liveBonus = Number(issueBonus) || 0;
+          const liveBonus = 0;
           const liveLeaveDed = Number(issueLeaveDeduction) || 0;
           const liveTotalAllowances = liveBreakdown.hra + liveBreakdown.travel + liveBreakdown.medical + liveBreakdown.other;
           const liveFinalGross = liveBreakdown.basic + liveTotalAllowances + liveBonus;
@@ -2982,39 +2981,73 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
               <div className="detail-grid-2">
                 {/* 1A. Bank & Salary Input Card */}
                 <Card title={<><Banknote size={16} style={{ marginRight: '0.5rem', color: '#38bdf8' }} /> 1. Salary Structure & Bank Account</>}>
-                  <div style={{ marginBottom: '1rem', fontSize: '0.82rem', color: '#94a3b8' }}>
-                    Define the base monthly CTC / gross compensation and verified banking credentials for salary credit:
-                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ marginBottom: '1rem', fontSize: '0.84rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                        Define the base monthly CTC / gross compensation and verified banking credentials for salary credit:
+                      </div>
 
-                  <div className="form-grid-2">
-                    <div className="form-field">
-                      <label style={{ color: '#38bdf8', fontWeight: 600 }}>Monthly Salary (₹)</label>
-                      <input 
-                        type="number" 
-                        placeholder="e.g. 85000"
-                        className="input-box" 
-                        value={editSalary} 
-                        onChange={e => setEditSalary(e.target.value)} 
-                      />
-                    </div>
-                    <div className="form-field">
-                      <label>Bank Name</label>
-                      <input type="text" className="input-box" value={editBank} onChange={e => setEditBank(e.target.value)} />
-                    </div>
-                    <div className="form-field">
-                      <label>Account Number</label>
-                      <input type="text" className="input-box" value={editAccNo} onChange={e => setEditAccNo(e.target.value)} />
-                    </div>
-                    <div className="form-field">
-                      <label>IFSC Code</label>
-                      <input type="text" className="input-box" value={editIfsc} onChange={e => setEditIfsc(e.target.value)} />
-                    </div>
-                  </div>
+                      <div className="form-grid-2">
+                        <div className="form-field">
+                          <label style={{ color: '#38bdf8', fontWeight: 600 }}>Monthly Salary (₹)</label>
+                          <input 
+                            type="number" 
+                            placeholder="e.g. 85000"
+                            className="input-box" 
+                            value={editSalary} 
+                            onChange={e => setEditSalary(e.target.value)} 
+                          />
+                        </div>
+                        <div className="form-field">
+                          <label style={{ fontWeight: 600 }}>Bank Name</label>
+                          <input type="text" className="input-box" value={editBank} onChange={e => setEditBank(e.target.value)} />
+                        </div>
+                        <div className="form-field">
+                          <label style={{ fontWeight: 600 }}>Account Number</label>
+                          <input type="text" className="input-box" value={editAccNo} onChange={e => setEditAccNo(e.target.value)} />
+                        </div>
+                        <div className="form-field">
+                          <label style={{ fontWeight: 600 }}>IFSC Code</label>
+                          <input type="text" className="input-box" value={editIfsc} onChange={e => setEditIfsc(e.target.value)} />
+                        </div>
+                      </div>
 
-                  <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-                    <button className="btn btn-primary" onClick={handleSaveSalary}>
-                      <Save size={15} /> Save Salary & Bank Info
-                    </button>
+                      {/* Banking & Annual Compensation Quick Summary (fills empty space seamlessly) */}
+                      <div style={{ 
+                        marginTop: '1.15rem', 
+                        background: 'rgba(15, 23, 42, 0.6)', 
+                        padding: '1rem 1.15rem', 
+                        borderRadius: '12px', 
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                        gap: '0.9rem'
+                      }}>
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Annual CTC</span>
+                          <strong style={{ color: '#38bdf8', fontSize: '1rem', fontFamily: 'monospace' }}>
+                            ₹{(currentSalaryGross * 12).toLocaleString()} <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#94a3b8' }}>/ yr</span>
+                          </strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Disbursement Mode</span>
+                          <span style={{ color: '#f8fafc', fontSize: '0.85rem', fontWeight: 600, display: 'block', marginTop: '2px' }}>Direct Bank Credit</span>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Payment Cycle</span>
+                          <span style={{ color: '#34d399', fontSize: '0.85rem', fontWeight: 600, display: 'block', marginTop: '2px' }}>Monthly Regular</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.85rem', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                      <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                        Linked: <strong style={{ color: '#cbd5e1' }}>{editBank || employee.bankName || 'Direct NEFT'}</strong>
+                      </span>
+                      <button className="btn btn-primary" onClick={handleSaveSalary}>
+                        <Save size={15} /> Save Salary & Bank Info
+                      </button>
+                    </div>
                   </div>
                 </Card>
 
@@ -3138,7 +3171,11 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                     </p>
                   </div>
 
-                  <div className="form-grid-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+                    gap: '1.25rem' 
+                  }}>
                     <div className="form-field">
                       <label style={{ color: '#38bdf8', fontWeight: 600 }}>Pay Month / Period</label>
                       <select 
@@ -3156,7 +3193,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                     </div>
 
                     <div className="form-field">
-                      <label>Disbursement Date</label>
+                      <label style={{ fontWeight: 600 }}>Disbursement Date</label>
                       <input 
                         type="date" 
                         className="input-box" 
@@ -3166,7 +3203,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                     </div>
 
                     <div className="form-field">
-                      <label>Disbursement Status</label>
+                      <label style={{ fontWeight: 600 }}>Disbursement Status</label>
                       <select 
                         className="input-box"
                         value={issuePayStatus}
@@ -3178,18 +3215,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                     </div>
 
                     <div className="form-field">
-                      <label>Performance Bonus / Incentive (₹)</label>
-                      <input 
-                        type="number"
-                        placeholder="0"
-                        className="input-box"
-                        value={issueBonus}
-                        onChange={e => setIssueBonus(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-field">
-                      <label>Attendance / LOP Deductions (₹)</label>
+                      <label style={{ color: '#f87171', fontWeight: 600 }}>Attendance / LOP Deductions (₹)</label>
                       <input 
                         type="number"
                         placeholder="0"
