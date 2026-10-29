@@ -403,7 +403,7 @@ const EmployeeDetail = () => {
     status: 'Present',
     inTime: '09:30',
     outTime: '18:30',
-    reason: 'Management Rectification / Late In Approved'
+    reason: 'Management Adjustment'
   });
 
   useEffect(() => {
@@ -506,7 +506,7 @@ const EmployeeDetail = () => {
         status: record.status || computeAttendanceStatus(record) || 'Present',
         inTime,
         outTime,
-        reason: record.correctionReason || 'Management Rectification / Late In Approved'
+        reason: record.correctionReason || 'Management Adjustment'
       });
       setEditingAttendanceRecord(record);
     } else {
@@ -516,7 +516,7 @@ const EmployeeDetail = () => {
         status: 'Present',
         inTime: '09:30',
         outTime: '18:30',
-        reason: 'Management Rectification / Late In Approved'
+        reason: 'Management Adjustment'
       });
       setEditingAttendanceRecord({});
     }
@@ -560,12 +560,12 @@ const EmployeeDetail = () => {
         status: rectifyForm.status,
         firstLoginTime,
         lastLogoutTime,
-        correctionReason: rectifyForm.reason || 'Management Rectification / Late In Approved'
+        correctionReason: rectifyForm.reason || 'Management Adjustment'
       }).catch(err => {
         console.warn('API error (saved locally):', err);
       });
 
-      // Update state locally immediately so UI reflects rectified status
+      // Update state locally immediately so UI reflects updated status
       setEmpAttendanceHistory(prev => {
         const dateStr = rectifyForm.date;
         const existingIdx = prev.findIndex(r => {
@@ -594,11 +594,11 @@ const EmployeeDetail = () => {
         }
       });
 
-      alert(`Attendance for ${formatDate(rectifyForm.date)} successfully rectified to '${rectifyForm.status}'!`);
+      alert(`Attendance for ${formatDate(rectifyForm.date)} successfully updated to '${rectifyForm.status}'!`);
       setEditingAttendanceRecord(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to rectify attendance: ' + (err.response?.data?.message || err.message));
+      alert('Failed to save attendance: ' + (err.response?.data?.message || err.message));
     } finally {
       setIsSavingAttendanceRectification(false);
     }
@@ -2966,14 +2966,14 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 </span>
               </div>
 
-              {/* Action Buttons for downloading per-day report & manual rectification */}
+              {/* Action Buttons for downloading per-day report & manual edit */}
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <button 
                   className="btn btn-primary" 
                   onClick={() => handleOpenRectifyModal(null)} 
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}
                 >
-                  <Pencil size={14} /> Rectify Attendance
+                  <Pencil size={14} /> Edit Attendance
                 </button>
                 <button className="btn btn-outline" onClick={exportEmpAttendancePDF} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                   <Printer size={15} /> Download PDF Report
@@ -3086,8 +3086,8 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             <StatusBadge status={computed} text={computed} />
                             {row.isManualCorrection && (
-                              <span style={{ fontSize: '0.68rem', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', padding: '1px 5px', borderRadius: '4px', fontWeight: 600 }} title={row.correctionReason || 'Admin Rectified'}>
-                                Rectified
+                              <span style={{ fontSize: '0.68rem', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', padding: '1px 5px', borderRadius: '4px', fontWeight: 600 }} title={row.correctionReason || 'Admin Edited'}>
+                                Edited
                               </span>
                             )}
                           </div>
@@ -3113,7 +3113,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                             background: 'rgba(99, 102, 241, 0.1)',
                             cursor: 'pointer'
                           }}
-                          title="Rectify / Edit Attendance for this day"
+                          title="Edit Attendance for this day"
                         >
                           <Pencil size={13} /> Edit
                         </button>
@@ -4061,17 +4061,13 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
         )}
       </Modal>
 
-      {/* Attendance Rectification Modal */}
+      {/* Attendance Edit Modal */}
       <Modal
         isOpen={!!editingAttendanceRecord}
         onClose={() => setEditingAttendanceRecord(null)}
-        title={<><Clock size={18} style={{ marginRight: '0.5rem', color: '#38bdf8' }} /> Rectify Attendance — {employee?.fullName}</>}
+        title={<><Clock size={18} style={{ marginRight: '0.5rem', color: '#38bdf8' }} /> Edit Attendance — {employee?.fullName}</>}
       >
         <form onSubmit={handleSaveAttendanceRectification} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.75rem 1rem', borderRadius: '8px', fontSize: '0.84rem', color: '#cbd5e1', lineHeight: 1.5 }}>
-            Admin attendance rectification allows overriding late punch-ins, adjusting working hours, or approving management-delayed attendance.
-          </div>
-
           <div className="form-grid-2">
             <div className="form-field">
               <label style={{ color: '#38bdf8', fontWeight: 600 }}>Attendance Date</label>
@@ -4085,7 +4081,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
             </div>
 
             <div className="form-field">
-              <label style={{ color: '#38bdf8', fontWeight: 600 }}>Rectified Status</label>
+              <label style={{ color: '#38bdf8', fontWeight: 600 }}>Attendance Status</label>
               <select 
                 className="input-box" 
                 value={rectifyForm.status} 
@@ -4104,7 +4100,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
 
           <div className="form-grid-2">
             <div className="form-field">
-              <label style={{ fontWeight: 600 }}>Adjusted Check-In Time</label>
+              <label style={{ fontWeight: 600 }}>Check-In Time</label>
               <input 
                 type="time" 
                 className="input-box" 
@@ -4117,7 +4113,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
             </div>
 
             <div className="form-field">
-              <label style={{ fontWeight: 600 }}>Adjusted Check-Out Time</label>
+              <label style={{ fontWeight: 600 }}>Check-Out Time</label>
               <input 
                 type="time" 
                 className="input-box" 
@@ -4131,32 +4127,14 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
           </div>
 
           <div className="form-field">
-            <label style={{ fontWeight: 600 }}>Rectification Reason / Management Approval</label>
+            <label style={{ fontWeight: 600 }}>Remarks / Reason (Optional)</label>
             <input 
               type="text" 
-              placeholder="e.g. Management delay / Client meeting / Late in approved / System issue" 
+              placeholder="e.g. Management approval / Late check-in excused / System adjustment" 
               className="input-box" 
               value={rectifyForm.reason} 
               onChange={e => setRectifyForm({ ...rectifyForm, reason: e.target.value })} 
             />
-          </div>
-
-          {/* Quick preset buttons */}
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <button 
-              type="button" 
-              onClick={() => setRectifyForm(prev => ({ ...prev, status: 'Present', inTime: '09:30', outTime: '18:30', reason: 'Management Rectification / Late In Approved' }))}
-              style={{ fontSize: '0.76rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer' }}
-            >
-              ✓ Quick Set: Standard 9:30 AM – 6:30 PM (Present)
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setRectifyForm(prev => ({ ...prev, status: 'Permission', reason: 'Official 2hr Permission Approved' }))}
-              style={{ fontSize: '0.76rem', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer' }}
-            >
-              ✓ Quick Set: Official Permission
-            </button>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
@@ -4172,7 +4150,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
               className="btn btn-primary" 
               disabled={isSavingAttendanceRectification}
             >
-              <Save size={15} /> {isSavingAttendanceRectification ? 'Saving...' : 'Save & Rectify Attendance'}
+              <Save size={15} /> {isSavingAttendanceRectification ? 'Saving...' : 'Save Attendance'}
             </button>
           </div>
         </form>
