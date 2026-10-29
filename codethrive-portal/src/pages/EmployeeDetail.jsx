@@ -1448,7 +1448,6 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
         ['Conveyance & Travel', `Rs. ${travel.toLocaleString()}`, 'Income Tax (TDS)', `Rs. ${incomeTax.toLocaleString()}`],
         ['Medical Allowance', `Rs. ${medical.toLocaleString()}`, 'Leave / LOP Deduction', `Rs. ${leaveDed.toLocaleString()}`],
         ['Special Allowances', `Rs. ${otherAllowance.toLocaleString()}`, 'ESI Deduction', `Rs. ${esi.toLocaleString()}`],
-        ['Performance Bonus', `Rs. ${bonus.toLocaleString()}`, '', ''],
         [
           'GROSS EARNINGS', 
           `Rs. ${(payslip.grossSalary || 0).toLocaleString()}`, 
@@ -1473,7 +1472,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
             3: { cellWidth: 38, halign: 'right' }
           },
           didParseCell: function(data) {
-            if (data.row.index === 6) {
+            if (data.row.index === 5 || data.row.index === 6) {
               data.cell.styles.fontStyle = 'bold';
               data.cell.styles.fillColor = [241, 245, 249];
             }
