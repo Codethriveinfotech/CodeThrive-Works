@@ -14,7 +14,7 @@ import {
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
   KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard,
   GraduationCap, Sparkles, Landmark, CheckCircle2, Search, Eye, FileCode, CheckSquare, Layers, AlertCircle, FileArchive,
-  Trash2, AlignLeft
+  Trash2, AlignLeft, Settings
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import Modal from '../components/common/Modal';
@@ -1737,10 +1737,17 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
         </button>
 
         <button 
-          className={`tab-btn ${activeTab === 'management' ? 'active' : ''}`}
+          className={`tab-btn ${activeTab === 'management' || activeTab === 'payroll' ? 'active' : ''}`}
           onClick={() => setActiveTab('management')}
         >
-          <KeyRound size={16} /> Payroll & Access <span className="tab-count-badge">{filteredPayslips.length}</span>
+          <Banknote size={16} /> Payroll & Payslips <span className="tab-count-badge">{filteredPayslips.length}</span>
+        </button>
+
+        <button 
+          className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
+          onClick={() => setActiveTab('settings')}
+        >
+          <Settings size={16} /> Account Settings
         </button>
       </div>
 
@@ -3371,58 +3378,88 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 )}
               </Card>
 
-              {/* ──────────────────────────────────────────────────────────
-                  STEP 4: PORTAL SECURITY, ACCESS ROLE & CREDENTIALS (IMAGE 2)
-                 ────────────────────────────────────────────────────────── */}
-              <div>
-                <Card title={<><KeyRound size={16} style={{ marginRight: '0.5rem', color: '#eab308' }} /> 4. Portal Security, Access Role & Password Reset</>}>
-                  <div style={{ marginBottom: '1rem', fontSize: '0.84rem', color: '#cbd5e1', lineHeight: 1.5 }}>
-                    This card manages <strong>{employee.fullName}'s</strong> portal login privileges. Use <em>System Access Role</em> to control page permissions, <em>Account Status</em> to activate or suspend access, and <em>Reset Password</em> to assign a new temporary password for the employee.
-                  </div>
-
-                  <div className="form-grid-2">
-                    <div className="form-field">
-                      <label>System Access Role</label>
-                      <select className="input-box" value={editRole} onChange={e => setEditRole(e.target.value)}>
-                        <option value="admin">System Administrator (Full Control)</option>
-                        <option value="hr">HR Manager (Personnel & Payroll)</option>
-                        <option value="teamlead">Team Lead (Team Management)</option>
-                        <option value="employee">Software Employee (Standard Access)</option>
-                        <option value="intern">Intern (Restricted)</option>
-                      </select>
-                    </div>
-                    <div className="form-field">
-                      <label>Account Status</label>
-                      <select className="input-box" value={editStatus} onChange={e => setEditStatus(e.target.value)}>
-                        <option value="Active">Active Account (Can Log In)</option>
-                        <option value="Inactive">Inactive / Suspended (Login Blocked)</option>
-                        <option value="Pending">Pending Approval</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-field" style={{ marginTop: '1rem' }}>
-                    <label>Reset Account Password</label>
-                    <input 
-                      type="password" 
-                      placeholder="Type new temporary password for employee..." 
-                      className="input-box" 
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                    />
-                  </div>
-
-                  <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-                    <button className="btn btn-primary" onClick={handleSaveRoleStatus}>
-                      <Save size={15} /> Save Role & Credentials
-                    </button>
-                  </div>
-                </Card>
               </div>
-
-            </div>
           );
         })()}
+
+        {/* TAB 8: EMPLOYEE PORTAL SECURITY & ACCOUNT SETTINGS */}
+        {activeTab === 'settings' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <Card title={<><Settings size={18} style={{ marginRight: '0.5rem', color: '#6366f1' }} /> Employee Portal Security & Account Settings</>}>
+              <div style={{ marginBottom: '1.25rem', fontSize: '0.88rem', color: '#cbd5e1', lineHeight: 1.6, background: 'rgba(99, 102, 241, 0.08)', padding: '12px 16px', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                This section manages portal login credentials, system access roles, and account active/suspended status for <strong>{employee.fullName}</strong>.
+              </div>
+
+              {/* Account Overview Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Employee ID</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc', marginTop: '3px' }}>{employee.employeeId || 'N/A'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Portal Login Email</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#60a5fa', marginTop: '3px' }}>{employee.personalEmailAddress || employee.companyEmailAddress || 'N/A'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Role</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc', marginTop: '3px' }}>{employee.role || employee.user?.role || 'employee'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Status</div>
+                  <div style={{ marginTop: '3px' }}><StatusBadge status={employee.status || 'Active'} /></div>
+                </div>
+              </div>
+
+              <div className="form-grid-2">
+                <div className="form-field">
+                  <label style={{ fontWeight: 600, color: '#e2e8f0', marginBottom: '6px', display: 'block' }}>System Access Role</label>
+                  <select className="input-box" value={editRole} onChange={e => setEditRole(e.target.value)}>
+                    <option value="admin">System Administrator (Full Control)</option>
+                    <option value="hr">HR Manager (Personnel & Payroll)</option>
+                    <option value="teamlead">Team Lead (Team Management)</option>
+                    <option value="employee">Software Employee (Standard Access)</option>
+                    <option value="intern">Intern (Restricted)</option>
+                  </select>
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>
+                    Controls portal page permissions and administrative privileges for this staff member.
+                  </span>
+                </div>
+
+                <div className="form-field">
+                  <label style={{ fontWeight: 600, color: '#e2e8f0', marginBottom: '6px', display: 'block' }}>Account Status</label>
+                  <select className="input-box" value={editStatus} onChange={e => setEditStatus(e.target.value)}>
+                    <option value="Active">Active Account (Can Log In)</option>
+                    <option value="Inactive">Inactive / Suspended (Login Blocked)</option>
+                    <option value="Pending">Pending Approval</option>
+                  </select>
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>
+                    Suspended or inactive accounts cannot authenticate into the employee portal.
+                  </span>
+                </div>
+              </div>
+
+              <div className="form-field" style={{ marginTop: '1.25rem' }}>
+                <label style={{ fontWeight: 600, color: '#e2e8f0', marginBottom: '6px', display: 'block' }}>Reset Account Password</label>
+                <input 
+                  type="password" 
+                  placeholder="Type new temporary password for employee (leave blank to keep unchanged)..." 
+                  className="input-box" 
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                />
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>
+                  Assign a new temporary password if the employee forgot their credentials or requested a reset.
+                </span>
+              </div>
+
+              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button className="btn btn-primary" onClick={handleSaveRoleStatus}>
+                  <Save size={15} /> Save Role & Credentials
+                </button>
+              </div>
+            </Card>
+          </div>
+        )}
 
       </div>
 
