@@ -3020,67 +3020,105 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
 
                 {/* 1B. Computed Statutory Breakdown Preview Card */}
                 <Card title={<><CheckCircle2 size={16} style={{ marginRight: '0.5rem', color: '#10b981' }} /> Computed Statutory Benefits & Deductions</>}>
-                  <div style={{ marginBottom: '0.85rem', fontSize: '0.82rem', color: '#94a3b8' }}>
-                    Live statutory breakdown calculated according to Indian Corporate Payroll norms based on <strong>₹{currentSalaryGross.toLocaleString()}</strong> monthly CTC:
+                  <div style={{ marginBottom: '1rem', fontSize: '0.84rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                    Live statutory breakdown calculated according to Indian Corporate Payroll norms based on <strong style={{ color: '#38bdf8' }}>₹{currentSalaryGross.toLocaleString()}</strong> monthly CTC:
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.9rem', background: 'rgba(15, 23, 42, 0.6)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                    <div>
-                      <span style={{ fontSize: '0.74rem', color: '#38bdf8', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem' }}>
-                        Gross Earnings
-                      </span>
-                      <div className="salary-component-row">
-                        <span>Basic Pay (50%)</span>
-                        <strong>₹{liveBreakdown.basic.toLocaleString()}</strong>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+                    gap: '1.25rem', 
+                    background: 'rgba(15, 23, 42, 0.6)', 
+                    padding: '1.15rem', 
+                    borderRadius: '12px', 
+                    border: '1px solid rgba(255, 255, 255, 0.08)' 
+                  }}>
+                    {/* Column 1: Gross Earnings */}
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        paddingBottom: '0.5rem', 
+                        marginBottom: '0.5rem', 
+                        borderBottom: '1px solid rgba(56, 189, 248, 0.2)' 
+                      }}>
+                        <span style={{ fontSize: '0.74rem', color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          Gross Earnings
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.12)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          ₹{liveFinalGross.toLocaleString()}
+                        </span>
                       </div>
-                      <div className="salary-component-row">
-                        <span>HRA (20%)</span>
-                        <strong>₹{liveBreakdown.hra.toLocaleString()}</strong>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: '1px solid rgba(255, 255, 255, 0.04)', fontSize: '0.84rem' }}>
+                        <span style={{ color: '#cbd5e1' }}>Basic Pay (50%)</span>
+                        <strong style={{ color: '#ffffff', fontFamily: 'monospace', fontSize: '0.88rem' }}>₹{liveBreakdown.basic.toLocaleString()}</strong>
                       </div>
-                      <div className="salary-component-row">
-                        <span>Allowances (30%)</span>
-                        <strong>₹{(liveBreakdown.travel + liveBreakdown.medical + liveBreakdown.other).toLocaleString()}</strong>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: '1px solid rgba(255, 255, 255, 0.04)', fontSize: '0.84rem' }}>
+                        <span style={{ color: '#cbd5e1' }}>HRA (20%)</span>
+                        <strong style={{ color: '#ffffff', fontFamily: 'monospace', fontSize: '0.88rem' }}>₹{liveBreakdown.hra.toLocaleString()}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', fontSize: '0.84rem' }}>
+                        <span style={{ color: '#cbd5e1' }}>Allowances (30%)</span>
+                        <strong style={{ color: '#ffffff', fontFamily: 'monospace', fontSize: '0.88rem' }}>₹{(liveBreakdown.travel + liveBreakdown.medical + liveBreakdown.other).toLocaleString()}</strong>
                       </div>
                     </div>
 
-                    <div>
-                      <span style={{ fontSize: '0.74rem', color: '#f87171', fontWeight: 700, textTransform: 'uppercase', display: 'block', marginBottom: '0.4rem' }}>
-                        Statutory Deductions
-                      </span>
-                      <div className="salary-component-row">
-                        <span>PF (12% of Basic)</span>
-                        <strong style={{ color: '#f87171' }}>-₹{liveBreakdown.pf.toLocaleString()}</strong>
+                    {/* Column 2: Statutory Deductions */}
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        paddingBottom: '0.5rem', 
+                        marginBottom: '0.5rem', 
+                        borderBottom: '1px solid rgba(248, 113, 113, 0.2)' 
+                      }}>
+                        <span style={{ fontSize: '0.74rem', color: '#f87171', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          Statutory Deductions
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#f87171', background: 'rgba(248, 113, 113, 0.12)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                          -₹{liveTotalDeductions.toLocaleString()}
+                        </span>
                       </div>
-                      <div className="salary-component-row">
-                        <span>Prof. Tax (PT)</span>
-                        <strong style={{ color: '#f87171' }}>-₹{liveBreakdown.profTax.toLocaleString()}</strong>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: '1px solid rgba(255, 255, 255, 0.04)', fontSize: '0.84rem' }}>
+                        <span style={{ color: '#cbd5e1' }}>PF (12% of Basic)</span>
+                        <strong style={{ color: '#f87171', fontFamily: 'monospace', fontSize: '0.88rem' }}>-₹{liveBreakdown.pf.toLocaleString()}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: liveBreakdown.incomeTax > 0 ? '1px solid rgba(255, 255, 255, 0.04)' : 'none', fontSize: '0.84rem' }}>
+                        <span style={{ color: '#cbd5e1' }}>Prof. Tax (PT)</span>
+                        <strong style={{ color: '#f87171', fontFamily: 'monospace', fontSize: '0.88rem' }}>-₹{liveBreakdown.profTax.toLocaleString()}</strong>
                       </div>
                       {liveBreakdown.incomeTax > 0 && (
-                        <div className="salary-component-row">
-                          <span>Income Tax (TDS)</span>
-                          <strong style={{ color: '#f87171' }}>-₹{liveBreakdown.incomeTax.toLocaleString()}</strong>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', fontSize: '0.84rem' }}>
+                          <span style={{ color: '#cbd5e1' }}>Income Tax (TDS)</span>
+                          <strong style={{ color: '#f87171', fontFamily: 'monospace', fontSize: '0.88rem' }}>-₹{liveBreakdown.incomeTax.toLocaleString()}</strong>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div style={{
-                    marginTop: '0.85rem',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(16, 185, 129, 0.1)',
+                    marginTop: '1rem',
+                    padding: '0.85rem 1.15rem',
+                    background: 'rgba(16, 185, 129, 0.08)',
                     border: '1px solid rgba(16, 185, 129, 0.25)',
                     borderRadius: '10px',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '0.75rem'
                   }}>
                     <div>
-                      <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>Estimated In-Hand Salary</span>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#34d399', fontFamily: 'monospace' }}>
-                        ₹{liveBreakdown.netPayable.toLocaleString()} / month
+                      <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Estimated In-Hand Salary</span>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#34d399', fontFamily: 'monospace', marginTop: '2px' }}>
+                        ₹{liveBreakdown.netPayable.toLocaleString()} <span style={{ fontSize: '0.82rem', fontWeight: 500, color: '#6ee7b7' }}>/ month</span>
                       </div>
                     </div>
-                    <span style={{ fontSize: '0.74rem', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                    <span style={{ fontSize: '0.76rem', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '5px 12px', borderRadius: '20px', fontWeight: 700, border: '1px solid rgba(16, 185, 129, 0.3)' }}>
                       ✓ Structure Active
                     </span>
                   </div>
