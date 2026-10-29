@@ -119,11 +119,10 @@ exports.startWorkSession = async (req, res) => {
     } else {
       if (!attendance.firstLoginTime) {
         attendance.firstLoginTime = now;
+      }
+      // Only set automatic status if admin has NOT manually corrected/edited it
+      if (!attendance.isManualCorrection) {
         attendance.status = initialStatus;
-      } else {
-        if (!['Late', 'Half Day', 'Permission', 'On Leave', 'Absent'].includes(attendance.status)) {
-          attendance.status = initialStatus;
-        }
       }
       await attendance.save();
     }
@@ -406,18 +405,21 @@ exports.checkout = async (req, res) => {
       }
 
       attendance.lastLogoutTime = now;
-      if (attendance.firstLoginTime) {
-        const istTimeStr = new Date(attendance.firstLoginTime).toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
-        const [h, m] = istTimeStr.split(':').map(Number);
-        if (h >= 13) {
-          attendance.status = 'Half Day';
-        } else if (h > 10 || (h === 10 && m > 15)) {
-          attendance.status = 'Late';
+      // Only set automatic status on checkout if admin has NOT manually set/corrected it
+      if (!attendance.isManualCorrection) {
+        if (attendance.firstLoginTime) {
+          const istTimeStr = new Date(attendance.firstLoginTime).toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+          const [h, m] = istTimeStr.split(':').map(Number);
+          if (h >= 13) {
+            attendance.status = 'Half Day';
+          } else if (h > 10 || (h === 10 && m > 15)) {
+            attendance.status = 'Late';
+          } else {
+            attendance.status = 'Present';
+          }
         } else {
-          attendance.status = 'Present';
+          attendance.status = 'On Leave';
         }
-      } else {
-        attendance.status = 'On Leave';
       }
       await attendance.save();
     }

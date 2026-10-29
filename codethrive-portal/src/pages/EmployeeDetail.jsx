@@ -4091,7 +4091,6 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 <option value="Late">Late (Late Punch-In Recorded)</option>
                 <option value="Half Day">Half Day</option>
                 <option value="Permission">Permission (Official Permission)</option>
-                <option value="Work From Home">Work From Home (WFH)</option>
                 <option value="On Leave">On Leave</option>
                 <option value="Absent">Absent</option>
               </select>

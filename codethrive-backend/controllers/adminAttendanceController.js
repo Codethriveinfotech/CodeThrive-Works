@@ -47,9 +47,19 @@ exports.getAttendanceRegister = async (req, res) => {
         profilePhoto: emp.profilePhoto || null,
         attendanceId: att ? att._id : null,
         status: (() => {
-          if (!att || !att.firstLoginTime) {
-            return att?.status === 'Permission' ? 'Permission' : (att?.status === 'Work From Home' ? 'Work From Home' : 'On Leave');
+          // 1. If admin manually marked/corrected -> ALWAYS respect admin's status
+          if (att && att.isManualCorrection && att.status) {
+            return att.status;
           }
+          // 2. Explicit approved leave or permission
+          if (att && att.status && ['Permission', 'On Leave', 'Absent', 'Half Day'].includes(att.status)) {
+            return att.status;
+          }
+          // 3. Not checked in yet
+          if (!att || !att.firstLoginTime) {
+            return att?.status || 'On Leave';
+          }
+          // 4. Automatic calculation based on login time
           const dt = new Date(att.firstLoginTime);
           const istStr = dt.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
           const [h, m] = istStr.split(':').map(Number);
@@ -68,12 +78,11 @@ exports.getAttendanceRegister = async (req, res) => {
     // Summary stats
     const summary = {
       total: register.length,
-      present: register.filter(r => ['Working', 'Checked Out', 'On Break', 'On Lunch', 'Present', 'Work From Home', 'Late', 'Permission'].includes(r.status)).length,
+      present: register.filter(r => ['Working', 'Checked Out', 'On Break', 'On Lunch', 'Present', 'Late', 'Permission'].includes(r.status)).length,
       absent: register.filter(r => r.status === 'Absent').length,
       permission: register.filter(r => r.status === 'Permission').length,
       onLeave: register.filter(r => r.status === 'On Leave').length,
       halfDay: register.filter(r => r.status === 'Half Day').length,
-      wfh: register.filter(r => r.status === 'Work From Home').length,
       late: register.filter(r => r.status === 'Late').length,
     };
 
@@ -113,7 +122,7 @@ exports.markAttendance = async (req, res) => {
 
     const validStatuses = [
       'Present', 'Absent', 'Permission', 'On Leave', 'Half Day',
-      'Work From Home', 'Late', 'Working', 'Checked Out',
+      'Late', 'Working', 'Checked Out',
     ];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({

@@ -2,9 +2,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../utils/api';
 import {
   Search, Save, CheckCircle2, RefreshCw,
-  ChevronLeft, ChevronRight, CalendarDays, AlertCircle
+  ChevronLeft, ChevronRight, CalendarDays, AlertCircle,
+  Pencil, Clock
 } from 'lucide-react';
 import DateInput, { toIsoDate } from '../components/common/DateInput';
+import Modal from '../components/common/Modal';
 import './AdminAttendance.css';
 
 
@@ -32,7 +34,7 @@ const fmtDuration = (secs) => {
 };
 
 const STATUS_OPTIONS = [
-  'Present', 'Absent', 'Permission', 'Half Day', 'On Leave', 'Work From Home', 'Late', 'Checked Out',
+  'Present', 'Absent', 'Permission', 'Half Day', 'On Leave', 'Late',
 ];
 
 const getBadgeClass = (status) => {
@@ -67,6 +69,66 @@ const AdminAttendance = () => {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [bulkSaving, setBulkSaving] = useState(false);
+
+  // Edit Modal State
+  const [editingRow, setEditingRow] = useState(null);
+  const [editForm, setEditForm] = useState({
+    status: 'Present',
+    inTime: '',
+    outTime: '',
+    reason: ''
+  });
+  const [modalSaving, setModalSaving] = useState(false);
+
+  const handleOpenEditModal = (row) => {
+    setEditingRow(row);
+    setEditForm({
+      status: row._localStatus || row.status || 'Present',
+      inTime: row.firstLoginTime ? new Date(row.firstLoginTime).toTimeString().slice(0, 5) : '',
+      outTime: row.lastLogoutTime ? new Date(row.lastLogoutTime).toTimeString().slice(0, 5) : '',
+      reason: row.correctionReason || ''
+    });
+  };
+
+  const handleSaveModal = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!editingRow) return;
+    setModalSaving(true);
+    try {
+      let firstLoginTime = null;
+      let lastLogoutTime = null;
+
+      if (editForm.inTime) {
+        const dt = new Date(selectedDate);
+        const [h, m] = editForm.inTime.split(':');
+        dt.setHours(parseInt(h), parseInt(m), 0, 0);
+        firstLoginTime = dt.toISOString();
+      }
+      if (editForm.outTime) {
+        const dt = new Date(selectedDate);
+        const [h, m] = editForm.outTime.split(':');
+        dt.setHours(parseInt(h), parseInt(m), 0, 0);
+        lastLogoutTime = dt.toISOString();
+      }
+
+      await api.post('/admin/attendance/mark', {
+        employeeId: editingRow.employeeId,
+        date: selectedDate,
+        status: editForm.status,
+        firstLoginTime,
+        lastLogoutTime,
+        correctionReason: editForm.reason || 'Admin manual update'
+      });
+
+      showToast(`✓ Updated attendance for ${editingRow.fullName}`, 'success');
+      setEditingRow(null);
+      fetchRegister(selectedDate);
+    } catch {
+      showToast(`Failed to update attendance for ${editingRow.fullName}`, 'error');
+    } finally {
+      setModalSaving(false);
+    }
+  };
 
   // Monthly report state
   const [reportMonth, setReportMonth] = useState(new Date().getMonth() + 1);
@@ -139,34 +201,17 @@ const AdminAttendance = () => {
   const saveRow = async (row) => {
     setSavingId(row.employeeId);
     try {
-      let firstLoginTime = null;
-      let lastLogoutTime = null;
-
-      if (row._localIn) {
-        const dt = new Date(selectedDate);
-        const [h, m] = row._localIn.split(':');
-        dt.setHours(parseInt(h), parseInt(m), 0, 0);
-        firstLoginTime = dt.toISOString();
-      }
-      if (row._localOut) {
-        const dt = new Date(selectedDate);
-        const [h, m] = row._localOut.split(':');
-        dt.setHours(parseInt(h), parseInt(m), 0, 0);
-        lastLogoutTime = dt.toISOString();
-      }
-
       await api.post('/admin/attendance/mark', {
         employeeId: row.employeeId,
         date: selectedDate,
         status: row._localStatus,
-        firstLoginTime,
-        lastLogoutTime,
+        firstLoginTime: row.firstLoginTime,
+        lastLogoutTime: row.lastLogoutTime,
         correctionReason: 'Admin marked via attendance register',
       });
 
       setSavedRows(prev => new Set([...prev, row.employeeId]));
-      showToast(`✓ ${row.fullName}'s attendance saved`, 'success');
-      // Refresh summary
+      showToast(`✓ ${row.fullName}'s attendance saved as "${row._localStatus}"`, 'success');
       fetchRegister(selectedDate);
     } catch {
       showToast(`Failed to save ${row.fullName}'s attendance`, 'error');
@@ -179,23 +224,13 @@ const AdminAttendance = () => {
   const saveAll = async () => {
     setBulkSaving(true);
     try {
-      const records = filteredRegister.map(row => {
-        let firstLoginTime = null;
-        let lastLogoutTime = null;
-        if (row._localIn) {
-          const dt = new Date(selectedDate);
-          const [h, m] = row._localIn.split(':');
-          dt.setHours(parseInt(h), parseInt(m), 0, 0);
-          firstLoginTime = dt.toISOString();
-        }
-        if (row._localOut) {
-          const dt = new Date(selectedDate);
-          const [h, m] = row._localOut.split(':');
-          dt.setHours(parseInt(h), parseInt(m), 0, 0);
-          lastLogoutTime = dt.toISOString();
-        }
-        return { employeeId: row.employeeId, status: row._localStatus, firstLoginTime, lastLogoutTime };
-      });
+      const records = filteredRegister.map(row => ({
+        employeeId: row.employeeId,
+        status: row._localStatus,
+        firstLoginTime: row.firstLoginTime,
+        lastLogoutTime: row.lastLogoutTime,
+        correctionReason: 'Admin bulk mark'
+      }));
       const res = await api.post('/admin/attendance/bulk-mark', { date: selectedDate, records });
       if (res.data.success) {
         const savedIds = new Set(filteredRegister.map(r => r.employeeId));
@@ -302,7 +337,7 @@ const AdminAttendance = () => {
 
             {/* Filter */}
             <div className="aa-filter-tabs">
-              {['ALL', 'Present', 'Absent', 'On Leave', 'Half Day', 'Work From Home', 'Late'].map(f => (
+              {['ALL', 'Present', 'Absent', 'On Leave', 'Half Day', 'Late'].map(f => (
                 <button
                   key={f}
                   className={`aa-filter-btn ${filterStatus === f ? 'active' : ''}`}
@@ -355,10 +390,6 @@ const AdminAttendance = () => {
                 <div className="aa-stat-num">{summary.halfDay ?? 0}</div>
                 <div className="aa-stat-label">Half Day</div>
               </div>
-              <div className="aa-stat-card wfh">
-                <div className="aa-stat-num">{summary.wfh ?? 0}</div>
-                <div className="aa-stat-label">WFH</div>
-              </div>
               <div className="aa-stat-card late">
                 <div className="aa-stat-num">{summary.late ?? 0}</div>
                 <div className="aa-stat-label">Late</div>
@@ -395,14 +426,12 @@ const AdminAttendance = () => {
                 <table className="aa-table">
                   <thead>
                     <tr>
-                      <th>#</th>
+                      <th style={{ width: '40px' }}>#</th>
                       <th>Employee</th>
                       <th>Department</th>
-                      <th>Status</th>
-                      <th>Check-In</th>
-                      <th>Check-Out</th>
-                      <th>Work Hours</th>
-                      <th>Action</th>
+                      <th style={{ width: '180px' }}>Attendance Status</th>
+                      <th>Logged Punch</th>
+                      <th style={{ width: '160px' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -425,7 +454,7 @@ const AdminAttendance = () => {
                               <div>
                                 <div className="aa-emp-name">
                                   {row.fullName}
-                                  {row.isManualCorrection && <span className="aa-correction-dot" title="Manually corrected" />}
+                                  {row.isManualCorrection && <span className="aa-correction-dot" title={row.correctionReason || 'Admin edited'} />}
                                 </div>
                                 <div className="aa-emp-code">{row.empCode}</div>
                               </div>
@@ -445,59 +474,54 @@ const AdminAttendance = () => {
                               {STATUS_OPTIONS.map(s => (
                                 <option key={s} value={s}>{s}</option>
                               ))}
-                              {/* Also allow current system-set statuses */}
-                              {!STATUS_OPTIONS.includes(row.status) && <option value={row.status}>{row.status}</option>}
+                              {!STATUS_OPTIONS.includes(row._localStatus) && <option value={row._localStatus}>{row._localStatus}</option>}
                             </select>
                           </td>
 
-                          {/* Time In */}
+                          {/* Logged Punch (Automated or recorded checkin/checkout) */}
                           <td>
-                            <input
-                              type="time"
-                              className="aa-time-input"
-                              value={row._localIn}
-                              onChange={e => handleFieldChange(row.employeeId, '_localIn', e.target.value)}
-                              id={`aa-in-${row.employeeId}`}
-                            />
+                            {row.firstLoginTime ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span style={{ color: '#34d399', fontSize: '0.82rem', fontFamily: 'monospace', fontWeight: 600 }}>
+                                  In: {fmtTime(row.firstLoginTime)}
+                                </span>
+                                {row.lastLogoutTime && (
+                                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.74rem', fontFamily: 'monospace' }}>
+                                    Out: {fmtTime(row.lastLogoutTime)} {row.totalWorkDurationInSeconds > 0 ? `(${fmtDuration(row.totalWorkDurationInSeconds)})` : ''}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>
+                                Not Checked In
+                              </span>
+                            )}
                           </td>
 
-                          {/* Time Out */}
+                          {/* Actions: Save button & Edit button */}
                           <td>
-                            <input
-                              type="time"
-                              className="aa-time-input"
-                              value={row._localOut}
-                              onChange={e => handleFieldChange(row.employeeId, '_localOut', e.target.value)}
-                              id={`aa-out-${row.employeeId}`}
-                            />
-                          </td>
-
-                          {/* Work Hours */}
-                          <td style={{ color: 'rgba(255,255,255,0.55)' }}>
-                            {row._localIn && row._localOut
-                              ? (() => {
-                                  const [ih, im] = row._localIn.split(':').map(Number);
-                                  const [oh, om] = row._localOut.split(':').map(Number);
-                                  const mins = (oh * 60 + om) - (ih * 60 + im);
-                                  if (mins <= 0) return '—';
-                                  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-                                })()
-                              : fmtDuration(row.totalWorkDurationInSeconds)
-                            }
-                          </td>
-
-                          {/* Save Row */}
-                          <td>
-                            <button
-                              className={`aa-save-btn ${isSaved ? 'saved' : ''}`}
-                              onClick={() => saveRow(row)}
-                              disabled={isSaving}
-                              id={`aa-save-row-${row.employeeId}`}
-                            >
-                              {isSaving ? <><div className="aa-spinner" style={{ width: 12, height: 12, borderWidth: 2 }} /> Saving</> :
-                               isSaved ? <><CheckCircle2 size={13} /> Saved</> :
-                               <><Save size={13} /> Save</>}
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <button
+                                className={`aa-save-btn ${isSaved ? 'saved' : ''}`}
+                                onClick={() => saveRow(row)}
+                                disabled={isSaving}
+                                id={`aa-save-row-${row.employeeId}`}
+                                title="Save Attendance Status"
+                              >
+                                {isSaving ? <><div className="aa-spinner" style={{ width: 12, height: 12, borderWidth: 2 }} /> Saving</> :
+                                 isSaved ? <><CheckCircle2 size={13} /> Saved</> :
+                                 <><Save size={13} /> Save</>}
+                              </button>
+                              <button
+                                type="button"
+                                className="aa-edit-btn"
+                                onClick={() => handleOpenEditModal(row)}
+                                id={`aa-edit-row-${row.employeeId}`}
+                                title="Edit Attendance Details"
+                              >
+                                <Pencil size={12} /> Edit
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -609,6 +633,105 @@ const AdminAttendance = () => {
           </div>
         </>
       )}
+
+      {/* Edit Attendance Modal */}
+      <Modal
+        isOpen={!!editingRow}
+        onClose={() => setEditingRow(null)}
+        title={<><Clock size={18} style={{ marginRight: '0.5rem', color: '#38bdf8' }} /> Edit Attendance — {editingRow?.fullName}</>}
+      >
+        <form onSubmit={handleSaveModal} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem' }}>Attendance Date</label>
+              <input 
+                type="text" 
+                className="aa-time-input" 
+                value={selectedDate} 
+                disabled 
+                style={{ width: '100%', padding: '0.55rem', opacity: 0.7, cursor: 'not-allowed', color: '#fff' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem' }}>Attendance Status</label>
+              <select 
+                className="aa-status-select" 
+                value={editForm.status} 
+                onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                style={{ width: '100%', padding: '0.55rem' }}
+              >
+                <option value="Present">Present (Full Day Approved)</option>
+                <option value="Late">Late (Late Punch-In)</option>
+                <option value="Half Day">Half Day</option>
+                <option value="Permission">Permission (Official Permission)</option>
+                <option value="On Leave">On Leave</option>
+                <option value="Absent">Absent</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={{ fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem', color: 'rgba(255,255,255,0.8)' }}>Check-In Time (Optional)</label>
+              <input 
+                type="time" 
+                className="aa-time-input" 
+                value={editForm.inTime} 
+                onChange={e => setEditForm({ ...editForm, inTime: e.target.value })} 
+                style={{ width: '100%', padding: '0.55rem' }}
+              />
+              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
+                Standard: 09:30 AM (Grace to 10:15 AM)
+              </span>
+            </div>
+
+            <div>
+              <label style={{ fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem', color: 'rgba(255,255,255,0.8)' }}>Check-Out Time (Optional)</label>
+              <input 
+                type="time" 
+                className="aa-time-input" 
+                value={editForm.outTime} 
+                onChange={e => setEditForm({ ...editForm, outTime: e.target.value })} 
+                style={{ width: '100%', padding: '0.55rem' }}
+              />
+              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
+                Standard: 06:30 PM
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem', color: 'rgba(255,255,255,0.8)' }}>Remarks / Reason (Optional)</label>
+            <input 
+              type="text" 
+              placeholder="e.g. Management approval / Late check-in excused / System adjustment" 
+              value={editForm.reason} 
+              onChange={e => setEditForm({ ...editForm, reason: e.target.value })} 
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '0.55rem 0.8rem', color: '#fff', fontSize: '0.85rem', outline: 'none' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <button 
+              type="button" 
+              className="btn btn-outline" 
+              onClick={() => setEditingRow(null)}
+              style={{ padding: '0.5rem 1rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff', cursor: 'pointer' }}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              disabled={modalSaving}
+              style={{ padding: '0.5rem 1.25rem', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+            >
+              <Save size={15} /> {modalSaving ? 'Saving...' : 'Save Attendance'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Toast */}
       {toast && (

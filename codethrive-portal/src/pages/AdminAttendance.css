@@ -202,6 +202,28 @@
 .aa-stat-card.wfh     .aa-stat-num { color: #38bdf8; }
 .aa-stat-card.late    .aa-stat-num { color: #e879f9; }
 
+/* Edit btn */
+.aa-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.38rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 7px;
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.aa-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
 /* ─── REGISTER TABLE ──────────────────────────────────────── */
 .aa-table-wrap {
   background: rgba(255,255,255,0.03);
