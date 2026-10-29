@@ -15,6 +15,7 @@ import {
   getCorporateTableStyles,
   formatCurrencyINR
 } from '../utils/pdfLetterhead';
+import { generatePsgStylePayslipPdf } from '../utils/psgPayslipPdf.js';
 import { 
   Banknote, Plus, Search, CheckCircle2, X, Zap, Eye, Printer, Users, 
   Sparkles, DollarSign, TrendingUp, ShieldCheck, Download, FileText,
@@ -303,10 +304,14 @@ const AdminPayroll = () => {
       setEmployees(apiEmps);
 
       const localPayrolls = JSON.parse(localStorage.getItem('cti_shared_payrolls') || '[]');
-      const cleanLocalPayrolls = localPayrolls.filter(p => p && !String(p._id).startsWith('ps-'));
-      localStorage.setItem('cti_shared_payrolls', JSON.stringify(cleanLocalPayrolls));
       
-      const combined = [...cleanLocalPayrolls, ...apiPayrolls];
+      // If local storage is empty, initialize with 10 default staff payrolls
+      const basePayrolls = localPayrolls.length > 0 ? localPayrolls : _DEFAULT_PAYROLLS;
+      if (localPayrolls.length === 0) {
+        localStorage.setItem('cti_shared_payrolls', JSON.stringify(_DEFAULT_PAYROLLS));
+      }
+
+      const combined = [...apiPayrolls, ...basePayrolls];
       const map = new Map();
       combined.forEach(p => map.set(p._id, p));
       setPayrolls(Array.from(map.values()));
@@ -548,6 +553,12 @@ const AdminPayroll = () => {
 
   const downloadPayslipPDF = async (payslip) => {
     try {
+      await generatePsgStylePayslipPdf({
+        payslip,
+        overrideMonth: payslip.month,
+        overrideDate: payslip.paymentDate
+      });
+      return;
       const basic = payslip.basicSalary || 0;
       const da = payslip.allowanceDetails?.da || 0;
       const hra = payslip.allowanceDetails?.hra || 0;

@@ -36,7 +36,7 @@ exports.createIndividualPayroll = async (req, res) => {
     const { 
       employeeId, month, basicSalary, bonus, 
       allowanceDetails, deductionDetails, 
-      status, paymentDate
+      status, paymentDate, employeeInfo, leaveStatus
     } = req.body;
 
     const employee = await Employee.findById(employeeId);
@@ -52,7 +52,9 @@ exports.createIndividualPayroll = async (req, res) => {
 
     // Calculate totals
     const totalAllowances = 
+      (allowanceDetails?.da || 0) +
       (allowanceDetails?.hra || 0) + 
+      (allowanceDetails?.conveyance || 0) + 
       (allowanceDetails?.travel || 0) + 
       (allowanceDetails?.medical || 0) + 
       (allowanceDetails?.other || 0);
@@ -69,7 +71,7 @@ exports.createIndividualPayroll = async (req, res) => {
     const grossSalary = Number(basicSalary) + totalAllowances + Number(bonus || 0);
     const netPayable = grossSalary - totalDeductions;
 
-    const payslipId = `PS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+    const payslipId = `CTI-PSL-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
 
     const payroll = await Payroll.create({
       employee: employee._id,
@@ -84,7 +86,21 @@ exports.createIndividualPayroll = async (req, res) => {
       grossSalary,
       netPayable,
       status: status || 'Pending',
-      paymentDate: paymentDate || null
+      paymentDate: paymentDate || null,
+      employeeInfo: employeeInfo || {
+        dob: employee.dateOfBirth,
+        doj: employee.dateOfJoining,
+        bankAcNo: employee.accountNumber,
+        pfNo: employee.panNumber ? `TN/CBE/PF/${employee.employeeId}` : '',
+        pfPercent: 12,
+        esiNo: ''
+      },
+      leaveStatus: leaveStatus || {
+        cl: { eligible: 12, availed: 1, balance: 11 },
+        el: { eligible: 15, availed: 0, balance: 15 },
+        ml: { eligible: 0, availed: 0, balance: 0 },
+        lop: 0
+      }
     });
 
     res.status(201).json({ success: true, data: payroll });
@@ -119,28 +135,45 @@ exports.bulkGeneratePayroll = async (req, res) => {
         continue;
       }
 
-      const basicSalary = emp.salaryAmount || 45000;
+      const basicSalary = Number(emp.salaryAmount) || 45000;
       const allowanceDetails = {
-        hra: Math.round(basicSalary * 0.4),
-        travel: 2500,
+        da: Math.round(basicSalary * 0.1),
+        hra: Math.round(basicSalary * 0.25),
+        conveyance: 3000,
+        travel: 2000,
         medical: 1500,
-        other: 1000
+        other: 2000
       };
+      const totalAllowances = 
+        allowanceDetails.da + 
+        allowanceDetails.hra + 
+        allowanceDetails.conveyance + 
+        allowanceDetails.travel + 
+        allowanceDetails.medical + 
+        allowanceDetails.other;
+
       const deductionDetails = {
         pf: Math.round(basicSalary * 0.12),
         esi: 0,
         professionalTax: 200,
-        incomeTax: 1500,
+        incomeTax: basicSalary > 50000 ? Math.round(basicSalary * 0.05) : 1000,
         leaveDeduction: 0,
         loanAdvance: 0,
         other: 0
       };
 
-      const totalAllowances = allowanceDetails.hra + allowanceDetails.travel + allowanceDetails.medical + allowanceDetails.other;
-      const totalDeductions = deductionDetails.pf + deductionDetails.professionalTax + deductionDetails.incomeTax;
+      const totalDeductions = 
+        deductionDetails.pf + 
+        deductionDetails.esi + 
+        deductionDetails.professionalTax + 
+        deductionDetails.incomeTax + 
+        deductionDetails.leaveDeduction + 
+        deductionDetails.loanAdvance + 
+        deductionDetails.other;
+
       const grossSalary = basicSalary + totalAllowances;
       const netPayable = grossSalary - totalDeductions;
-      const payslipId = `PS-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+      const payslipId = `CTI-PSL-${new Date().getFullYear()}-${String(1000 + createdCount + 1)}`;
 
       const payroll = await Payroll.create({
         employee: emp._id,
@@ -155,7 +188,21 @@ exports.bulkGeneratePayroll = async (req, res) => {
         grossSalary,
         netPayable,
         status: status || 'Paid',
-        paymentDate: paymentDate || new Date()
+        paymentDate: paymentDate || new Date(),
+        employeeInfo: {
+          dob: emp.dateOfBirth || '1998-05-15',
+          doj: emp.dateOfJoining || '2024-01-15',
+          bankAcNo: emp.accountNumber || 'XXXX-XXXX-4521',
+          pfNo: `TN/CBE/PF/${emp.employeeId || '001'}`,
+          pfPercent: 12,
+          esiNo: ''
+        },
+        leaveStatus: {
+          cl: { eligible: 12, availed: 1, balance: 11 },
+          el: { eligible: 15, availed: 0, balance: 15 },
+          ml: { eligible: 0, availed: 0, balance: 0 },
+          lop: 0
+        }
       });
 
       createdPayrolls.push(payroll);
