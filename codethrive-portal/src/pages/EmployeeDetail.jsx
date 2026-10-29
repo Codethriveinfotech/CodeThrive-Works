@@ -3315,7 +3315,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                           boxShadow: '0 4px 14px rgba(16, 185, 129, 0.35)'
                         }}
                       >
-                        <CheckCircle2 size={16} /> {isIssuingPayslip ? 'Generating...' : `⚡ Issue Payslip for ${issuePayMonth}`}
+                        <CheckCircle2 size={16} /> {isIssuingPayslip ? 'Generating...' : `Issue Payslip for ${issuePayMonth}`}
                       </button>
                     </div>
                   </div>

@@ -4,13 +4,15 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, CheckSquare, FileText, Banknote, 
-  CalendarOff, UserCircle, LogOut, ChevronLeft, ChevronRight, FolderOpen, Clock 
+  CalendarOff, UserCircle, LogOut, ChevronLeft, ChevronRight, FolderOpen, Clock, Settings 
 } from 'lucide-react';
+import SettingsModal from './SettingsModal';
 import './Sidebar.css';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   useEffect(() => {
     if (collapsed) {
@@ -121,11 +123,26 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
+        <button 
+          className="nav-item" 
+          onClick={() => setShowSettingsModal(true)} 
+          title={collapsed ? "Account Settings" : ""}
+          style={{ width: '100%', marginBottom: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+        >
+          <Settings size={20} />
+          {!collapsed && <span>Account Settings</span>}
+        </button>
         <button className="nav-item logout-btn" onClick={handleLogout} title={collapsed ? "Logout" : ""}>
           <LogOut size={20} />
           {!collapsed && <span>Logout</span>}
         </button>
       </div>
+
+      <SettingsModal 
+        isOpen={showSettingsModal} 
+        onClose={() => setShowSettingsModal(false)} 
+        isAdmin={false} 
+      />
     </aside>
   );
 };

@@ -5,8 +5,9 @@ import { useAuth } from '../context/AuthContext';
 import { 
   Users, CheckSquare, 
   FileText, Banknote, FolderOpen, UserCircle, Building2,
-  CalendarOff, LogOut, ChevronLeft, ChevronRight, ClipboardList, ArrowLeft, User
+  CalendarOff, LogOut, ChevronLeft, ChevronRight, ClipboardList, ArrowLeft, User, Settings
 } from 'lucide-react';
+import SettingsModal from './SettingsModal';
 import './Sidebar.css';
 
 const AdminSidebar = () => {
@@ -15,6 +16,7 @@ const AdminSidebar = () => {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [activeEmployeeInfo, setActiveEmployeeInfo] = useState(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   // Check if current view is an Employee Detail page (/admin/employees/:id)
   const isEmployeeDetail = location.pathname.startsWith('/admin/employees/') && location.pathname !== '/admin/employees';
@@ -85,7 +87,8 @@ const AdminSidebar = () => {
     { id: 'leaves', name: 'Leave Applications', icon: <CalendarOff size={20} /> },
     { id: 'attendance', name: 'Attendance Audit', icon: <ClipboardList size={20} /> },
     { id: 'documents', name: 'Documents', icon: <FolderOpen size={20} /> },
-    { id: 'management', name: 'Payroll & Access', icon: <Banknote size={20} /> }
+    { id: 'management', name: 'Payroll & Payslips', icon: <Banknote size={20} /> },
+    { id: 'settings', name: 'Account Settings', icon: <Settings size={20} /> }
   ];
 
   const handleLogout = () => {
@@ -261,11 +264,26 @@ const AdminSidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
+        <button 
+          className="nav-item" 
+          onClick={() => setShowSettingsModal(true)} 
+          title={collapsed ? "Account Settings" : ""}
+          style={{ width: '100%', marginBottom: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+        >
+          <Settings size={20} />
+          {!collapsed && <span>Account Settings</span>}
+        </button>
         <button className="nav-item logout-btn" onClick={handleLogout} title={collapsed ? "Logout" : ""}>
           <LogOut size={20} />
           {!collapsed && <span>Logout</span>}
         </button>
       </div>
+
+      <SettingsModal 
+        isOpen={showSettingsModal} 
+        onClose={() => setShowSettingsModal(false)} 
+        isAdmin={true} 
+      />
     </aside>
   );
 };
