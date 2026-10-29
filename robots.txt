@@ -1,0 +1,28 @@
+# CodeThrive Works — Robots Exclusion File
+# https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+Allow: /
+Allow: /employee/login
+Allow: /employee/register
+Allow: /employee/forgot-password
+Allow: /admin/login
+
+# Disallow private authenticated portal views and internal APIs
+Disallow: /employee/dashboard
+Disallow: /employee/attendance
+Disallow: /employee/tasks
+Disallow: /employee/daily-reports
+Disallow: /employee/leave
+Disallow: /employee/documents
+Disallow: /employee/payroll
+Disallow: /employee/profile
+Disallow: /employee/timesheet
+Disallow: /employee/team
+Disallow: /employee/projects
+Disallow: /employee/performance
+Disallow: /employee/meetings
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://portal.codethriveinfotech.in/sitemap.xml
