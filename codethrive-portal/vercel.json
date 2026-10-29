@@ -8,6 +8,10 @@
           "value": "application/xml; charset=utf-8"
         },
         {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
           "key": "X-Robots-Tag",
           "value": "all"
         }
@@ -19,6 +23,10 @@
         {
           "key": "Content-Type",
           "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     }
@@ -27,14 +35,6 @@
     {
       "source": "/api/(.*)",
       "destination": "https://codethrive-backend.onrender.com/api/$1"
-    },
-    {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
     },
     {
       "source": "/((?!api/|.*\\..*).*)",
