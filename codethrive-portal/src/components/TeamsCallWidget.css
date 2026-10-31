@@ -266,13 +266,14 @@
   width: 420px;
   max-height: 84vh;
   height: auto;
-  background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(150deg, #0c1222 0%, #111a30 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
   border-radius: 24px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(16, 185, 129, 0.25);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  backdrop-filter: blur(20px);
   animation: teamsPanelSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -289,7 +290,7 @@
 
 .teams-panel-header {
   padding: 1.1rem 1.25rem;
-  background: linear-gradient(135deg, #181124 0%, #0d0f1a 100%);
+  background: linear-gradient(135deg, #0a0f1d 0%, #111728 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
@@ -347,41 +348,13 @@
   transform: rotate(90deg);
 }
 
-/* Tabs Bar */
-.connect-tabs-bar {
-  display: flex;
-  background: #100e1c;
-  padding: 6px 12px;
-  gap: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.connect-tab-btn {
-  flex: 1;
-  padding: 7px 12px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  color: #94a3b8;
-  background: transparent;
-  transition: all 0.2s ease;
-}
-
-.connect-tab-btn.active {
-  background: #1f1b30;
-  color: #34d399;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
 /* --------------------------------------------------------------------------
-   CONNECT CHANNELS CONTAINER & CARDS (IMAGE 2 DESIGN)
+   CONNECT CHANNELS CONTAINER & CARDS (WEBSITE DARK THEME)
    -------------------------------------------------------------------------- */
 .connect-channels-container {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: transparent;
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -401,17 +374,19 @@
   align-items: center;
   justify-content: space-between;
   border-radius: 16px;
-  border: 1.5px solid;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.7);
   padding: 10px 14px;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .channel-card-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  background: rgba(30, 41, 59, 0.85);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .channel-icon-box {
@@ -423,7 +398,7 @@
   justify-content: center;
   color: #ffffff;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .channel-info-box {
@@ -442,7 +417,7 @@
 .channel-title-text {
   font-size: 0.92rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #ffffff;
 }
 
 .channel-badge-pill {
@@ -456,8 +431,8 @@
 
 .channel-sub-text {
   font-size: 0.78rem;
-  font-weight: 600;
-  color: #475569;
+  font-weight: 500;
+  color: #94a3b8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -475,13 +450,13 @@
 
 .channel-card-item:hover .channel-link-arrow {
   transform: translate(2px, -2px);
-  color: #0f172a;
+  color: #34d399;
 }
 
 .connect-modal-footer {
   padding: 12px 18px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: rgba(10, 15, 29, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -490,20 +465,20 @@
 .footer-assist-text {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #cbd5e1;
 }
 
 .footer-contact-link {
   font-size: 0.8rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #34d399;
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .footer-contact-link:hover {
   text-decoration: underline;
-  color: #10b981;
+  color: #6ee7b7;
 }
 
 /* Directory Tab Switcher */

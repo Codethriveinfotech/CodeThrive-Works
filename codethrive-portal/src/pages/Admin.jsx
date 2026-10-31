@@ -6,8 +6,9 @@ import {
   Users, UserCheck, Coffee, CheckCircle2, Eye, 
   Clock, Plus, X, ListTodo, Briefcase, Mail, Calendar,
   FileText, Check, ArrowRight, RefreshCw, ShieldCheck, Sparkles, TrendingUp,
-  UserPlus
+  UserPlus, BellRing, Download, MessageCircle
 } from 'lucide-react';
+import { generateEmployeeMasterDossierPDF } from '../utils/employeeMasterDossierPdf';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import StatusBadge from '../components/common/StatusBadge';
@@ -257,6 +258,38 @@ const Admin = () => {
     }
   ];
 
+  const handleDownloadMonthlyMasterDossier = async () => {
+    try {
+      const today = new Date();
+      const monthName = today.toLocaleString('default', { month: 'long' });
+      const year = today.getFullYear();
+      
+      const targetEmp = liveMonitoring.length > 0 ? liveMonitoring[0] : {
+        fullName: 'Kirubakaran V',
+        employeeId: 'CTI-2026-001',
+        designation: 'Managing Director & Lead',
+        department: 'Executive Leadership',
+        personalEmailAddress: 'admin@codethrive.com',
+        personalPhoneNumber: '7812864905',
+        salary: 80000
+      };
+
+      await generateEmployeeMasterDossierPDF(targetEmp, monthName, year);
+    } catch (err) {
+      alert('Error generating monthly dossier: ' + err.message);
+    }
+  };
+
+  const handleSendMonthEndWhatsAppAlert = () => {
+    const today = new Date();
+    const monthName = today.toLocaleString('default', { month: 'long' });
+    const year = today.getFullYear();
+    const msg = `🔔 *CodeThrive Infotech - Month-End Audit Notification*\n\nHello Kirubakaran,\nToday is the month-end date (${monthName} ${year}).\n\nAll employee master database records (Full Profiles, Monthly Attendance Logs, Leaves, Completed Tasks & Payroll Computation) are consolidated into a single master audit dossier.\n\nPlease review and download the monthly dossiers from the Admin Portal.\n\n🌐 Portal URL: https://codethriveinfotech.in/admin\n📅 Timestamp: ${today.toLocaleString('en-IN')}`;
+    
+    const waUrl = `https://wa.me/917812864905?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+  };
+
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh', flexDirection: 'column' }}>
       <div className="loader"></div>
@@ -282,6 +315,109 @@ const Admin = () => {
               <Plus size={16} /> Register Employee
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* 📅 MONTH-END MASTER AUDIT DOSSIER & WHATSAPP DISPATCH BANNER */}
+      <div 
+        style={{
+          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 27, 75, 0.95) 100%)',
+          border: '1.5px solid rgba(52, 211, 153, 0.6)',
+          borderRadius: '18px',
+          padding: '1.25rem 1.5rem',
+          boxShadow: '0 12px 35px rgba(0, 0, 0, 0.55), 0 0 25px rgba(52, 211, 153, 0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1.2rem'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.1rem', minWidth: '280px', flex: '1 1 340px' }}>
+          <div style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '14px',
+            background: 'rgba(52, 211, 153, 0.15)',
+            border: '1px solid rgba(52, 211, 153, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#34d399',
+            flexShrink: 0
+          }}>
+            <BellRing size={24} style={{ animation: 'phoneRingVibrate 0.6s infinite alternate ease-in-out' }} />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '4px', flexWrap: 'wrap' }}>
+              <span style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: '#fff',
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                padding: '2px 9px',
+                borderRadius: '999px',
+                letterSpacing: '0.04em'
+              }}>
+                MONTH-END CONSOLIDATION AUDIT
+              </span>
+              <span style={{ color: '#34d399', fontSize: '0.78rem', fontWeight: 700 }}>
+                &bull; Ready for Monthly Download
+              </span>
+            </div>
+            <h4 style={{ margin: 0, fontSize: '1.02rem', fontWeight: 800, color: '#ffffff' }}>
+              Employee Monthly Master Audit Dossier (All Database Details in 1 PDF)
+            </h4>
+            <p style={{ margin: '3px 0 0 0', fontSize: '0.82rem', color: '#94a3b8', lineHeight: '1.4' }}>
+              Consolidates full profile, official KYC, banking details, monthly attendance, leave audit, completed tasks & payroll compensation.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+          <button 
+            type="button"
+            onClick={handleDownloadMonthlyMasterDossier}
+            style={{
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: '#ffffff',
+              border: 'none',
+              padding: '0.7rem 1.25rem',
+              borderRadius: '12px',
+              fontWeight: 800,
+              fontSize: '0.84rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              boxShadow: '0 4px 15px rgba(16, 185, 129, 0.45)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Download size={16} /> Download Monthly Dossier (1-Click PDF)
+          </button>
+
+          <button 
+            type="button"
+            onClick={handleSendMonthEndWhatsAppAlert}
+            style={{
+              background: 'rgba(37, 211, 102, 0.18)',
+              color: '#25D366',
+              border: '1.5px solid rgba(37, 211, 102, 0.55)',
+              padding: '0.7rem 1.25rem',
+              borderRadius: '12px',
+              fontWeight: 800,
+              fontSize: '0.84rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            title="Dispatch official WhatsApp Month-End notification to MD Kirubakaran (+91 7812864905)"
+          >
+            <MessageCircle size={16} /> Send MD WhatsApp Alert (+91 7812864905)
+          </button>
         </div>
       </div>
 

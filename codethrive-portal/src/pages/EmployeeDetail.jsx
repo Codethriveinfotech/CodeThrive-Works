@@ -10,6 +10,7 @@ import {
   getCorporateTableStyles,
   formatCurrencyINR
 } from '../utils/pdfLetterhead';
+import { generateEmployeeMasterDossierPDF } from '../utils/employeeMasterDossierPdf';
 import { 
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
   KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard,
@@ -1226,6 +1227,19 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
 
   const handleDownloadMonthlyAuditPDF = async () => {
     if (!employee) return;
+    try {
+      const today = new Date();
+      const monthObj = AUDIT_MONTH_OPTIONS.find(m => m.value === selectedAuditMonth);
+      const selectedMonthName = monthObj ? monthObj.label.split(' ')[0] : 'October';
+      await generateEmployeeMasterDossierPDF(employee, selectedMonthName, today.getFullYear());
+      return;
+    } catch (err) {
+      console.error('Failed to generate master dossier PDF', err);
+      alert('Error generating master dossier PDF. Please try again.');
+    }
+  };
+
+  const handleOldUnusedPdf = async () => {
     try {
       const monthObj = AUDIT_MONTH_OPTIONS.find(m => m.value === selectedAuditMonth);
       const selectedLabel = monthObj ? monthObj.label : 'All-Time Continuous History';

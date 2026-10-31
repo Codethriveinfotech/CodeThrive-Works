@@ -606,272 +606,60 @@ const TeamsCallWidget = () => {
             </button>
           </div>
 
-          {/* Tab Selector */}
-          <div className="connect-tabs-bar">
-            <button 
-              className={`connect-tab-btn ${activeTab === 'channels' ? 'active' : ''}`}
-              onClick={() => setActiveTab('channels')}
-            >
-              Direct Channels
-            </button>
-            <button 
-              className={`connect-tab-btn ${activeTab === 'directory' ? 'active' : ''}`}
-              onClick={() => setActiveTab('directory')}
-            >
-              Staff Directory
-            </button>
-          </div>
-
-          {activeTab === 'channels' ? (
-            /* Official Connect Channels (Image 2 style) */
-            <div className="connect-channels-container">
-              <div className="channels-cards-list">
-                {OFFICIAL_CHANNELS.map(ch => (
-                  <a
-                    key={ch.id}
-                    href={ch.link}
-                    target={ch.link.startsWith('tel:') || ch.link.startsWith('mailto:') ? '_self' : '_blank'}
-                    rel="noopener noreferrer"
-                    className="channel-card-item"
-                    style={{
-                      background: ch.bg,
-                      borderColor: ch.border
-                    }}
-                  >
-                    <div 
-                      className="channel-icon-box"
-                      style={{ background: ch.iconBg }}
-                    >
-                      {renderChannelIcon(ch.type)}
-                    </div>
-
-                    <div className="channel-info-box">
-                      <div className="channel-title-row">
-                        <span className="channel-title-text">{ch.title}</span>
-                        <span 
-                          className="channel-badge-pill"
-                          style={{ background: ch.badgeColor }}
-                        >
-                          {ch.badge}
-                        </span>
-                      </div>
-                      <span className="channel-sub-text">{ch.subtitle}</span>
-                    </div>
-
-                    <div className="channel-link-arrow">
-                      <ExternalLink size={16} />
-                    </div>
-                  </a>
-                ))}
-              </div>
-
-              {/* Card Footer */}
-              <div className="connect-modal-footer">
-                <span className="footer-assist-text">Need custom assistance?</span>
-                <a 
-                  href="https://codethriveinfotech.in/" 
-                  target="_blank" 
+          {/* Official Connect Channels (Separated Dedicated View Matching Portal Dark Theme) */}
+          <div className="connect-channels-container">
+            <div className="channels-cards-list">
+              {OFFICIAL_CHANNELS.map(ch => (
+                <a
+                  key={ch.id}
+                  href={ch.link}
+                  target={ch.link.startsWith('tel:') || ch.link.startsWith('mailto:') ? '_self' : '_blank'}
                   rel="noopener noreferrer"
-                  className="footer-contact-link"
+                  className="channel-card-item"
+                  style={{
+                    borderColor: ch.border
+                  }}
                 >
-                  Go to Contact Page &rarr;
+                  <div 
+                    className="channel-icon-box"
+                    style={{ background: ch.iconBg }}
+                  >
+                    {renderChannelIcon(ch.type)}
+                  </div>
+
+                  <div className="channel-info-box">
+                    <div className="channel-title-row">
+                      <span className="channel-title-text">{ch.title}</span>
+                      <span 
+                        className="channel-badge-pill"
+                        style={{ background: ch.badgeColor }}
+                      >
+                        {ch.badge}
+                      </span>
+                    </div>
+                    <span className="channel-sub-text">{ch.subtitle}</span>
+                  </div>
+
+                  <div className="channel-link-arrow">
+                    <ExternalLink size={16} />
+                  </div>
                 </a>
-              </div>
+              ))}
             </div>
-          ) : (
-            /* If Active Call Screen */
-            activeCall ? (
-              <div className="teams-call-screen">
-                {/* Call Top Bar */}
-                <div className="call-top-bar">
-                  <span className="call-hd-tag">
-                    <ShieldCheck size={13} /> Secure Portal Call
-                  </span>
-                  <span className="call-status-badge">
-                    {activeCall.callStatus === 'Connected' ? formatTimer(callTimer) : activeCall.callStatus}
-                  </span>
-                </div>
 
-                {/* Center Calling Avatar & Ringing Effect */}
-                <div className="call-avatar-stage">
-                  <div className={`call-avatar-circle ${activeCall.callStatus === 'Connected' ? 'in-call' : 'ringing'}`}>
-                    <div className="call-avatar-inner" style={{ background: activeCall.contact.avatarBg }}>
-                      {activeCall.contact.name.charAt(0)}
-                    </div>
-                  </div>
-                  <h3 className="calling-name">{activeCall.contact.name}</h3>
-                  <p className="calling-role">{activeCall.contact.role}</p>
-                  {activeCall.contact.formattedPhone && (
-                    <a 
-                      href={`tel:+${getCleanPhone(activeCall.contact.phone || activeCall.contact.formattedPhone)}`}
-                      className="calling-phone phone-call-link"
-                      title={`Cellular call to ${activeCall.contact.formattedPhone}`}
-                    >
-                      <Phone size={12} style={{ marginRight: '5px' }} />
-                      {activeCall.contact.formattedPhone}
-                    </a>
-                  )}
-                  <span className="calling-dept">{activeCall.contact.dept}</span>
-                </div>
-
-                {/* Ringing Notification Status Alert / Pick Up Instructions */}
-                {activeCall.callStatus === 'Ringing...' ? (
-                  <div className="call-ringing-notice">
-                    <BellRing size={16} className="spin-bell" color="#f59e0b" />
-                    <div>
-                      <strong>Continuous Ringing... ({ringCount})</strong>
-                      <p>Alerting {activeCall.contact.name}'s mobile device. Click <strong>ACCEPT CALL</strong> in banner to pick up.</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="call-mobile-alert">
-                    <BellRing size={14} color="#34d399" style={{ marginRight: '6px' }} />
-                    <span>Call Active & Live &bull; Connected with {activeCall.contact.name}</span>
-                  </div>
-                )}
-
-                {/* Call Controls Bar */}
-                <div className="teams-call-controls">
-                  {activeCall.callStatus === 'Ringing...' ? (
-                    <>
-                      <button 
-                        className="btn-call-pickup-screen"
-                        onClick={handleAcceptCall}
-                        title="Accept & Pick up Call"
-                      >
-                        <Phone size={18} /> Answer Call
-                      </button>
-                      <button 
-                        className="call-ctrl-btn end-call"
-                        onClick={handleDeclineCall}
-                        title="Decline Call"
-                      >
-                        <PhoneOff size={20} />
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button 
-                        className={`call-ctrl-btn ${isMuted ? 'muted' : ''}`}
-                        onClick={() => setIsMuted(!isMuted)}
-                        title={isMuted ? "Unmute Mic" : "Mute Mic"}
-                      >
-                        {isMuted ? <MicOff size={19} /> : <Mic size={19} />}
-                      </button>
-
-                      <button 
-                        className={`call-ctrl-btn ${isVideoOff ? 'off' : ''}`}
-                        onClick={() => setIsVideoOff(!isVideoOff)}
-                        title={isVideoOff ? "Turn Camera On" : "Turn Camera Off"}
-                      >
-                        {isVideoOff ? <VideoOff size={19} /> : <Video size={19} />}
-                      </button>
-
-                      <button 
-                        className={`call-ctrl-btn ${isScreenSharing ? 'active' : ''}`}
-                        onClick={() => {
-                          setIsScreenSharing(!isScreenSharing);
-                          alert(isScreenSharing ? "Screen sharing stopped" : "Sharing screen on Call...");
-                        }}
-                        title="Share Screen"
-                      >
-                        <Monitor size={19} />
-                      </button>
-
-                      <button 
-                        className="call-ctrl-btn end-call"
-                        onClick={handleDeclineCall}
-                        title="End Call"
-                      >
-                        <PhoneOff size={20} />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* Contact List Body */
-              <div className="teams-directory-body">
-                <div className="teams-search-box">
-                  <Search size={16} className="search-ic" />
-                  <input 
-                    type="text" 
-                    placeholder={isAdmin ? "Search registered employees by name, role..." : "Search CEO, MD, HR, Team Leads..."} 
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                  />
-                </div>
-
-                <div className="teams-employee-list">
-                  {filteredList.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'rgba(255,255,255,0.6)' }}>
-                      <Users size={32} style={{ marginBottom: '0.75rem', opacity: 0.5, color: '#60a5fa' }} />
-                      <h5 style={{ margin: '0 0 0.4rem 0', color: '#fff', fontSize: '0.95rem' }}>
-                        {isAdmin ? 'No Registered Employees Found' : 'No Contacts Match Search'}
-                      </h5>
-                      <p style={{ fontSize: '0.8rem', margin: 0, lineHeight: '1.4' }}>
-                        {isAdmin 
-                          ? 'As new employees register on the portal, their details and phone numbers will appear here automatically.' 
-                          : 'Try searching for Mahadhevan, Kirubakaran, or HR.'}
-                      </p>
-                    </div>
-                  ) : (
-                    filteredList.map(contact => (
-                      <div key={contact._id} className="teams-emp-row">
-                        <div className="emp-avatar-box" style={{ background: contact.avatarBg }}>
-                          {contact.name.charAt(0)}
-                          <span className="emp-status-dot" style={{ background: contact.statusColor }}></span>
-                        </div>
-
-                        <div className="emp-info-col">
-                          <h5 className="emp-name" title={contact.name}>{contact.name}</h5>
-                          
-                          <div className="emp-meta-row">
-                            <span className="emp-role-text">{contact.role}</span>
-                            {contact.formattedPhone && (
-                              <a 
-                                href={`tel:+${getCleanPhone(contact.phone || contact.formattedPhone)}`}
-                                className="emp-phone-badge phone-call-link"
-                                title={`Direct Mobile Call: ${contact.formattedPhone}`}
-                                onClick={() => triggerMobileNotification(contact)}
-                              >
-                                <Phone size={10} className="phone-badge-icon" />
-                                <span>{contact.formattedPhone}</span>
-                              </a>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="emp-call-actions">
-                          {/* WhatsApp Chat Button (Visible on Desktop & Mobile) */}
-                          {contact.phone && (
-                            <button 
-                              className="btn-call-action whatsapp"
-                              onClick={() => handleWhatsAppCall(contact)}
-                              title={`WhatsApp chat with ${contact.name}`}
-                            >
-                              <MessageCircle size={15} />
-                            </button>
-                          )}
-
-                          {/* Direct Phone Call Button (Enabled & Visible on Mobile Only) */}
-                          {contact.phone && (
-                            <a 
-                              href={`tel:+${getCleanPhone(contact.phone || contact.formattedPhone)}`}
-                              className="btn-call-action mobile-phone-call"
-                              title={`Direct call to ${contact.name}`}
-                            >
-                              <Phone size={15} />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )
-          )}
+            {/* Card Footer */}
+            <div className="connect-modal-footer">
+              <span className="footer-assist-text">Need custom assistance?</span>
+              <a 
+                href="https://codethriveinfotech.in/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="footer-contact-link"
+              >
+                Go to Contact Page &rarr;
+              </a>
+            </div>
+          </div>
         </div>
       )}
     </div>
