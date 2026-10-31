@@ -863,80 +863,77 @@ const AdminPayroll = () => {
 
         <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', flexWrap: 'wrap' }}>
           {viewMode === 'list' ? (
-            <>
-              <button 
-                onClick={exportFullPayrollPDF}
-                title="Download Organization Master Payroll Statement PDF"
-                style={{
-                  padding: '0.75rem 1.1rem', borderRadius: '12px',
-                  background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)',
-                  color: '#a5b4fc', fontWeight: 700, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '0.5rem'
-                }}
-              >
-                <Download size={16} />
-                <span>Export Master PDF</span>
-              </button>
-              <button 
-                onClick={exportFullPayrollExcel}
-                title="Export Payroll Data to Excel Sheet"
-                style={{
-                  padding: '0.75rem 1.1rem', borderRadius: '12px',
-                  background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.3)',
-                  color: '#38bdf8', fontWeight: 700, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '0.5rem'
-                }}
-              >
-                <Download size={16} />
-                <span>Export Excel</span>
-              </button>
-              <button 
-                onClick={() => setViewMode(viewMode === 'claims' ? 'list' : 'claims')}
-                style={{
-                  padding: '0.75rem 1.1rem', borderRadius: '12px',
-                  background: viewMode === 'claims' ? 'rgba(236, 72, 153, 0.3)' : 'rgba(236, 72, 153, 0.15)',
-                  border: '1px solid rgba(236, 72, 153, 0.35)',
-                  color: '#f472b6', fontWeight: 700, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '0.5rem'
-                }}
-              >
-                <Receipt size={16} />
-                <span>Expense Bills Audit</span>
-                {expenseClaims.filter(c => c.status === 'Pending').length > 0 && (
-                  <span style={{
-                    background: '#ef4444', color: '#fff', fontSize: '0.72rem', fontWeight: 800,
-                    padding: '2px 7px', borderRadius: '10px', marginLeft: '3px'
-                  }}>
-                    {expenseClaims.filter(c => c.status === 'Pending').length}
-                  </span>
-                )}
-              </button>
-              <button 
-                onClick={() => setViewMode('bulk')}
-                style={{
-                  padding: '0.75rem 1.1rem', borderRadius: '12px',
-                  background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)',
-                  color: '#fbbf24', fontWeight: 700, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: '0.5rem'
-                }}
-              >
-                <Zap size={16} />
-                <span>1-Click Bulk Payroll</span>
-              </button>
-              <button 
-                onClick={() => setViewMode('individual')}
-                style={{
-                  padding: '0.75rem 1.3rem', borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  color: '#fff', fontWeight: 700, border: 'none',
-                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                  display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer'
-                }}
-              >
-                <Plus size={18} />
-                <span>Create Single Payslip</span>
-              </button>
-            </>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Left Group: Create Single Payslip (top) & Bulk Payroll (below) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                <button 
+                  onClick={() => setViewMode('individual')}
+                  style={{
+                    padding: '0.65rem 1.15rem', borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    color: '#fff', fontWeight: 700, border: 'none',
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.35)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer',
+                    fontSize: '0.88rem'
+                  }}
+                >
+                  <span>Create Single Payslip</span>
+                </button>
+                <button 
+                  onClick={() => setViewMode('bulk')}
+                  style={{
+                    padding: '0.65rem 1.15rem', borderRadius: '10px',
+                    background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)',
+                    color: '#fbbf24', fontWeight: 700, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    fontSize: '0.88rem'
+                  }}
+                >
+                  <Zap size={15} />
+                  <span>1-Click Bulk Payroll</span>
+                </button>
+              </div>
+
+              {/* Right Group: Expense Bills Audit & Master PDF */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                <button 
+                  onClick={() => setViewMode(viewMode === 'claims' ? 'list' : 'claims')}
+                  style={{
+                    padding: '0.65rem 1.15rem', borderRadius: '10px',
+                    background: viewMode === 'claims' ? 'rgba(236, 72, 153, 0.3)' : 'rgba(236, 72, 153, 0.15)',
+                    border: '1px solid rgba(236, 72, 153, 0.35)',
+                    color: '#f472b6', fontWeight: 700, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    fontSize: '0.88rem'
+                  }}
+                >
+                  <Receipt size={15} />
+                  <span>Expense Bills Audit</span>
+                  {expenseClaims.filter(c => c.status === 'Pending').length > 0 && (
+                    <span style={{
+                      background: '#ef4444', color: '#fff', fontSize: '0.72rem', fontWeight: 800,
+                      padding: '2px 7px', borderRadius: '10px', marginLeft: '3px'
+                    }}>
+                      {expenseClaims.filter(c => c.status === 'Pending').length}
+                    </span>
+                  )}
+                </button>
+                <button 
+                  onClick={exportFullPayrollPDF}
+                  title="Download Organization Master Payroll Statement PDF"
+                  style={{
+                    padding: '0.65rem 1.15rem', borderRadius: '10px',
+                    background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.3)',
+                    color: '#a5b4fc', fontWeight: 700, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    fontSize: '0.88rem'
+                  }}
+                >
+                  <Download size={15} />
+                  <span>Export Master PDF</span>
+                </button>
+              </div>
+            </div>
           ) : (
             <button 
               onClick={() => setViewMode('list')}
@@ -1147,8 +1144,8 @@ const AdminPayroll = () => {
                     style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}
                     className="hover-lift"
                   >
-                    <td style={{ padding: '1rem', borderRadius: '12px 0 0 12px', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap', display: 'inline-block' }}>
+                    <td style={{ padding: '0.85rem 1rem', borderRadius: '12px 0 0 12px', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#34d399', letterSpacing: '0.2px' }}>
                         {ps.payslipId}
                       </span>
                     </td>
@@ -1212,19 +1209,6 @@ const AdminPayroll = () => {
                         >
                           <Download size={14} />
                           <span>PDF</span>
-                        </button>
-                        <button
-                          onClick={() => downloadPayslipWord(ps)}
-                          title="Download Official Word Statement"
-                          style={{
-                            padding: '0.45rem 0.85rem', borderRadius: '8px',
-                            background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(37, 99, 235, 0.3)',
-                            color: '#60a5fa', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
-                            display: 'inline-flex', alignItems: 'center', gap: '0.4rem'
-                          }}
-                        >
-                          <FileText size={14} />
-                          <span>Word</span>
                         </button>
                       </div>
                     </td>
@@ -1985,9 +1969,6 @@ const AdminPayroll = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', padding: '1rem 1.5rem', background: 'rgba(15, 23, 42, 0.5)' }}>
               <button type="button" className="btn btn-outline" onClick={() => downloadPayslipPDF(selectedPayslip)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem' }}>
                 <Download size={15} /> PDF
-              </button>
-              <button type="button" className="btn btn-outline" onClick={() => downloadPayslipWord(selectedPayslip)} style={{ borderColor: '#2563eb', color: '#60a5fa', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem' }}>
-                <FileText size={15} /> Word
               </button>
               <button type="button" className="btn btn-outline" onClick={() => window.print()} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem' }}>
                 <Printer size={15} /> Print
