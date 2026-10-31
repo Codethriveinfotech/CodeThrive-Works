@@ -320,6 +320,7 @@ const Admin = () => {
 
       {/* 📅 MONTH-END MASTER AUDIT DOSSIER & WHATSAPP DISPATCH BANNER */}
       <div 
+        className="month-end-audit-banner"
         style={{
           background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 27, 75, 0.95) 100%)',
           border: '1.5px solid rgba(52, 211, 153, 0.6)',
@@ -374,7 +375,7 @@ const Admin = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+        <div className="month-end-audit-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
           <button 
             type="button"
             onClick={handleDownloadMonthlyMasterDossier}
@@ -553,7 +554,7 @@ const Admin = () => {
           </div>
 
           {/* Filter Pills & Employee Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+          <div className="month-end-audit-actions" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: '0.25rem', background: 'rgba(15, 23, 42, 0.8)', padding: '3px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
               <button 
                 onClick={() => setActiveFilter('ALL')}

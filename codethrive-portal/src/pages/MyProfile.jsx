@@ -568,9 +568,11 @@ const MyProfile = () => {
       {(isAdmin || activeProfileTab === 'company') && (
         <>
           {/* Company Hero Banner */}
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(99, 102, 241, 0.15), rgba(15, 23, 42, 0.9))',
-            borderRadius: '24px', padding: '2.2rem 2.5rem',
+          <div 
+            className="company-hero-banner"
+            style={{
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(99, 102, 241, 0.15), rgba(15, 23, 42, 0.9))',
+              borderRadius: '24px', padding: '2.2rem 2.5rem',
             border: '1px solid rgba(0, 210, 255, 0.3)', backdropFilter: 'blur(20px)',
             boxShadow: '0 20px 40px rgba(0, 0, 0, 0.35)',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem'

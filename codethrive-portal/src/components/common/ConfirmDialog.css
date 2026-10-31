@@ -173,3 +173,22 @@
   box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
 }
 
+/* 📱 MOBILE RESPONSIVE OPTIMIZATIONS */
+@media (max-width: 480px) {
+  .ct-confirm-card {
+    padding: 1.5rem 1.25rem !important;
+    border-radius: 20px !important;
+    max-width: calc(100vw - 28px) !important;
+  }
+
+  .ct-confirm-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .ct-confirm-btn {
+    width: 100% !important;
+  }
+}
+
+

@@ -257,8 +257,24 @@
 
   .profile-widget span,
   .profile-widget .user-email,
+  .profile-widget .profile-info,
   .topbar-profile-chevron {
     display: none !important;
+  }
+
+  .profile-widget {
+    padding: 0 !important;
+  }
+
+  .topbar-notif-popover,
+  .topbar-reg-popover {
+    position: fixed !important;
+    top: 64px !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: 80vh !important;
   }
 
   /* Flexible 1-column layout for grid cards on mobile screens */

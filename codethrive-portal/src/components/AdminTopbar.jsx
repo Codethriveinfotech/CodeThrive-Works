@@ -220,12 +220,14 @@ const AdminTopbar = () => {
 
             {/* Notification Popover Dropdown */}
             {showNotifDropdown && (
-              <div style={{
-                position: 'absolute',
-                top: '125%',
-                right: '-30px',
-                width: '360px',
-                maxWidth: '92vw',
+              <div 
+                className="topbar-notif-popover"
+                style={{
+                  position: 'absolute',
+                  top: '125%',
+                  right: 0,
+                  width: '360px',
+                  maxWidth: 'calc(100vw - 24px)',
                 background: 'linear-gradient(150deg, #0e1726 0%, #0a0f1d 100%)',
                 border: '1.5px solid rgba(52, 211, 153, 0.45)',
                 borderRadius: '18px',
@@ -352,11 +354,14 @@ const AdminTopbar = () => {
 
             {/* Quick Registration Popover Dropdown */}
             {showRegDropdown && (
-              <div style={{
-                position: 'absolute',
-                top: '120%',
-                right: 0,
-                width: '320px',
+              <div 
+                className="topbar-reg-popover"
+                style={{
+                  position: 'absolute',
+                  top: '120%',
+                  right: 0,
+                  width: '320px',
+                  maxWidth: 'calc(100vw - 24px)',
                 background: '#0f172a',
                 border: '1px solid rgba(99, 102, 241, 0.4)',
                 borderRadius: '14px',

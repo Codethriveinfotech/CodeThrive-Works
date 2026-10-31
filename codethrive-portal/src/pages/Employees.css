@@ -653,3 +653,68 @@ select.reg-emp-input option {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* 📱 MOBILE RESPONSIVE OPTIMIZATIONS */
+@media (max-width: 768px) {
+  .page-header-hero {
+    padding: 1.25rem 1rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+
+  .page-header-hero h1 {
+    font-size: 1.35rem !important;
+  }
+
+  .emp-metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .emp-metric-card {
+    padding: 1rem 0.85rem !important;
+  }
+
+  .metric-val {
+    font-size: 1.45rem !important;
+  }
+
+  .emp-toolbar {
+    padding: 0.85rem 1rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  .emp-search-box {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .emp-filters-group {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .filter-item {
+    flex: 1 1 calc(50% - 0.5rem) !important;
+  }
+
+  .filter-item select {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .emp-metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .filter-item {
+    flex: 1 1 100% !important;
+  }
+}
+

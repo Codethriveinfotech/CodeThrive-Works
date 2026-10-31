@@ -74,6 +74,27 @@
   .metric-data h3 {
     font-size: 1.4rem !important;
   }
+
+  .month-end-audit-banner {
+    padding: 1.15rem 1rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+  }
+
+  .month-end-audit-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem !important;
+  }
+
+  .month-end-audit-actions button {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0.75rem 1rem !important;
+  }
 }
 
 @media (max-width: 480px) {
