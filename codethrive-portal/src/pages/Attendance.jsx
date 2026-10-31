@@ -54,7 +54,7 @@ const Attendance = () => {
 
   const [sessionDate, setSessionDate] = useState(new Date().toDateString());
 
-  // 1. Real-time Timestamp-based Timer Calculation
+  // 1. Real-time Timestamp-based Timer Calculation (Persists across sleep, shutdown & tab close)
   useEffect(() => {
     let interval;
     const updateTimers = () => {
@@ -62,23 +62,31 @@ const Attendance = () => {
       const prevBreak = todayAttendance?.totalBreakDurationInSeconds || 0;
       const prevLunch = todayAttendance?.totalLunchDurationInSeconds || 0;
 
-      const sessionStartTime = activeSession?.startTime || todayAttendance?.lastSessionStartTime || (todayAttendance?.firstLoginTime && todayAttendance?.status === 'Working' ? todayAttendance.firstLoginTime : null);
+      const hasActive = Boolean(activeSession && activeSession.status === 'Active');
+      const sessType = hasActive ? activeSession.sessionType : (todayAttendance?.status === 'On Break' ? 'Break' : (todayAttendance?.status === 'On Lunch' ? 'Lunch' : 'Work'));
 
-      if (sessionStartTime && (todayAttendance?.status === 'Working' || todayAttendance?.status === 'On Break' || todayAttendance?.status === 'On Lunch')) {
+      const isCurrentlyCheckedOut = (Boolean(todayAttendance?.lastLogoutTime) || todayAttendance?.status === 'Checked Out') && !hasActive;
+      const isCurrentlyWorking = (hasActive && sessType === 'Work') ||
+                                (!isCurrentlyCheckedOut && sessType !== 'Break' && sessType !== 'Lunch' && Boolean(todayAttendance?.firstLoginTime)) ||
+                                todayAttendance?.status === 'Working';
+
+      const sessionStartTime = activeSession?.startTime || 
+                               todayAttendance?.lastSessionStartTime || 
+                               (todayAttendance?.firstLoginTime && isCurrentlyWorking ? todayAttendance.firstLoginTime : null);
+
+      if (sessionStartTime && (isCurrentlyWorking || sessType === 'Break' || sessType === 'Lunch')) {
         const startTime = new Date(sessionStartTime).getTime();
         const elapsed = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
         
-        const type = activeSession?.sessionType || (todayAttendance?.status === 'On Break' ? 'Break' : (todayAttendance?.status === 'On Lunch' ? 'Lunch' : 'Work'));
-
-        if (type === 'Work') {
+        if (sessType === 'Work') {
           setLiveWorkDuration(prevWork + elapsed);
           setLiveBreakDuration(prevBreak);
           setLiveLunchDuration(prevLunch);
-        } else if (type === 'Break') {
+        } else if (sessType === 'Break') {
           setLiveWorkDuration(prevWork);
           setLiveBreakDuration(prevBreak + elapsed);
           setLiveLunchDuration(prevLunch);
-        } else if (type === 'Lunch') {
+        } else if (sessType === 'Lunch') {
           setLiveWorkDuration(prevWork);
           setLiveBreakDuration(prevBreak);
           setLiveLunchDuration(prevLunch + elapsed);
@@ -96,11 +104,15 @@ const Attendance = () => {
       if (document.visibilityState === 'visible') updateTimers();
     };
     window.addEventListener('focus', updateTimers);
-    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('pageshow', updateTimers);
+    window.addEventListener('online', updateTimers);
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', updateTimers);
-      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('pageshow', updateTimers);
+      window.removeEventListener('online', updateTimers);
     };
   }, [activeSession, todayAttendance]);
 
@@ -611,12 +623,17 @@ const Attendance = () => {
     return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
   };
 
+  const hasActiveSession = Boolean(activeSession && activeSession.status === 'Active');
+  const activeSessionType = hasActiveSession ? activeSession.sessionType : null;
+
   const currentStatus = todayAttendance?.status || 'Not Checked In';
-  const isWorking = currentStatus === 'Working' || currentStatus === 'Present';
-  const isOnBreak = currentStatus === 'On Break';
-  const isOnLunch = currentStatus === 'On Lunch';
-  const isCheckedOut = currentStatus === 'Checked Out';
-  const isNotStarted = currentStatus === 'Not Checked In' || (!todayAttendance?.firstLoginTime && !isWorking && !isOnBreak && !isOnLunch && !isCheckedOut);
+  const isCheckedOut = (Boolean(todayAttendance?.lastLogoutTime) || todayAttendance?.status === 'Checked Out') && !hasActiveSession;
+  const isOnBreak = activeSessionType === 'Break' || currentStatus === 'On Break';
+  const isOnLunch = activeSessionType === 'Lunch' || currentStatus === 'On Lunch';
+  const isWorking = (hasActiveSession && activeSessionType === 'Work') ||
+                    (!isCheckedOut && !isOnBreak && !isOnLunch && Boolean(todayAttendance?.firstLoginTime)) ||
+                    currentStatus === 'Working';
+  const isNotStarted = !todayAttendance?.firstLoginTime && !hasActiveSession;
 
   let displayMainTimer = liveWorkDuration;
   let timerLabelText = "Work Duration";
