@@ -154,14 +154,21 @@
 }
 
 /* --------------------------------------------------------------------------
-   FLOATING BUTTON & TRIGGER
+   FLOATING BUTTONS & DUAL TRIGGER FAB GROUP
    -------------------------------------------------------------------------- */
+.teams-fab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+}
+
 .teams-trigger-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 54px;
-  height: 54px;
+  width: 52px;
+  height: 52px;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
@@ -171,6 +178,34 @@
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+}
+
+.teams-trigger-btn.directory-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+  box-shadow: 0 10px 28px rgba(99, 102, 241, 0.45);
+  border-color: rgba(129, 140, 248, 0.4);
+}
+
+.teams-trigger-btn.directory-btn:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 14px 36px rgba(99, 102, 241, 0.65);
+}
+
+.teams-trigger-btn.connect-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 10px 28px rgba(16, 185, 129, 0.45);
+}
+
+.teams-trigger-btn.connect-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 14px 36px rgba(16, 185, 129, 0.65);
+}
+
+.directory-logo {
+  background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
 }
 
 .teams-trigger-btn.ringing-pulse-btn {
@@ -261,10 +296,10 @@
    -------------------------------------------------------------------------- */
 .teams-panel-card {
   position: absolute;
-  bottom: 60px;
+  bottom: 125px;
   right: 0;
   width: 420px;
-  max-height: 84vh;
+  max-height: 78vh;
   height: auto;
   background: linear-gradient(150deg, #0c1222 0%, #111a30 100%);
   border: 1.5px solid rgba(16, 185, 129, 0.4);
@@ -275,6 +310,11 @@
   overflow: hidden;
   backdrop-filter: blur(20px);
   animation: teamsPanelSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.teams-panel-card.directory-panel {
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(99, 102, 241, 0.25);
 }
 
 @keyframes teamsPanelSlide {
@@ -988,8 +1028,8 @@
     width: calc(100vw - 32px) !important;
     max-width: 400px !important;
     right: 0 !important;
-    bottom: 64px !important;
-    max-height: 82vh !important;
+    bottom: 125px !important;
+    max-height: 75vh !important;
     border-radius: 20px !important;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75) !important;
   }

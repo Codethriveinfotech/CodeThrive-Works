@@ -27,8 +27,7 @@ const OFFICIAL_CHANNELS = [
   {
     id: 'call',
     title: 'Direct Call',
-    badge: '9 AM – 6 PM',
-    badgeColor: '#2563eb',
+    badge: null,
     subtitle: '+91 9150781685',
     link: 'tel:+919150781685',
     bg: '#eff6ff',
@@ -231,8 +230,8 @@ const TeamsCallWidget = () => {
 
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin' || location.pathname.startsWith('/admin');
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('channels'); // 'channels' | 'directory'
+  const [isConnectOpen, setIsConnectOpen] = useState(false);
+  const [isDirectoryOpen, setIsDirectoryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [registeredEmployees, setRegisteredEmployees] = useState([]);
   
@@ -294,10 +293,8 @@ const TeamsCallWidget = () => {
   };
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchRegisteredContacts();
-    }
-  }, [isAdmin, isOpen]);
+    fetchRegisteredContacts();
+  }, [isAdmin, isDirectoryOpen]);
 
   // Request browser Notification permission on mount
   useEffect(() => {
@@ -572,21 +569,43 @@ const TeamsCallWidget = () => {
         </div>
       )}
 
-      {/* Floating Trigger Button - Icon Only FAB */}
-      <button 
-        className={`teams-trigger-btn ${isOpen ? 'active' : ''} ${activeCall && activeCall.callStatus === 'Ringing...' ? 'ringing-pulse-btn' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
-        title={activeCall ? (activeCall.callStatus === 'Ringing...' ? 'Ringing...' : 'In Call...') : 'CodeThrive Contact Hub'}
-        aria-label="Contact Hub"
-      >
-        <div className="teams-icon-badge">
-          <PhoneCall size={20} color="#fff" />
-        </div>
-        <span className="online-dot-pulse"></span>
-      </button>
+      {/* Dual Floating Trigger Buttons - Both Standalone & Separate */}
+      <div className="teams-fab-group">
+        {/* FAB 1: Employee Contact Hub (Directory with Employee Numbers & WhatsApp) */}
+        <button 
+          className={`teams-trigger-btn directory-btn ${isDirectoryOpen ? 'active' : ''}`}
+          onClick={() => {
+            setIsDirectoryOpen(!isDirectoryOpen);
+            setIsConnectOpen(false);
+          }}
+          title="CodeThrive Employees Contact Hub"
+          aria-label="Employees Contact Hub"
+        >
+          <div className="teams-icon-badge">
+            <Users size={20} color="#fff" />
+          </div>
+          <span className="online-dot-pulse"></span>
+        </button>
 
-      {/* Contact Drawer Panel */}
-      {isOpen && (
+        {/* FAB 2: Connect with CodeThrive (Official Channels) */}
+        <button 
+          className={`teams-trigger-btn connect-btn ${isConnectOpen ? 'active' : ''}`}
+          onClick={() => {
+            setIsConnectOpen(!isConnectOpen);
+            setIsDirectoryOpen(false);
+          }}
+          title="Connect with CodeThrive"
+          aria-label="Connect with CodeThrive"
+        >
+          <div className="teams-icon-badge">
+            <PhoneCall size={20} color="#fff" />
+          </div>
+          <span className="online-dot-pulse"></span>
+        </button>
+      </div>
+
+      {/* MODAL 1: Connect with CodeThrive (Official Channels - Dark Theme) */}
+      {isConnectOpen && (
         <div className="teams-panel-card">
           {/* Header */}
           <div className="teams-panel-header">
@@ -601,12 +620,12 @@ const TeamsCallWidget = () => {
                 <span className="teams-status-subtext">Fast response via any channel</span>
               </div>
             </div>
-            <button className="teams-close-btn" onClick={() => setIsOpen(false)} title="Close">
+            <button className="teams-close-btn" onClick={() => setIsConnectOpen(false)} title="Close">
               <X size={18} />
             </button>
           </div>
 
-          {/* Official Connect Channels (Separated Dedicated View Matching Portal Dark Theme) */}
+          {/* Official Connect Channels */}
           <div className="connect-channels-container">
             <div className="channels-cards-list">
               {OFFICIAL_CHANNELS.map(ch => (
@@ -630,12 +649,14 @@ const TeamsCallWidget = () => {
                   <div className="channel-info-box">
                     <div className="channel-title-row">
                       <span className="channel-title-text">{ch.title}</span>
-                      <span 
-                        className="channel-badge-pill"
-                        style={{ background: ch.badgeColor }}
-                      >
-                        {ch.badge}
-                      </span>
+                      {ch.badge && (
+                        <span 
+                          className="channel-badge-pill"
+                          style={{ background: ch.badgeColor }}
+                        >
+                          {ch.badge}
+                        </span>
+                      )}
                     </div>
                     <span className="channel-sub-text">{ch.subtitle}</span>
                   </div>
@@ -658,6 +679,110 @@ const TeamsCallWidget = () => {
               >
                 Go to Contact Page &rarr;
               </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: CodeThrive Contact Hub (Employees Directory with Mobile Call & WhatsApp) */}
+      {isDirectoryOpen && (
+        <div className="teams-panel-card directory-panel">
+          {/* Header */}
+          <div className="teams-panel-header">
+            <div className="teams-header-brand">
+              <div className="teams-logo-box directory-logo">
+                <Users size={20} />
+              </div>
+              <div>
+                <h4 className="teams-brand-title">CodeThrive Contact Hub</h4>
+                <span className="teams-status-subtext">
+                  {isAdmin ? 'Registered Employees Directory' : 'Management & Staff Directory'}
+                </span>
+              </div>
+            </div>
+            <button className="teams-close-btn" onClick={() => setIsDirectoryOpen(false)} title="Close">
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Directory Body */}
+          <div className="teams-directory-body">
+            <div className="teams-search-box">
+              <Search size={16} className="search-ic" />
+              <input 
+                type="text" 
+                placeholder={isAdmin ? "Search registered employees by name, role..." : "Search CEO, MD, HR, Team Leads..."} 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div className="teams-employee-list">
+              {filteredList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'rgba(255,255,255,0.6)' }}>
+                  <Users size={32} style={{ marginBottom: '0.75rem', opacity: 0.5, color: '#60a5fa' }} />
+                  <h5 style={{ margin: '0 0 0.4rem 0', color: '#fff', fontSize: '0.95rem' }}>
+                    {isAdmin ? 'No Registered Employees Found' : 'No Contacts Match Search'}
+                  </h5>
+                  <p style={{ fontSize: '0.8rem', margin: 0, lineHeight: '1.4' }}>
+                    {isAdmin 
+                      ? 'As new employees register on the portal, their details and phone numbers will appear here automatically.' 
+                      : 'Try searching for Mahadhevan, Kirubakaran, or HR.'}
+                  </p>
+                </div>
+              ) : (
+                filteredList.map(contact => (
+                  <div key={contact._id} className="teams-emp-row">
+                    <div className="emp-avatar-box" style={{ background: contact.avatarBg }}>
+                      {contact.name.charAt(0)}
+                      <span className="emp-status-dot" style={{ background: contact.statusColor }}></span>
+                    </div>
+
+                    <div className="emp-info-col">
+                      <h5 className="emp-name" title={contact.name}>{contact.name}</h5>
+                      
+                      <div className="emp-meta-row">
+                        <span className="emp-role-text">{contact.role}</span>
+                        {contact.formattedPhone && (
+                          <a 
+                            href={`tel:+${getCleanPhone(contact.phone || contact.formattedPhone)}`}
+                            className="emp-phone-badge phone-call-link"
+                            title={`Direct Mobile Call: ${contact.formattedPhone}`}
+                            onClick={() => triggerMobileNotification(contact)}
+                          >
+                            <Phone size={10} className="phone-badge-icon" />
+                            <span>{contact.formattedPhone}</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="emp-call-actions">
+                      {/* WhatsApp Chat Button (Visible on Desktop & Mobile) */}
+                      {contact.phone && (
+                        <button 
+                          className="btn-call-action whatsapp"
+                          onClick={() => handleWhatsAppCall(contact)}
+                          title={`WhatsApp chat with ${contact.name}`}
+                        >
+                          <MessageCircle size={15} />
+                        </button>
+                      )}
+
+                      {/* Direct Phone Call Button (Enabled & Visible on Mobile Only) */}
+                      {contact.phone && (
+                        <a 
+                          href={`tel:+${getCleanPhone(contact.phone || contact.formattedPhone)}`}
+                          className="btn-call-action mobile-phone-call"
+                          title={`Direct call to ${contact.name}`}
+                        >
+                          <Phone size={15} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
