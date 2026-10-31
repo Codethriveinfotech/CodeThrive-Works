@@ -27,14 +27,39 @@ import DateInput from '../components/common/DateInput';
 import './MyProfile.css';
 import './EmployeeDetail.css';
 
-const AUDIT_MONTH_OPTIONS = [
-  { label: 'All-Time Continuous History', value: 'All' },
-  { label: 'September 2026', value: '2026-09', monthName: 'September' },
-  { label: 'August 2026', value: '2026-08', monthName: 'August' },
-  { label: 'July 2026', value: '2026-07', monthName: 'July' },
-  { label: 'June 2026', value: '2026-06', monthName: 'June' },
-  { label: 'May 2026', value: '2026-05', monthName: 'May' }
-];
+const getAuditMonthOptions = () => {
+  const options = [
+    { label: 'All-Time Continuous History', value: 'All' }
+  ];
+  const startYear = 2026;
+  const startMonth = 10; // Live Launch Month: October 2026
+  
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  
+  let y = currentYear;
+  let m = currentMonth;
+  
+  while (y > startYear || (y === startYear && m >= startMonth)) {
+    const d = new Date(y, m - 1, 1);
+    const monthName = d.toLocaleString('en-US', { month: 'long' });
+    const monthCode = `${y}-${String(m).padStart(2, '0')}`;
+    options.push({
+      label: `${monthName} ${y}`,
+      value: monthCode,
+      monthName
+    });
+    m--;
+    if (m < 1) {
+      m = 12;
+      y--;
+    }
+  }
+  return options;
+};
+
+const AUDIT_MONTH_OPTIONS = getAuditMonthOptions();
 
 const DEFAULT_DEMO_EMPLOYEES = [
   {
@@ -3400,9 +3425,6 @@ CodeThrive Infotech • Confidential Personnel Archive
                         onChange={e => setIssuePayMonth(e.target.value)}
                       >
                         <option value="October 2026">October 2026</option>
-                        <option value="September 2026">September 2026</option>
-                        <option value="August 2026">August 2026</option>
-                        <option value="July 2026">July 2026</option>
                         <option value="November 2026">November 2026</option>
                         <option value="December 2026">December 2026</option>
                       </select>
