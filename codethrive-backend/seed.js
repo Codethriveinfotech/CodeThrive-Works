@@ -46,7 +46,7 @@ const seedDatabase = async () => {
     // 1. Create Super Admin User & Employee
     const adminUser = await User.create({
       email: 'admin@codethrive.com',
-      password: 'Password@123',
+      password: 'Code@2026',
       role: 'superadmin',
       status: 'active'
     });
@@ -387,7 +387,7 @@ const seedDatabase = async () => {
     console.log('================================================');
     console.log('🔑 ADMIN LOGIN:');
     console.log('   Email: admin@codethrive.com');
-    console.log('   Password: Password@123');
+    console.log('   Password: Code@2026');
     console.log('🔑 EMPLOYEE LOGIN:');
     console.log('   Employee ID / Email: CTI-2026-001 or kiruba@codethrive.com');
     console.log('   Password: Password@123');

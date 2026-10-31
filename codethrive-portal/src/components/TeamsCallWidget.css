@@ -263,16 +263,16 @@
   position: absolute;
   bottom: 60px;
   right: 0;
-  width: 430px;
-  height: 540px;
-  background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 100%);
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  width: 420px;
+  max-height: 84vh;
+  height: auto;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(16, 185, 129, 0.2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  backdrop-filter: blur(20px);
   animation: teamsPanelSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -289,7 +289,7 @@
 
 .teams-panel-header {
   padding: 1.1rem 1.25rem;
-  background: rgba(30, 41, 59, 0.75);
+  background: linear-gradient(135deg, #181124 0%, #0d0f1a 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
@@ -314,10 +314,11 @@
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
 
-.teams-header-brand h4 {
+.teams-header-brand h4,
+.teams-brand-title {
   margin: 0;
   font-size: 0.98rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #ffffff;
 }
 
@@ -327,18 +328,182 @@
 }
 
 .teams-close-btn {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.08);
   border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 0.3rem;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .teams-close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: rotate(90deg);
+}
+
+/* Tabs Bar */
+.connect-tabs-bar {
+  display: flex;
+  background: #100e1c;
+  padding: 6px 12px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.connect-tab-btn {
+  flex: 1;
+  padding: 7px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.connect-tab-btn.active {
+  background: #1f1b30;
+  color: #34d399;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* --------------------------------------------------------------------------
+   CONNECT CHANNELS CONTAINER & CARDS (IMAGE 2 DESIGN)
+   -------------------------------------------------------------------------- */
+.connect-channels-container {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.channels-cards-list {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 440px;
+}
+
+.channel-card-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 16px;
+  border: 1.5px solid;
+  padding: 10px 14px;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.channel-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.channel-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.channel-info-box {
+  flex: 1;
+  margin: 0 12px;
+  min-width: 0;
+}
+
+.channel-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.channel-title-text {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.channel-badge-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.channel-sub-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.channel-link-arrow {
+  color: #64748b;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.channel-card-item:hover .channel-link-arrow {
+  transform: translate(2px, -2px);
+  color: #0f172a;
+}
+
+.connect-modal-footer {
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-assist-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.footer-contact-link {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-contact-link:hover {
+  text-decoration: underline;
+  color: #10b981;
 }
 
 /* Directory Tab Switcher */
@@ -374,6 +539,7 @@
    -------------------------------------------------------------------------- */
 .teams-directory-body {
   padding: 1rem;
+  background: #0f172a;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
