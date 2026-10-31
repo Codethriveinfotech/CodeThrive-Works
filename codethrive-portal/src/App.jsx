@@ -287,7 +287,7 @@ function AppContent() {
             <Route path="/employee/reports" element={<DailyReports />} />
             <Route path="/employee/payslips" element={<Payroll />} />
             <Route path="/employee/documents" element={<Documents />} />
-            <Route path="/employee/company-profile" element={<MyProfile />} />
+            <Route path="/employee/company-profile" element={<Navigate to="/employee/profile" replace />} />
             <Route path="/employee/profile" element={<MyProfile />} />
             
             {/* Other legacy Employee routes (optional but kept for existing components) */}
