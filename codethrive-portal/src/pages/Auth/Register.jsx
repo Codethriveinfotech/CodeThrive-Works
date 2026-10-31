@@ -110,7 +110,7 @@ const Register = () => {
             <input 
               type="text" 
               name="fullName" 
-              placeholder="e.g. Kirubakaran V"
+              placeholder=""
               value={formData.fullName} 
               onChange={handleChange} 
               className="input-field" 
@@ -123,7 +123,7 @@ const Register = () => {
             <input 
               type="text" 
               name="employeeId" 
-              placeholder="e.g. CTI-2026-002"
+              placeholder=""
               value={formData.employeeId} 
               onChange={handleChange} 
               className="input-field" 
@@ -136,7 +136,7 @@ const Register = () => {
             <input 
               type="text" 
               name="role" 
-              placeholder="e.g. Senior Software Engineer, Managing Director, UI/UX Designer" 
+              placeholder="" 
               value={formData.role} 
               onChange={handleChange} 
               className="input-field" 
@@ -149,7 +149,7 @@ const Register = () => {
             <input 
               type="email" 
               name="emailId" 
-              placeholder="e.g. employee@codethrive.com"
+              placeholder=""
               value={formData.emailId} 
               onChange={handleChange} 
               className="input-field" 
@@ -162,7 +162,7 @@ const Register = () => {
             <input 
               type="tel" 
               name="phoneNumber" 
-              placeholder="e.g. 9876543210"
+              placeholder=""
               value={formData.phoneNumber} 
               onChange={handleChange} 
               className="input-field" 
@@ -176,7 +176,7 @@ const Register = () => {
               <input 
                 type={showPassword ? 'text' : 'password'} 
                 name="password" 
-                placeholder="Enter password"
+                placeholder=""
                 value={formData.password} 
                 onChange={handleChange} 
                 onFocus={() => setPasswordError('')}
@@ -217,7 +217,7 @@ const Register = () => {
               <input 
                 type={showConfirmPassword ? 'text' : 'password'} 
                 name="confirmPassword" 
-                placeholder="Re-enter password"
+                placeholder=""
                 value={formData.confirmPassword} 
                 onChange={handleChange} 
                 className="input-field" 

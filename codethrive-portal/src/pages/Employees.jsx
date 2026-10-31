@@ -565,7 +565,7 @@ const Employees = () => {
                 <input 
                   type="text" 
                   required 
-                  placeholder="e.g. Kirubakaran V" 
+                  placeholder="" 
                   className="reg-emp-input" 
                   value={newEmpData.fullName} 
                   onChange={e => setNewEmpData({...newEmpData, fullName: e.target.value})} 
@@ -580,7 +580,7 @@ const Employees = () => {
                 <input 
                   type="text" 
                   required 
-                  placeholder="e.g. CTI-2026-002" 
+                  placeholder="" 
                   className="reg-emp-input" 
                   value={newEmpData.employeeId} 
                   onChange={e => setNewEmpData({...newEmpData, employeeId: e.target.value})} 
@@ -595,7 +595,7 @@ const Employees = () => {
                 <input 
                   type="text" 
                   required
-                  placeholder="e.g. Senior Software Engineer, Managing Director, UI/UX Designer" 
+                  placeholder="" 
                   className="reg-emp-input" 
                   value={newEmpData.role} 
                   onChange={e => setNewEmpData({...newEmpData, role: e.target.value})} 
@@ -610,7 +610,7 @@ const Employees = () => {
                 <input 
                   type="email" 
                   required 
-                  placeholder="e.g. employee@codethrive.com" 
+                  placeholder="" 
                   className="reg-emp-input" 
                   value={newEmpData.emailId} 
                   onChange={e => setNewEmpData({...newEmpData, emailId: e.target.value})} 
@@ -625,7 +625,7 @@ const Employees = () => {
                 <input 
                   type="tel" 
                   required
-                  placeholder="e.g. 9876543210" 
+                  placeholder="" 
                   className="reg-emp-input" 
                   value={newEmpData.phoneNumber} 
                   onChange={e => setNewEmpData({...newEmpData, phoneNumber: e.target.value})} 

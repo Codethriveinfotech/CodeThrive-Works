@@ -95,7 +95,7 @@ const Timesheet = () => {
                 min="0.1" 
                 max="24"
                 className="input-field" 
-                placeholder="e.g. 4.5" 
+                placeholder="" 
                 value={hours}
                 onChange={(e) => setHours(e.target.value)}
                 required

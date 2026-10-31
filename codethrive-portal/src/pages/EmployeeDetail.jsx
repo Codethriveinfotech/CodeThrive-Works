@@ -2521,7 +2521,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                     </label>
                     <input 
                       type="text" 
-                      placeholder="e.g. Implement Neon PostgreSQL SSL Connection Pooling & Auto-Reconnect" 
+                      placeholder="" 
                       className="input-box" 
                       value={taskTitle} 
                       onChange={e => setTaskTitle(e.target.value)} 
@@ -3208,7 +3208,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                           <label style={{ color: '#38bdf8', fontWeight: 600 }}>Monthly Salary (₹)</label>
                           <input 
                             type="number" 
-                            placeholder="e.g. 85000"
+                            placeholder=""
                             className="input-box" 
                             value={editSalary} 
                             onChange={e => setEditSalary(e.target.value)} 
@@ -4165,7 +4165,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
             <label style={{ fontWeight: 600 }}>Remarks / Reason (Optional)</label>
             <input 
               type="text" 
-              placeholder="e.g. Management approval / Late check-in excused / System adjustment" 
+              placeholder="" 
               className="input-box" 
               value={rectifyForm.reason} 
               onChange={e => setRectifyForm({ ...rectifyForm, reason: e.target.value })} 

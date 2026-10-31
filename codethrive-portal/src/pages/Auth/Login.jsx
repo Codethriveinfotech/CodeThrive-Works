@@ -84,7 +84,7 @@ const Login = () => {
               value={formData.employeeId}
               onChange={handleChange}
               className={`input-field ${error && !formData.employeeId ? 'input-error' : ''}`} 
-              placeholder="e.g. CTI-2026-001" 
+              placeholder="" 
             />
           </div>
           
@@ -97,7 +97,7 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 className={`input-field ${error && !formData.password ? 'input-error' : ''}`} 
-                placeholder="Enter password" 
+                placeholder="" 
               />
               <button 
                 type="button" 

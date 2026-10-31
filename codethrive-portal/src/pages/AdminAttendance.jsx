@@ -705,7 +705,7 @@ const AdminAttendance = () => {
             <label style={{ fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem', color: 'rgba(255,255,255,0.8)' }}>Remarks / Reason (Optional)</label>
             <input 
               type="text" 
-              placeholder="e.g. Management approval / Late check-in excused / System adjustment" 
+              placeholder="" 
               value={editForm.reason} 
               onChange={e => setEditForm({ ...editForm, reason: e.target.value })} 
               style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '0.55rem 0.8rem', color: '#fff', fontSize: '0.85rem', outline: 'none' }}

@@ -68,7 +68,7 @@ const AdminLogin = () => {
               value={formData.email}
               onChange={handleChange}
               className={`input-field ${error && !formData.email ? 'input-error' : ''}`} 
-              placeholder="admin@codethrive.com" 
+              placeholder="" 
             />
           </div>
           
@@ -81,7 +81,7 @@ const AdminLogin = () => {
                 value={formData.password}
                 onChange={handleChange}
                 className={`input-field ${error && !formData.password ? 'input-error' : ''}`} 
-                placeholder="Enter admin password" 
+                placeholder="" 
               />
               <button 
                 type="button" 

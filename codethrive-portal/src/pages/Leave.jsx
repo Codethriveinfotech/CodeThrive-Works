@@ -515,7 +515,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
                 type="text" 
                 className="input-field-pro" 
                 required 
-                placeholder="Type your custom leave type (e.g. Marriage, Exam, Emergency Travel)..." 
+                placeholder="" 
                 value={formData.customCategory || ''} 
                 onChange={e => setFormData({...formData, customCategory: e.target.value})} 
               />

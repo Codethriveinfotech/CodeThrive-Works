@@ -80,7 +80,7 @@ const CreateCredentials = () => {
           
           <div className="form-group">
             <label>Approved Employee ID</label>
-            <input type="text" name="employeeId" value={formData.employeeId} onChange={handleChange} className="input-field" placeholder="e.g. CTI-2026-001" disabled={step === 2} />
+            <input type="text" name="employeeId" value={formData.employeeId} onChange={handleChange} className="input-field" placeholder="" disabled={step === 2} />
           </div>
           
           <div className="form-group">

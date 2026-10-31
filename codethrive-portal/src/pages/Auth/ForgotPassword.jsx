@@ -145,7 +145,7 @@ const ForgotPassword = () => {
               <input 
                 type="text" 
                 className="input-field" 
-                placeholder="e.g. CTI-2026-001" 
+                placeholder="" 
                 value={employeeId}
                 onChange={(e) => {
                   setEmployeeId(e.target.value);
@@ -163,7 +163,7 @@ const ForgotPassword = () => {
               <input 
                 type="tel" 
                 className="input-field" 
-                placeholder="e.g. 9876543210" 
+                placeholder="" 
                 value={phoneNumber}
                 onChange={(e) => {
                   setPhoneNumber(e.target.value);

@@ -949,7 +949,7 @@ const DailyReports = () => {
             <input 
               type="text" 
               className="input-field-pro" 
-              placeholder="e.g. Enterprise HRMS Portal, E-Commerce App, Backend API"
+              placeholder=""
               value={formData.projectTitle}
               onChange={e => setFormData({...formData, projectTitle: e.target.value})}
               required
@@ -977,7 +977,7 @@ const DailyReports = () => {
                   min="0.5" 
                   max="24"
                   className="input-field-pro hours-input" 
-                  placeholder="e.g. 8"
+                  placeholder=""
                   value={formData.hoursWorked}
                   onChange={e => setFormData({...formData, hoursWorked: parseFloat(e.target.value) || 0})}
                   required
@@ -1250,7 +1250,7 @@ const DailyReports = () => {
             <input 
               type="text" 
               className="input-field-pro" 
-              placeholder="e.g. Enterprise HRMS - Frontend & Backend Source Code / Document"
+              placeholder=""
               value={srcFormData.projectTitle}
               onChange={e => setSrcFormData({...srcFormData, projectTitle: e.target.value})}
               required

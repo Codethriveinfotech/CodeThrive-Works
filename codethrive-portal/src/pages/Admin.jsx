@@ -690,7 +690,7 @@ const Admin = () => {
               <label style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.3rem' }}>Task Title & Objective *</label>
               <input 
                 type="text" 
-                placeholder="e.g. Implement Payment Gateway Integration"
+                placeholder=""
                 value={quickTaskTitle}
                 onChange={e => setQuickTaskTitle(e.target.value)}
                 required

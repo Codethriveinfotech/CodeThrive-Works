@@ -464,7 +464,7 @@ const RegistrationHubModal = ({ isOpen, onClose }) => {
                           <form onSubmit={handleAssignTask} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                             <div>
                               <label className="form-label" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.82rem', color: '#cbd5e1' }}>Task Title *</label>
-                              <input type="text" placeholder="e.g. Build Backend Auth Middleware" className="form-input" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} required style={{ width: '100%' }} />
+                              <input type="text" placeholder="" className="form-input" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} required style={{ width: '100%' }} />
                             </div>
                             <div>
                               <label className="form-label" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.82rem', color: '#cbd5e1' }}>Task Description / Requirements</label>

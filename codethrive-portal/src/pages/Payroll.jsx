@@ -726,7 +726,7 @@ const Payroll = () => {
                   className="input-field"
                   value={confirmedMonth} 
                   onChange={e => setConfirmedMonth(e.target.value)}
-                  placeholder="e.g. October 2026"
+                  placeholder=""
                 />
               </div>
 

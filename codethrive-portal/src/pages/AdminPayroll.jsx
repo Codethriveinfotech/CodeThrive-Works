@@ -1702,7 +1702,7 @@ const AdminPayroll = () => {
                       name="paidLeaveDays"
                       value={formData.paidLeaveDays} 
                       onChange={_handleChange}
-                      placeholder="e.g. 2"
+                      placeholder=""
                       style={{ width: '100%', background: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#fff', padding: '0.65rem 0.9rem', borderRadius: '8px', outline: 'none' }}
                     />
                   </div>

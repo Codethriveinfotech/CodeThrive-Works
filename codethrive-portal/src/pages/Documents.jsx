@@ -642,7 +642,7 @@ const Documents = () => {
               required 
               value={formData.title} 
               onChange={e => setFormData({ ...formData, title: e.target.value })} 
-              placeholder="e.g. Degree Certificate, HSC Marksheet, Relieving Letter, ID Proof" 
+              placeholder="" 
             />
           </div>
 

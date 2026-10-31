@@ -404,7 +404,7 @@ const AdminTasks = () => {
               <FileText size={15} color="#818cf8" />
               <span>Task Title *</span>
             </label>
-            <input type="text" className="input-box" name="title" value={formData.title} onChange={handleChange} required placeholder="e.g. Implement Payment Gateway Integration" />
+            <input type="text" className="input-box" name="title" value={formData.title} onChange={handleChange} required placeholder="" />
           </div>
           
           <div className="form-group" style={{ marginBottom: 0 }}>

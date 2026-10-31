@@ -519,7 +519,7 @@ const AdminDocuments = () => {
             <label className="field-label">Document Title *</label>
             <input 
               type="text" className="input-box" 
-              placeholder="e.g. CodeThrive IT Policy 2026"
+              placeholder=""
               value={uploadData.title}
               onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
               required

@@ -1437,7 +1437,7 @@ const MyProfile = () => {
                 type="text" className="input-box" 
                 value={companyFormData.registrationNumber}
                 onChange={(e) => setCompanyFormData({...companyFormData, registrationNumber: e.target.value})}
-                placeholder="e.g. UDYAM-TN-2024-0012345"
+                placeholder=""
                 required
               />
             </div>
@@ -1679,7 +1679,7 @@ const MyProfile = () => {
 
               <div className="form-group">
                 <label>Blood Group *</label>
-                <input type="text" className="input-field" placeholder="e.g. O+, A+, B+" value={formData.bloodGroup} onChange={e => setFormData({ ...formData, bloodGroup: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="" value={formData.bloodGroup} onChange={e => setFormData({ ...formData, bloodGroup: e.target.value })} required />
               </div>
 
               <div className="form-group">
@@ -1700,12 +1700,12 @@ const MyProfile = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group">
                 <label>Department *</label>
-                <input type="text" className="input-field" placeholder="e.g. Quality Assurance, Software Engineering" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} required />
               </div>
 
               <div className="form-group">
                 <label>Designation *</label>
-                <input type="text" className="input-field" placeholder="e.g. Software Testing Specialist" value={formData.designation} onChange={e => setFormData({ ...formData, designation: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="" value={formData.designation} onChange={e => setFormData({ ...formData, designation: e.target.value })} required />
               </div>
 
               <div className="form-group">
@@ -1740,33 +1740,33 @@ const MyProfile = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                   <label>Highest Qualification *</label>
-                  <input type="text" className="input-field" placeholder="e.g. B.E. Computer Science" value={formData.qualification} onChange={e => setFormData({ ...formData, qualification: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="" value={formData.qualification} onChange={e => setFormData({ ...formData, qualification: e.target.value })} required />
                 </div>
 
                 <div className="form-group">
                   <label>College Name *</label>
-                  <input type="text" className="input-field" placeholder="e.g. SRM Institute of Science & Tech" value={formData.collegeName} onChange={e => setFormData({ ...formData, collegeName: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="" value={formData.collegeName} onChange={e => setFormData({ ...formData, collegeName: e.target.value })} required />
                 </div>
 
                 <div className="form-group">
                   <label>University Name *</label>
-                  <input type="text" className="input-field" placeholder="e.g. Anna University" value={formData.universityName} onChange={e => setFormData({ ...formData, universityName: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="" value={formData.universityName} onChange={e => setFormData({ ...formData, universityName: e.target.value })} required />
                 </div>
 
                 <div className="form-group">
                   <label>Graduation Year *</label>
-                  <input type="text" className="input-field" placeholder="e.g. 2024" value={formData.graduationYear} onChange={e => setFormData({ ...formData, graduationYear: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="" value={formData.graduationYear} onChange={e => setFormData({ ...formData, graduationYear: e.target.value })} required />
                 </div>
 
                 <div className="form-group">
                   <label>CGPA / Percentage *</label>
-                  <input type="text" className="input-field" placeholder="e.g. 8.5 CGPA or 85%" value={formData.cgpaOrPercentage} onChange={e => setFormData({ ...formData, cgpaOrPercentage: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="" value={formData.cgpaOrPercentage} onChange={e => setFormData({ ...formData, cgpaOrPercentage: e.target.value })} required />
                 </div>
               </div>
 
               <div className="form-group">
                 <label>Technical Skills & Tools * (comma separated)</label>
-                <textarea className="input-field" rows="2" placeholder="e.g. React, Node.js, Python, Automation Testing, JIRA, Cypress" value={formData.skills} onChange={e => setFormData({ ...formData, skills: e.target.value })} required></textarea>
+                <textarea className="input-field" rows="2" placeholder="" value={formData.skills} onChange={e => setFormData({ ...formData, skills: e.target.value })} required></textarea>
               </div>
             </>
           )}
@@ -1781,27 +1781,27 @@ const MyProfile = () => {
 
               <div className="form-group">
                 <label>Bank Name *</label>
-                <input type="text" className="input-field" placeholder="e.g. HDFC Bank, ICICI Bank, SBI" value={formData.bankName} onChange={e => setFormData({ ...formData, bankName: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="" value={formData.bankName} onChange={e => setFormData({ ...formData, bankName: e.target.value })} required />
               </div>
 
               <div className="form-group">
                 <label>Bank Account Number *</label>
-                <input type="text" className="input-field" placeholder="e.g. 50100234567890" value={formData.accountNumber} onChange={e => setFormData({ ...formData, accountNumber: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="" value={formData.accountNumber} onChange={e => setFormData({ ...formData, accountNumber: e.target.value })} required />
               </div>
 
               <div className="form-group">
                 <label>IFSC Code *</label>
-                <input type="text" className="input-field" placeholder="e.g. HDFC0001234" value={formData.ifscCode} onChange={e => setFormData({ ...formData, ifscCode: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="" value={formData.ifscCode} onChange={e => setFormData({ ...formData, ifscCode: e.target.value })} required />
               </div>
 
               <div className="form-group">
                 <label>Branch Name *</label>
-                <input type="text" className="input-field" placeholder="e.g. Main Branch, Chennai" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} required />
               </div>
 
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label>UPI ID *</label>
-                <input type="text" className="input-field" placeholder="e.g. user@upi" value={formData.upiId} onChange={e => setFormData({ ...formData, upiId: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="" value={formData.upiId} onChange={e => setFormData({ ...formData, upiId: e.target.value })} required />
               </div>
             </div>
           )}
@@ -1831,7 +1831,7 @@ const MyProfile = () => {
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                   <label>Relationship *</label>
-                  <input type="text" className="input-field" placeholder="e.g. Spouse, Parent, Sibling" value={formData.emergencyContactRelation} onChange={e => setFormData({ ...formData, emergencyContactRelation: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="" value={formData.emergencyContactRelation} onChange={e => setFormData({ ...formData, emergencyContactRelation: e.target.value })} required />
                 </div>
               </div>
             </>
@@ -1882,7 +1882,7 @@ const MyProfile = () => {
 
             <div className="form-group">
               <label>Udyam Registration Number (Udhayam) *</label>
-              <input type="text" className="input-field" value={companyFormData.registrationNumber || ''} onChange={e => setCompanyFormData({ ...companyFormData, registrationNumber: e.target.value })} placeholder="e.g. UDYAM-TN-2024-0012345" required />
+              <input type="text" className="input-field" value={companyFormData.registrationNumber || ''} onChange={e => setCompanyFormData({ ...companyFormData, registrationNumber: e.target.value })} placeholder="" required />
             </div>
 
             <div className="form-group">
@@ -1912,22 +1912,22 @@ const MyProfile = () => {
 
             <div className="form-group">
               <label>Corporate Bank Name *</label>
-              <input type="text" className="input-field" placeholder="e.g. Canara Bank, HDFC Bank" value={companyFormData.bankName || ''} onChange={e => setCompanyFormData({ ...companyFormData, bankName: e.target.value })} required />
+              <input type="text" className="input-field" placeholder="" value={companyFormData.bankName || ''} onChange={e => setCompanyFormData({ ...companyFormData, bankName: e.target.value })} required />
             </div>
 
             <div className="form-group">
               <label>Account Number *</label>
-              <input type="text" className="input-field" placeholder="e.g. 50200088991122" value={companyFormData.accountNumber || ''} onChange={e => setCompanyFormData({ ...companyFormData, accountNumber: e.target.value })} required />
+              <input type="text" className="input-field" placeholder="" value={companyFormData.accountNumber || ''} onChange={e => setCompanyFormData({ ...companyFormData, accountNumber: e.target.value })} required />
             </div>
 
             <div className="form-group">
               <label>IFSC Code *</label>
-              <input type="text" className="input-field" placeholder="e.g. CNRB0001234" value={companyFormData.ifscCode || ''} onChange={e => setCompanyFormData({ ...companyFormData, ifscCode: e.target.value })} required />
+              <input type="text" className="input-field" placeholder="" value={companyFormData.ifscCode || ''} onChange={e => setCompanyFormData({ ...companyFormData, ifscCode: e.target.value })} required />
             </div>
 
             <div className="form-group">
               <label>Branch Name *</label>
-              <input type="text" className="input-field" placeholder="e.g. Tech Park Branch, Coimbatore" value={companyFormData.branchName || ''} onChange={e => setCompanyFormData({ ...companyFormData, branchName: e.target.value })} required />
+              <input type="text" className="input-field" placeholder="" value={companyFormData.branchName || ''} onChange={e => setCompanyFormData({ ...companyFormData, branchName: e.target.value })} required />
             </div>
           </div>
 
@@ -1996,7 +1996,7 @@ const MyProfile = () => {
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="e.g. CodeThrive Infotech, HR Lead, Tech Lead"
+                  placeholder=""
                   value={editingDirector.role || ''}
                   onChange={e => setEditingDirector({ ...editingDirector, role: e.target.value })}
                   required
