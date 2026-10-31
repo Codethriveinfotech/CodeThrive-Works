@@ -585,14 +585,6 @@ const MyProfile = () => {
                 <Building2 size={36} color="#fff" />
               </div>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
-                  <span style={{ background: 'rgba(0, 210, 255, 0.2)', border: '1px solid rgba(0, 210, 255, 0.4)', color: '#38bdf8', padding: '3px 10px', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700 }}>
-                    UDYAM REGISTERED MSME
-                  </span>
-                  <span style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#a7f3d0', padding: '3px 10px', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 600 }}>
-                    {companyProfile.registrationNumber}
-                  </span>
-                </div>
                 <h1 style={{ fontSize: '2.1rem', fontWeight: 800, margin: 0, background: 'linear-gradient(90deg, #fff, #a7f3d0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   {companyProfile.companyName}
                 </h1>
@@ -629,7 +621,7 @@ const MyProfile = () => {
             borderRadius: '20px', padding: '1.4rem 1.8rem',
             border: '1px solid rgba(0, 210, 255, 0.25)', backdropFilter: 'blur(16px)',
             boxShadow: '0 12px 32px rgba(0, 0, 0, 0.3)',
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '1.4rem'
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.4rem'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{
@@ -643,7 +635,7 @@ const MyProfile = () => {
               </div>
               <div>
                 <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.8px' }}>CORE SERVICES & DOMAIN</span>
-                <div style={{ fontSize: '0.96rem', fontWeight: 700, color: '#fff', marginTop: '0.15rem' }}>Enterprise IT & Web Development</div>
+                <div style={{ fontSize: '0.96rem', fontWeight: 700, color: '#fff', marginTop: '0.15rem' }}>Enterprise IT & Software</div>
               </div>
             </div>
 
@@ -660,7 +652,24 @@ const MyProfile = () => {
               <div>
                 <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.8px' }}>HEADQUARTERS & HUB</span>
                 <div style={{ fontSize: '0.96rem', fontWeight: 700, color: '#fff', marginTop: '0.15rem' }}>Coimbatore Tech Park HQ</div>
-                <span style={{ fontSize: '0.78rem', color: '#fbbf24', fontWeight: 500, display: 'block', marginTop: '0.1rem' }}>Tamil Nadu, India - 641035</span>
+                <span style={{ fontSize: '0.78rem', color: '#fbbf24', fontWeight: 500, display: 'block', marginTop: '0.1rem' }}>Tamil Nadu, India</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '46px', height: '46px', borderRadius: '14px', flexShrink: 0,
+                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.2))',
+                border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 0 15px rgba(16, 185, 129, 0.2)'
+              }}>
+                <ShieldCheck size={22} color="#34d399" />
+              </div>
+              <div>
+                <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.8px' }}>UDYAM REGISTRATION</span>
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#34d399', marginTop: '0.15rem', fontFamily: 'monospace' }}>{companyProfile.registrationNumber}</div>
+                <span style={{ fontSize: '0.75rem', color: '#a7f3d0', fontWeight: 500, display: 'block', marginTop: '0.1rem' }}>MSME Verified Enterprise</span>
               </div>
             </div>
 
@@ -767,7 +776,7 @@ const MyProfile = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
             <Card title={
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <MapPin size={20} color="#60a5fa" /> Registered Headquarters & Contact
+                <MapPin size={20} color="#60a5fa" /> Registered Headquarters & Statutory
               </div>
             }>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.9rem' }}>
@@ -786,6 +795,14 @@ const MyProfile = () => {
                   <div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Corporate Phone</span>
                     <div style={{ fontWeight: 600, color: '#fff', marginTop: '0.2rem' }}>{companyProfile.officialPhone}</div>
+                  </div>
+                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '0.6rem' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Udyam Registration No</span>
+                    <div style={{ fontWeight: 700, color: '#38bdf8', marginTop: '0.2rem', fontFamily: 'monospace' }}>{companyProfile.registrationNumber}</div>
+                  </div>
+                  <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', paddingTop: '0.6rem' }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>GSTIN Number</span>
+                    <div style={{ fontWeight: 700, color: '#a7f3d0', marginTop: '0.2rem', fontFamily: 'monospace' }}>{companyProfile.gstin}</div>
                   </div>
                 </div>
               </div>
