@@ -7,6 +7,7 @@ import {
   FileText, Banknote, FolderOpen, UserCircle, Building2,
   CalendarOff, LogOut, ChevronLeft, ChevronRight, ClipboardList, ArrowLeft, User, Settings
 } from 'lucide-react';
+import ConfirmDialog from './common/ConfirmDialog';
 import './Sidebar.css';
 
 const AdminSidebar = () => {
@@ -15,6 +16,7 @@ const AdminSidebar = () => {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [activeEmployeeInfo, setActiveEmployeeInfo] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Check if current view is an Employee Detail page (/admin/employees/:id)
   const isEmployeeDetail = location.pathname.startsWith('/admin/employees/') && location.pathname !== '/admin/employees';
@@ -90,9 +92,7 @@ const AdminSidebar = () => {
   ];
 
   const handleLogout = () => {
-    if (window.confirm("Are you sure you want to log out?")) {
-      logout();
-    }
+    setShowLogoutConfirm(true);
   };
 
   return (
@@ -267,6 +267,20 @@ const AdminSidebar = () => {
           {!collapsed && <span>Logout</span>}
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out of Admin Portal?"
+        confirmText="Log Out"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          logout();
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </aside>
   );
 };

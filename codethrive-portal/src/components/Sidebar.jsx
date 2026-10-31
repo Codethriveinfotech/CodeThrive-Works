@@ -6,11 +6,13 @@ import {
   LayoutDashboard, CheckSquare, FileText, Banknote, 
   CalendarOff, UserCircle, LogOut, ChevronLeft, ChevronRight, FolderOpen, Clock 
 } from 'lucide-react';
+import ConfirmDialog from './common/ConfirmDialog';
 import './Sidebar.css';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     if (collapsed) {
@@ -49,9 +51,7 @@ const Sidebar = () => {
   ];
 
   const handleLogout = () => {
-    if (window.confirm("Are you sure you want to log out?")) {
-      logout();
-    }
+    setShowLogoutConfirm(true);
   };
 
   return (
@@ -126,6 +126,20 @@ const Sidebar = () => {
           {!collapsed && <span>Logout</span>}
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out of your CodeThrive account?"
+        confirmText="Log Out"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          logout();
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </aside>
   );
 };
