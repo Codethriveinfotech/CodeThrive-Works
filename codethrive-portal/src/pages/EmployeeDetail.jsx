@@ -3646,7 +3646,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 </div>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Current Role</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc', marginTop: '3px' }}>{employee.role || employee.user?.role || 'employee'}</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc', marginTop: '3px', textTransform: 'capitalize' }}>{employee.role || employee.user?.role || 'Employee'}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Status</div>

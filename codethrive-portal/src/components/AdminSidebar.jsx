@@ -65,15 +65,15 @@ const AdminSidebar = () => {
     document.body.classList.remove('mobile-sidebar-open');
   };
 
-  // Standard Admin Links - Dashboard completely removed, Employees is #1
+  // Standard Admin Links - Mirrored in exact order with employee management subpages
   const adminLinks = [
     { name: 'Employees', path: '/admin/employees', icon: <Users size={20} /> },
-    { name: 'Attendance', path: '/admin/attendance', icon: <ClipboardList size={20} /> },
     { name: 'Tasks', path: '/admin/tasks', icon: <CheckSquare size={20} /> },
     { name: 'Daily Reports', path: '/admin/reports', icon: <FileText size={20} /> },
     { name: 'Leave', path: '/admin/leave', icon: <CalendarOff size={20} /> },
-    { name: 'Payroll', path: '/admin/payroll', icon: <Banknote size={20} /> },
+    { name: 'Attendance', path: '/admin/attendance', icon: <ClipboardList size={20} /> },
     { name: 'Documents', path: '/admin/documents', icon: <FolderOpen size={20} /> },
+    { name: 'Payroll', path: '/admin/payroll', icon: <Banknote size={20} /> },
     { name: 'Company Profile', path: '/admin/profile', icon: <Building2 size={20} /> }
   ];
 
@@ -83,7 +83,7 @@ const AdminSidebar = () => {
     { id: 'tasks', name: 'Tasks', icon: <CheckSquare size={20} /> },
     { id: 'reports', name: 'Daily Reports', icon: <FileText size={20} /> },
     { id: 'leaves', name: 'Leave Applications', icon: <CalendarOff size={20} /> },
-    { id: 'attendance', name: 'Attendance Audit', icon: <ClipboardList size={20} /> },
+    { id: 'attendance', name: 'Attendance', icon: <ClipboardList size={20} /> },
     { id: 'documents', name: 'Documents', icon: <FolderOpen size={20} /> },
     { id: 'management', name: 'Payroll & Payslips', icon: <Banknote size={20} /> },
     { id: 'settings', name: 'Account Settings', icon: <Settings size={20} /> }

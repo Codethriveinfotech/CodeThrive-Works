@@ -304,7 +304,7 @@ const AdminDocuments = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', marginTop: '0.2rem' }}>
             <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#34d399', lineHeight: 1 }}>{stats.publicCount}</div>
-            <span style={{ fontSize: '0.75rem', color: '#a7f3d0', fontWeight: 500 }}>Visible to all staff</span>
+            <span style={{ fontSize: '0.75rem', color: '#a7f3d0', fontWeight: 500 }}>Visible to All Staff</span>
           </div>
         </motion.div>
 

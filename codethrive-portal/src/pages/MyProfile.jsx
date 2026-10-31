@@ -27,13 +27,14 @@ const MyProfile = () => {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [contactModal, setContactModal] = useState({ isOpen: false, name: '', phone: '' });
   const isAdminPath = window.location.pathname.startsWith('/admin');
-  const [activeProfileTab, setActiveProfileTab] = useState(isAdminPath ? 'company' : 'personal');
+  const isCompanyRoute = window.location.pathname.includes('/company') || window.location.pathname === '/admin/profile';
+  const [activeProfileTab, setActiveProfileTab] = useState(isCompanyRoute ? 'company' : (isAdminPath ? 'company' : 'personal'));
 
   const [companyProfile, setCompanyProfile] = useState(() => {
     const defaultData = {
       companyName: 'CodeThrive Infotech Pvt Ltd',
       tagline: 'Enterprise Digital Transformation & Custom Software Solutions',
-      registrationNumber: 'CIN-U72900TN2024PTC168920',
+      registrationNumber: 'UDYAM-TN-2024-0012345',
       gstin: '33AABCC1234D1Z5',
       panNumber: 'AABCC1234D',
       foundedYear: '2024',
@@ -60,11 +61,19 @@ const MyProfile = () => {
     if (saved) {
       try { 
         const parsed = JSON.parse(saved);
+        let updated = false;
         // Force update leadership & headquarters if old dummy data, Chennai address, or old CTO/SuperAdmin roles exist
         if (!parsed.leadershipMembers || !Array.isArray(parsed.leadershipMembers) || (parsed.headquarters && parsed.headquarters.includes('Chennai')) || parsed.leadershipMembers.some(m => m?.role === 'SuperAdmin' || m?.name?.includes('Sarah') || m?.email?.includes('@codethrive.com') || (m?.title && m.title.includes('CTO')))) {
           parsed.headquarters = defaultData.headquarters;
           parsed.branchName = defaultData.branchName;
           parsed.leadershipMembers = defaultData.leadershipMembers;
+          updated = true;
+        }
+        if (!parsed.registrationNumber || parsed.registrationNumber.includes('CIN')) {
+          parsed.registrationNumber = defaultData.registrationNumber;
+          updated = true;
+        }
+        if (updated) {
           localStorage.setItem('cti_company_profile', JSON.stringify(parsed));
         }
         return parsed; 
@@ -478,38 +487,66 @@ const MyProfile = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
     >
-      {/* Admin View Mode Switcher (Company Profile vs My Admin Profile) */}
-      {isAdmin && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.75))',
-          border: '1px solid rgba(0, 210, 255, 0.25)',
-          borderRadius: '16px', padding: '0.75rem 1.2rem', backdropFilter: 'blur(16px)', flexWrap: 'wrap', gap: '0.75rem',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{
-              padding: '8px 12px', borderRadius: '10px',
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(99, 102, 241, 0.2))',
-              border: '1px solid rgba(6, 182, 212, 0.4)', color: '#38bdf8',
-              display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.92rem'
-            }}>
-              <Building2 size={18} color="#00d2ff" />
-              <span>CodeThrive Infotech &bull; Company Profile</span>
-            </div>
-          </div>
-
-          <div style={{ fontSize: '0.82rem', color: '#38bdf8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <ShieldCheck size={16} color="#00d2ff" />
-            <span>Master Enterprise Profile & Leadership Directory</span>
-          </div>
-        </div>
-      )}
+      {/* Profile Mode Switcher Tabs (Accessible to Employees & Admins) */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.65rem',
+        marginBottom: '1.25rem',
+        background: 'rgba(15, 23, 42, 0.65)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: '14px',
+        padding: '5px',
+        width: 'fit-content'
+      }}>
+        <button
+          type="button"
+          onClick={() => setActiveProfileTab('personal')}
+          style={{
+            padding: '0.55rem 1.15rem',
+            borderRadius: '10px',
+            border: activeProfileTab === 'personal' ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid transparent',
+            background: activeProfileTab === 'personal' ? 'rgba(16, 185, 129, 0.18)' : 'transparent',
+            color: activeProfileTab === 'personal' ? '#34d399' : '#94a3b8',
+            fontWeight: 700,
+            fontSize: '0.86rem',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <UserCircle size={16} />
+          <span>My Profile</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveProfileTab('company')}
+          style={{
+            padding: '0.55rem 1.15rem',
+            borderRadius: '10px',
+            border: activeProfileTab === 'company' ? '1px solid rgba(56, 189, 248, 0.5)' : '1px solid transparent',
+            background: activeProfileTab === 'company' ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
+            color: activeProfileTab === 'company' ? '#38bdf8' : '#94a3b8',
+            fontWeight: 700,
+            fontSize: '0.86rem',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Building2 size={16} />
+          <span>Company Profile</span>
+        </button>
+      </div>
 
       {/* --------------------------------------------------------------------------
           COMPANY ENTERPRISE PROFILE VIEW (RENDERED WHEN ACTIVE TAB IS 'company')
          -------------------------------------------------------------------------- */}
-      {(activeProfileTab === 'company' || isAdmin) && (
+      {activeProfileTab === 'company' && (
         <>
           {/* Company Hero Banner */}
           <div style={{
@@ -531,7 +568,7 @@ const MyProfile = () => {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
                   <span style={{ background: 'rgba(0, 210, 255, 0.2)', border: '1px solid rgba(0, 210, 255, 0.4)', color: '#38bdf8', padding: '3px 10px', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700 }}>
-                    VERIFIED ENTERPRISE HQ
+                    UDYAM REGISTERED MSME
                   </span>
                   <span style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#a7f3d0', padding: '3px 10px', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 600 }}>
                     {companyProfile.registrationNumber}
@@ -546,23 +583,25 @@ const MyProfile = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => {
-                setCompanyFormData(JSON.parse(JSON.stringify(companyProfile)));
-                setCompanyEditModalTab('general');
-                setIsCompanyEditModalOpen(true);
-              }}
-              style={{
-                padding: '0.75rem 1.4rem', borderRadius: '12px',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                color: '#fff', fontWeight: 700, border: 'none',
-                boxShadow: '0 4px 18px rgba(16, 185, 129, 0.4)',
-                display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer'
-              }}
-            >
-              <Edit3 size={17} />
-              <span>Edit Company Profile</span>
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setCompanyFormData(JSON.parse(JSON.stringify(companyProfile)));
+                  setCompanyEditModalTab('general');
+                  setIsCompanyEditModalOpen(true);
+                }}
+                style={{
+                  padding: '0.75rem 1.4rem', borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#fff', fontWeight: 700, border: 'none',
+                  boxShadow: '0 4px 18px rgba(16, 185, 129, 0.4)',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer'
+                }}
+              >
+                <Edit3 size={17} />
+                <span>Edit Company Profile</span>
+              </button>
+            )}
           </div>
 
           {/* Executive Enterprise Highlights & Governance Bar */}
@@ -640,30 +679,32 @@ const MyProfile = () => {
                   borderRadius: '16px', padding: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem',
                   position: 'relative'
                 }}>
-                  <button
-                    type="button"
-                    onClick={() => setEditingDirector({ ...member })}
-                    style={{
-                      position: 'absolute',
-                      top: '1rem',
-                      right: '1rem',
-                      background: 'rgba(59, 130, 246, 0.12)',
-                      border: '1px solid rgba(59, 130, 246, 0.3)',
-                      color: '#60a5fa',
-                      borderRadius: '8px',
-                      padding: '4px 9px',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    title="Edit Member Details"
-                  >
-                    <Edit3 size={12} /> Edit
-                  </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingDirector({ ...member })}
+                      style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        background: 'rgba(59, 130, 246, 0.12)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        color: '#60a5fa',
+                        borderRadius: '8px',
+                        padding: '4px 9px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      title="Edit Member Details"
+                    >
+                      <Edit3 size={12} /> Edit
+                    </button>
+                  )}
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', paddingRight: '3.2rem' }}>
                     <div style={{
@@ -1353,11 +1394,12 @@ const MyProfile = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label className="field-label">Corporate CIN Number *</label>
+              <label className="field-label">Udyam Registration Number (Udhayam) *</label>
               <input 
                 type="text" className="input-box" 
                 value={companyFormData.registrationNumber}
                 onChange={(e) => setCompanyFormData({...companyFormData, registrationNumber: e.target.value})}
+                placeholder="e.g. UDYAM-TN-2024-0012345"
                 required
               />
             </div>
@@ -1801,8 +1843,8 @@ const MyProfile = () => {
             </div>
 
             <div className="form-group">
-              <label>Registration Number (CIN) *</label>
-              <input type="text" className="input-field" value={companyFormData.registrationNumber || ''} onChange={e => setCompanyFormData({ ...companyFormData, registrationNumber: e.target.value })} required />
+              <label>Udyam Registration Number (Udhayam) *</label>
+              <input type="text" className="input-field" value={companyFormData.registrationNumber || ''} onChange={e => setCompanyFormData({ ...companyFormData, registrationNumber: e.target.value })} placeholder="e.g. UDYAM-TN-2024-0012345" required />
             </div>
 
             <div className="form-group">

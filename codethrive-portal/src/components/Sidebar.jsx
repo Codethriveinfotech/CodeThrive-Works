@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, CheckSquare, FileText, Banknote, 
-  CalendarOff, UserCircle, LogOut, ChevronLeft, ChevronRight, FolderOpen, Clock 
+  CalendarOff, UserCircle, LogOut, ChevronLeft, ChevronRight, FolderOpen, Clock, Building2 
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -45,6 +45,7 @@ const Sidebar = () => {
     { name: 'Attendance', path: '/employee/attendance', icon: <Clock size={20} /> },
     { name: 'Payslips', path: '/employee/payslips', icon: <Banknote size={20} /> },
     { name: 'Documents', path: '/employee/documents', icon: <FolderOpen size={20} /> },
+    { name: 'Company Profile', path: '/employee/company-profile', icon: <Building2 size={20} /> },
     { name: 'My Profile', path: '/employee/profile', icon: <UserCircle size={20} /> },
   ];
 
