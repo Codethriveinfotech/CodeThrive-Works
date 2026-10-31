@@ -493,9 +493,41 @@
   font-weight: 600;
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.35);
-  padding: 1px 6px;
+  padding: 2px 7px;
   border-radius: 6px;
   letter-spacing: 0.02em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.2s ease;
+}
+
+.emp-phone-badge.phone-call-link {
+  cursor: pointer;
+}
+
+.emp-phone-badge.phone-call-link:hover {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: #34d399;
+  color: #a7f3d0;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  transform: translateY(-1px);
+}
+
+.calling-phone.phone-call-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.calling-phone.phone-call-link:hover {
+  color: #34d399;
+  text-decoration: underline;
 }
 
 .emp-status-text {
@@ -831,6 +863,14 @@
 
   .emp-call-actions {
     gap: 0.3rem !important;
+  }
+
+  .emp-phone-badge.phone-call-link {
+    padding: 3px 8px !important;
+    background: rgba(16, 185, 129, 0.22) !important;
+    border-color: rgba(52, 211, 153, 0.5) !important;
+    font-size: 0.74rem !important;
+    -webkit-tap-highlight-color: rgba(52, 211, 153, 0.3);
   }
 
   .btn-call-action {

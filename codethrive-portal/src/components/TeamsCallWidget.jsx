@@ -100,6 +100,15 @@ const TeamsCallWidget = () => {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
+  // Helper to extract clean digits with India country code 91
+  const getCleanPhone = (phone) => {
+    if (!phone) return '';
+    const digits = String(phone).replace(/\D/g, '');
+    if (digits.length === 10) return `91${digits}`;
+    if (digits.length === 12 && digits.startsWith('91')) return digits;
+    return digits;
+  };
+
   // Fetch real registered employees dynamically from DB & localStorage
   const fetchRegisteredContacts = async () => {
     try {
@@ -270,8 +279,20 @@ const TeamsCallWidget = () => {
     setIsOpen(true);
     triggerMobileNotification(contact);
     
-    if (contact.phone) {
-      const telUrl = `tel:+91${contact.phone}`;
+    const clean = getCleanPhone(contact.phone || contact.formattedPhone);
+    const isMobile = typeof window !== 'undefined' && (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      window.innerWidth <= 768
+    );
+
+    // On mobile view / phone screens, directly open dialer
+    if (isMobile && clean) {
+      window.location.href = `tel:+${clean}`;
+      return;
+    }
+
+    if (clean) {
+      const telUrl = `tel:+${clean}`;
       try {
         const a = document.createElement('a');
         a.href = telUrl;
@@ -317,32 +338,41 @@ const TeamsCallWidget = () => {
 
   const handleWhatsAppCall = (contact) => {
     triggerMobileNotification(contact);
-    const callerName = user?.fullName || user?.name || 'Employee User';
-    const callerPhone = user?.phone || user?.mobile || '';
-    const callerRole = user?.role === 'admin' ? 'Management' : (user?.designation || 'Team Member');
+    const clean = getCleanPhone(contact.phone || contact.formattedPhone);
+    if (!clean) return;
+
+    const callerName = user?.fullName || user?.name || 'CodeThrive Team Member';
+    const callerRole = user?.role === 'admin' ? 'Management' : (user?.designation || 'Staff');
+    const msg = `Hello ${contact.name},\n\nI am contacting you from the CodeThrive Infotech portal.\n\n👤 Sender: ${callerName} (${callerRole})\n\nPlease connect with me when available. Thank you!`;
     
-    const isManagement = contact.role.includes('CEO') || contact.role.includes('MD') || contact.role.includes('HR') || contact.role.includes('Lead') || (contact.dept && contact.dept.includes('Executive'));
-    const salutation = isManagement ? `Respected ${contact.name}` : `Dear ${contact.name}`;
-    
-    const msg = `Hello ${salutation},\n\nI am contacting you from the CodeThrive Infotech Portal.\n\n👤 Sender: ${callerName} (${callerRole})\n📱 Mobile: +91 ${callerPhone || 'Contact'}\n\nPlease join the live portal session or return my call.\nThank you!`;
-    
-    const waUrl = `https://wa.me/91${contact.phone}?text=${encodeURIComponent(msg)}`;
-    window.open(waUrl, '_blank');
+    // Opens directly in WhatsApp app (on mobile) or WhatsApp Web (on desktop)
+    const waUrl = `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleSMSAlert = (contact) => {
     triggerMobileNotification(contact);
-    const callerName = user?.fullName || user?.name || 'Employee User';
-    const callerPhone = user?.phone || user?.mobile || '';
-    const callerRole = user?.role === 'admin' ? 'Management' : (user?.designation || 'Team Member');
+    const clean = getCleanPhone(contact.phone || contact.formattedPhone);
+    if (!clean) return;
+
+    const callerName = user?.fullName || user?.name || 'CodeThrive Team';
+    const textMsg = `Hello ${contact.name}, ${callerName} is trying to reach you from CodeThrive Infotech Portal. Please connect or check portal.`;
     
-    const isManagement = contact.role.includes('CEO') || contact.role.includes('MD') || contact.role.includes('HR') || contact.role.includes('Lead') || (contact.dept && contact.dept.includes('Executive'));
-    const salutation = isManagement ? `Respected ${contact.name}` : `Dear ${contact.name}`;
+    // Direct native SMS dispatch (handles iOS vs Android URL format)
+    const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const separator = isIOS ? '&' : '?';
+    const smsUrl = `sms:+${clean}${separator}body=${encodeURIComponent(textMsg)}`;
     
-    const textMsg = `[URGENT PORTAL CALL ALERT] ${salutation}, Employee ${callerName} (${callerRole}${callerPhone ? `, Mob: +91 ${callerPhone}` : ''}) is calling your mobile line +91 ${contact.phone}. Please connect or check portal.`;
-    
-    const smsUrl = `sms:+91${contact.phone}?body=${encodeURIComponent(textMsg)}`;
-    window.open(smsUrl, '_blank');
+    try {
+      const link = document.createElement('a');
+      link.href = smsUrl;
+      link.target = '_self';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      window.location.href = smsUrl;
+    }
   };
 
   const formatTimer = (seconds) => {
@@ -481,7 +511,14 @@ const TeamsCallWidget = () => {
                 <h3 className="calling-name">{activeCall.contact.name}</h3>
                 <p className="calling-role">{activeCall.contact.role}</p>
                 {activeCall.contact.formattedPhone && (
-                  <span className="calling-phone">{activeCall.contact.formattedPhone}</span>
+                  <a 
+                    href={`tel:+${getCleanPhone(activeCall.contact.phone || activeCall.contact.formattedPhone)}`}
+                    className="calling-phone phone-call-link"
+                    title={`Cellular call to ${activeCall.contact.formattedPhone}`}
+                  >
+                    <Phone size={12} style={{ marginRight: '5px' }} />
+                    {activeCall.contact.formattedPhone}
+                  </a>
                 )}
                 <span className="calling-dept">{activeCall.contact.dept}</span>
               </div>
@@ -601,9 +638,15 @@ const TeamsCallWidget = () => {
                         <div className="emp-meta-row">
                           <span className="emp-role-text">{contact.role}</span>
                           {contact.formattedPhone && (
-                            <span className="emp-phone-badge">
-                              {contact.formattedPhone}
-                            </span>
+                            <a 
+                              href={`tel:+${getCleanPhone(contact.phone || contact.formattedPhone)}`}
+                              className="emp-phone-badge phone-call-link"
+                              title={`Direct Mobile Call: ${contact.formattedPhone}`}
+                              onClick={() => triggerMobileNotification(contact)}
+                            >
+                              <Phone size={10} className="phone-badge-icon" />
+                              <span>{contact.formattedPhone}</span>
+                            </a>
                           )}
                         </div>
                       </div>
