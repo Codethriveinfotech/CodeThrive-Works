@@ -337,42 +337,13 @@ const TeamsCallWidget = () => {
   };
 
   const handleWhatsAppCall = (contact) => {
-    triggerMobileNotification(contact);
     const clean = getCleanPhone(contact.phone || contact.formattedPhone);
     if (!clean) return;
 
-    const callerName = user?.fullName || user?.name || 'CodeThrive Team Member';
-    const callerRole = user?.role === 'admin' ? 'Management' : (user?.designation || 'Staff');
-    const msg = `Hello ${contact.name},\n\nI am contacting you from the CodeThrive Infotech portal.\n\n👤 Sender: ${callerName} (${callerRole})\n\nPlease connect with me when available. Thank you!`;
-    
-    // Opens directly in WhatsApp app (on mobile) or WhatsApp Web (on desktop)
+    // Only "Hello {name}" as requested
+    const msg = `Hello ${contact.name}`;
     const waUrl = `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  const handleSMSAlert = (contact) => {
-    triggerMobileNotification(contact);
-    const clean = getCleanPhone(contact.phone || contact.formattedPhone);
-    if (!clean) return;
-
-    const callerName = user?.fullName || user?.name || 'CodeThrive Team';
-    const textMsg = `Hello ${contact.name}, ${callerName} is trying to reach you from CodeThrive Infotech Portal. Please connect or check portal.`;
-    
-    // Direct native SMS dispatch (handles iOS vs Android URL format)
-    const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const separator = isIOS ? '&' : '?';
-    const smsUrl = `sms:+${clean}${separator}body=${encodeURIComponent(textMsg)}`;
-    
-    try {
-      const link = document.createElement('a');
-      link.href = smsUrl;
-      link.target = '_self';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (e) {
-      window.location.href = smsUrl;
-    }
   };
 
   const formatTimer = (seconds) => {
@@ -652,36 +623,27 @@ const TeamsCallWidget = () => {
                       </div>
 
                       <div className="emp-call-actions">
-                        {/* Official WhatsApp Call / Chat Button */}
+                        {/* WhatsApp Chat Button (Visible on Desktop & Mobile) */}
                         {contact.phone && (
                           <button 
                             className="btn-call-action whatsapp"
                             onClick={() => handleWhatsAppCall(contact)}
-                            title={`WhatsApp Message & Call with ${contact.name} (${contact.formattedPhone})`}
+                            title={`WhatsApp chat with ${contact.name}`}
                           >
                             <MessageCircle size={15} />
                           </button>
                         )}
 
-                        {/* Direct Mobile SMS Alert Button */}
+                        {/* Direct Phone Call Button (Enabled & Visible on Mobile Only) */}
                         {contact.phone && (
-                          <button 
-                            className="btn-call-action sms"
-                            onClick={() => handleSMSAlert(contact)}
-                            title={`Send Instant Mobile SMS Alert to ${contact.name} (${contact.formattedPhone})`}
+                          <a 
+                            href={`tel:+${getCleanPhone(contact.phone || contact.formattedPhone)}`}
+                            className="btn-call-action mobile-phone-call"
+                            title={`Direct call to ${contact.name}`}
                           >
-                            <MessageSquare size={14} />
-                          </button>
+                            <Phone size={15} />
+                          </a>
                         )}
-
-                        {/* Direct Audio Call */}
-                        <button 
-                          className="btn-call-action audio"
-                          onClick={() => handleStartCall(contact, 'audio')}
-                          title={`Direct Line Call to ${contact.name} (${contact.formattedPhone})`}
-                        >
-                          <Phone size={15} />
-                        </button>
                       </div>
                     </div>
                   ))

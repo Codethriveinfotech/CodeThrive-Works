@@ -501,18 +501,24 @@
   align-items: center;
   gap: 3px;
   transition: all 0.2s ease;
+  pointer-events: none; /* Disabled on desktop */
+  cursor: default;
 }
 
-.emp-phone-badge.phone-call-link {
-  cursor: pointer;
+/* Direct mobile call button: HIDDEN on desktop so ONLY WhatsApp icon shows */
+.btn-call-action.mobile-phone-call {
+  display: none !important;
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  text-decoration: none;
 }
 
-.emp-phone-badge.phone-call-link:hover {
-  background: rgba(16, 185, 129, 0.3);
-  border-color: #34d399;
-  color: #a7f3d0;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
-  transform: translateY(-1px);
+.btn-call-action.mobile-phone-call:hover {
+  background: #2563eb;
+  color: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 .calling-phone.phone-call-link {
@@ -862,15 +868,30 @@
   }
 
   .emp-call-actions {
-    gap: 0.3rem !important;
+    gap: 0.4rem !important;
   }
 
+  /* 📲 Show Call icon only on mobile devices */
+  .btn-call-action.mobile-phone-call {
+    display: flex !important;
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* 📲 Enable 1-click dial on phone number only in mobile */
   .emp-phone-badge.phone-call-link {
+    pointer-events: auto !important;
+    cursor: pointer !important;
     padding: 3px 8px !important;
     background: rgba(16, 185, 129, 0.22) !important;
     border-color: rgba(52, 211, 153, 0.5) !important;
     font-size: 0.74rem !important;
     -webkit-tap-highlight-color: rgba(52, 211, 153, 0.3);
+  }
+
+  .emp-phone-badge.phone-call-link:active {
+    background: rgba(16, 185, 129, 0.4) !important;
+    transform: scale(0.97);
   }
 
   .btn-call-action {
