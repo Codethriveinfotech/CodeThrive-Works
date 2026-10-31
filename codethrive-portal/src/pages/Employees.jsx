@@ -5,11 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Search, Filter, User, Briefcase, Eye,
   UserCheck, X, UserPlus, Mail, Phone,
-  ShieldCheck, KeyRound, EyeOff, Loader2
+  ShieldCheck, KeyRound, EyeOff, Loader2, Download
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import DataTable from '../components/common/DataTable';
 import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
+import { generateEmployeeMasterDossierPDF } from '../utils/employeeMasterDossierPdf';
 import './Employees.css';
 
 const Employees = () => {
@@ -78,6 +79,18 @@ const Employees = () => {
 
   const handleOpenEmployeePage = (empId) => {
     navigate(`/admin/employees/${empId}`);
+  };
+
+  const handleDownloadDossier = async (row) => {
+    try {
+      const today = new Date();
+      const monthName = today.toLocaleString('default', { month: 'long' });
+      const year = today.getFullYear();
+      await generateEmployeeMasterDossierPDF(row, monthName, year);
+    } catch (err) {
+      console.error('Failed to export employee dossier:', err);
+      alert('Error generating dossier: ' + err.message);
+    }
   };
 
   const handleOpenAddModal = () => {
@@ -266,16 +279,16 @@ const Employees = () => {
     {
       header: 'Action',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}>
           <button 
             onClick={() => handleOpenEmployeePage(row._id)}
             className="btn btn-primary"
             style={{ 
-              padding: '0.48rem 1.25rem', 
-              fontSize: '0.82rem', 
+              padding: '0.45rem 1rem', 
+              fontSize: '0.8rem', 
               display: 'inline-flex', 
               alignItems: 'center', 
-              gap: '0.45rem',
+              gap: '0.4rem',
               borderRadius: '20px',
               fontWeight: 600,
               background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
@@ -284,7 +297,34 @@ const Employees = () => {
               whiteSpace: 'nowrap'
             }}
           >
-            <Eye size={14} /> Open Employee Page
+            <Eye size={13} /> Open Page
+          </button>
+
+          <button 
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDownloadDossier(row);
+            }}
+            title={`Download ${row.fullName}'s Monthly Master Dossier PDF (All Database Records)`}
+            style={{ 
+              padding: '0.45rem 0.95rem', 
+              fontSize: '0.8rem', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.4rem',
+              borderRadius: '20px',
+              fontWeight: 700,
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.35) 100%)',
+              border: '1.5px solid rgba(52, 211, 153, 0.55)',
+              color: '#34d399',
+              boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Download size={13} /> Dossier (PDF)
           </button>
         </div>
       )
