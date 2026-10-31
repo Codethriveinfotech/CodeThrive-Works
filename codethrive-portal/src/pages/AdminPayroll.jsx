@@ -498,7 +498,7 @@ const AdminPayroll = () => {
       const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
         title: 'ORGANIZATION MASTER PAYROLL AUDIT STATEMENT',
         metaFields: [
-          { label: 'Organization', value: 'CodeThrive Infotech Pvt Ltd' },
+          { label: 'Organization', value: 'CodeThrive Infotech' },
           { label: 'Report Date', value: formatDate(new Date()) },
           { label: 'Total Payroll Records', value: `${filteredPayrolls.length} Records` },
           { label: 'Disbursement Status', value: 'Processed & Verified' }
@@ -548,7 +548,7 @@ const AdminPayroll = () => {
       exportOfficialWordDoc({
         title: 'ORGANIZATION MASTER PAYROLL AUDIT STATEMENT',
         metaFields: [
-          { label: 'Organization', value: 'CodeThrive Infotech Pvt Ltd' },
+          { label: 'Organization', value: 'CodeThrive Infotech' },
           { label: 'Report Date', value: formatDate(new Date()) },
           { label: 'Total Payroll Records', value: `${filteredPayrolls.length} Records` }
         ],
@@ -1591,7 +1591,7 @@ const AdminPayroll = () => {
               borderBottom: '2px solid #10b981'
             }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.15rem', color: '#10b981', fontWeight: 800, letterSpacing: '1px' }}>CODETHRIVE INFOTECH PVT LTD, COIMBATORE</h2>
+                <h2 style={{ margin: 0, fontSize: '1.15rem', color: '#10b981', fontWeight: 800, letterSpacing: '1px' }}>CODETHRIVE INFOTECH, COIMBATORE</h2>
                 <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.78rem', color: '#94a3b8', letterSpacing: '0.5px' }}>No.1 Srihari Nivas, Indira Nagar, Sungam, Coimbatore - 641045</p>
               </div>
               <div style={{ textAlign: 'right' }}>

@@ -415,7 +415,7 @@ const Payroll = () => {
             {/* Header Header Info */}
             <div className="payslip-doc-header">
               <div>
-                <h3 className="company-title">CodeThrive Infotech Pvt Ltd</h3>
+                <h3 className="company-title">CodeThrive Infotech</h3>
                 <p className="company-sub">Official Salary Statement • {selectedPayslip.month}</p>
               </div>
               <div style={{ textAlign: 'right' }}>

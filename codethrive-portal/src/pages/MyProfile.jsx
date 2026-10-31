@@ -32,7 +32,7 @@ const MyProfile = () => {
 
   const [companyProfile, setCompanyProfile] = useState(() => {
     const defaultData = {
-      companyName: 'CodeThrive Infotech Pvt Ltd',
+      companyName: 'CodeThrive Infotech',
       tagline: 'Enterprise Digital Transformation & Custom Software Solutions',
       registrationNumber: 'UDYAM-TN-2024-0012345',
       gstin: '33AABCC1234D1Z5',
@@ -70,6 +70,10 @@ const MyProfile = () => {
           parsed.headquarters = defaultData.headquarters;
           parsed.branchName = defaultData.branchName;
           parsed.leadershipMembers = defaultData.leadershipMembers;
+          updated = true;
+        }
+        if (parsed.companyName && parsed.companyName.includes('Pvt Ltd')) {
+          parsed.companyName = parsed.companyName.replace(/\s*Pvt\s*Ltd/gi, '').trim();
           updated = true;
         }
         if (!parsed.registrationNumber || parsed.registrationNumber.includes('CIN')) {
@@ -945,7 +949,7 @@ const MyProfile = () => {
                 <CreditCard size={14} /> {profile.employeeId || (isAdmin ? 'CTI-ADM-001' : 'CTI-EMP-001')}
               </span>
               <span className="title-sep">|</span>
-              <span className="profile-company-name">CodeThrive Infotech Pvt Ltd</span>
+              <span className="profile-company-name">CodeThrive Infotech</span>
             </div>
 
             {/* Direct Communication & Tenure Bar */}

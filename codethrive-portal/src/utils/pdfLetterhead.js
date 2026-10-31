@@ -10,7 +10,7 @@ import autoTable from 'jspdf-autotable';
 // Company Credentials matching official letterhead
 export const COMPANY_INFO = {
   name: 'CODETHRIVE INFOTECH',
-  legalName: 'CodeThrive Infotech Pvt Ltd',
+  legalName: 'CodeThrive Infotech',
   address: 'No.1 Srihari Nivas, Indira Nagar, Sungam, Coimbatore - 641045',
   email: 'codethriveinfotech@gmail.com',
   website: 'www.codethriveinfotech.in',

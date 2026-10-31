@@ -68,7 +68,7 @@ const DEFAULT_DEMO_EMPLOYEES = [
     universityName: 'Anna University',
     graduationYear: '2023',
     cgpaOrPercentage: '8.9 CGPA',
-    previousCompany: 'CodeThrive Labs Pvt Ltd',
+    previousCompany: 'CodeThrive Labs',
     user: { role: 'employee', status: 'active' },
     skills: ['React.js', 'Node.js', 'Express', 'PostgreSQL', 'TypeScript', 'REST APIs', 'Docker', 'Git'],
     currentAddress: '12, Tech Park Avenue, Coimbatore, Tamil Nadu - 641035',
@@ -858,7 +858,7 @@ const EmployeeDetail = () => {
         universityName: target.universityName || 'Anna University',
         graduationYear: target.graduationYear || '2024',
         cgpaOrPercentage: target.cgpaOrPercentage || '8.8 CGPA',
-        previousCompany: target.previousCompany || 'CodeThrive Infotech Pvt Ltd',
+        previousCompany: target.previousCompany || 'CodeThrive Infotech',
         bankAccountHolderName: target.bankAccountHolderName || target.fullName,
         bankName: target.bankName || 'Canara Bank',
         accountNumber: target.accountNumber || '50200088991122',
@@ -1192,7 +1192,7 @@ ${report.issuesFaced || report.blockers || 'None reported. Smooth execution.'}
 NEXT DAY MILESTONES:
 ${report.tomorrowsPlan || 'Proceed with staging integration and code review.'}
 ========================================================================
-CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
+CodeThrive Infotech • Confidential Personnel Archive
 ========================================================================`;
 
       const blob = new Blob([deliverableContent], { type: 'text/plain;charset=utf-8' });
@@ -1785,7 +1785,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 <CreditCard size={14} /> {employee.employeeId || 'CTI-EMP-001'}
               </span>
               <span className="title-sep">|</span>
-              <span className="profile-company-name">CodeThrive Infotech Pvt Ltd</span>
+              <span className="profile-company-name">CodeThrive Infotech</span>
             </div>
 
             {/* Direct Communication & Tenure Bar */}
@@ -2143,7 +2143,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
 
                 <div className="profile-field-tile">
                   <span className="field-tile-label">Prior Organization</span>
-                  <div className="field-tile-val">{employee.previousCompany || 'CodeThrive Infotech Pvt Ltd'}</div>
+                  <div className="field-tile-val">{employee.previousCompany || 'CodeThrive Infotech'}</div>
                 </div>
               </div>
 

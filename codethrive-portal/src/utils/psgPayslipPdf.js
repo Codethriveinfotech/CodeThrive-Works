@@ -112,7 +112,7 @@ export const generatePsgStylePayslipPdf = async ({
   doc.setFont('courier', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(15, 23, 42);
-  doc.text('CODETHRIVE INFOTECH PVT LTD, COIMBATORE-45', margin + 2, curY);
+  doc.text('CODETHRIVE INFOTECH, COIMBATORE-45', margin + 2, curY);
 
   doc.setFontSize(10.5);
   doc.text('PAYSLIP', pageW / 2 - 12, curY);
@@ -320,7 +320,7 @@ export const generatePsgStylePayslipPdf = async ({
   doc.setFont('courier', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(100, 110, 120);
-  doc.text(`Official Computer-Generated Salary Voucher — CodeThrive Infotech Pvt Ltd | Generated on: ${issueDateStr}`, margin + 2, subFootY);
+  doc.text(`Official Computer-Generated Salary Voucher — CodeThrive Infotech | Generated on: ${issueDateStr}`, margin + 2, subFootY);
   doc.text(`Website: ${COMPANY_INFO.website}  |  Email: ${COMPANY_INFO.email}  |  Phone: ${COMPANY_INFO.phone}`, pageW - margin - 2, subFootY, { align: 'right' });
 
   // Save PDF
