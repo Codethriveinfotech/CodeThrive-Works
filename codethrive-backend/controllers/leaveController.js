@@ -4,7 +4,7 @@ const Employee = require('../models/Employee');
 // Default allocations (Can be moved to DB settings later)
 const LEAVE_ALLOCATIONS = {
   Casual: 12,
-  Sick: 6,
+  Sick: 12,
   Paid: 24
 };
 

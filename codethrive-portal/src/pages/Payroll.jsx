@@ -515,9 +515,7 @@ const Payroll = () => {
               <button className="btn-outline-glass" onClick={() => setIsModalOpen(false)}>
                 Close
               </button>
-              <button className="btn-outline-glass" onClick={() => downloadPayslipWord(selectedPayslip)} title="Download Official Word Document">
-                <FileText size={16} /> Word (.doc)
-              </button>
+              
               <button className="btn-primary-glow" onClick={() => initiateDownloadConfirm(selectedPayslip)} title="Confirm Date & Download PDF">
                 <Download size={16} /> Download Official PDF
               </button>

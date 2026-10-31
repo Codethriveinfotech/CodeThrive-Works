@@ -99,9 +99,12 @@ const AdminSidebar = () => {
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         {!collapsed ? (
-          <div className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src="/logo.png" alt="CodeThrive Infotech Logo" className="sidebar-logo-img" style={{ width: '50px', height: '50px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />
-            <span className="logo-text" style={{ fontSize: '1.1rem', lineHeight: '1.2' }}>CodeThrive<br/><span style={{ opacity: 0.8, fontSize: '0.75rem', letterSpacing: '1px' }}>Infotech</span></span>
+          <div className="logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <img src="/logo.png" alt="CodeThrive Infotech Logo" className="sidebar-logo-img" style={{ width: '44px', height: '44px', objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 0 8px rgba(99,102,241,0.5))' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: '1.25' }}>
+              <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#ffffff', letterSpacing: '0.2px', textTransform: 'none' }}>CodeThrive</span>
+              <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#38bdf8', letterSpacing: '0.2px', textTransform: 'none' }}>Infotech Pvt Ltd</span>
+            </div>
           </div>
         ) : (
           <div className="logo-container collapsed-logo" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>

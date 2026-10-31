@@ -70,7 +70,7 @@
   background: linear-gradient(to right, var(--text-main), var(--primary-light));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-transform: uppercase;
+  text-transform: none;
   margin-left: -10px;
 }
 

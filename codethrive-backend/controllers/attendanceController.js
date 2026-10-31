@@ -593,7 +593,7 @@ exports.getLeaveBalances = async (req, res) => {
       success: true,
       data: {
         casualLeaveBalance: employee.casualLeaveBalance || 6,
-        sickLeaveBalance: employee.sickLeaveBalance || 4,
+        sickLeaveBalance: employee.sickLeaveBalance || 12,
         earnedLeaveBalance: employee.earnedLeaveBalance || 10,
         maternityPaternityBalance: 30
       }

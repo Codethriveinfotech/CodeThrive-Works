@@ -594,12 +594,17 @@ const MyProfile = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.4rem' }}>
               <div style={{
-                width: '70px', height: '70px', borderRadius: '20px',
-                background: 'linear-gradient(135deg, #00d2ff, #3b82f6)',
+                width: '74px', height: '74px', borderRadius: '22px',
+                background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.25))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 30px rgba(0, 210, 255, 0.4)', border: '2px solid rgba(255, 255, 255, 0.2)'
+                boxShadow: '0 0 30px rgba(0, 210, 255, 0.35)', border: '2px solid rgba(56, 189, 248, 0.4)',
+                padding: '10px'
               }}>
-                <Building2 size={36} color="#fff" />
+                <img 
+                  src="/logo.png" 
+                  alt="CodeThrive Infotech Logo" 
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(0,210,255,0.6))' }} 
+                />
               </div>
               <div>
                 <h1 style={{ fontSize: '2.1rem', fontWeight: 800, margin: 0, background: 'linear-gradient(90deg, #fff, #a7f3d0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>

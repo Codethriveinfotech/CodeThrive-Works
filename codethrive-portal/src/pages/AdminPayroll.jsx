@@ -882,17 +882,7 @@ const AdminPayroll = () => {
               >
                 <Download size={14} /> Master PDF
               </button>
-              <button 
-                onClick={exportFullPayrollWord}
-                style={{
-                  padding: '0.45rem 0.85rem', borderRadius: '10px',
-                  background: 'rgba(37, 99, 235, 0.15)', border: '1px solid rgba(37, 99, 235, 0.3)',
-                  color: '#60a5fa', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem'
-                }}
-              >
-                <FileText size={14} /> Master Word
-              </button>
+              
               <button 
                 onClick={exportFullPayrollExcel}
                 style={{
