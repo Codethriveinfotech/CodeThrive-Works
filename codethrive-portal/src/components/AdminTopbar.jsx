@@ -223,8 +223,8 @@ const AdminTopbar = () => {
               <div style={{
                 position: 'absolute',
                 top: '125%',
-                right: '-50px',
-                width: '390px',
+                right: '-30px',
+                width: '360px',
                 maxWidth: '92vw',
                 background: 'linear-gradient(150deg, #0e1726 0%, #0a0f1d 100%)',
                 border: '1.5px solid rgba(52, 211, 153, 0.45)',
@@ -249,178 +249,69 @@ const AdminTopbar = () => {
                       Notification Center
                     </span>
                   </div>
-                  <span style={{
-                    background: 'rgba(52, 211, 153, 0.2)',
-                    color: '#34d399',
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    padding: '2px 8px',
-                    borderRadius: '999px',
-                    border: '1px solid rgba(52, 211, 153, 0.4)'
-                  }}>
-                    Month-End Notice
-                  </span>
                 </div>
 
-                <div style={{ maxHeight: '380px', overflowY: 'auto', padding: '0.85rem' }}>
-                  {/* NOTIFICATION ITEM 1: Month-End Employee Master Dossier PDF */}
+                <div style={{ padding: '1rem' }}>
                   <div style={{
-                    background: 'rgba(15, 23, 42, 0.85)',
+                    background: 'rgba(15, 23, 42, 0.75)',
                     border: '1px solid rgba(52, 211, 153, 0.35)',
                     borderRadius: '14px',
                     padding: '1rem',
-                    marginBottom: '0.75rem',
-                    position: 'relative'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.65rem' }}>
-                      <div style={{
-                        width: '38px',
-                        height: '38px',
+                    {/* Action 1: Download Monthly Master Dossier */}
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadMonthlyMasterDossier()}
+                      disabled={isGeneratingPdf}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
                         borderRadius: '10px',
-                        background: 'rgba(52, 211, 153, 0.15)',
-                        border: '1px solid rgba(52, 211, 153, 0.35)',
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        border: 'none',
+                        color: '#ffffff',
+                        fontWeight: 800,
+                        fontSize: '0.86rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#34d399',
-                        flexShrink: 0
-                      }}>
-                        <FileText size={19} />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '2px' }}>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                            MONTH-END CONSOLIDATION AUDIT
-                          </span>
-                        </div>
-                        <h5 style={{ margin: '0 0 4px', fontSize: '0.88rem', fontWeight: 800, color: '#ffffff' }}>
-                          Employee Monthly Master Audit Dossier
-                        </h5>
-                        <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8', lineHeight: '1.45' }}>
-                          Consolidates all database records (Full Profile, KYC, Monthly Attendance, Leaves, Completed Tasks & Payroll) into a single master PDF.
-                        </p>
-                      </div>
-                    </div>
+                        gap: '0.5rem',
+                        cursor: isGeneratingPdf ? 'wait' : 'pointer',
+                        boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <Download size={16} />
+                      <span>{isGeneratingPdf ? 'Generating PDF...' : 'Download Monthly Master Dossier (PDF)'}</span>
+                    </button>
 
-                    {/* Action Buttons Inside Notification */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '0.85rem' }}>
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadMonthlyMasterDossier()}
-                        disabled={isGeneratingPdf}
-                        style={{
-                          width: '100%',
-                          padding: '0.55rem 0.9rem',
-                          borderRadius: '10px',
-                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                          border: 'none',
-                          color: '#ffffff',
-                          fontWeight: 700,
-                          fontSize: '0.82rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.45rem',
-                          cursor: isGeneratingPdf ? 'wait' : 'pointer',
-                          boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        <Download size={15} />
-                        <span>{isGeneratingPdf ? 'Generating Official Dossier PDF...' : 'Download Monthly Master Dossier (PDF)'}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleSendMonthEndWhatsAppAlert}
-                        style={{
-                          width: '100%',
-                          padding: '0.55rem 0.9rem',
-                          borderRadius: '10px',
-                          background: 'rgba(37, 211, 102, 0.12)',
-                          border: '1px solid rgba(37, 211, 102, 0.4)',
-                          color: '#25d366',
-                          fontWeight: 700,
-                          fontSize: '0.82rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.45rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        <MessageCircle size={15} />
-                        <span>Send WhatsApp Alert to MD (7812864905)</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* NOTIFICATION ITEM 2: Employee Registrations Quick Access */}
-                  <div style={{
-                    background: 'rgba(15, 23, 42, 0.65)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '14px',
-                    padding: '0.85rem 1rem'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#e2e8f0' }}>
-                        Registered Staff Records ({registeredStaff.length})
-                      </span>
-                      <button 
-                        onClick={() => {
-                          setShowNotifDropdown(false);
-                          navigate('/admin/employees');
-                        }}
-                        style={{ background: 'transparent', border: 'none', color: '#60a5fa', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-                      >
-                        View Directory &rarr;
-                      </button>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {registeredStaff.slice(0, 3).map(staff => (
-                        <div 
-                          key={staff._id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '6px 8px',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            borderRadius: '8px'
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#6366f1', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 700 }}>
-                              {staff.name.charAt(0)}
-                            </div>
-                            <span style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 600 }}>{staff.name}</span>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadMonthlyMasterDossier(staff)}
-                            title={`Download ${staff.name}'s PDF Dossier`}
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              background: 'rgba(52, 211, 153, 0.15)',
-                              border: '1px solid rgba(52, 211, 153, 0.35)',
-                              color: '#34d399',
-                              fontSize: '0.72rem',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}
-                          >
-                            <Download size={11} /> PDF
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    {/* Action 2: Send WhatsApp Alert */}
+                    <button
+                      type="button"
+                      onClick={handleSendMonthEndWhatsAppAlert}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '10px',
+                        background: 'rgba(37, 211, 102, 0.12)',
+                        border: '1.5px solid rgba(37, 211, 102, 0.45)',
+                        color: '#25d366',
+                        fontWeight: 800,
+                        fontSize: '0.84rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <MessageCircle size={16} />
+                      <span>Send WhatsApp Alert to MD (7812864905)</span>
+                    </button>
                   </div>
                 </div>
               </div>

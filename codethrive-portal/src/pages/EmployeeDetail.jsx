@@ -1728,9 +1728,9 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
           <button 
             className="btn-export-dossier" 
             onClick={handleDownloadMonthlyAuditPDF}
-            title="Download Monthly Employee Audit Dossier PDF"
+            title="Download Monthly Employee Audit PDF (All Database Details)"
           >
-            <Download size={15} /> Export Audit (PDF)
+            <Download size={15} /> Monthly PDF
           </button>
         </div>
       </div>
@@ -1837,6 +1837,28 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                   <span className="pill-val">{employee.dateOfJoining ? formatDate(employee.dateOfJoining) : 'Active Roster'}</span>
                 </div>
               </div>
+
+              <button 
+                type="button"
+                className="executive-contact-pill"
+                onClick={handleDownloadMonthlyAuditPDF}
+                title="Download this employee's complete Monthly PDF (All Database Records)"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.35) 100%)',
+                  border: '1.5px solid rgba(52, 211, 153, 0.55)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div className="pill-icon-box" style={{ background: 'rgba(52, 211, 153, 0.25)', color: '#34d399' }}>
+                  <Download size={14} />
+                </div>
+                <div className="pill-text-col">
+                  <span className="pill-label" style={{ color: '#34d399', fontWeight: 800 }}>AUDIT RECORD</span>
+                  <span className="pill-val" style={{ color: '#ffffff', fontWeight: 700 }}>Monthly PDF</span>
+                </div>
+                <span className="pill-arrow" style={{ color: '#34d399' }}>↓</span>
+              </button>
             </div>
           </div>
         </div>
