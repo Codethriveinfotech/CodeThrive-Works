@@ -16,13 +16,55 @@ const AdminTopbar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showRegDropdown, setShowRegDropdown] = useState(false);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
-  const [hasUnreadNotif, setHasUnreadNotif] = useState(true);
+
+  // Month-end date check: returns true if today is the last calendar day of the current month
+  const isMonthEndToday = () => {
+    const now = new Date();
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    return tomorrow.getDate() === 1;
+  };
+
+  const getMonthNotifKey = () => {
+    const now = new Date();
+    return `cti_month_end_notif_seen_${now.getFullYear()}_${now.getMonth() + 1}`;
+  };
+
+  // Only show the alert badge if today is month-end AND the user hasn't already opened/dismissed it for this month
+  const [hasUnreadNotif, setHasUnreadNotif] = useState(() => {
+    try {
+      const isMonthEnd = isMonthEndToday();
+      const seenKey = getMonthNotifKey();
+      const alreadySeen = localStorage.getItem(seenKey) === 'true';
+      return isMonthEnd && !alreadySeen;
+    } catch {
+      return false;
+    }
+  });
+
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [registeredStaff, setRegisteredStaff] = useState([]);
 
   const notifRef = useRef(null);
   const regRef = useRef(null);
+
+  // Check month-end notification on mount & trigger system alert if month-end today
+  useEffect(() => {
+    if (isMonthEndToday()) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const alertedToday = localStorage.getItem(`cti_wa_month_end_alert_${todayStr}`);
+      if (!alertedToday && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          new Notification('CodeThrive Month-End Audit Notice', {
+            body: 'Today is Month-End! Employee audit dossiers are consolidated. Ready to send WhatsApp alert to MD.',
+            icon: '/favicon.ico'
+          });
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     fetchRegisteredStaff();
@@ -124,12 +166,34 @@ const AdminTopbar = () => {
     }
   };
 
+  const handleToggleNotif = () => {
+    const nextState = !showNotifDropdown;
+    setShowNotifDropdown(nextState);
+    setShowRegDropdown(false);
+    if (hasUnreadNotif) {
+      setHasUnreadNotif(false);
+      try {
+        localStorage.setItem(getMonthNotifKey(), 'true');
+      } catch (err) {
+        console.warn('Failed to save notif state:', err);
+      }
+    }
+  };
+
   const handleSendMonthEndWhatsAppAlert = () => {
     const today = new Date();
     const monthName = today.toLocaleString('default', { month: 'long' });
     const year = today.getFullYear();
     const msg = `🔔 *CodeThrive Infotech - Month-End Audit Notification*\n\nHello Kirubakaran,\nToday is the month-end date (${monthName} ${year}).\n\nAll employee master database records (Full Profiles, Monthly Attendance Logs, Leaves, Completed Tasks & Payroll Computation) are consolidated into a single master audit dossier.\n\nPlease review and download the monthly dossiers from the Admin Portal.\n\n🌐 Portal URL: https://codethriveinfotech.in/admin\n📅 Timestamp: ${today.toLocaleString('en-IN')}`;
     
+    try {
+      localStorage.setItem(`cti_wa_month_end_alert_${today.toISOString().slice(0, 10)}`, 'sent');
+      localStorage.setItem(getMonthNotifKey(), 'true');
+      setHasUnreadNotif(false);
+    } catch (e) {
+      console.warn(e);
+    }
+
     const waUrl = `https://wa.me/917812864905?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank', 'noopener,noreferrer');
   };
@@ -158,169 +222,7 @@ const AdminTopbar = () => {
         </div>
         
         <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', position: 'relative' }}>
-          {/* 🔔 Executive Notification Center with Month-End Audit Notice & PDF Download */}
-          <div ref={notifRef} style={{ position: 'relative' }}>
-            <button 
-              onClick={() => {
-                setShowNotifDropdown(!showNotifDropdown);
-                setShowRegDropdown(false);
-                if (hasUnreadNotif) setHasUnreadNotif(false);
-              }}
-              title="Notifications & Month-End Audit Alerts"
-              style={{ 
-                background: showNotifDropdown ? 'rgba(52, 211, 153, 0.25)' : 'rgba(255, 255, 255, 0.05)', 
-                border: showNotifDropdown ? '1.5px solid #34d399' : '1px solid var(--border-color)', 
-                color: showNotifDropdown ? '#34d399' : 'var(--text-main)', 
-                cursor: 'pointer', 
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                transition: 'all 0.2s ease',
-                boxShadow: showNotifDropdown ? '0 0 15px rgba(52, 211, 153, 0.35)' : 'none'
-              }}
-              onMouseOver={(e) => {
-                if (!showNotifDropdown) e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
-              }}
-              onMouseOut={(e) => {
-                if (!showNotifDropdown) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-              }}
-            >
-              {hasUnreadNotif ? (
-                <BellRing size={20} color="#34d399" style={{ animation: 'phoneRingVibrate 0.6s infinite alternate ease-in-out' }} />
-              ) : (
-                <Bell size={20} />
-              )}
-              
-              {hasUnreadNotif && (
-                <span style={{ 
-                  position: 'absolute',
-                  top: '-2px',
-                  right: '-2px',
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                  color: '#ffffff',
-                  fontSize: '0.65rem',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '2px solid #0f172a',
-                  boxShadow: '0 0 10px rgba(239, 68, 68, 0.8)'
-                }}>
-                  1
-                </span>
-              )}
-            </button>
-
-            {/* Notification Popover Dropdown */}
-            {showNotifDropdown && (
-              <div 
-                className="topbar-notif-popover"
-                style={{
-                  position: 'absolute',
-                  top: '125%',
-                  right: 0,
-                  width: '360px',
-                  maxWidth: 'calc(100vw - 24px)',
-                background: 'linear-gradient(150deg, #0e1726 0%, #0a0f1d 100%)',
-                border: '1.5px solid rgba(52, 211, 153, 0.45)',
-                borderRadius: '18px',
-                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(52, 211, 153, 0.2)',
-                zIndex: 1000,
-                overflow: 'hidden',
-                animation: 'fadeIn 0.25s ease-out'
-              }}>
-                {/* Popover Header */}
-                <div style={{
-                  padding: '1rem 1.25rem',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Bell size={17} color="#34d399" />
-                    <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#ffffff' }}>
-                      Notification Center
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ padding: '1rem' }}>
-                  <div style={{
-                    background: 'rgba(15, 23, 42, 0.75)',
-                    border: '1px solid rgba(52, 211, 153, 0.35)',
-                    borderRadius: '14px',
-                    padding: '1rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px'
-                  }}>
-                    {/* Action 1: Download Monthly Master Dossier */}
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadMonthlyMasterDossier()}
-                      disabled={isGeneratingPdf}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        border: 'none',
-                        color: '#ffffff',
-                        fontWeight: 800,
-                        fontSize: '0.86rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        cursor: isGeneratingPdf ? 'wait' : 'pointer',
-                        boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <Download size={16} />
-                      <span>{isGeneratingPdf ? 'Generating PDF...' : 'Download Monthly Master Dossier (PDF)'}</span>
-                    </button>
-
-                    {/* Action 2: Send WhatsApp Alert */}
-                    <button
-                      type="button"
-                      onClick={handleSendMonthEndWhatsAppAlert}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '10px',
-                        background: 'rgba(37, 211, 102, 0.12)',
-                        border: '1.5px solid rgba(37, 211, 102, 0.45)',
-                        color: '#25d366',
-                        fontWeight: 800,
-                        fontSize: '0.84rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <MessageCircle size={16} />
-                      <span>Send WhatsApp Alert to MD (7812864905)</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Registered Employees Onboarding Hub Option next to Settings */}
+          {/* Registered Employees Onboarding Hub Option */}
           <div ref={regRef} style={{ position: 'relative' }}>
             <button 
               onClick={() => setShowRegDropdown(!showRegDropdown)}
@@ -362,14 +264,15 @@ const AdminTopbar = () => {
                   right: 0,
                   width: '320px',
                   maxWidth: 'calc(100vw - 24px)',
-                background: '#0f172a',
-                border: '1px solid rgba(99, 102, 241, 0.4)',
-                borderRadius: '14px',
-                boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6)',
-                zIndex: 1000,
-                overflow: 'hidden',
-                animation: 'fadeIn 0.2s ease-out'
-              }}>
+                  background: '#0f172a',
+                  border: '1px solid rgba(99, 102, 241, 0.4)',
+                  borderRadius: '14px',
+                  boxShadow: '0 15px 35px rgba(0, 0, 0, 0.6)',
+                  zIndex: 1000,
+                  overflow: 'hidden',
+                  animation: 'fadeIn 0.2s ease-out'
+                }}
+              >
                 <div style={{ padding: '0.85rem 1rem', background: 'rgba(30, 41, 59, 0.8)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--primary-light)' }}>Registered Employees</span>
                   <button onClick={() => navigate('/admin/employees')} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem' }}>
@@ -463,6 +366,199 @@ const AdminTopbar = () => {
           >
             <Settings size={20} />
           </button>
+
+          {/* 🔔 Executive Notification Center (Placed AFTER Settings as requested) */}
+          <div ref={notifRef} style={{ position: 'relative' }}>
+            <button 
+              onClick={handleToggleNotif}
+              title="Notifications & Month-End Audit Alerts"
+              style={{ 
+                background: showNotifDropdown ? 'rgba(52, 211, 153, 0.25)' : 'rgba(255, 255, 255, 0.05)', 
+                border: showNotifDropdown ? '1.5px solid #34d399' : '1px solid var(--border-color)', 
+                color: showNotifDropdown ? '#34d399' : 'var(--text-main)', 
+                cursor: 'pointer', 
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                transition: 'all 0.2s ease',
+                boxShadow: showNotifDropdown ? '0 0 15px rgba(52, 211, 153, 0.35)' : 'none'
+              }}
+              onMouseOver={(e) => {
+                if (!showNotifDropdown) e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+              }}
+              onMouseOut={(e) => {
+                if (!showNotifDropdown) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+              }}
+            >
+              {hasUnreadNotif ? (
+                <BellRing size={20} color="#34d399" style={{ animation: 'phoneRingVibrate 0.6s infinite alternate ease-in-out' }} />
+              ) : (
+                <Bell size={20} />
+              )}
+              
+              {hasUnreadNotif && (
+                <span style={{ 
+                  position: 'absolute',
+                  top: '-2px',
+                  right: '-2px',
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  color: '#ffffff',
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #0f172a',
+                  boxShadow: '0 0 10px rgba(239, 68, 68, 0.8)'
+                }}>
+                  1
+                </span>
+              )}
+            </button>
+
+            {/* Notification Popover Dropdown */}
+            {showNotifDropdown && (
+              <div 
+                className="topbar-notif-popover"
+                style={{
+                  position: 'absolute',
+                  top: '125%',
+                  right: 0,
+                  width: '360px',
+                  maxWidth: 'calc(100vw - 24px)',
+                  background: 'linear-gradient(150deg, #0e1726 0%, #0a0f1d 100%)',
+                  border: '1.5px solid rgba(52, 211, 153, 0.45)',
+                  borderRadius: '18px',
+                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(52, 211, 153, 0.2)',
+                  zIndex: 1000,
+                  overflow: 'hidden',
+                  animation: 'fadeIn 0.25s ease-out'
+                }}
+              >
+                {/* Popover Header */}
+                <div style={{
+                  padding: '1rem 1.25rem',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Bell size={17} color="#34d399" />
+                    <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#ffffff' }}>
+                      Notification Center
+                    </span>
+                  </div>
+                  <span style={{
+                    fontSize: '0.72rem',
+                    padding: '2px 8px',
+                    borderRadius: '10px',
+                    background: isMonthEndToday() ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                    color: isMonthEndToday() ? '#34d399' : '#94a3b8',
+                    fontWeight: 700
+                  }}>
+                    {isMonthEndToday() ? 'Month-End Notice' : 'Notice'}
+                  </span>
+                </div>
+
+                <div style={{ padding: '1rem' }}>
+                  {/* Month End Badge */}
+                  {isMonthEndToday() && (
+                    <div style={{
+                      background: 'rgba(52, 211, 153, 0.12)',
+                      border: '1px solid rgba(52, 211, 153, 0.35)',
+                      borderRadius: '10px',
+                      padding: '0.65rem 0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.65rem',
+                      marginBottom: '0.75rem'
+                    }}>
+                      <Calendar size={18} color="#34d399" />
+                      <div>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#34d399', display: 'block' }}>
+                          Today is Month-End Date!
+                        </span>
+                        <span style={{ fontSize: '0.73rem', color: '#cbd5e1', lineHeight: '1.3', display: 'block' }}>
+                          Staff database records are consolidated. Ready to send WhatsApp alert to MD or download audit dossier.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{
+                    background: 'rgba(15, 23, 42, 0.75)',
+                    border: '1px solid rgba(52, 211, 153, 0.35)',
+                    borderRadius: '14px',
+                    padding: '1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    {/* Action 1: Download Monthly Master Dossier */}
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadMonthlyMasterDossier()}
+                      disabled={isGeneratingPdf}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        border: 'none',
+                        color: '#ffffff',
+                        fontWeight: 800,
+                        fontSize: '0.86rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        cursor: isGeneratingPdf ? 'wait' : 'pointer',
+                        boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <Download size={16} />
+                      <span>{isGeneratingPdf ? 'Generating PDF...' : 'Download Monthly Master Dossier (PDF)'}</span>
+                    </button>
+
+                    {/* Action 2: Send WhatsApp Alert */}
+                    <button
+                      type="button"
+                      onClick={handleSendMonthEndWhatsAppAlert}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '10px',
+                        background: 'rgba(37, 211, 102, 0.12)',
+                        border: '1.5px solid rgba(37, 211, 102, 0.45)',
+                        color: '#25d366',
+                        fontWeight: 800,
+                        fontSize: '0.84rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <MessageCircle size={16} />
+                      <span>Send WhatsApp Alert to MD (7812864905)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div style={{ width: '1px', height: '24px', background: 'var(--border-color)' }}></div>
 
