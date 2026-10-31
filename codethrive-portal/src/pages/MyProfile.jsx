@@ -48,6 +48,9 @@ const MyProfile = () => {
       accountNumber: '50200088991122',
       ifscCode: 'CNRB0001234',
       branchName: 'Tech Park Branch, Coimbatore',
+      coreServicesDomain: 'Enterprise IT & Software',
+      headquartersHub: 'Coimbatore Tech Park HQ',
+      headquartersRegion: 'Tamil Nadu, India',
       leadershipMembers: [
         { id: 1, name: 'Mahadhevan', title: 'Chief Executive Officer (CEO)', email: 'mahadhevancti@gmail.com', phone: '+91 97878 57769', role: 'CodeThrive Infotech' },
         { id: 2, name: 'Kirubakaran', title: 'Managing Director (MD)', email: 'kirubakarancti@gmail.com', phone: '+91 78128 64905', role: 'CodeThrive Infotech' },
@@ -71,6 +74,18 @@ const MyProfile = () => {
         }
         if (!parsed.registrationNumber || parsed.registrationNumber.includes('CIN')) {
           parsed.registrationNumber = defaultData.registrationNumber;
+          updated = true;
+        }
+        if (!parsed.coreServicesDomain) {
+          parsed.coreServicesDomain = defaultData.coreServicesDomain;
+          updated = true;
+        }
+        if (!parsed.headquartersHub) {
+          parsed.headquartersHub = defaultData.headquartersHub;
+          updated = true;
+        }
+        if (!parsed.headquartersRegion) {
+          parsed.headquartersRegion = defaultData.headquartersRegion;
           updated = true;
         }
         if (updated) {
@@ -637,7 +652,7 @@ const MyProfile = () => {
               </div>
               <div>
                 <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.8px' }}>CORE SERVICES & DOMAIN</span>
-                <div style={{ fontSize: '0.96rem', fontWeight: 700, color: '#fff', marginTop: '0.15rem' }}>Enterprise IT & Software</div>
+                <div style={{ fontSize: '0.96rem', fontWeight: 700, color: '#fff', marginTop: '0.15rem' }}>{companyProfile.coreServicesDomain || 'Enterprise IT & Software'}</div>
               </div>
             </div>
 
@@ -653,8 +668,8 @@ const MyProfile = () => {
               </div>
               <div>
                 <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.8px' }}>HEADQUARTERS & HUB</span>
-                <div style={{ fontSize: '0.96rem', fontWeight: 700, color: '#fff', marginTop: '0.15rem' }}>Coimbatore Tech Park HQ</div>
-                <span style={{ fontSize: '0.78rem', color: '#fbbf24', fontWeight: 500, display: 'block', marginTop: '0.1rem' }}>Tamil Nadu, India</span>
+                <div style={{ fontSize: '0.96rem', fontWeight: 700, color: '#fff', marginTop: '0.15rem' }}>{companyProfile.headquartersHub || 'Coimbatore Tech Park HQ'}</div>
+                <span style={{ fontSize: '0.78rem', color: '#fbbf24', fontWeight: 500, display: 'block', marginTop: '0.1rem' }}>{companyProfile.headquartersRegion || 'Tamil Nadu, India'}</span>
               </div>
             </div>
 
@@ -1398,120 +1413,6 @@ const MyProfile = () => {
       )}
 
       {/* --------------------------------------------------------------------------
-          5. COMPANY PROFILE EDIT MODAL
-         -------------------------------------------------------------------------- */}
-      <Modal
-        isOpen={isCompanyEditModalOpen}
-        onClose={() => setIsCompanyEditModalOpen(false)}
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <Building2 size={20} color="#10b981" />
-            <span>Edit Corporate Company Profile</span>
-          </div>
-        }
-      >
-        <form onSubmit={handleCompanySave} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '0.5rem' }}>
-          <div className="form-group">
-            <label className="field-label">Company Official Name *</label>
-            <input 
-              type="text" className="input-box" 
-              value={companyFormData.companyName}
-              onChange={(e) => setCompanyFormData({...companyFormData, companyName: e.target.value})}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="field-label">Corporate Tagline / Mission</label>
-            <input 
-              type="text" className="input-box" 
-              value={companyFormData.tagline}
-              onChange={(e) => setCompanyFormData({...companyFormData, tagline: e.target.value})}
-            />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label className="field-label">Udyam Registration Number (Udhayam) *</label>
-              <input 
-                type="text" className="input-box" 
-                value={companyFormData.registrationNumber}
-                onChange={(e) => setCompanyFormData({...companyFormData, registrationNumber: e.target.value})}
-                placeholder=""
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label className="field-label">GSTIN Identification Number *</label>
-              <input 
-                type="text" className="input-box" 
-                value={companyFormData.gstin}
-                onChange={(e) => setCompanyFormData({...companyFormData, gstin: e.target.value})}
-                required
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label className="field-label">Official Support Email *</label>
-              <input 
-                type="email" className="input-box" 
-                value={companyFormData.officialEmail}
-                onChange={(e) => setCompanyFormData({...companyFormData, officialEmail: e.target.value})}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label className="field-label">Official Corporate Phone *</label>
-              <input 
-                type="text" className="input-box" 
-                value={companyFormData.officialPhone}
-                onChange={(e) => setCompanyFormData({...companyFormData, officialPhone: e.target.value})}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="field-label">Corporate Registered Address *</label>
-            <textarea 
-              className="input-box" rows={2}
-              value={companyFormData.headquarters}
-              onChange={(e) => setCompanyFormData({...companyFormData, headquarters: e.target.value})}
-              required
-            />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label className="field-label">Primary Corporate Bank</label>
-              <input 
-                type="text" className="input-box" 
-                value={companyFormData.bankName}
-                onChange={(e) => setCompanyFormData({...companyFormData, bankName: e.target.value})}
-              />
-            </div>
-            <div className="form-group">
-              <label className="field-label">Operating Account Number</label>
-              <input 
-                type="text" className="input-box" 
-                value={companyFormData.accountNumber}
-                onChange={(e) => setCompanyFormData({...companyFormData, accountNumber: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '1rem' }}>
-            <button type="button" className="btn btn-outline" onClick={() => setIsCompanyEditModalOpen(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none' }}>
-              Save Corporate Profile
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* --------------------------------------------------------------------------
           6. INTERACTIVE IMAGE CROP & ADJUSTMENT MODAL
          -------------------------------------------------------------------------- */}
       <Modal isOpen={isCropModalOpen} onClose={() => setIsCropModalOpen(false)} title="Adjust & Position Profile Photo">
@@ -1878,6 +1779,21 @@ const MyProfile = () => {
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label>Tagline / Corporate Overview *</label>
               <input type="text" className="input-field" value={companyFormData.tagline || ''} onChange={e => setCompanyFormData({ ...companyFormData, tagline: e.target.value })} required />
+            </div>
+
+            <div className="form-group">
+              <label>Core Services & Domain *</label>
+              <input type="text" className="input-field" placeholder="e.g. Enterprise IT & Software" value={companyFormData.coreServicesDomain || ''} onChange={e => setCompanyFormData({ ...companyFormData, coreServicesDomain: e.target.value })} required />
+            </div>
+
+            <div className="form-group">
+              <label>Headquarters & Hub Title *</label>
+              <input type="text" className="input-field" placeholder="e.g. Coimbatore Tech Park HQ" value={companyFormData.headquartersHub || ''} onChange={e => setCompanyFormData({ ...companyFormData, headquartersHub: e.target.value })} required />
+            </div>
+
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label>Headquarters State / Country Region *</label>
+              <input type="text" className="input-field" placeholder="e.g. Tamil Nadu, India" value={companyFormData.headquartersRegion || ''} onChange={e => setCompanyFormData({ ...companyFormData, headquartersRegion: e.target.value })} required />
             </div>
 
             <div className="form-group">
