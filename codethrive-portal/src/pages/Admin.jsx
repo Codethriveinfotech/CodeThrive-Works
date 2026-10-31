@@ -260,23 +260,18 @@ const Admin = () => {
 
   const handleDownloadMonthlyMasterDossier = async () => {
     try {
+      if (!liveMonitoring || liveMonitoring.length === 0) {
+        alert('No registered employee records found in database to generate Monthly Employee Full Pdf.');
+        return;
+      }
       const today = new Date();
       const monthName = today.toLocaleString('default', { month: 'long' });
       const year = today.getFullYear();
       
-      const targetEmp = liveMonitoring.length > 0 ? liveMonitoring[0] : {
-        fullName: 'Kirubakaran V',
-        employeeId: 'CTI-2026-001',
-        designation: 'Managing Director & Lead',
-        department: 'Executive Leadership',
-        personalEmailAddress: 'admin@codethrive.com',
-        personalPhoneNumber: '7812864905',
-        salary: 80000
-      };
-
+      const targetEmp = liveMonitoring[0];
       await generateEmployeeMasterDossierPDF(targetEmp, monthName, year);
     } catch (err) {
-      alert('Error generating monthly dossier: ' + err.message);
+      alert('Error generating Monthly Employee Full Pdf: ' + err.message);
     }
   };
 
@@ -284,7 +279,7 @@ const Admin = () => {
     const today = new Date();
     const monthName = today.toLocaleString('default', { month: 'long' });
     const year = today.getFullYear();
-    const msg = `🔔 *CodeThrive Infotech - Month-End Audit Notification*\n\nHello Kirubakaran,\nToday is the month-end date (${monthName} ${year}).\n\nAll employee master database records (Full Profiles, Monthly Attendance Logs, Leaves, Completed Tasks & Payroll Computation) are consolidated into a single master audit dossier.\n\nPlease review and download the monthly dossiers from the Admin Portal.\n\n🌐 Portal URL: https://codethriveinfotech.in/admin\n📅 Timestamp: ${today.toLocaleString('en-IN')}`;
+    const msg = `🔔 *CodeThrive Infotech - Month-End Audit Notification*\n\nHello Kirubakaran (MD),\nToday is the month-end date (${monthName} ${year}).\n\nAll employee master database records (Full Profiles, Monthly Attendance Logs, Leaves, Completed Tasks & Payroll Computation) are consolidated into Monthly Employee Full Pdf.\n\nPlease review and download the monthly records from the Admin Portal.\n\n🌐 Portal URL: https://codethriveinfotech.in/admin\n📅 Timestamp: ${today.toLocaleString('en-IN')}`;
     
     const waUrl = `https://wa.me/917812864905?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank', 'noopener,noreferrer');

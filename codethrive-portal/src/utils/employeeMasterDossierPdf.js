@@ -17,7 +17,7 @@ export const generateEmployeeMasterDossierPDF = async (employee, monthName = 'Oc
   const empId = employee.employeeId || employee.id || 'CTI-EMP-001';
 
   const { doc, startY, pageW, pageH, finalizeDoc } = await createOfficialCodeThriveDoc({
-    title: 'MONTHLY EMPLOYEE MASTER AUDIT DOSSIER & COMPREHENSIVE RECORD',
+    title: 'MONTHLY EMPLOYEE FULL PDF & COMPREHENSIVE RECORD',
     metaFields: [
       { label: 'Employee Name', value: employee.fullName || employee.name || 'Registered Employee' },
       { label: 'Employee ID', value: empId },
@@ -26,7 +26,7 @@ export const generateEmployeeMasterDossierPDF = async (employee, monthName = 'Oc
     ],
     orientation: 'portrait',
     userName: cleanName,
-    reportType: `Master_Dossier_${monthName}_${year}`
+    reportType: `Monthly_Employee_Full_Pdf_${monthName}_${year}`
   });
 
   let currentY = startY + 4;
@@ -267,7 +267,7 @@ export const generateEmployeeMasterDossierPDF = async (employee, monthName = 'Oc
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
   doc.text(
-    'This monthly master dossier has been compiled automatically from CodeThrive Infotech central database records,\n' +
+    'This monthly employee full pdf record has been compiled automatically from CodeThrive Infotech central database records,\n' +
     'encompassing verified biometric logins, approved daily deliverables, attendance logs, and statutory payroll computation.',
     margin + 6,
     currentY + 10
@@ -281,7 +281,7 @@ export const generateEmployeeMasterDossierPDF = async (employee, monthName = 'Oc
   doc.text('[Digitally Verified & Sealed]', pageW - margin - 8, currentY + 18.5, { align: 'right' });
 
   // 7. Finalize and trigger download
-  const fileName = `CodeThrive_${cleanName}_Master_Dossier_${monthName}_${year}.pdf`;
+  const fileName = `CodeThrive_${cleanName}_Monthly_Employee_Full_Pdf_${monthName}_${year}.pdf`;
   finalizeDoc(fileName);
   return fileName;
 };

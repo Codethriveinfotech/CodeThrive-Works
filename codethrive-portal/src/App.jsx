@@ -250,7 +250,7 @@ function AppContent() {
 
     // Clean all test and mock records from localStorage on fresh workspace startup
     try {
-      ['cti_shared_leaves', 'cti_shared_payrolls', 'cti_shared_documents', 'cti_local_users', 'cti_admin_tasks', 'cti_daily_reports', 'cti_employees'].forEach(key => {
+      ['cti_shared_leaves', 'cti_shared_payrolls', 'cti_shared_documents', 'cti_local_users', 'cti_admin_tasks', 'cti_daily_reports', 'cti_employees', 'cti_expense_claims'].forEach(key => {
         localStorage.removeItem(key);
       });
     } catch (err) {}

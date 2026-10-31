@@ -306,7 +306,7 @@ const Employees = () => {
               e.stopPropagation();
               handleDownloadDossier(row);
             }}
-            title={`Download ${row.fullName}'s Monthly PDF (All Database Records)`}
+            title={`Download ${row.fullName}'s Monthly Employee Full Pdf (All Database Records)`}
             style={{ 
               padding: '0.45rem 0.95rem', 
               fontSize: '0.8rem', 
@@ -324,7 +324,7 @@ const Employees = () => {
               transition: 'all 0.2s ease'
             }}
           >
-            <Download size={13} /> Monthly PDF
+            <Download size={13} /> Monthly Employee Full Pdf
           </button>
         </div>
       )

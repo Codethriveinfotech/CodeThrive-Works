@@ -428,14 +428,14 @@ const EmployeeDetail = () => {
       }
       const res = await api.get('/attendance/history', { params });
       let records = res?.data?.data || res?.data || [];
-      if (Array.isArray(records) && records.length > 0) {
+      if (Array.isArray(records)) {
         setEmpAttendanceHistory(records);
       } else {
-        setEmpAttendanceHistory(generateMockAttendance(emp));
+        setEmpAttendanceHistory([]);
       }
     } catch (err) {
-      console.warn('Could not fetch employee attendance from API, generating realistic logs', err);
-      setEmpAttendanceHistory(generateMockAttendance(emp));
+      console.warn('Could not fetch employee attendance from API', err);
+      setEmpAttendanceHistory([]);
     } finally {
       setAttendanceLoading(false);
     }
@@ -1728,9 +1728,9 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
           <button 
             className="btn-export-dossier" 
             onClick={handleDownloadMonthlyAuditPDF}
-            title="Download Monthly Employee Audit PDF (All Database Details)"
+            title="Download Monthly Employee Full Pdf (All Database Details)"
           >
-            <Download size={15} /> Monthly PDF
+            <Download size={15} /> Monthly Employee Full Pdf
           </button>
         </div>
       </div>
@@ -1842,7 +1842,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 type="button"
                 className="executive-contact-pill"
                 onClick={handleDownloadMonthlyAuditPDF}
-                title="Download this employee's complete Monthly PDF (All Database Records)"
+                title="Download this employee's complete Monthly Employee Full Pdf (All Database Records)"
                 style={{
                   background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.35) 100%)',
                   border: '1.5px solid rgba(52, 211, 153, 0.55)',
@@ -1855,7 +1855,7 @@ CodeThrive Infotech Pvt Ltd • Confidential Personnel Archive
                 </div>
                 <div className="pill-text-col">
                   <span className="pill-label" style={{ color: '#34d399', fontWeight: 800 }}>AUDIT RECORD</span>
-                  <span className="pill-val" style={{ color: '#ffffff', fontWeight: 700 }}>Monthly PDF</span>
+                  <span className="pill-val" style={{ color: '#ffffff', fontWeight: 700 }}>Monthly Employee Full Pdf</span>
                 </div>
                 <span className="pill-arrow" style={{ color: '#34d399' }}>↓</span>
               </button>

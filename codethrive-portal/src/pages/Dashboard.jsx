@@ -118,19 +118,12 @@ const Dashboard = () => {
 
       setLoading(false);
     } catch (err) {
-      console.warn('Backend API offline. Loading fallback demo dashboard data...', err);
-      const mockTasks = [
-        { _id: 't1', title: 'Complete Code Review & Module Testing', status: 'In Progress', priority: 'High', dueDate: '2026-09-15' },
-        { _id: 't2', title: 'Update Enterprise Portal Documentation', status: 'Pending', priority: 'Medium', dueDate: '2026-09-18' },
-        { _id: 't3', title: 'Weekly Engineering Sync', status: 'Completed', priority: 'High', dueDate: '2026-09-07' }
-      ];
-      setTasksData(mockTasks);
-      setTaskStats({ total: 3, pending: 2, completed: 1 });
-      setPriorityTasks([mockTasks[0]]);
-      setUpcomingDeadlines([mockTasks[0], mockTasks[1]]);
-      setNotifications([
-        { _id: 'n1', title: 'Welcome to CodeThrive Portal!', message: 'Your workspace is ready and active.', createdAt: new Date().toISOString() }
-      ]);
+      console.warn('Backend API task stats fetch error:', err);
+      setTasksData([]);
+      setTaskStats({ total: 0, pending: 0, completed: 0 });
+      setPriorityTasks([]);
+      setUpcomingDeadlines([]);
+      setNotifications([]);
       let savedAttendance = null;
       let savedActiveSession = null;
       try {

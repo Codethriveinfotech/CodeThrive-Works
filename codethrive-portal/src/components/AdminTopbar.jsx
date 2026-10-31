@@ -48,15 +48,32 @@ const AdminTopbar = () => {
   const notifRef = useRef(null);
   const regRef = useRef(null);
 
-  // Check month-end notification on mount & trigger system alert if month-end today
+  // Check month-end notification on mount & automatically trigger WhatsApp alert to MD (7812864905)
   useEffect(() => {
     if (isMonthEndToday()) {
       const todayStr = new Date().toISOString().slice(0, 10);
-      const alertedToday = localStorage.getItem(`cti_wa_month_end_alert_${todayStr}`);
-      if (!alertedToday && 'Notification' in window && Notification.permission === 'granted') {
+      const alertedKey = `cti_auto_wa_month_end_${todayStr}`;
+      
+      if (!localStorage.getItem(alertedKey)) {
+        try {
+          localStorage.setItem(alertedKey, 'true');
+          const today = new Date();
+          const monthName = today.toLocaleString('default', { month: 'long' });
+          const year = today.getFullYear();
+          const msg = `🔔 *CodeThrive Infotech - Month-End Audit Notification*\n\nHello Kirubakaran (MD),\nToday is the month-end date (${monthName} ${year}).\n\nAll employee master database records (Full Profiles, Monthly Attendance Logs, Leaves, Completed Tasks & Payroll Computation) are consolidated into Monthly Employee Full Pdf.\n\nPlease review and download the monthly records from the Admin Portal.\n\n🌐 Portal URL: https://codethriveinfotech.in/admin\n📅 Timestamp: ${today.toLocaleString('en-IN')}`;
+          const waUrl = `https://wa.me/917812864905?text=${encodeURIComponent(msg)}`;
+
+          // Automatic WhatsApp alert launch
+          window.open(waUrl, '_blank', 'noopener,noreferrer');
+        } catch (e) {
+          console.warn('Auto WhatsApp trigger exception:', e);
+        }
+      }
+
+      if ('Notification' in window && Notification.permission === 'granted') {
         try {
           new Notification('CodeThrive Month-End Audit Notice', {
-            body: 'Today is Month-End! Employee audit dossiers are consolidated. Ready to send WhatsApp alert to MD.',
+            body: 'Today is Month-End! Monthly Employee Full Pdf is consolidated. WhatsApp alert sent to MD (7812864905).',
             icon: '/favicon.ico'
           });
         } catch (e) {
@@ -184,7 +201,7 @@ const AdminTopbar = () => {
     const today = new Date();
     const monthName = today.toLocaleString('default', { month: 'long' });
     const year = today.getFullYear();
-    const msg = `🔔 *CodeThrive Infotech - Month-End Audit Notification*\n\nHello Kirubakaran,\nToday is the month-end date (${monthName} ${year}).\n\nAll employee master database records (Full Profiles, Monthly Attendance Logs, Leaves, Completed Tasks & Payroll Computation) are consolidated into a single master audit dossier.\n\nPlease review and download the monthly dossiers from the Admin Portal.\n\n🌐 Portal URL: https://codethriveinfotech.in/admin\n📅 Timestamp: ${today.toLocaleString('en-IN')}`;
+    const msg = `🔔 *CodeThrive Infotech - Month-End Audit Notification*\n\nHello Kirubakaran (MD),\nToday is the month-end date (${monthName} ${year}).\n\nAll employee master database records (Full Profiles, Monthly Attendance Logs, Leaves, Completed Tasks & Payroll Computation) are consolidated into Monthly Employee Full Pdf.\n\nPlease review and download the monthly dossiers from the Admin Portal.\n\n🌐 Portal URL: https://codethriveinfotech.in/admin\n📅 Timestamp: ${today.toLocaleString('en-IN')}`;
     
     try {
       localStorage.setItem(`cti_wa_month_end_alert_${today.toISOString().slice(0, 10)}`, 'sent');
@@ -488,7 +505,7 @@ const AdminTopbar = () => {
                           Today is Month-End Date!
                         </span>
                         <span style={{ fontSize: '0.73rem', color: '#cbd5e1', lineHeight: '1.3', display: 'block' }}>
-                          Staff database records are consolidated. Ready to send WhatsApp alert to MD or download audit dossier.
+                          Staff database records are consolidated. Ready to send WhatsApp alert to MD or download Monthly Employee Full Pdf.
                         </span>
                       </div>
                     </div>
@@ -503,7 +520,7 @@ const AdminTopbar = () => {
                     flexDirection: 'column',
                     gap: '10px'
                   }}>
-                    {/* Action 1: Download Monthly Master Dossier */}
+                    {/* Action 1: Download Monthly Employee Full Pdf */}
                     <button
                       type="button"
                       onClick={() => handleDownloadMonthlyMasterDossier()}
@@ -527,7 +544,7 @@ const AdminTopbar = () => {
                       }}
                     >
                       <Download size={16} />
-                      <span>{isGeneratingPdf ? 'Generating PDF...' : 'Download Monthly Master Dossier (PDF)'}</span>
+                      <span>{isGeneratingPdf ? 'Generating PDF...' : 'Monthly Employee Full Pdf'}</span>
                     </button>
 
                     {/* Action 2: Send WhatsApp Alert */}
