@@ -41,14 +41,12 @@ const AdminReports = () => {
         ]
       });
 
-      const tableColumn = ["Date", "Employee", "Project", "Work Summary", "File", "Hours", "Status"];
+      const tableColumn = ["Date", "Name", "Project", "File", "Status"];
       const tableRows = filteredReports.map(r => [
         r.date ? formatDate(r.date) : '-',
         r.employee?.fullName || 'Employee',
         r.projectTitle || '-',
-        r.workSummary || r.summary || '-',
         r.srcFileName || (r.srcFileUrl ? 'Attached' : 'None'),
-        `${r.hoursWorked || r.hoursLogged || 0} hrs`,
         r.status || 'Approved'
       ]);
 
@@ -58,10 +56,7 @@ const AdminReports = () => {
           startY: startY,
           head: [tableColumn],
           body: tableRows,
-          ...getCorporateTableStyles(),
-          columnStyles: {
-            3: { cellWidth: 55 }
-          }
+          ...getCorporateTableStyles()
         });
       } else {
         throw new Error('PDF autoTable renderer could not be initialized');
@@ -195,6 +190,7 @@ const AdminReports = () => {
     { 
       header: 'Date', 
       accessor: 'date', 
+      width: '130px',
       render: (row) => (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontFamily: 'monospace', fontWeight: 600, color: '#818cf8' }}>
           <Calendar size={14} color="#818cf8" /> {formatDate(row.date)}
@@ -202,8 +198,9 @@ const AdminReports = () => {
       )
     },
     { 
-      header: 'Employee Details', 
+      header: 'Name', 
       accessor: 'employee', 
+      width: '210px',
       render: (row) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
           <div className="emp-avatar-big" style={{ width: '34px', height: '34px', fontSize: '0.85rem' }}>
@@ -225,7 +222,7 @@ const AdminReports = () => {
             {row.projectTitle || 'General Project'}
           </span>
           {row.tasksWorked && (
-            <span style={{ fontSize: '0.75rem', color: '#c084fc', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '0.75rem', color: '#c084fc', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               Tasks: {row.tasksWorked}
             </span>
           )}
@@ -233,22 +230,9 @@ const AdminReports = () => {
       )
     },
     { 
-      header: 'Work Summary', 
-      accessor: 'workSummary', 
-      render: (row) => (
-        <span style={{ display: 'block', maxWidth: '280px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#cbd5e1', fontSize: '0.88rem' }}>
-          {row.workSummary || row.summary || '-'}
-        </span>
-      )
-    },
-    { 
-      header: 'Hours', 
-      accessor: 'hoursWorked', 
-      render: (row) => <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#34d399' }}>{row.hoursWorked || row.hoursLogged || 8} hrs</span> 
-    },
-    { 
       header: 'SRC File', 
       accessor: 'srcFileName', 
+      width: '180px',
       render: (row) => {
         const fileUrl = row.srcFileUrl || (row.attachments && row.attachments[0]);
         const fileName = row.srcFileName || (fileUrl ? 'SRC File' : null);
@@ -268,7 +252,7 @@ const AdminReports = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <FolderArchive size={13} color="#a855f7" />
-            <span style={{ maxWidth: '110px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {fileName}
             </span>
             <Download size={12} color="#c084fc" />
@@ -279,11 +263,13 @@ const AdminReports = () => {
     { 
       header: 'Status', 
       accessor: 'status', 
+      width: '130px',
       render: (row) => <StatusBadge status={row.status} /> 
     },
     { 
       header: 'Actions & Approval', 
       accessor: 'actions', 
+      width: '210px',
       render: (row) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <button className="btn btn-outline" style={{ padding: '0.35rem 0.65rem' }} onClick={() => handleView(row)} title="View Details">
@@ -329,14 +315,8 @@ const AdminReports = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button className="btn btn-outline" onClick={exportDailyReportsPDF} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+            <button className="btn btn-primary" onClick={exportDailyReportsPDF} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
               <Printer size={15} /> Download PDF
-            </button>
-            <button className="btn btn-outline" onClick={exportDailyReportsWord} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-              <FileText size={15} /> Export Word (.doc)
-            </button>
-            <button className="btn btn-primary" onClick={exportDailyReportsExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Download size={15} /> Export Excel (.xlsx)
             </button>
           </div>
         </div>
@@ -441,7 +421,7 @@ const AdminReports = () => {
             <Search size={16} color="#64748b" />
             <input 
               type="text" 
-              placeholder="Search reports by employee or summary..." 
+              placeholder="Search reports by employee or project..." 
               style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', fontSize: '0.9rem', width: '300px' }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
