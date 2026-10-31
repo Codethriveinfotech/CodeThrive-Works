@@ -101,6 +101,21 @@ exports.getEmployee = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     let employee = await Employee.findOne({ user: req.user._id }).populate('user', 'email role status');
+    if (!employee && req.user.email) {
+      // Find matching employee by registered email
+      employee = await Employee.findOne({
+        $or: [
+          { personalEmailAddress: req.user.email },
+          { companyEmailAddress: req.user.email }
+        ]
+      }).populate('user', 'email role status');
+
+      if (employee) {
+        employee.user = req.user._id;
+        await employee.save();
+      }
+    }
+
     if (!employee) {
       // Auto-create profile for Admin/User if missing
       const isManagement = ['superadmin', 'admin', 'hr'].includes(req.user.role);
@@ -112,6 +127,7 @@ exports.getMe = async (req, res) => {
         employeeId: isManagement ? `CTI-ADM-001` : `CTI-EMP-001`,
         fullName: isManagement ? 'System Administrator' : defaultName,
         personalEmailAddress: req.user.email,
+        companyEmailAddress: req.user.email,
         personalPhoneNumber: '9876543210',
         designation: roleTitle,
         department: isManagement ? 'System Administration & Management' : 'Engineering',

@@ -13,7 +13,16 @@ const GlobalSearchBar = ({ isAdmin = false, placeholder = 'Search Employee Porta
   const [isOpen, setIsOpen] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [loadingEmp, setLoadingEmp] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(true);
   const searchContainerRef = useRef(null);
+
+  // Clear any browser automated autofill credentials (e.g. admin@codethrive.com)
+  useEffect(() => {
+    if (query && (query === 'admin@codethrive.com' || (query.includes('@') && !isOpen))) {
+      setQuery('');
+      setIsOpen(false);
+    }
+  }, [query, isOpen]);
 
   // Fetch employees list for live directory search
   useEffect(() => {
@@ -167,10 +176,25 @@ const GlobalSearchBar = ({ isAdmin = false, placeholder = 'Search Employee Porta
         <Search size={17} color={isOpen ? '#60a5fa' : 'var(--text-muted)'} style={{ marginRight: '0.65rem', flexShrink: 0 }} />
         
         <input 
-          type="text" 
+          type="search"
+          name="search_query_portal"
+          id="search_query_portal"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck="false"
+          data-lpignore="true"
+          data-form-type="other"
           placeholder={placeholder}
           value={query}
-          onFocus={() => setIsOpen(true)}
+          readOnly={isReadOnly}
+          onFocus={() => {
+            setIsReadOnly(false);
+            setIsOpen(true);
+          }}
+          onClick={() => {
+            setIsReadOnly(false);
+            setIsOpen(true);
+          }}
           onChange={(e) => {
             setQuery(e.target.value);
             setIsOpen(true);

@@ -28,8 +28,11 @@ const sendTokenResponse = async (user, statusCode, res) => {
         role: user.role,
         status: user.status,
         name: employee ? employee.fullName : user.email.split('@')[0],
+        fullName: employee ? employee.fullName : user.email.split('@')[0],
         employeeId: employee ? employee.employeeId : null,
-        designation: employee ? employee.designation : null
+        phoneNumber: employee ? employee.personalPhoneNumber : null,
+        designation: employee ? employee.designation : null,
+        department: employee ? employee.department : null
       }
     });
 };
@@ -108,6 +111,8 @@ exports.registerEmployee = async (req, res) => {
         existingEmployee.user = existingUser._id;
         existingEmployee.fullName = fullName;
         existingEmployee.employeeId = employeeId;
+        existingEmployee.personalEmailAddress = emailId;
+        existingEmployee.companyEmailAddress = emailId;
         existingEmployee.designation = customRoleText;
         existingEmployee.personalPhoneNumber = phoneNumber;
         existingEmployee.status = 'Active';
@@ -118,6 +123,7 @@ exports.registerEmployee = async (req, res) => {
           fullName: fullName,
           employeeId: employeeId,
           personalEmailAddress: emailId,
+          companyEmailAddress: emailId,
           personalPhoneNumber: phoneNumber,
           department: req.body.department || 'Engineering',
           designation: customRoleText,
@@ -146,6 +152,7 @@ exports.registerEmployee = async (req, res) => {
       fullName: fullName,
       employeeId: employeeId,
       personalEmailAddress: emailId,
+      companyEmailAddress: emailId,
       personalPhoneNumber: phoneNumber,
       department: req.body.department || 'Engineering',
       designation: customRoleText,

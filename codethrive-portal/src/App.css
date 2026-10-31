@@ -341,3 +341,14 @@
     padding: 0.5rem 0.4rem !important;
   }
 }
+
+
+.topbar-search input:-webkit-autofill,
+.topbar-search input:-webkit-autofill:hover,
+.topbar-search input:-webkit-autofill:focus,
+.topbar-search input:-webkit-autofill:active {
+  -webkit-text-fill-color: #f8fafc !important;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(30, 41, 59, 1) inset !important;
+  box-shadow: 0 0 0px 1000px rgba(30, 41, 59, 1) inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}

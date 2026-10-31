@@ -184,20 +184,37 @@ const MyProfile = () => {
       let data = profileRes?.data?.data || profileRes?.data;
       const isAdminUser = ['superadmin', 'admin', 'hr'].includes(user?.role?.toLowerCase() || '') || window.location.pathname.startsWith('/admin');
 
+      // Check registered local users if any
+      const localUsers = JSON.parse(localStorage.getItem('cti_local_users') || '[]');
+      const matchedLocal = localUsers.find(u => u.employeeId === user?.employeeId || u.email === user?.email || u.emailId === user?.email);
+
+      const regName = user?.fullName || user?.name || matchedLocal?.fullName || matchedLocal?.name || (user?.email ? user.email.split('@')[0] : '');
+      const regEmail = user?.email || user?.personalEmailAddress || matchedLocal?.email || matchedLocal?.emailId || '';
+      const regPhone = user?.phoneNumber || user?.personalPhoneNumber || matchedLocal?.phoneNumber || '';
+      const regId = user?.employeeId || matchedLocal?.employeeId || (isAdminUser ? 'CTI-ADM-001' : '');
+      const regRole = user?.designation || matchedLocal?.designation || matchedLocal?.role || (isAdminUser ? 'Administrator' : 'Employee');
+
       // Fallback if profile data is empty
       if (!data || !data.fullName) {
         data = {
-          fullName: user?.fullName || user?.name || (user?.email ? user.email.split('@')[0].toUpperCase() : 'CodeThrive Administrator'),
-          personalEmailAddress: user?.email || user?.personalEmailAddress || 'admin@codethrive.com',
-          personalPhoneNumber: user?.phoneNumber || '9876543210',
-          employeeId: user?.employeeId || (isAdminUser ? 'CTI-ADM-001' : 'CTI-EMP-002'),
-          designation: user?.designation || (isAdminUser ? 'Chief System Administrator' : 'Software Testing Specialist'),
-          department: user?.department || (isAdminUser ? 'Executive Management & System Control' : 'Quality Assurance & Software Testing'),
+          fullName: regName || (isAdminUser ? 'CodeThrive Administrator' : 'Employee'),
+          personalEmailAddress: regEmail || (isAdminUser ? 'admin@codethrive.com' : ''),
+          personalPhoneNumber: regPhone || '',
+          employeeId: regId || '',
+          designation: regRole,
+          department: user?.department || (isAdminUser ? 'Executive Management' : 'Engineering'),
           employmentType: 'Full-Time',
           status: 'Active',
           workLocation: isAdminUser ? 'Corporate HQ (Master Console)' : 'Office',
-          skills: isAdminUser ? ['System Governance', 'Enterprise Payroll Control', 'User Directory Access', 'Security Audit'] : ['Software Testing', 'Quality Assurance', 'Automation Testing', 'React Control']
+          skills: []
         };
+      } else {
+        // Guarantee registered fields from registration aren't overwritten with blank
+        if (!data.fullName && regName) data.fullName = regName;
+        if (!data.employeeId && regId) data.employeeId = regId;
+        if (!data.personalEmailAddress && regEmail) data.personalEmailAddress = regEmail;
+        if (!data.personalPhoneNumber && regPhone) data.personalPhoneNumber = regPhone;
+        if (!data.designation && regRole) data.designation = regRole;
       }
 
       setProfile(data);
@@ -487,66 +504,68 @@ const MyProfile = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
     >
-      {/* Profile Mode Switcher Tabs (Accessible to Employees & Admins) */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.65rem',
-        marginBottom: '1.25rem',
-        background: 'rgba(15, 23, 42, 0.65)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        borderRadius: '14px',
-        padding: '5px',
-        width: 'fit-content'
-      }}>
-        <button
-          type="button"
-          onClick={() => setActiveProfileTab('personal')}
-          style={{
-            padding: '0.55rem 1.15rem',
-            borderRadius: '10px',
-            border: activeProfileTab === 'personal' ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid transparent',
-            background: activeProfileTab === 'personal' ? 'rgba(16, 185, 129, 0.18)' : 'transparent',
-            color: activeProfileTab === 'personal' ? '#34d399' : '#94a3b8',
-            fontWeight: 700,
-            fontSize: '0.86rem',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.45rem',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <UserCircle size={16} />
-          <span>My Profile</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveProfileTab('company')}
-          style={{
-            padding: '0.55rem 1.15rem',
-            borderRadius: '10px',
-            border: activeProfileTab === 'company' ? '1px solid rgba(56, 189, 248, 0.5)' : '1px solid transparent',
-            background: activeProfileTab === 'company' ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
-            color: activeProfileTab === 'company' ? '#38bdf8' : '#94a3b8',
-            fontWeight: 700,
-            fontSize: '0.86rem',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.45rem',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <Building2 size={16} />
-          <span>Company Profile</span>
-        </button>
-      </div>
+      {/* Profile Mode Switcher Tabs (Only for Employees to toggle My Profile & Company Profile) */}
+      {!isAdmin && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.65rem',
+          marginBottom: '1.25rem',
+          background: 'rgba(15, 23, 42, 0.65)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '14px',
+          padding: '5px',
+          width: 'fit-content'
+        }}>
+          <button
+            type="button"
+            onClick={() => setActiveProfileTab('personal')}
+            style={{
+              padding: '0.55rem 1.15rem',
+              borderRadius: '10px',
+              border: activeProfileTab === 'personal' ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid transparent',
+              background: activeProfileTab === 'personal' ? 'rgba(16, 185, 129, 0.18)' : 'transparent',
+              color: activeProfileTab === 'personal' ? '#34d399' : '#94a3b8',
+              fontWeight: 700,
+              fontSize: '0.86rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <UserCircle size={16} />
+            <span>My Profile</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveProfileTab('company')}
+            style={{
+              padding: '0.55rem 1.15rem',
+              borderRadius: '10px',
+              border: activeProfileTab === 'company' ? '1px solid rgba(56, 189, 248, 0.5)' : '1px solid transparent',
+              background: activeProfileTab === 'company' ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
+              color: activeProfileTab === 'company' ? '#38bdf8' : '#94a3b8',
+              fontWeight: 700,
+              fontSize: '0.86rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Building2 size={16} />
+            <span>Company Profile</span>
+          </button>
+        </div>
+      )}
 
       {/* --------------------------------------------------------------------------
-          COMPANY ENTERPRISE PROFILE VIEW (RENDERED WHEN ACTIVE TAB IS 'company')
+          COMPANY ENTERPRISE PROFILE VIEW (DEFAULT FOR ADMIN, OR WHEN EMPLOYEE CLICKS COMPANY TAB)
          -------------------------------------------------------------------------- */}
-      {activeProfileTab === 'company' && (
+      {(isAdmin || activeProfileTab === 'company') && (
         <>
           {/* Company Hero Banner */}
           <div style={{
@@ -801,9 +820,9 @@ const MyProfile = () => {
       )}
 
       {/* --------------------------------------------------------------------------
-          MY ADMIN / PERSONAL ACCOUNT VIEW (RENDERED WHEN TAB IS 'personal')
+          EMPLOYEE PERSONAL ACCOUNT VIEW (RENDERED WHEN TAB IS 'personal' FOR EMPLOYEES)
          -------------------------------------------------------------------------- */}
-      {activeProfileTab === 'personal' && (
+      {!isAdmin && activeProfileTab === 'personal' && (
         <>
       {/* --------------------------------------------------------------------------
           1. SLEEK EXECUTIVE PROFILE HEADER - DISTINGUISHED BOARDROOM DESIGN
