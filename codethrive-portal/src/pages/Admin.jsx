@@ -20,19 +20,31 @@ import './Dashboard.css';
 const Admin = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const [stats, setStats] = useState({
-    totalEmployees: 0,
-    working: 0,
-    onBreak: 0,
-    onLunch: 0,
-    checkedOut: 0,
-    absent: 0,
-    pendingRegistrations: 0,
-    pendingTaskReviews: 0
+  const [stats, setStats] = useState(() => {
+    try {
+      const cached = sessionStorage.getItem('cti_admin_stats');
+      if (cached) return JSON.parse(cached);
+    } catch {}
+    return {
+      totalEmployees: 0,
+      working: 0,
+      onBreak: 0,
+      onLunch: 0,
+      checkedOut: 0,
+      absent: 0,
+      pendingRegistrations: 0,
+      pendingTaskReviews: 0
+    };
   });
+
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem('cti_admin_stats');
+    } catch {
+      return false;
+    }
+  });
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [liveMonitoring, setLiveMonitoring] = useState([]);
   const [selectedEmpId, setSelectedEmpId] = useState('ALL');
@@ -50,7 +62,7 @@ const Admin = () => {
 
   const fetchStats = async () => {
     try {
-      setLoading(true);
+      if (!sessionStorage.getItem('cti_admin_stats')) setLoading(true);
       const [res, reportsRes] = await Promise.all([
         api.get('/dashboard/admin-stats').catch(() => ({ data: { success: false } })),
         api.get('/daily-reports').catch(() => ({ data: { success: false, data: [] } }))

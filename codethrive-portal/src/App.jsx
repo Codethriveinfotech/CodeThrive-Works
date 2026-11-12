@@ -162,7 +162,7 @@ const EmployeeLayout = () => {
         <Topbar />
         <main className="main-content">
           <ErrorBoundary>
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence initial={false}>
               <PageTransition key={location.pathname}>
                 <Suspense fallback={<PageLoader />}>
                   <Outlet />
@@ -185,7 +185,7 @@ const AdminLayout = () => {
         <AdminTopbar />
         <main className="main-content">
           <ErrorBoundary>
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence initial={false}>
               <PageTransition key={location.pathname}>
                 <Suspense fallback={<PageLoader />}>
                   <Outlet />
@@ -206,14 +206,14 @@ const AuthLayout = () => {
     <div className="auth-split-container">
       <div className="auth-split-image">
         <div className="auth-overlay"></div>
-        <img src="/auth-bg.png" alt="Premium Modern Architecture" />
+        <img src="/auth-bg.png" alt="Premium Modern Architecture" loading="lazy" decoding="async" />
         <div className="auth-quote">
            <h2>Building the Future.</h2>
            <p>Experience the luxury of seamless operations and unparalleled enterprise management.</p>
         </div>
       </div>
       <div className="auth-split-content">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           <PageTransition key={location.pathname}>
             <Suspense fallback={<PageLoader />}>
               <Outlet />
@@ -227,7 +227,7 @@ const AuthLayout = () => {
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
-  const [bootLoading, setBootLoading] = useState(true);
+  const [bootLoading, setBootLoading] = useState(false);
   const [isFading, setIsFading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
   const toastTimerRef = useRef(null);
@@ -254,10 +254,6 @@ function AppContent() {
         localStorage.removeItem(key);
       });
     } catch (err) {}
-
-    const fadeTimer = setTimeout(() => setIsFading(true), 1200);
-    const removeTimer = setTimeout(() => setBootLoading(false), 1600);
-    return () => { clearTimeout(fadeTimer); clearTimeout(removeTimer); };
   }, []);
 
   if (bootLoading || authLoading) {

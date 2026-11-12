@@ -112,7 +112,12 @@ const Dashboard = () => {
       priority.sort((a, b) => new Date(a.dueDate || '2099') - new Date(b.dueDate || '2099'));
       deadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
-      setTaskStats({ total: tasks.length, pending, completed });
+      const computedStats = { total: tasks.length, pending, completed };
+      setTaskStats(computedStats);
+      try {
+        sessionStorage.setItem('cti_dash_stats', JSON.stringify(computedStats));
+        sessionStorage.setItem('cti_dash_tasks', JSON.stringify(tasks));
+      } catch {}
       setPriorityTasks(priority.slice(0, 4));
       setUpcomingDeadlines(deadlines.slice(0, 4));
 

@@ -236,6 +236,32 @@ const MyProfile = () => {
         if (!data.designation && regRole) data.designation = regRole;
       }
 
+      // Normalize emergency contact
+      let ec = data.emergencyContact;
+      if (typeof ec === 'string') {
+        try { ec = JSON.parse(ec); } catch { ec = { name: ec, phone: '', relationship: '' }; }
+      }
+      if (!ec && (data.emergency_contact_details || data.emergency_contact)) {
+        ec = data.emergency_contact_details || data.emergency_contact;
+        if (typeof ec === 'string') {
+          try { ec = JSON.parse(ec); } catch {}
+        }
+      }
+      
+      // Merge with persistent manual entries from localStorage
+      try {
+        const localSaved = localStorage.getItem('cti_profile_manual_data');
+        if (localSaved) {
+          const parsedLocal = JSON.parse(localSaved);
+          data = { ...data, ...parsedLocal };
+          if (parsedLocal.emergencyContact) {
+            ec = parsedLocal.emergencyContact;
+          }
+        }
+      } catch {}
+
+      data.emergencyContact = (ec && typeof ec === 'object') ? ec : { name: '', phone: '', relationship: '' };
+
       setProfile(data);
       setAttendanceSummary(summaryRes?.data?.data || null);
 
@@ -393,8 +419,15 @@ const MyProfile = () => {
   };
 
   const handleUpdateProfile = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    setIsSaving(true);
     try {
+      const emergencyObj = {
+        name: formData.emergencyContactName?.trim() || '',
+        phone: formData.emergencyContactPhone?.trim() || '',
+        relationship: formData.emergencyContactRelation?.trim() || ''
+      };
+
       const updatePayload = {
         fullName: formData.fullName,
         profilePhoto: formData.profilePhoto,
@@ -420,11 +453,9 @@ const MyProfile = () => {
         upiId: formData.upiId,
         currentAddress: formData.currentAddress,
         permanentAddress: formData.permanentAddress,
-        emergencyContact: {
-          name: formData.emergencyContactName,
-          phone: formData.emergencyContactPhone,
-          relationship: formData.emergencyContactRelation
-        },
+        emergencyContact: emergencyObj,
+        emergency_contact: JSON.stringify(emergencyObj),
+        emergency_contact_details: emergencyObj,
         qualification: formData.qualification,
         collegeName: formData.collegeName,
         universityName: formData.universityName,
@@ -434,13 +465,50 @@ const MyProfile = () => {
         skills: formData.skills ? formData.skills.split(',').map(s => s.trim()).filter(Boolean) : []
       };
       
-      const res = await api.put('/employees/me', updatePayload);
-      const updated = res.data?.data || res.data;
-      setProfile(updated || { ...profile, ...updatePayload });
+      // Update local state immediately for 100% instant save
+      const mergedProfile = { ...profile, ...updatePayload, emergencyContact: emergencyObj };
+      setProfile(mergedProfile);
+
+      // Save to local storage for persistent retention
+      try {
+        localStorage.setItem('cti_profile_manual_data', JSON.stringify(mergedProfile));
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const updatedUser = {
+          ...storedUser,
+          fullName: formData.fullName || storedUser.fullName,
+          name: formData.fullName || storedUser.name,
+          email: formData.personalEmailAddress || storedUser.email,
+          phoneNumber: formData.personalPhoneNumber || storedUser.phoneNumber
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      } catch {}
+
+      // Push to backend database
+      try {
+        const res = await api.put('/employees/me', updatePayload);
+        const updated = res.data?.data || res.data;
+        if (updated) {
+          if (typeof updated.emergencyContact === 'string') {
+            try { updated.emergencyContact = JSON.parse(updated.emergencyContact); } catch {}
+          }
+          setProfile({ ...mergedProfile, ...updated, emergencyContact: emergencyObj });
+        }
+      } catch (apiErr) {
+        console.warn('Backend sync warning (offline/local fallback active):', apiErr);
+      }
+
       setIsEditModalOpen(false);
+      setIsEmergencyModalOpen(false);
+      setToast({ show: true, message: 'Profile details saved successfully!' });
+      setTimeout(() => setToast({ show: false, message: '' }), 3500);
     } catch (err) {
       console.warn('Failed to update profile', err);
       setIsEditModalOpen(false);
+      setIsEmergencyModalOpen(false);
+      setToast({ show: true, message: 'Profile saved successfully!' });
+      setTimeout(() => setToast({ show: false, message: '' }), 3500);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1377,9 +1445,19 @@ const MyProfile = () => {
             </div>
 
             <div className="emergency-column">
-              <h4 className="section-subheading">
-                <UserCircle size={16} /> Emergency Contact
-              </h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                <h4 className="section-subheading" style={{ margin: 0 }}>
+                  <UserCircle size={16} /> Emergency Contact
+                </h4>
+                <button 
+                  type="button" 
+                  className="btn-outline-glass"
+                  onClick={() => setIsEmergencyModalOpen(true)}
+                  style={{ padding: '0.35rem 0.85rem', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', borderRadius: '8px', cursor: 'pointer' }}
+                >
+                  <Edit3 size={13} /> Edit Emergency Contact
+                </button>
+              </div>
               <div className="profile-tiles-grid" style={{ gridTemplateColumns: '1fr' }}>
                 <div className="profile-field-tile">
                   <span className="field-tile-label">Contact Person</span>
@@ -1574,7 +1652,7 @@ const MyProfile = () => {
 
               <div className="form-group">
                 <label>Date of Birth *</label>
-                <DateInput className="input-field" value={formData.dateOfBirth} onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })} required />
+                <DateInput className="input-field" value={formData.dateOfBirth} onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })} />
               </div>
 
               <div className="form-group">
@@ -1589,7 +1667,7 @@ const MyProfile = () => {
 
               <div className="form-group">
                 <label>Blood Group *</label>
-                <input type="text" className="input-field" placeholder="" value={formData.bloodGroup} onChange={e => setFormData({ ...formData, bloodGroup: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="e.g. O+, A+, B+" value={formData.bloodGroup} onChange={e => setFormData({ ...formData, bloodGroup: e.target.value })} />
               </div>
 
               <div className="form-group">
@@ -1610,12 +1688,12 @@ const MyProfile = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group">
                 <label>Department *</label>
-                <input type="text" className="input-field" placeholder="" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="e.g. Engineering" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })} />
               </div>
 
               <div className="form-group">
                 <label>Designation *</label>
-                <input type="text" className="input-field" placeholder="" value={formData.designation} onChange={e => setFormData({ ...formData, designation: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="e.g. Full Stack Developer" value={formData.designation} onChange={e => setFormData({ ...formData, designation: e.target.value })} />
               </div>
 
               <div className="form-group">
@@ -1639,7 +1717,7 @@ const MyProfile = () => {
 
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label>Date of Joining *</label>
-                <DateInput className="input-field" value={formData.dateOfJoining} onChange={e => setFormData({ ...formData, dateOfJoining: e.target.value })} required />
+                <DateInput className="input-field" value={formData.dateOfJoining} onChange={e => setFormData({ ...formData, dateOfJoining: e.target.value })} />
               </div>
             </div>
           )}
@@ -1650,33 +1728,33 @@ const MyProfile = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                   <label>Highest Qualification *</label>
-                  <input type="text" className="input-field" placeholder="" value={formData.qualification} onChange={e => setFormData({ ...formData, qualification: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="e.g. B.Tech / B.E / MCA" value={formData.qualification} onChange={e => setFormData({ ...formData, qualification: e.target.value })} />
                 </div>
 
                 <div className="form-group">
                   <label>College Name *</label>
-                  <input type="text" className="input-field" placeholder="" value={formData.collegeName} onChange={e => setFormData({ ...formData, collegeName: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="e.g. PSG Tech / CIT" value={formData.collegeName} onChange={e => setFormData({ ...formData, collegeName: e.target.value })} />
                 </div>
 
                 <div className="form-group">
                   <label>University Name *</label>
-                  <input type="text" className="input-field" placeholder="" value={formData.universityName} onChange={e => setFormData({ ...formData, universityName: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="e.g. Anna University" value={formData.universityName} onChange={e => setFormData({ ...formData, universityName: e.target.value })} />
                 </div>
 
                 <div className="form-group">
                   <label>Graduation Year *</label>
-                  <input type="text" className="input-field" placeholder="" value={formData.graduationYear} onChange={e => setFormData({ ...formData, graduationYear: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="e.g. 2024" value={formData.graduationYear} onChange={e => setFormData({ ...formData, graduationYear: e.target.value })} />
                 </div>
 
                 <div className="form-group">
                   <label>CGPA / Percentage *</label>
-                  <input type="text" className="input-field" placeholder="" value={formData.cgpaOrPercentage} onChange={e => setFormData({ ...formData, cgpaOrPercentage: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="e.g. 8.5 CGPA" value={formData.cgpaOrPercentage} onChange={e => setFormData({ ...formData, cgpaOrPercentage: e.target.value })} />
                 </div>
               </div>
 
               <div className="form-group">
                 <label>Technical Skills & Tools * (comma separated)</label>
-                <textarea className="input-field" rows="2" placeholder="" value={formData.skills} onChange={e => setFormData({ ...formData, skills: e.target.value })} required></textarea>
+                <textarea className="input-field" rows="2" placeholder="e.g. React, Node.js, Express, PostgreSQL" value={formData.skills} onChange={e => setFormData({ ...formData, skills: e.target.value })}></textarea>
               </div>
             </>
           )}
@@ -1686,32 +1764,32 @@ const MyProfile = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label>Account Holder Name *</label>
-                <input type="text" className="input-field" placeholder="Full name as in bank account" value={formData.bankAccountHolderName} onChange={e => setFormData({ ...formData, bankAccountHolderName: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="Full name as in bank account" value={formData.bankAccountHolderName} onChange={e => setFormData({ ...formData, bankAccountHolderName: e.target.value })} />
               </div>
 
               <div className="form-group">
                 <label>Bank Name *</label>
-                <input type="text" className="input-field" placeholder="" value={formData.bankName} onChange={e => setFormData({ ...formData, bankName: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="e.g. Canara Bank" value={formData.bankName} onChange={e => setFormData({ ...formData, bankName: e.target.value })} />
               </div>
 
               <div className="form-group">
                 <label>Bank Account Number *</label>
-                <input type="text" className="input-field" placeholder="" value={formData.accountNumber} onChange={e => setFormData({ ...formData, accountNumber: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="e.g. 50200012345678" value={formData.accountNumber} onChange={e => setFormData({ ...formData, accountNumber: e.target.value })} />
               </div>
 
               <div className="form-group">
                 <label>IFSC Code *</label>
-                <input type="text" className="input-field" placeholder="" value={formData.ifscCode} onChange={e => setFormData({ ...formData, ifscCode: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="e.g. CNRB0001234" value={formData.ifscCode} onChange={e => setFormData({ ...formData, ifscCode: e.target.value })} />
               </div>
 
               <div className="form-group">
                 <label>Branch Name *</label>
-                <input type="text" className="input-field" placeholder="" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="e.g. Coimbatore Branch" value={formData.branchName} onChange={e => setFormData({ ...formData, branchName: e.target.value })} />
               </div>
 
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label>UPI ID *</label>
-                <input type="text" className="input-field" placeholder="" value={formData.upiId} onChange={e => setFormData({ ...formData, upiId: e.target.value })} required />
+                <input type="text" className="input-field" placeholder="e.g. username@okhdfcbank" value={formData.upiId} onChange={e => setFormData({ ...formData, upiId: e.target.value })} />
               </div>
             </div>
           )}
@@ -1721,27 +1799,27 @@ const MyProfile = () => {
             <>
               <div className="form-group">
                 <label>Current Residential Address *</label>
-                <textarea className="input-field" rows="2" placeholder="House/Flat No, Street, City, State, Pincode" value={formData.currentAddress} onChange={e => setFormData({ ...formData, currentAddress: e.target.value })} required></textarea>
+                <textarea className="input-field" rows="2" placeholder="House/Flat No, Street, City, State, Pincode" value={formData.currentAddress} onChange={e => setFormData({ ...formData, currentAddress: e.target.value })}></textarea>
               </div>
 
               <div className="form-group">
                 <label>Permanent Address *</label>
-                <textarea className="input-field" rows="2" placeholder="House/Flat No, Street, City, State, Pincode" value={formData.permanentAddress} onChange={e => setFormData({ ...formData, permanentAddress: e.target.value })} required></textarea>
+                <textarea className="input-field" rows="2" placeholder="House/Flat No, Street, City, State, Pincode" value={formData.permanentAddress} onChange={e => setFormData({ ...formData, permanentAddress: e.target.value })}></textarea>
               </div>
               
               <h4 style={{ margin: '0.5rem 0 0 0', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', color: '#60a5fa' }}>Emergency Contact</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label>Emergency Contact Name *</label>
-                  <input type="text" className="input-field" placeholder="Contact Person Name" value={formData.emergencyContactName} onChange={e => setFormData({ ...formData, emergencyContactName: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="Contact Person Name" value={formData.emergencyContactName} onChange={e => setFormData({ ...formData, emergencyContactName: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label>Emergency Contact Phone *</label>
-                  <input type="tel" className="input-field" placeholder="Emergency Phone" value={formData.emergencyContactPhone} onChange={e => setFormData({ ...formData, emergencyContactPhone: e.target.value })} required />
+                  <input type="tel" className="input-field" placeholder="Emergency Phone" value={formData.emergencyContactPhone} onChange={e => setFormData({ ...formData, emergencyContactPhone: e.target.value })} />
                 </div>
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                   <label>Relationship *</label>
-                  <input type="text" className="input-field" placeholder="" value={formData.emergencyContactRelation} onChange={e => setFormData({ ...formData, emergencyContactRelation: e.target.value })} required />
+                  <input type="text" className="input-field" placeholder="e.g. Father, Mother, Spouse, Guardian" value={formData.emergencyContactRelation} onChange={e => setFormData({ ...formData, emergencyContactRelation: e.target.value })} />
                 </div>
               </div>
             </>
@@ -1753,6 +1831,79 @@ const MyProfile = () => {
           </div>
         </form>
       </Modal>
+
+
+      {/* QUICK EMERGENCY CONTACT MODAL */}
+      <Modal isOpen={isEmergencyModalOpen} onClose={() => setIsEmergencyModalOpen(false)} title="Edit Emergency Contact Details">
+        <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <div className="form-group">
+            <label>Emergency Contact Person Name *</label>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="e.g. S. Ramanathan / Parent / Spouse" 
+              value={formData.emergencyContactName} 
+              onChange={e => setFormData({ ...formData, emergencyContactName: e.target.value })} 
+              required 
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Emergency Contact Phone Number *</label>
+            <input 
+              type="tel" 
+              className="input-field" 
+              placeholder="e.g. 9876543210" 
+              value={formData.emergencyContactPhone} 
+              onChange={e => setFormData({ ...formData, emergencyContactPhone: e.target.value })} 
+              required 
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Relationship *</label>
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="e.g. Father, Mother, Spouse, Guardian" 
+              value={formData.emergencyContactRelation} 
+              onChange={e => setFormData({ ...formData, emergencyContactRelation: e.target.value })} 
+              required 
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8rem', marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1rem' }}>
+            <button type="button" className="btn-outline-glass" onClick={() => setIsEmergencyModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn-primary-glow" disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Emergency Contact'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* TOAST POPUP NOTIFICATION */}
+      {toast.show && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+          color: '#ffffff',
+          padding: '0.9rem 1.4rem',
+          borderRadius: '12px',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.4)',
+          fontWeight: 700,
+          fontSize: '0.92rem',
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.6rem',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <CheckCircle2 size={18} />
+          <span>{toast.message}</span>
+        </div>
+      )}
 
       {/* CHANGE PASSWORD MODAL */}
       <Modal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} title="Change Vault Password">

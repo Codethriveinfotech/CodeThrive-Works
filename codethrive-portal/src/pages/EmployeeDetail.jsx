@@ -901,7 +901,13 @@ const EmployeeDetail = () => {
         skills: (target.skills && target.skills.length > 0) ? target.skills : ['React.js', 'Node.js', 'Express', 'PostgreSQL', 'TypeScript', 'REST APIs', 'Git'],
         currentAddress: target.currentAddress || '12, Tech Park Avenue, Coimbatore, Tamil Nadu - 641035',
         permanentAddress: target.permanentAddress || '45, Main Street, Trichy, Tamil Nadu - 620001',
-        emergencyContact: target.emergencyContact || { name: 'S. Ramanathan', phone: '9876500000', relationship: 'Father / Guardian' }
+        emergencyContact: (() => {
+          let ec = target.emergencyContact || target.emergency_contact_details || target.emergency_contact;
+          if (typeof ec === 'string') {
+            try { ec = JSON.parse(ec); } catch { ec = { name: ec, phone: '', relationship: '' }; }
+          }
+          return (ec && typeof ec === 'object') ? ec : null;
+        })()
       };
 
       // Fetch tasks for this employee from backend
@@ -2290,7 +2296,7 @@ CodeThrive Infotech • Confidential Personnel Archive
                   <div className="profile-tiles-grid" style={{ gridTemplateColumns: '1fr' }}>
                     <div className="profile-field-tile">
                       <span className="field-tile-label">Contact Person</span>
-                      <div className="field-tile-val">{employee.emergencyContact?.name || 'S. Ramanathan'}</div>
+                      <div className="field-tile-val">{employee.emergencyContact?.name || <span className="val-not-set">Not Provided</span>}</div>
                     </div>
 
                     <div className="profile-field-tile">
@@ -2318,7 +2324,7 @@ CodeThrive Infotech • Confidential Personnel Archive
 
                     <div className="profile-field-tile">
                       <span className="field-tile-label">Relationship</span>
-                      <div className="field-tile-val">{employee.emergencyContact?.relationship || 'Parent / Guardian'}</div>
+                      <div className="field-tile-val">{employee.emergencyContact?.relationship || <span className="val-not-set">Not Provided</span>}</div>
                     </div>
                   </div>
                 </div>

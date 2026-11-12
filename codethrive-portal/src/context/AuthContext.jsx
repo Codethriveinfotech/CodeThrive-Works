@@ -14,9 +14,6 @@ const getApiBaseUrl = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
   // Normalize user object: ensure both name & fullName are always present
   const normalizeUser = (u) => {
     if (!u) return u;
@@ -27,6 +24,19 @@ export const AuthProvider = ({ children }) => {
     };
   };
 
+  // Instant zero-delay cached initialization: paint immediately from localStorage on reload
+  const [user, setUser] = useState(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? normalizeUser(JSON.parse(stored)) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [loading, setLoading] = useState(false);
+
   axios.defaults.baseURL = getApiBaseUrl();
   axios.defaults.withCredentials = true;
   const initialToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -35,32 +45,20 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        const normalized = normalizeUser(parsed);
-        setUser(normalized);
-        // Persist normalized back so future loads also have both name & fullName
-        localStorage.setItem('user', JSON.stringify(normalized));
-      } catch (e) {
-        console.error('Failed to parse stored user', e);
-      }
-      
-      // Fetch fresh data in background if backend is reachable
-      axios.get('/auth/me').then(res => {
+    
+    // Background revalidation (Stale-While-Revalidate): never block page render
+    if (token || storedUser) {
+      axios.get('/auth/me', { timeout: 8000 }).then(res => {
         if (res.data?.user) {
           const normalized = normalizeUser(res.data.user);
           setUser(normalized);
           localStorage.setItem('user', JSON.stringify(normalized));
         }
       }).catch(_err => {
-        console.warn('Backend session refresh skipped (Offline/Local mode active)');
-      }).finally(() => {
-        setLoading(false);
+        // Silently preserve cached user without freezing UI
       });
-    } else {
-      setLoading(false);
     }
   }, []);
 

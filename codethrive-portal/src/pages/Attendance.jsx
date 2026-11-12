@@ -21,10 +21,41 @@ const Attendance = () => {
   const isAdminHR = ['admin', 'superadmin', 'hr'].includes(user?.role);
   const isTeamLead = user?.role === 'teamlead';
   
-  const [loading, setLoading] = useState(true);
+  const [todayAttendance, setTodayAttendance] = useState(() => {
+    try {
+      const cached = localStorage.getItem('codethrive_session');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.savedDate === new Date().toDateString()) {
+          return parsed.attendance;
+        }
+      }
+    } catch {}
+    return null;
+  });
+
+  const [activeSession, setActiveSession] = useState(() => {
+    try {
+      const cached = localStorage.getItem('codethrive_session');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.savedDate === new Date().toDateString()) {
+          return parsed.activeSession;
+        }
+      }
+    } catch {}
+    return null;
+  });
+
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('codethrive_session');
+      return !cached;
+    } catch {
+      return false;
+    }
+  });
   const [isActionLoading, setIsActionLoading] = useState(false);
-  const [todayAttendance, setTodayAttendance] = useState(null);
-  const [activeSession, setActiveSession] = useState(null);
   const [history, setHistory] = useState([]);
   const [summary, setSummary] = useState(null);
   const [employees, setEmployees] = useState([]); 
@@ -175,7 +206,7 @@ const Attendance = () => {
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true);
+      if (!todayAttendance) setLoading(true);
       const params = { month: selectedMonth, year: selectedYear, employeeId: selectedEmp };
       const [todayRes, historyRes, summaryRes] = await Promise.allSettled([
         api.get('/attendance/today'),

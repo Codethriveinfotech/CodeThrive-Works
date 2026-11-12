@@ -89,6 +89,15 @@ exports.getEmployee = async (req, res) => {
       }
     }
 
+    if (employee) {
+      if (typeof employee.emergencyContact === 'string') {
+        try { employee.emergencyContact = JSON.parse(employee.emergencyContact); } catch {
+          employee.emergencyContact = { name: employee.emergencyContact, phone: '', relationship: '' };
+        }
+      } else if (!employee.emergencyContact && employee.emergency_contact_details) {
+        employee.emergencyContact = employee.emergency_contact_details;
+      }
+    }
     res.status(200).json({ success: true, data: employee });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -256,6 +265,16 @@ exports.updateMe = async (req, res) => {
       }
     });
 
+    if (req.body.emergencyContact !== undefined) {
+      let ec = req.body.emergencyContact;
+      if (typeof ec === 'string') {
+        try { ec = JSON.parse(ec); } catch {}
+      }
+      updateData.emergencyContact = typeof ec === 'object' ? JSON.stringify(ec) : ec;
+      updateData.emergency_contact = typeof ec === 'object' ? JSON.stringify(ec) : ec;
+      updateData.emergency_contact_details = typeof ec === 'object' ? ec : null;
+    }
+
     // Handle photo upload if file exists
     if (req.file) {
       updateData.profilePhoto = req.file.path;
@@ -271,6 +290,13 @@ exports.updateMe = async (req, res) => {
       await User.findByIdAndUpdate(req.user._id, { email: updateData.personalEmailAddress });
     }
 
+    if (employee) {
+      if (typeof employee.emergencyContact === 'string') {
+        try { employee.emergencyContact = JSON.parse(employee.emergencyContact); } catch {}
+      } else if (!employee.emergencyContact && employee.emergency_contact_details) {
+        employee.emergencyContact = employee.emergency_contact_details;
+      }
+    }
     res.status(200).json({ success: true, data: employee });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

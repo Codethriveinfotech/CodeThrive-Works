@@ -24,6 +24,21 @@ class Document {
       this._original[snake] = v;
     }
 
+    // Auto-parse emergency_contact if stringified JSON
+    if ((this.emergency_contact || this.emergencyContact) && typeof (this.emergency_contact || this.emergencyContact) === 'string') {
+      try {
+        const raw = this.emergency_contact || this.emergencyContact;
+        if (raw.startsWith('{') || raw.startsWith('[')) {
+          const parsedEC = JSON.parse(raw);
+          this.emergencyContact = parsedEC;
+          this.emergency_contact = parsedEC;
+        }
+      } catch {}
+    }
+    if (this.emergency_contact_details && (!this.emergencyContact || typeof this.emergencyContact !== 'object')) {
+      this.emergencyContact = this.emergency_contact_details;
+    }
+
     // Ensure _id and id are identical
     const recordId = data.id || data._id;
     if (recordId) {
