@@ -26,6 +26,9 @@ const MyProfile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [contactModal, setContactModal] = useState({ isOpen: false, name: '', phone: '' });
+  const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '' });
   const isAdminPath = window.location.pathname.startsWith('/admin');
   const isCompanyRoute = window.location.pathname.includes('/company') || window.location.pathname === '/admin/profile';
   const [activeProfileTab, setActiveProfileTab] = useState(isCompanyRoute ? 'company' : (isAdminPath ? 'company' : 'personal'));
