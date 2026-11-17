@@ -39,16 +39,42 @@ const Payroll = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
   const [filterYear, setFilterYear] = useState('');
+  const [employeeProfile, setEmployeeProfile] = useState(null);
 
   useEffect(() => {
     fetchPayslips();
+    fetchProfile();
   }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get('/employees/me');
+      let data = res.data?.data || res.data;
+      try {
+        const localSaved = localStorage.getItem('cti_profile_manual_data');
+        if (localSaved) {
+          data = { ...data, ...JSON.parse(localSaved) };
+        }
+      } catch {}
+      setEmployeeProfile(data);
+    } catch (err) {
+      try {
+        const localSaved = localStorage.getItem('cti_profile_manual_data');
+        if (localSaved) setEmployeeProfile(JSON.parse(localSaved));
+      } catch {}
+    }
+  };
+
+  const isSeedPayslip = (p) => {
+    if (p?.payslipId === 'PAY-2026-09-001' || p?.month === 'September 2026') return true;
+    return false;
+  };
 
   const fetchPayslips = async () => {
     try {
       setLoading(true);
       const res = await api.get('/payroll/my-payslips');
-      const fetched = res.data?.data || [];
+      const fetched = (res.data?.data || []).filter(p => !isSeedPayslip(p));
 
       setPayslips(Array.isArray(fetched) ? fetched : []);
     } catch (err) {
@@ -98,6 +124,9 @@ const Payroll = () => {
           { label: 'Designation', value: empRole },
           { label: 'Pay Period', value: targetMonth },
           { label: 'Statement Date', value: targetDate },
+          { label: 'Bank Name', value: payslip.employeeInfo?.bankName || payslip.employee?.bankName || employeeProfile?.bankName || 'Direct Transfer' },
+          { label: 'Bank A/C No', value: payslip.employeeInfo?.bankAcNo || payslip.employee?.accountNumber || employeeProfile?.accountNumber || '-' },
+          { label: 'IFSC Code', value: payslip.employeeInfo?.ifscCode || payslip.employee?.ifscCode || employeeProfile?.ifscCode || '-' },
           { label: 'Email ID', value: empEmail },
           { label: 'Payslip Number', value: payslip.payslipId || 'PAY-2026' },
           { label: 'Disbursement Status', value: payslip.status || 'Paid' }
@@ -508,6 +537,49 @@ const Payroll = () => {
                 <span className="net-sub">Direct Credited to Salary Account</span>
               </div>
               <span className="net-amount">₹{(selectedPayslip.netPayable || 0).toLocaleString()}</span>
+            </div>
+
+            {/* Employee Bank Account Details */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.75), rgba(30, 41, 59, 0.6))',
+              borderRadius: '14px',
+              padding: '1.1rem 1.4rem',
+              border: '1px solid rgba(59, 130, 246, 0.25)',
+              marginTop: '1.2rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.8rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#60a5fa', fontWeight: 700, fontSize: '0.88rem' }}>
+                <Landmark size={18} />
+                <span>Salary Disbursement Bank Account Details</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.9rem', fontSize: '0.82rem' }}>
+                <div>
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.74rem', textTransform: 'uppercase' }}>Operating Bank</span>
+                  <strong style={{ color: '#fff', fontSize: '0.9rem' }}>
+                    {selectedPayslip.employeeInfo?.bankName || selectedPayslip.employee?.bankName || employeeProfile?.bankName || 'CodeThrive Salary Account'}
+                  </strong>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.74rem', textTransform: 'uppercase' }}>Bank Account Number</span>
+                  <strong style={{ color: '#38bdf8', fontSize: '0.9rem', fontFamily: 'monospace' }}>
+                    {selectedPayslip.employeeInfo?.bankAcNo || selectedPayslip.employee?.accountNumber || employeeProfile?.accountNumber || 'Not Provided'}
+                  </strong>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.74rem', textTransform: 'uppercase' }}>IFSC Code</span>
+                  <strong style={{ color: '#34d399', fontSize: '0.9rem', fontFamily: 'monospace' }}>
+                    {selectedPayslip.employeeInfo?.ifscCode || selectedPayslip.employee?.ifscCode || employeeProfile?.ifscCode || 'Not Provided'}
+                  </strong>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.74rem', textTransform: 'uppercase' }}>Account Holder</span>
+                  <strong style={{ color: '#fff', fontSize: '0.9rem' }}>
+                    {selectedPayslip.employeeInfo?.accountHolderName || selectedPayslip.employee?.bankAccountHolderName || selectedPayslip.employee?.fullName || employeeProfile?.bankAccountHolderName || employeeProfile?.fullName || user?.fullName || 'Employee'}
+                  </strong>
+                </div>
+              </div>
             </div>
 
             {/* Modal Actions */}

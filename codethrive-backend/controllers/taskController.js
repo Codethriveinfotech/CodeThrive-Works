@@ -75,6 +75,19 @@ exports.updateTaskProgress = async (req, res) => {
   }
 };
 
+// Helper to identify un-uploaded seed/dummy tasks
+const isSeedTask = (t) => {
+  const tid = t.taskId || '';
+  const title = t.title || '';
+  if (['TSK-101', 'TSK-102', 'TSK-103'].includes(tid)) return true;
+  if (title.includes('OAuth Authentication & JWT Refresh Tokens') ||
+      title.includes('Glassmorphic Admin Dashboard Theme') ||
+      title.includes('End-to-End API Integration Testing')) {
+    return true;
+  }
+  return false;
+};
+
 // @desc    Get Employee's Tasks
 // @route   GET /api/v1/tasks/my-tasks
 // @access  Private (Employee)
@@ -83,7 +96,8 @@ exports.getMyTasks = async (req, res) => {
     const employee = await Employee.findOne({ user: req.user._id });
     if (!employee) return res.status(200).json({ success: true, count: 0, data: [] });
     
-    const tasks = await Task.find({ assignedTo: employee._id }).sort('-createdAt');
+    const rawTasks = await Task.find({ assignedTo: employee._id }).sort('-createdAt');
+    const tasks = (rawTasks || []).filter(t => !isSeedTask(t));
     res.status(200).json({ success: true, count: tasks.length, data: tasks });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -95,7 +109,8 @@ exports.getMyTasks = async (req, res) => {
 // @access  Private (Admin)
 exports.getAllTasks = async (req, res) => {
   try {
-    const tasks = await Task.find().populate('assignedTo', 'fullName employeeId').sort('-createdAt');
+    const rawTasks = await Task.find().populate('assignedTo', 'fullName employeeId').sort('-createdAt');
+    const tasks = (rawTasks || []).filter(t => !isSeedTask(t));
     res.status(200).json({ success: true, count: tasks.length, data: tasks });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

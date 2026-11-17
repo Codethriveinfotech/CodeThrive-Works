@@ -100,103 +100,14 @@ const DEFAULT_DEMO_EMPLOYEES = [
     permanentAddress: '45, Main Street, Coimbatore, Tamil Nadu - 641001',
     emergencyContact: { name: 'S. Ramanathan', phone: '9876500000', relationship: 'Father' },
     sentByEmployee: {
-      dailyReports: [
-        {
-          _id: 'rep_001',
-          date: '2026-10-25',
-          title: 'Neon PostgreSQL Connection Pool & JWT Middleware Implementation',
-          tasksWorked: 'Configured pg.Pool with SSL connection pooling, healthcheck routing and auth token auto-refresh',
-          workSummary: 'Configured pg.Pool with SSL connection pooling, healthcheck routing and auth token auto-refresh',
-          hoursWorked: '8h 30m',
-          hoursLogged: '8h 30m',
-          completedWork: 'Merged auth middleware, integrated Neon PG pool, validated load stress under 50 simultaneous connections',
-          issuesFaced: 'None. All unit tests passed 100%',
-          tomorrowsPlan: 'Build employee task assignment sync service & SRC download zip streamer',
-          status: 'Approved',
-          srcFileName: 'Sprint_Postgres_Auth_Deliverable.zip',
-          srcFileSize: '2.4 MB'
-        },
-        {
-          _id: 'rep_002',
-          date: '2026-10-24',
-          title: 'Employee Dossier & Export Audit Architecture',
-          tasksWorked: 'Created PDF and Word document generators with official company letterhead',
-          workSummary: 'Created PDF and Word document generators with official company letterhead',
-          hoursWorked: '8h 00m',
-          hoursLogged: '8h 00m',
-          completedWork: 'Built corporate letterhead templates, dynamic autoTable headers and verified table page boundaries',
-          issuesFaced: 'Resolved table page break margins in jsPDF autotable',
-          tomorrowsPlan: 'Refactor executive portal profile tabs & add audit filters',
-          status: 'Approved',
-          srcFileName: 'CodeThrive_Audit_Engine_SRC.zip',
-          srcFileSize: '3.1 MB'
-        }
-      ],
+      dailyReports: [],
       leaveApplications: [],
       uploadedDocs: [],
       attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '8h 00m', breakTime: '20m' },
-      payslips: [
-        {
-          _id: 'psl_demo_001',
-          payslipId: 'PSL-2026-001',
-          month: 'September 2026',
-          monthCode: '2026-09',
-          paymentDate: '2026-09-30',
-          status: 'Paid',
-          basicSalary: 42500,
-          grossSalary: 85000,
-          bonus: 0,
-          allowanceDetails: { hra: 17000, travel: 3000, medical: 2000, other: 20500 },
-          deductionDetails: { pf: 5100, esi: 0, professionalTax: 200, incomeTax: 4250, leaveDeduction: 0, loanAdvance: 0, other: 0 },
-          deductions: 9550,
-          netPayable: 75450,
-          createdAt: '2026-09-30T10:00:00.000Z'
-        },
-        {
-          _id: 'psl_demo_002',
-          payslipId: 'PSL-2026-002',
-          month: 'August 2026',
-          monthCode: '2026-08',
-          paymentDate: '2026-08-31',
-          status: 'Paid',
-          basicSalary: 42500,
-          grossSalary: 85000,
-          bonus: 0,
-          allowanceDetails: { hra: 17000, travel: 3000, medical: 2000, other: 20500 },
-          deductionDetails: { pf: 5100, esi: 0, professionalTax: 200, incomeTax: 4250, leaveDeduction: 0, loanAdvance: 0, other: 0 },
-          deductions: 9550,
-          netPayable: 75450,
-          createdAt: '2026-08-31T10:00:00.000Z'
-        }
-      ]
+      payslips: []
     },
     assignedByAdmin: {
-      tasks: [
-        {
-          _id: 'task_001',
-          taskId: 'TSK-101',
-          title: 'Implement Neon DB Connection Pooling & Connection Healthcheck',
-          description: 'Configure pg.Pool with max connections 20 and idle timeout 30s for Neon PostgreSQL database.',
-          priority: 'High',
-          status: 'Completed',
-          dueDate: '2026-10-26',
-          createdAt: '2026-10-23T10:00:00.000Z',
-          assignedAtText: '23 Oct 2026, 10:00 AM',
-          assignedBy: 'Admin / Management'
-        },
-        {
-          _id: 'task_002',
-          taskId: 'TSK-102',
-          title: 'Enterprise Employee Profile & Daily Work Reports Audit',
-          description: 'Ensure 100% complete employee profile visibility, task assignment history tracking, and daily reports SRC downloads.',
-          priority: 'Urgent',
-          status: 'In Progress',
-          dueDate: '2026-10-28',
-          createdAt: '2026-10-24T14:30:00.000Z',
-          assignedAtText: '24 Oct 2026, 02:30 PM',
-          assignedBy: 'Admin / Management'
-        }
-      ],
+      tasks: [],
       notificationsSent: []
     }
   },
@@ -238,23 +149,7 @@ const DEFAULT_DEMO_EMPLOYEES = [
     permanentAddress: '12, Garden Street, Mysuru, Karnataka - 570001',
     emergencyContact: { name: 'R. Sharma', phone: '9876511111', relationship: 'Spouse' },
     sentByEmployee: {
-      dailyReports: [
-        {
-          _id: 'rep_003',
-          date: '2026-10-25',
-          title: 'Design System Tokens & Dark Theme Color Palette Audit',
-          tasksWorked: 'Updated glassmorphism card styles, modal headers and custom scrollbars',
-          workSummary: 'Updated glassmorphism card styles, modal headers and custom scrollbars',
-          hoursWorked: '7h 45m',
-          hoursLogged: '7h 45m',
-          completedWork: 'Finalized Figma component library sync with React components',
-          issuesFaced: 'None',
-          tomorrowsPlan: 'Deliver high-res mobile view layouts',
-          status: 'Approved',
-          srcFileName: 'CodeThrive_DesignTokens_FigmaExport.zip',
-          srcFileSize: '5.2 MB'
-        }
-      ],
+      dailyReports: [],
       leaveApplications: [],
       uploadedDocs: [],
       attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '7h 45m', breakTime: '20m' },
@@ -866,49 +761,73 @@ const EmployeeDetail = () => {
       const res = await api.get('/employees');
       let list = DEFAULT_DEMO_EMPLOYEES;
       if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        list = res.data.data.map((emp, idx) => ({
-          ...DEFAULT_DEMO_EMPLOYEES[idx % DEFAULT_DEMO_EMPLOYEES.length],
-          ...emp
+        list = res.data.data.map((emp) => ({
+          ...emp,
+          sentByEmployee: {
+            dailyReports: [],
+            leaveApplications: [],
+            uploadedDocs: [],
+            payslips: []
+          },
+          assignedByAdmin: {
+            tasks: [],
+            notificationsSent: []
+          }
         }));
       }
       setAllEmployees(list);
 
-      const target = list.find(e => e._id === id || e.employeeId === id) || list[0];
+      const target = list.find(e => e._id === id || e.employeeId === id) || list[0] || {};
       
-      // Enrich target with 100% full profile fallback fields so that every single field displays cleanly
+      // Enrich target with clean profile fields without fake dummy fallbacks
       const enrichedTarget = {
         ...target,
-        qualification: target.qualification || 'Bachelor of Engineering (B.E. Computer Science)',
-        collegeName: target.collegeName || 'SRM Institute of Science & Technology',
-        universityName: target.universityName || 'Anna University',
-        graduationYear: target.graduationYear || '2024',
-        cgpaOrPercentage: target.cgpaOrPercentage || '8.8 CGPA',
-        previousCompany: target.previousCompany || 'CodeThrive Infotech',
-        bankAccountHolderName: target.bankAccountHolderName || target.fullName,
-        bankName: target.bankName || 'Canara Bank',
-        accountNumber: target.accountNumber || '50200088991122',
-        ifscCode: target.ifscCode || 'CNRB0001234',
-        branchName: target.branchName || 'Tech Park Branch, Coimbatore',
-        panNumber: target.panNumber || 'ABCDE1234F',
-        aadhaarOrIdentityProofNumber: target.aadhaarOrIdentityProofNumber || 'XXXX-XXXX-9842',
-        upiId: target.upiId || `${(target.fullName || 'staff').toLowerCase().replace(/\s+/g, '')}@okaxis`,
-        dateOfBirth: target.dateOfBirth || '2001-08-15',
-        gender: target.gender || 'Male',
-        bloodGroup: target.bloodGroup || 'O+',
-        maritalStatus: target.maritalStatus || 'Single',
+        qualification: target.qualification || '',
+        collegeName: target.collegeName || '',
+        universityName: target.universityName || '',
+        graduationYear: target.graduationYear || '',
+        cgpaOrPercentage: target.cgpaOrPercentage || '',
+        previousCompany: target.previousCompany || '',
+        bankAccountHolderName: target.bankAccountHolderName || target.fullName || '',
+        bankName: target.bankName || '',
+        accountNumber: target.accountNumber || '',
+        ifscCode: target.ifscCode || '',
+        branchName: target.branchName || '',
+        panNumber: target.panNumber || '',
+        aadhaarOrIdentityProofNumber: target.aadhaarOrIdentityProofNumber || '',
+        upiId: target.upiId || '',
+        dateOfBirth: target.dateOfBirth || '',
+        gender: target.gender || 'Not Specified',
+        bloodGroup: target.bloodGroup || '',
+        maritalStatus: target.maritalStatus || '',
         nationality: target.nationality || 'Indian',
-        workLocation: target.workLocation || 'Tech Park HQ',
-        skills: (target.skills && target.skills.length > 0) ? target.skills : ['React.js', 'Node.js', 'Express', 'PostgreSQL', 'TypeScript', 'REST APIs', 'Git'],
-        currentAddress: target.currentAddress || '12, Tech Park Avenue, Coimbatore, Tamil Nadu - 641035',
-        permanentAddress: target.permanentAddress || '45, Main Street, Trichy, Tamil Nadu - 620001',
+        workLocation: target.workLocation || 'Office',
+        skills: Array.isArray(target.skills) ? target.skills : [],
+        currentAddress: target.currentAddress || '',
+        permanentAddress: target.permanentAddress || '',
         emergencyContact: (() => {
           let ec = target.emergencyContact || target.emergency_contact_details || target.emergency_contact;
           if (typeof ec === 'string') {
             try { ec = JSON.parse(ec); } catch { ec = { name: ec, phone: '', relationship: '' }; }
           }
           return (ec && typeof ec === 'object') ? ec : null;
-        })()
+        })(),
+        sentByEmployee: {
+          dailyReports: [],
+          leaveApplications: [],
+          uploadedDocs: [],
+          payslips: []
+        },
+        assignedByAdmin: {
+          tasks: [],
+          notificationsSent: []
+        }
       };
+
+      // Helpers to exclude seed/dummy records
+      const isSeedT = (t) => ['TSK-101', 'TSK-102', 'TSK-103'].includes(t?.taskId) || (t?.title && t.title.includes('OAuth Authentication'));
+      const isSeedR = (r) => (r?.tasksWorked && r.tasksWorked.includes('authentication API unit tests')) || (r?.srcFileName === 'CodeThrive_Audit_Engine_SRC.zip');
+      const isSeedP = (p) => p?.payslipId === 'PAY-2026-09-001' || p?.month === 'September 2026' || p?._id === 'psl_demo_001';
 
       // Fetch tasks for this employee from backend
       try {
@@ -916,19 +835,17 @@ const EmployeeDetail = () => {
         const allTasks = taskRes?.data?.data || taskRes?.data || [];
         if (Array.isArray(allTasks) && allTasks.length > 0) {
           const empTasks = allTasks.filter(t => 
-            t.assignedTo?._id === enrichedTarget._id || 
-            t.assignedTo?.employeeId === enrichedTarget.employeeId || 
-            t.assignedTo === enrichedTarget._id ||
-            t.assignedTo === enrichedTarget.employeeId
+            !isSeedT(t) && (
+              t.assignedTo?._id === enrichedTarget._id || 
+              t.assignedTo?.employeeId === enrichedTarget.employeeId || 
+              t.assignedTo === enrichedTarget._id ||
+              t.assignedTo === enrichedTarget.employeeId
+            )
           );
-          if (empTasks.length > 0) {
-            const existingIds = new Set((enrichedTarget.assignedByAdmin?.tasks || []).map(t => t._id || t.taskId));
-            const mergedTasks = [...empTasks, ...(enrichedTarget.assignedByAdmin?.tasks || []).filter(t => !existingIds.has(t._id || t.taskId))];
-            enrichedTarget.assignedByAdmin = {
-              ...enrichedTarget.assignedByAdmin,
-              tasks: mergedTasks
-            };
-          }
+          enrichedTarget.assignedByAdmin = {
+            ...enrichedTarget.assignedByAdmin,
+            tasks: empTasks
+          };
         }
       } catch (taskErr) {
         console.warn('Could not fetch tasks from server', taskErr);
@@ -940,19 +857,17 @@ const EmployeeDetail = () => {
         const allReports = reportRes?.data?.data || reportRes?.data || [];
         if (Array.isArray(allReports) && allReports.length > 0) {
           const empReports = allReports.filter(r => 
-            r.employee?._id === enrichedTarget._id || 
-            r.employee?.employeeId === enrichedTarget.employeeId || 
-            r.employee === enrichedTarget._id ||
-            r.employee_id === enrichedTarget._id
+            !isSeedR(r) && (
+              r.employee?._id === enrichedTarget._id || 
+              r.employee?.employeeId === enrichedTarget.employeeId || 
+              r.employee === enrichedTarget._id ||
+              r.employee_id === enrichedTarget._id
+            )
           );
-          if (empReports.length > 0) {
-            const existingIds = new Set((enrichedTarget.sentByEmployee?.dailyReports || []).map(r => r._id));
-            const mergedReports = [...empReports, ...(enrichedTarget.sentByEmployee?.dailyReports || []).filter(r => !existingIds.has(r._id))];
-            enrichedTarget.sentByEmployee = {
-              ...enrichedTarget.sentByEmployee,
-              dailyReports: mergedReports
-            };
-          }
+          enrichedTarget.sentByEmployee = {
+            ...enrichedTarget.sentByEmployee,
+            dailyReports: empReports
+          };
         }
       } catch (repErr) {
         console.warn('Could not fetch daily reports from server', repErr);
@@ -964,16 +879,17 @@ const EmployeeDetail = () => {
         const allPayslips = payRes?.data?.data || payRes?.data || [];
         if (Array.isArray(allPayslips) && allPayslips.length > 0) {
           const empPayslips = allPayslips.filter(p => 
-            p.employee?._id === enrichedTarget._id || 
-            p.employee?.employeeId === enrichedTarget.employeeId || 
-            p.employee === enrichedTarget._id ||
-            p.employee === enrichedTarget.employeeId
+            !isSeedP(p) && (
+              p.employee?._id === enrichedTarget._id || 
+              p.employee?.employeeId === enrichedTarget.employeeId || 
+              p.employee === enrichedTarget._id ||
+              p.employee === enrichedTarget.employeeId
+            )
           );
-          if (empPayslips.length > 0) {
-            const existingMonths = new Set((enrichedTarget.sentByEmployee?.payslips || []).map(p => p.month || p.payslipId));
-            const merged = [...empPayslips, ...(enrichedTarget.sentByEmployee?.payslips || []).filter(p => !existingMonths.has(p.month || p.payslipId))];
-            enrichedTarget.sentByEmployee = { ...enrichedTarget.sentByEmployee, payslips: merged };
-          }
+          enrichedTarget.sentByEmployee = {
+            ...enrichedTarget.sentByEmployee,
+            payslips: empPayslips
+          };
         }
       } catch (payErr) {
         console.warn('Could not fetch payroll from server', payErr);
@@ -982,7 +898,7 @@ const EmployeeDetail = () => {
       // Merge localStorage payslips
       try {
         const cachedPayKey = `cti_payslips_${enrichedTarget._id || enrichedTarget.employeeId}`;
-        const localPayslips = JSON.parse(localStorage.getItem(cachedPayKey) || '[]');
+        const localPayslips = (JSON.parse(localStorage.getItem(cachedPayKey) || '[]')).filter(p => !isSeedP(p));
         if (localPayslips.length > 0) {
           const existingMonths = new Set((enrichedTarget.sentByEmployee?.payslips || []).map(p => p.month || p.payslipId));
           const merged = [...localPayslips.filter(p => !existingMonths.has(p.month || p.payslipId)), ...(enrichedTarget.sentByEmployee?.payslips || [])];
@@ -1018,7 +934,7 @@ const EmployeeDetail = () => {
       // Merge localStorage payslips if offline
       try {
         const cachedPayKey = `cti_payslips_${target._id || target.employeeId}`;
-        const localPayslips = JSON.parse(localStorage.getItem(cachedPayKey) || '[]');
+        const localPayslips = (JSON.parse(localStorage.getItem(cachedPayKey) || '[]')).filter(p => !isSeedP(p));
         if (localPayslips.length > 0) {
           const existingMonths = new Set((target.sentByEmployee?.payslips || []).map(p => p.month || p.payslipId));
           const merged = [...localPayslips.filter(p => !existingMonths.has(p.month || p.payslipId)), ...(target.sentByEmployee?.payslips || [])];

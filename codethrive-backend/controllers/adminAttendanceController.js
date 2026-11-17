@@ -111,6 +111,10 @@ exports.markAttendance = async (req, res) => {
       firstLoginTime,
       lastLogoutTime,
       correctionReason,
+      breakMinutes,
+      lunchMinutes,
+      totalBreakDurationInSeconds,
+      totalLunchDurationInSeconds
     } = req.body;
 
     if (!employeeId || !date || !status) {
@@ -145,28 +149,43 @@ exports.markAttendance = async (req, res) => {
     const now = new Date();
     const loginTime = firstLoginTime ? new Date(firstLoginTime) : now;
 
+    const breakSec = totalBreakDurationInSeconds !== undefined
+      ? Number(totalBreakDurationInSeconds)
+      : (breakMinutes !== undefined ? Number(breakMinutes) * 60 : (attendance?.totalBreakDurationInSeconds || 0));
+    const lunchSec = totalLunchDurationInSeconds !== undefined
+      ? Number(totalLunchDurationInSeconds)
+      : (lunchMinutes !== undefined ? Number(lunchMinutes) * 60 : (attendance?.totalLunchDurationInSeconds || 0));
+
     if (attendance) {
       attendance.status = status;
       attendance.isManualCorrection = true;
       attendance.correctionReason = correctionReason || 'Admin manual mark';
       if (firstLoginTime) attendance.firstLoginTime = loginTime;
       if (lastLogoutTime) attendance.lastLogoutTime = new Date(lastLogoutTime);
+      attendance.totalBreakDurationInSeconds = breakSec;
+      attendance.totalLunchDurationInSeconds = lunchSec;
+
       if (firstLoginTime && lastLogoutTime) {
+        const totalBreakLunchSec = breakSec + lunchSec;
         const workMs = new Date(lastLogoutTime) - new Date(firstLoginTime);
-        attendance.totalWorkDurationInSeconds = Math.max(0, Math.floor(workMs / 1000));
+        attendance.totalWorkDurationInSeconds = Math.max(0, Math.floor(workMs / 1000) - totalBreakLunchSec);
       }
       await attendance.save();
     } else {
+      const totalBreakLunchSec = breakSec + lunchSec;
+      const initialWorkSec = (firstLoginTime && lastLogoutTime)
+        ? Math.max(0, Math.floor((new Date(lastLogoutTime) - new Date(firstLoginTime)) / 1000) - totalBreakLunchSec)
+        : 0;
+
       attendance = await Attendance.create({
         employee: employeeId,
         date: new Date(date),
         firstLoginTime: loginTime,
         lastLogoutTime: lastLogoutTime ? new Date(lastLogoutTime) : undefined,
         status,
-        totalWorkDurationInSeconds:
-          firstLoginTime && lastLogoutTime
-            ? Math.max(0, Math.floor((new Date(lastLogoutTime) - new Date(firstLoginTime)) / 1000))
-            : 0,
+        totalBreakDurationInSeconds: breakSec,
+        totalLunchDurationInSeconds: lunchSec,
+        totalWorkDurationInSeconds: initialWorkSec,
         isManualCorrection: true,
         correctionReason: correctionReason || 'Admin manual mark',
       });

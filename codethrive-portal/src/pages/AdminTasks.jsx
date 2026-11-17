@@ -43,6 +43,18 @@ const AdminTasks = () => {
     fetchData();
   }, []);
 
+  const isSeedTask = (t) => {
+    const tid = t?.taskId || '';
+    const title = t?.title || '';
+    if (['TSK-101', 'TSK-102', 'TSK-103'].includes(tid)) return true;
+    if (title.includes('OAuth Authentication') ||
+        title.includes('Glassmorphic Admin Dashboard') ||
+        title.includes('End-to-End API Integration')) {
+      return true;
+    }
+    return false;
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -50,7 +62,7 @@ const AdminTasks = () => {
         api.get('/tasks'),
         api.get('/employees')
       ]);
-      const tasksData = Array.isArray(taskRes.data?.data) ? taskRes.data.data : (Array.isArray(taskRes.data) ? taskRes.data : []);
+      const tasksData = (Array.isArray(taskRes.data?.data) ? taskRes.data.data : (Array.isArray(taskRes.data) ? taskRes.data : [])).filter(t => !isSeedTask(t));
       const empsData = Array.isArray(empRes.data?.data) ? empRes.data.data : (Array.isArray(empRes.data) ? empRes.data : []);
 
       setTasks(tasksData);

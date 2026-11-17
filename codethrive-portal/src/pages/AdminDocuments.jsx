@@ -30,26 +30,6 @@ const DEFAULT_DOCUMENTS = [
     fileSize: '1.1 MB',
     owner: { fullName: 'Mahadevan', employeeId: 'CTI-EMP-001' },
     createdAt: new Date(Date.now() - 86400000 * 30).toISOString()
-  },
-  {
-    _id: 'doc-3',
-    title: 'Offer Letter & Employment Agreement - Sarah Jenkins',
-    documentType: 'Employee Contract',
-    fileUrl: 'docs/contract_sarah.pdf',
-    isPublic: false,
-    fileSize: '850 KB',
-    owner: { fullName: 'Sarah Jenkins', employeeId: 'CTI-EMP-004' },
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString()
-  },
-  {
-    _id: 'doc-4',
-    title: 'Form 16 Tax Declaration Statement 2025-26',
-    documentType: 'Tax Document',
-    fileUrl: 'docs/form16_tax.pdf',
-    isPublic: false,
-    fileSize: '540 KB',
-    owner: { fullName: 'Alex Rivera', employeeId: 'CTI-EMP-007' },
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
   }
 ];
 

@@ -7,7 +7,8 @@ import * as XLSX from 'xlsx';
 import { 
   Clock, Coffee, Utensils, LogIn, Play, LogOut, CheckCircle2, AlertTriangle, 
   Download, Printer, Search, Calendar as CalIcon, User, 
-  ChevronLeft, ChevronRight, AlertCircle, ShieldCheck, Sparkles, TrendingUp, FileText
+  ChevronLeft, ChevronRight, AlertCircle, ShieldCheck, Sparkles, TrendingUp, FileText,
+  Edit, Pencil
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import DateInput from '../components/common/DateInput';
@@ -83,6 +84,125 @@ const Attendance = () => {
     reason: ''
   });
 
+  // Dedicated Break & Lunch Adjustment Modal State
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [adjustForm, setAdjustForm] = useState({
+    checkInTime: '09:00',
+    checkOutTime: '',
+    breakMinutes: 15,
+    lunchMinutes: 45,
+    reason: ''
+  });
+  const [adjustSaving, setAdjustSaving] = useState(false);
+
+  const handleOpenAdjustModal = () => {
+    let inTime = '09:30';
+    if (todayAttendance?.firstLoginTime) {
+      try {
+        const dt = new Date(todayAttendance.firstLoginTime);
+        inTime = dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } catch {}
+    }
+
+    let outTime = '';
+    if (todayAttendance?.lastLogoutTime) {
+      try {
+        const dt = new Date(todayAttendance.lastLogoutTime);
+        outTime = dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } catch {}
+    }
+
+    const bMins = Math.round((liveBreakDuration || todayAttendance?.totalBreakDurationInSeconds || 0) / 60) || 15;
+    const lMins = Math.round((liveLunchDuration || todayAttendance?.totalLunchDurationInSeconds || 0) / 60) || 45;
+
+    setAdjustForm({
+      checkInTime: inTime,
+      checkOutTime: outTime,
+      breakMinutes: bMins,
+      lunchMinutes: lMins,
+      reason: ''
+    });
+    setIsAdjustModalOpen(true);
+  };
+
+  const handleSaveAdjustTimings = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    try {
+      setAdjustSaving(true);
+      const bSec = (Number(adjustForm.breakMinutes) || 0) * 60;
+      const lSec = (Number(adjustForm.lunchMinutes) || 0) * 60;
+      const totalBreakSec = bSec + lSec;
+
+      const now = new Date();
+      let inDate = todayAttendance?.firstLoginTime ? new Date(todayAttendance.firstLoginTime) : new Date();
+      if (adjustForm.checkInTime) {
+        const [ih, im] = adjustForm.checkInTime.split(':').map(Number);
+        inDate.setHours(ih, im, 0, 0);
+      }
+
+      let outDate = null;
+      if (adjustForm.checkOutTime) {
+        outDate = new Date();
+        const [oh, om] = adjustForm.checkOutTime.split(':').map(Number);
+        outDate.setHours(oh, om, 0, 0);
+      } else if (todayAttendance?.lastLogoutTime) {
+        outDate = new Date(todayAttendance.lastLogoutTime);
+      }
+
+      const grossSec = Math.max(0, Math.floor(((outDate || now).getTime() - inDate.getTime()) / 1000));
+      const netWorkSec = Math.max(0, grossSec - totalBreakSec);
+
+      const payload = {
+        checkInTime: inDate.toISOString(),
+        checkOutTime: outDate ? outDate.toISOString() : null,
+        totalBreakDurationInSeconds: bSec,
+        totalLunchDurationInSeconds: lSec,
+        breakMinutes: Number(adjustForm.breakMinutes) || 0,
+        lunchMinutes: Number(adjustForm.lunchMinutes) || 0,
+        status: outDate ? 'Checked Out' : (todayAttendance?.status === 'On Break' || todayAttendance?.status === 'On Lunch' ? todayAttendance.status : 'Working'),
+        reason: adjustForm.reason || 'Manual break, lunch & timing adjustment'
+      };
+
+      const updatedAtt = {
+        ...todayAttendance,
+        firstLoginTime: inDate.toISOString(),
+        lastLogoutTime: outDate ? outDate.toISOString() : null,
+        totalBreakDurationInSeconds: bSec,
+        totalLunchDurationInSeconds: lSec,
+        totalWorkDurationInSeconds: netWorkSec,
+        status: payload.status,
+        isManualCorrection: true
+      };
+
+      setTodayAttendance(updatedAtt);
+      setLiveWorkDuration(netWorkSec);
+      setLiveBreakDuration(bSec);
+      setLiveLunchDuration(lSec);
+
+      try {
+        localStorage.setItem('codethrive_session', JSON.stringify({
+          savedDate: new Date().toDateString(),
+          attendance: updatedAtt,
+          activeSession
+        }));
+      } catch {}
+
+      try {
+        await api.put('/attendance/today', payload);
+      } catch (apiErr) {
+        console.warn('Backend update attendance today notice:', apiErr);
+      }
+
+      setIsAdjustModalOpen(false);
+      alert('✓ Today attendance, break & lunch durations updated and recalculated!');
+    } catch (err) {
+      console.error('Failed to update timings', err);
+      alert('Failed to save timings: ' + err.message);
+    } finally {
+      setAdjustSaving(false);
+    }
+  };
+
   const [sessionDate, setSessionDate] = useState(new Date().toDateString());
 
   // 1. Real-time Timestamp-based Timer Calculation (Persists across sleep, shutdown & tab close)
@@ -93,7 +213,7 @@ const Attendance = () => {
       const prevBreak = todayAttendance?.totalBreakDurationInSeconds || 0;
       const prevLunch = todayAttendance?.totalLunchDurationInSeconds || 0;
 
-      const hasActive = Boolean(activeSession && activeSession.status === 'Active');
+      const hasActive = Boolean(activeSession && (activeSession.status === 'Active' || activeSession.startTime));
       const sessType = hasActive ? activeSession.sessionType : (todayAttendance?.status === 'On Break' ? 'Break' : (todayAttendance?.status === 'On Lunch' ? 'Lunch' : 'Work'));
 
       const isCurrentlyCheckedOut = (Boolean(todayAttendance?.lastLogoutTime) || todayAttendance?.status === 'Checked Out') && !hasActive;
@@ -290,7 +410,7 @@ const Attendance = () => {
           setActiveSession(null);
         } else {
           const defaultType = action === 'start-break' ? 'Break' : (action === 'start-lunch' ? 'Lunch' : 'Work');
-          setActiveSession(sessData || { startTime: now.toISOString(), sessionType: defaultType });
+          setActiveSession(sessData || { startTime: now.toISOString(), sessionType: defaultType, status: 'Active' });
         }
         window.dispatchEvent(new CustomEvent('cti_attendance_updated'));
         setIsActionLoading(false);
@@ -322,21 +442,21 @@ const Attendance = () => {
         totalLunchDurationInSeconds: liveLunchDuration
       };
       setTodayAttendance(newAtt);
-      setActiveSession({ startTime: now.toISOString(), sessionType: 'Work' });
+      setActiveSession({ startTime: now.toISOString(), sessionType: 'Work', status: 'Active' });
     } else if (action === 'start-break') {
       setTodayAttendance(prev => ({ 
         ...prev, 
         status: 'On Break',
         totalWorkDurationInSeconds: liveWorkDuration
       }));
-      setActiveSession({ startTime: now.toISOString(), sessionType: 'Break' });
+      setActiveSession({ startTime: now.toISOString(), sessionType: 'Break', status: 'Active' });
     } else if (action === 'start-lunch') {
       setTodayAttendance(prev => ({ 
         ...prev, 
         status: 'On Lunch',
         totalWorkDurationInSeconds: liveWorkDuration
       }));
-      setActiveSession({ startTime: now.toISOString(), sessionType: 'Lunch' });
+      setActiveSession({ startTime: now.toISOString(), sessionType: 'Lunch', status: 'Active' });
     } else if (action === 'resume-work') {
       const currentType = activeSession?.sessionType;
       const firstLogin = todayAttendance?.firstLoginTime || now.toISOString();
@@ -353,7 +473,7 @@ const Attendance = () => {
         totalBreakDurationInSeconds: currentType === 'Break' ? liveBreakDuration : (prev?.totalBreakDurationInSeconds || 0),
         totalLunchDurationInSeconds: currentType === 'Lunch' ? liveLunchDuration : (prev?.totalLunchDurationInSeconds || 0)
       }));
-      setActiveSession({ startTime: now.toISOString(), sessionType: 'Work' });
+      setActiveSession({ startTime: now.toISOString(), sessionType: 'Work', status: 'Active' });
     } else if (action === 'checkout') {
       const firstLogin = todayAttendance?.firstLoginTime || now.toISOString();
       const loginDt = new Date(firstLogin);
@@ -654,7 +774,7 @@ const Attendance = () => {
     return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
   };
 
-  const hasActiveSession = Boolean(activeSession && activeSession.status === 'Active');
+  const hasActiveSession = Boolean(activeSession && (activeSession.status === 'Active' || activeSession.startTime));
   const activeSessionType = hasActiveSession ? activeSession.sessionType : null;
 
   const currentStatus = todayAttendance?.status || 'Not Checked In';
@@ -912,7 +1032,34 @@ const Attendance = () => {
             <span className="timer-label">{timerLabelText}</span>
           </div>
 
-          {/* 3-Way Duration Breakdown */}
+          {/* 3-Way Duration Breakdown & Edit Option */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0 0.5rem', marginBottom: '0.4rem' }}>
+            <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>
+              Duration Breakdown
+            </span>
+            <button
+              type="button"
+              onClick={handleOpenAdjustModal}
+              style={{
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                color: '#38bdf8',
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                borderRadius: '8px',
+                padding: '0.25rem 0.65rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                transition: 'all 0.2s ease'
+              }}
+              title="Edit & Recalculate Today's Break & Lunch Timings"
+            >
+              <Pencil size={12} /> Adjust Break & Lunch
+            </button>
+          </div>
+
           <div className="timer-breakdown-grid">
             <div className="timer-breakdown-item">
               <span className="tb-label"><Clock size={12} /> Work</span>
@@ -1371,6 +1518,166 @@ const Attendance = () => {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* --------------------------------------------------------------------------
+          7. ADJUST BREAK & LUNCH TIMINGS MODAL
+          -------------------------------------------------------------------------- */}
+      <Modal
+        isOpen={isAdjustModalOpen}
+        onClose={() => setIsAdjustModalOpen(false)}
+        title={<><Clock size={18} style={{ marginRight: '0.5rem', color: '#38bdf8' }} /> Adjust Today's Attendance, Break & Lunch</>}
+      >
+        <form onSubmit={handleSaveAdjustTimings} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '0.4rem 0' }}>
+          <p style={{ color: '#94a3b8', fontSize: '0.84rem', margin: 0 }}>
+            Modify today's check-in, check-out, tea break, and lunch durations. Net working hours will be automatically recalculated accurately.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>
+                Check-In Time *
+              </label>
+              <input
+                type="time"
+                className="input-field"
+                required
+                value={adjustForm.checkInTime}
+                onChange={e => setAdjustForm({ ...adjustForm, checkInTime: e.target.value })}
+              />
+              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
+                Shift Start (e.g. 09:30)
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>
+                Check-Out Time (Optional)
+              </label>
+              <input
+                type="time"
+                className="input-field"
+                value={adjustForm.checkOutTime}
+                onChange={e => setAdjustForm({ ...adjustForm, checkOutTime: e.target.value })}
+              />
+              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
+                Leave empty if still on shift
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>
+                ☕ Break Duration (Mins)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="300"
+                className="input-field"
+                value={adjustForm.breakMinutes}
+                onChange={e => setAdjustForm({ ...adjustForm, breakMinutes: e.target.value })}
+              />
+              <span style={{ fontSize: '0.74rem', color: '#fbbf24', marginTop: '3px', display: 'block' }}>
+                Tea & refreshment breaks
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>
+                🍽️ Lunch Duration (Mins)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="300"
+                className="input-field"
+                value={adjustForm.lunchMinutes}
+                onChange={e => setAdjustForm({ ...adjustForm, lunchMinutes: e.target.value })}
+              />
+              <span style={{ fontSize: '0.74rem', color: '#60a5fa', marginTop: '3px', display: 'block' }}>
+                Lunch interval (e.g. 45 mins)
+              </span>
+            </div>
+          </div>
+
+          {/* Live Net Work Hours Calculation Preview */}
+          {(() => {
+            let inMins = 0;
+            if (adjustForm.checkInTime) {
+              const [ih, im] = adjustForm.checkInTime.split(':').map(Number);
+              inMins = ih * 60 + im;
+            }
+            let outMins = 0;
+            if (adjustForm.checkOutTime) {
+              const [oh, om] = adjustForm.checkOutTime.split(':').map(Number);
+              outMins = oh * 60 + om;
+            } else {
+              const now = new Date();
+              outMins = now.getHours() * 60 + now.getMinutes();
+            }
+
+            const totalShiftMins = Math.max(0, outMins - inMins);
+            const totalBreakMins = (Number(adjustForm.breakMinutes) || 0) + (Number(adjustForm.lunchMinutes) || 0);
+            const netWorkMins = Math.max(0, totalShiftMins - totalBreakMins);
+            const wh = Math.floor(netWorkMins / 60);
+            const wm = netWorkMins % 60;
+
+            return (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.7))',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                borderRadius: '12px',
+                padding: '0.85rem 1.1rem',
+                fontSize: '0.82rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div>
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.72rem', textTransform: 'uppercase' }}>Gross Shift</span>
+                  <strong style={{ color: '#fff' }}>{Math.floor(totalShiftMins / 60)}h {totalShiftMins % 60}m</strong>
+                  <span style={{ color: '#fbbf24', marginLeft: '0.5rem', fontSize: '0.76rem' }}>(Break & Lunch: {totalBreakMins}m)</span>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.72rem', textTransform: 'uppercase' }}>Recalculated Net Work</span>
+                  <strong style={{ color: '#34d399', fontSize: '1rem' }}>{wh}h {wm}m</strong>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="form-group">
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>
+              Adjustment Note / Reason
+            </label>
+            <input
+              type="text"
+              className="input-field"
+              placeholder=""
+              value={adjustForm.reason}
+              onChange={e => setAdjustForm({ ...adjustForm, reason: e.target.value })}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.85rem', marginTop: '0.5rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <button
+              type="button"
+              className="btn-outline-glass"
+              onClick={() => setIsAdjustModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-primary-glow"
+              disabled={adjustSaving}
+            >
+              {adjustSaving ? 'Saving Timings...' : 'Apply & Recalculate'}
+            </button>
+          </div>
+        </form>
       </Modal>
 
     </div>

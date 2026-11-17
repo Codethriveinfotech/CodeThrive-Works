@@ -1,6 +1,14 @@
 const Payroll = require('../models/Payroll');
 const Employee = require('../models/Employee');
 
+// Helper to filter out un-uploaded/seed payrolls
+const isSeedPayroll = (p) => {
+  if (p.payslipId === 'PAY-2026-09-001' || p.month === 'September 2026') return true;
+  return false;
+};
+
+const EMP_POPULATE_FIELDS = 'fullName employeeId department designation accountNumber bankName ifscCode bankAccountHolderName branchName panNumber upiId dateOfBirth dateOfJoining';
+
 // @desc    Get all payslips for current user
 // @route   GET /api/v1/payroll/my-payslips
 // @access  Private
@@ -9,7 +17,26 @@ exports.getMyPayslips = async (req, res) => {
     const employee = await Employee.findOne({ user: req.user._id });
     if (!employee) return res.status(404).json({ success: false, message: 'Employee not found' });
 
-    const payslips = await Payroll.find({ employee: employee._id }).sort({ createdAt: -1 });
+    const rawPayslips = await Payroll.find({ employee: employee._id })
+      .populate('employee', EMP_POPULATE_FIELDS)
+      .sort({ createdAt: -1 });
+
+    const payslips = (rawPayslips || []).filter(p => !isSeedPayroll(p)).map(p => {
+      // Ensure employee's bank details are properly embedded in employeeInfo
+      const emp = p.employee || employee;
+      const empInfo = p.employeeInfo || {};
+      return {
+        ...p,
+        employeeInfo: {
+          ...empInfo,
+          bankAcNo: emp?.accountNumber || empInfo.bankAcNo || '',
+          bankName: emp?.bankName || empInfo.bankName || '',
+          ifscCode: emp?.ifscCode || empInfo.ifscCode || '',
+          accountHolderName: emp?.bankAccountHolderName || emp?.fullName || empInfo.accountHolderName || ''
+        }
+      };
+    });
+
     res.status(200).json({ success: true, count: payslips.length, data: payslips });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -21,7 +48,24 @@ exports.getMyPayslips = async (req, res) => {
 // @access  Private (Admin/HR)
 exports.getAllPayroll = async (req, res) => {
   try {
-    const payrolls = await Payroll.find().populate('employee', 'fullName employeeId department designation');
+    const rawPayrolls = await Payroll.find()
+      .populate('employee', EMP_POPULATE_FIELDS);
+
+    const payrolls = (rawPayrolls || []).filter(p => !isSeedPayroll(p)).map(p => {
+      const emp = p.employee || {};
+      const empInfo = p.employeeInfo || {};
+      return {
+        ...p,
+        employeeInfo: {
+          ...empInfo,
+          bankAcNo: emp?.accountNumber || empInfo.bankAcNo || '',
+          bankName: emp?.bankName || empInfo.bankName || '',
+          ifscCode: emp?.ifscCode || empInfo.ifscCode || '',
+          accountHolderName: emp?.bankAccountHolderName || emp?.fullName || empInfo.accountHolderName || ''
+        }
+      };
+    });
+
     res.status(200).json({ success: true, count: payrolls.length, data: payrolls });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -90,7 +134,10 @@ exports.createIndividualPayroll = async (req, res) => {
       employeeInfo: employeeInfo || {
         dob: employee.dateOfBirth,
         doj: employee.dateOfJoining,
-        bankAcNo: employee.accountNumber,
+        bankAcNo: employee.accountNumber || '',
+        bankName: employee.bankName || '',
+        ifscCode: employee.ifscCode || '',
+        accountHolderName: employee.bankAccountHolderName || employee.fullName,
         pfNo: employee.panNumber ? `TN/CBE/PF/${employee.employeeId}` : '',
         pfPercent: 12,
         esiNo: ''
@@ -192,7 +239,10 @@ exports.bulkGeneratePayroll = async (req, res) => {
         employeeInfo: {
           dob: emp.dateOfBirth || '1998-05-15',
           doj: emp.dateOfJoining || '2024-01-15',
-          bankAcNo: emp.accountNumber || 'XXXX-XXXX-4521',
+          bankAcNo: emp.accountNumber || '',
+          bankName: emp.bankName || '',
+          ifscCode: emp.ifscCode || '',
+          accountHolderName: emp.bankAccountHolderName || emp.fullName,
           pfNo: `TN/CBE/PF/${emp.employeeId || '001'}`,
           pfPercent: 12,
           esiNo: ''

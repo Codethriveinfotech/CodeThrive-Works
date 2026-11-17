@@ -1,7 +1,7 @@
 const express = require('express');
 const { 
   startWorkSession, startBreak, startLunch, resumeWork, checkout, 
-  getTodayAttendance, getAttendanceHistory, getAttendanceSummary, 
+  getTodayAttendance, updateTodayAttendance, getAttendanceHistory, getAttendanceSummary, 
   submitRegularization, getLeaveBalances, applyLeave 
 } = require('../controllers/attendanceController');
 const { protect } = require('../middleware/authMiddleware');
@@ -13,6 +13,7 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/today', getTodayAttendance);
+router.put('/today', updateTodayAttendance);
 router.post('/start-work', startWorkSession);
 router.post('/start-break', startBreak);
 router.post('/start-lunch', startLunch);

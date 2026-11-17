@@ -83,6 +83,15 @@ exports.submitReport = async (req, res) => {
   }
 };
 
+// Helper to identify un-uploaded seed/dummy reports
+const isSeedReport = (r) => {
+  const text = ((r.tasksWorked || '') + ' ' + (r.workSummary || '') + ' ' + (r.completedWork || '')).toLowerCase();
+  if (text.includes('authentication api unit tests') || text.includes('polished dashboard dark-mode styling')) {
+    return true;
+  }
+  return false;
+};
+
 // @desc    Get my daily reports
 // @route   GET /api/v1/daily-reports/my-reports
 // @access  Private (Employee)
@@ -91,7 +100,8 @@ exports.getMyReports = async (req, res) => {
     const employee = await Employee.findOne({ user: req.user._id });
     if (!employee) return res.status(404).json({ success: false, message: 'Employee not found' });
 
-    const reports = await DailyReport.find({ employee: employee._id }).sort('-date -createdAt');
+    const rawReports = await DailyReport.find({ employee: employee._id }).sort('-date -createdAt');
+    const reports = (rawReports || []).filter(r => !isSeedReport(r));
     res.status(200).json({ success: true, count: reports.length, data: reports });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -177,9 +187,10 @@ exports.reviewReport = async (req, res) => {
 // @access  Private (Admin/HR/TeamLead)
 exports.getAllReports = async (req, res) => {
   try {
-    const reports = await DailyReport.find()
+    const rawReports = await DailyReport.find()
       .populate('employee', 'fullName employeeId department designation profilePhoto')
       .sort('-date -createdAt');
+    const reports = (rawReports || []).filter(r => !isSeedReport(r));
     res.status(200).json({ success: true, count: reports.length, data: reports });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

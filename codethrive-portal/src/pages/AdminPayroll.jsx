@@ -102,7 +102,7 @@ const AdminPayroll = () => {
 
       setEmployees(apiEmps);
 
-      setPayrolls(apiPayrolls);
+      setPayrolls(apiPayrolls.filter(p => !isSeedPayslip(p)));
       localStorage.removeItem('cti_shared_payrolls');
     } catch (err) {
       console.error('Failed to fetch payroll data', err);
@@ -112,17 +112,17 @@ const AdminPayroll = () => {
     }
   };
 
+  const isSeedPayslip = (p) => {
+    if (p?.payslipId === 'PAY-2026-09-001' || p?.month === 'September 2026') return true;
+    return false;
+  };
+
   const _handleEmployeeSelect = (e) => {
     const empId = e.target.value;
     setSelectedEmployeeId(empId);
     if (empId) {
-      let emp = employees.find(item => item._id === empId);
-      if (!emp) {
-        if (empId === 'emp-fallback-1') emp = { fullName: 'Kirubakaran', employeeId: 'CTI-EMP-002', department: 'Executive Board', designation: 'Managing Director' };
-        else if (empId === 'emp-fallback-2') emp = { fullName: 'Mahadevan', employeeId: 'CTI-EMP-001', department: 'Executive Management', designation: 'Chief Executive Officer' };
-        else if (empId === 'emp-fallback-3') emp = { fullName: 'Sarah Jenkins', employeeId: 'CTI-EMP-004', department: 'UI/UX Design', designation: 'Lead Product Designer' };
-      }
-      setSelectedEmployee(emp);
+      let emp = employees.find(item => item._id === empId || item.id === empId);
+      setSelectedEmployee(emp || null);
       
       const basic = emp?.salaryAmount || 45000;
       setFormData(prev => ({
@@ -285,7 +285,18 @@ const AdminPayroll = () => {
         deductions: totalDeductions,
         allowanceDetails: formData.allowanceDetails,
         deductionDetails: formData.deductionDetails,
-        employee: selectedEmployee || { fullName: 'Employee User', employeeId: 'CTI-EMP-001' }
+        employee: selectedEmployee || { fullName: 'Employee User', employeeId: 'CTI-EMP-001' },
+        employeeInfo: {
+          dob: selectedEmployee?.dateOfBirth,
+          doj: selectedEmployee?.dateOfJoining,
+          bankAcNo: selectedEmployee?.accountNumber || '',
+          bankName: selectedEmployee?.bankName || '',
+          ifscCode: selectedEmployee?.ifscCode || '',
+          accountHolderName: selectedEmployee?.bankAccountHolderName || selectedEmployee?.fullName || '',
+          pfNo: selectedEmployee?.panNumber ? `TN/CBE/PF/${selectedEmployee.employeeId}` : '',
+          pfPercent: 12,
+          esiNo: ''
+        }
       };
 
       try {
@@ -324,7 +335,18 @@ const AdminPayroll = () => {
         bonus: 1000,
         allowanceDetails: { hra: 18000, travel: 2500, medical: 1500, other: 1000 },
         deductionDetails: { pf: 5400, esi: 0, professionalTax: 200, incomeTax: 1500, leaveDeduction: 0, loanAdvance: 0, other: 0 },
-        employee: emp
+        employee: emp,
+        employeeInfo: {
+          dob: emp.dateOfBirth,
+          doj: emp.dateOfJoining,
+          bankAcNo: emp.accountNumber || '',
+          bankName: emp.bankName || '',
+          ifscCode: emp.ifscCode || '',
+          accountHolderName: emp.bankAccountHolderName || emp.fullName || '',
+          pfNo: emp.panNumber ? `TN/CBE/PF/${emp.employeeId}` : '',
+          pfPercent: 12,
+          esiNo: ''
+        }
       }));
 
       const updated = [...generated, ...payrolls];
@@ -1356,11 +1378,7 @@ const AdminPayroll = () => {
                       </option>
                     ))}
                     {employees.length === 0 && (
-                      <>
-                        <option value="emp-fallback-1">Kirubakaran (CTI-EMP-002) - Managing Director</option>
-                        <option value="emp-fallback-2">Mahadevan (CTI-EMP-001) - Chief Executive Officer</option>
-                        <option value="emp-fallback-3">Sarah Jenkins (CTI-EMP-004) - Lead Designer</option>
-                      </>
+                      <option value="" disabled>No registered employees found</option>
                     )}
                   </select>
                 </div>

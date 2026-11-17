@@ -76,6 +76,8 @@ const AdminAttendance = () => {
     status: 'Present',
     inTime: '',
     outTime: '',
+    breakMinutes: 15,
+    lunchMinutes: 45,
     reason: ''
   });
   const [modalSaving, setModalSaving] = useState(false);
@@ -86,6 +88,8 @@ const AdminAttendance = () => {
       status: row._localStatus || row.status || 'Present',
       inTime: row.firstLoginTime ? new Date(row.firstLoginTime).toTimeString().slice(0, 5) : '',
       outTime: row.lastLogoutTime ? new Date(row.lastLogoutTime).toTimeString().slice(0, 5) : '',
+      breakMinutes: row.totalBreakDurationInSeconds !== undefined ? Math.round(row.totalBreakDurationInSeconds / 60) : 15,
+      lunchMinutes: row.totalLunchDurationInSeconds !== undefined ? Math.round(row.totalLunchDurationInSeconds / 60) : 45,
       reason: row.correctionReason || ''
     });
   };
@@ -111,12 +115,19 @@ const AdminAttendance = () => {
         lastLogoutTime = dt.toISOString();
       }
 
+      const bSec = (Number(editForm.breakMinutes) || 0) * 60;
+      const lSec = (Number(editForm.lunchMinutes) || 0) * 60;
+
       await api.post('/admin/attendance/mark', {
         employeeId: editingRow.employeeId,
         date: selectedDate,
         status: editForm.status,
         firstLoginTime,
         lastLogoutTime,
+        breakMinutes: Number(editForm.breakMinutes) || 0,
+        lunchMinutes: Number(editForm.lunchMinutes) || 0,
+        totalBreakDurationInSeconds: bSec,
+        totalLunchDurationInSeconds: lSec,
         correctionReason: editForm.reason || 'Admin manual update'
       });
 
@@ -700,6 +711,62 @@ const AdminAttendance = () => {
               </span>
             </div>
           </div>
+
+          {/* Break and Lunch Duration Adjustment */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+            <div>
+              <label style={{ fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem', color: 'rgba(255,255,255,0.8)' }}>
+                ☕ Break Duration (Mins)
+              </label>
+              <input 
+                type="number" 
+                min="0"
+                max="240"
+                className="aa-time-input" 
+                value={editForm.breakMinutes} 
+                onChange={e => setEditForm({ ...editForm, breakMinutes: e.target.value })} 
+                style={{ width: '100%', padding: '0.55rem' }}
+              />
+              <span style={{ fontSize: '0.74rem', color: '#fbbf24', marginTop: '3px', display: 'block' }}>
+                Standard: 15-20 mins
+              </span>
+            </div>
+
+            <div>
+              <label style={{ fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem', color: 'rgba(255,255,255,0.8)' }}>
+                🍽️ Lunch Duration (Mins)
+              </label>
+              <input 
+                type="number" 
+                min="0"
+                max="240"
+                className="aa-time-input" 
+                value={editForm.lunchMinutes} 
+                onChange={e => setEditForm({ ...editForm, lunchMinutes: e.target.value })} 
+                style={{ width: '100%', padding: '0.55rem' }}
+              />
+              <span style={{ fontSize: '0.74rem', color: '#60a5fa', marginTop: '3px', display: 'block' }}>
+                Standard: 45-60 mins
+              </span>
+            </div>
+          </div>
+
+          {/* Live Net Work Hours Calculation Preview */}
+          {editForm.inTime && editForm.outTime && (() => {
+            const [ih, im] = editForm.inTime.split(':').map(Number);
+            const [oh, om] = editForm.outTime.split(':').map(Number);
+            const totalShiftMins = (oh * 60 + om) - (ih * 60 + im);
+            const totalBreakMins = (Number(editForm.breakMinutes) || 0) + (Number(editForm.lunchMinutes) || 0);
+            const netWorkMins = Math.max(0, totalShiftMins - totalBreakMins);
+            const wh = Math.floor(netWorkMins / 60);
+            const wm = netWorkMins % 60;
+            return (
+              <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '8px', padding: '0.65rem 0.9rem', fontSize: '0.8rem', color: '#93c5fd', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Shift Duration: <strong>{Math.floor(totalShiftMins / 60)}h {totalShiftMins % 60}m</strong> (Break: {totalBreakMins}m)</span>
+                <span style={{ color: '#34d399', fontWeight: 700 }}>Net Working Hours: {wh}h {wm}m</span>
+              </div>
+            );
+          })()}
 
           <div>
             <label style={{ fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem', color: 'rgba(255,255,255,0.8)' }}>Remarks / Reason (Optional)</label>

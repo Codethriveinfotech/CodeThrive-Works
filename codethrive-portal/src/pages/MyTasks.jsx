@@ -58,27 +58,39 @@ const MyTasks = () => {
     }
   }, [location.search]);
 
+  const isSeedTask = (t) => {
+    const tid = t?.taskId || '';
+    const title = t?.title || '';
+    if (['TSK-101', 'TSK-102', 'TSK-103'].includes(tid)) return true;
+    if (title.includes('OAuth Authentication') ||
+        title.includes('Glassmorphic Admin Dashboard') ||
+        title.includes('End-to-End API Integration')) {
+      return true;
+    }
+    return false;
+  };
+
   const fetchTasks = async () => {
     try {
       setLoading(true);
       const res = await api.get('/tasks/my-tasks');
-      let fetched = res.data?.data || [];
+      let fetched = (res.data?.data || []).filter(t => !isSeedTask(t));
 
       // Merge with any cached tasks stored locally for this employee
       const empIdKey = user?._id || user?.id || user?.employeeId;
       if (empIdKey) {
-        const cached = JSON.parse(localStorage.getItem(`cti_tasks_${empIdKey}`) || '[]');
+        const cached = (JSON.parse(localStorage.getItem(`cti_tasks_${empIdKey}`) || '[]')).filter(t => !isSeedTask(t));
         if (cached.length > 0) {
           const existingIds = new Set(fetched.map(t => t._id || t.taskId));
           const merged = [...fetched, ...cached.filter(c => !existingIds.has(c._id || c.taskId))];
           fetched = merged;
         }
       }
-      setTasks(fetched);
+      setTasks(fetched.filter(t => !isSeedTask(t)));
     } catch (err) {
       console.warn('API fetch failed or offline, initializing tasks state', err);
       const empIdKey = user?._id || user?.id || user?.employeeId;
-      const cached = empIdKey ? JSON.parse(localStorage.getItem(`cti_tasks_${empIdKey}`) || '[]') : [];
+      const cached = empIdKey ? (JSON.parse(localStorage.getItem(`cti_tasks_${empIdKey}`) || '[]')).filter(t => !isSeedTask(t)) : [];
       setTasks(cached);
     } finally {
       setLoading(false);

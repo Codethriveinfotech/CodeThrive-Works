@@ -136,11 +136,19 @@ const DailyReports = () => {
     fetchReports();
   }, []);
 
+  const isSeedReport = (r) => {
+    const text = ((r?.tasksWorked || '') + ' ' + (r?.workSummary || '') + ' ' + (r?.completedWork || '')).toLowerCase();
+    if (text.includes('authentication api unit tests') || text.includes('polished dashboard dark-mode styling')) {
+      return true;
+    }
+    return false;
+  };
+
   const fetchReports = async () => {
     try {
       setLoading(true);
       const res = await api.get('/daily-reports/my-reports');
-      const fetched = res.data?.data || [];
+      const fetched = (res.data?.data || []).filter(r => !isSeedReport(r));
 
       if (fetched.length > 0) {
         setReports(fetched);

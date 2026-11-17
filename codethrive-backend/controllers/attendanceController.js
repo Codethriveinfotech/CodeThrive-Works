@@ -195,20 +195,23 @@ exports.startBreak = async (req, res) => {
       });
     }
 
-    // Close active work session if any
-    const activeWork = await AttendanceSession.findOne({
+    // Close ANY currently active session (Work, Lunch, or prior Break)
+    const activeSessions = await AttendanceSession.find({
       attendanceId: attendance._id,
-      sessionType: 'Work',
       status: 'Active'
     });
 
-    if (activeWork) {
-      activeWork.endTime = now;
-      activeWork.durationInSeconds = Math.floor((now.getTime() - activeWork.startTime.getTime()) / 1000);
-      activeWork.status = 'Completed';
-      await activeWork.save();
+    for (const active of activeSessions) {
+      active.endTime = now;
+      active.durationInSeconds = Math.max(0, Math.floor((now.getTime() - new Date(active.startTime).getTime()) / 1000));
+      active.status = 'Completed';
+      await active.save();
 
-      attendance.totalWorkDurationInSeconds = (attendance.totalWorkDurationInSeconds || 0) + activeWork.durationInSeconds;
+      if (active.sessionType === 'Work') {
+        attendance.totalWorkDurationInSeconds = (attendance.totalWorkDurationInSeconds || 0) + active.durationInSeconds;
+      } else if (active.sessionType === 'Lunch') {
+        attendance.totalLunchDurationInSeconds = (attendance.totalLunchDurationInSeconds || 0) + active.durationInSeconds;
+      }
     }
 
     // Start Break Session
@@ -230,7 +233,7 @@ exports.startBreak = async (req, res) => {
   }
 };
 
-// @desc    Start Lunch (Pauses work session)
+// @desc    Start Lunch (Pauses work session or active break)
 // @route   POST /api/v1/attendance/start-lunch
 // @access  Private
 exports.startLunch = async (req, res) => {
@@ -253,20 +256,23 @@ exports.startLunch = async (req, res) => {
       });
     }
 
-    // Close active work session if any
-    const activeWork = await AttendanceSession.findOne({
+    // Close ANY currently active session (Work, Break, or prior Lunch)
+    const activeSessions = await AttendanceSession.find({
       attendanceId: attendance._id,
-      sessionType: 'Work',
       status: 'Active'
     });
 
-    if (activeWork) {
-      activeWork.endTime = now;
-      activeWork.durationInSeconds = Math.floor((now.getTime() - activeWork.startTime.getTime()) / 1000);
-      activeWork.status = 'Completed';
-      await activeWork.save();
+    for (const active of activeSessions) {
+      active.endTime = now;
+      active.durationInSeconds = Math.max(0, Math.floor((now.getTime() - new Date(active.startTime).getTime()) / 1000));
+      active.status = 'Completed';
+      await active.save();
 
-      attendance.totalWorkDurationInSeconds = (attendance.totalWorkDurationInSeconds || 0) + activeWork.durationInSeconds;
+      if (active.sessionType === 'Work') {
+        attendance.totalWorkDurationInSeconds = (attendance.totalWorkDurationInSeconds || 0) + active.durationInSeconds;
+      } else if (active.sessionType === 'Break') {
+        attendance.totalBreakDurationInSeconds = (attendance.totalBreakDurationInSeconds || 0) + active.durationInSeconds;
+      }
     }
 
     // Start Lunch Session
@@ -311,24 +317,24 @@ exports.resumeWork = async (req, res) => {
       });
     }
 
-    // Close active Break or Lunch session
-    const activeSession = await AttendanceSession.findOne({
+    // Close ALL active Break, Lunch, or Work sessions
+    const activeSessions = await AttendanceSession.find({
       attendanceId: attendance._id,
       status: 'Active'
     });
 
-    if (activeSession) {
-      activeSession.endTime = now;
-      activeSession.durationInSeconds = Math.floor((now.getTime() - activeSession.startTime.getTime()) / 1000);
-      activeSession.status = 'Completed';
-      await activeSession.save();
+    for (const active of activeSessions) {
+      active.endTime = now;
+      active.durationInSeconds = Math.max(0, Math.floor((now.getTime() - new Date(active.startTime).getTime()) / 1000));
+      active.status = 'Completed';
+      await active.save();
 
-      if (activeSession.sessionType === 'Break') {
-        attendance.totalBreakDurationInSeconds = (attendance.totalBreakDurationInSeconds || 0) + activeSession.durationInSeconds;
-      } else if (activeSession.sessionType === 'Lunch') {
-        attendance.totalLunchDurationInSeconds = (attendance.totalLunchDurationInSeconds || 0) + activeSession.durationInSeconds;
-      } else if (activeSession.sessionType === 'Work') {
-        attendance.totalWorkDurationInSeconds = (attendance.totalWorkDurationInSeconds || 0) + activeSession.durationInSeconds;
+      if (active.sessionType === 'Break') {
+        attendance.totalBreakDurationInSeconds = (attendance.totalBreakDurationInSeconds || 0) + active.durationInSeconds;
+      } else if (active.sessionType === 'Lunch') {
+        attendance.totalLunchDurationInSeconds = (attendance.totalLunchDurationInSeconds || 0) + active.durationInSeconds;
+      } else if (active.sessionType === 'Work') {
+        attendance.totalWorkDurationInSeconds = (attendance.totalWorkDurationInSeconds || 0) + active.durationInSeconds;
       }
     }
 
@@ -347,6 +353,106 @@ exports.resumeWork = async (req, res) => {
     res.status(200).json({ success: true, message: 'Work resumed', data: { attendance, activeSession: workSession } });
   } catch (err) {
     console.error('Error in resumeWork:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Employee adjusts/edits today's attendance, break and lunch timings
+// @route   PUT /api/v1/attendance/today
+// @access  Private (Employee)
+exports.updateTodayAttendance = async (req, res) => {
+  try {
+    const employee = await getOrCreateEmployee(req.user);
+    const { start, end } = getTodayRange();
+    const now = new Date();
+
+    let attendance = await Attendance.findOne({
+      employee: employee._id,
+      date: { $gte: start, $lte: end }
+    });
+
+    if (!attendance) {
+      attendance = await Attendance.create({
+        employee: employee._id,
+        date: now,
+        firstLoginTime: now,
+        status: 'Working'
+      });
+    }
+
+    const {
+      checkInTime,
+      checkOutTime,
+      breakMinutes,
+      lunchMinutes,
+      totalBreakDurationInSeconds,
+      totalLunchDurationInSeconds,
+      status
+    } = req.body;
+
+    if (checkInTime) {
+      if (checkInTime.includes(':') && !checkInTime.includes('T')) {
+        const [h, m] = checkInTime.split(':').map(Number);
+        const inDt = new Date(now);
+        inDt.setHours(h, m, 0, 0);
+        attendance.firstLoginTime = inDt;
+      } else {
+        attendance.firstLoginTime = new Date(checkInTime);
+      }
+    }
+
+    if (checkOutTime !== undefined) {
+      if (!checkOutTime) {
+        attendance.lastLogoutTime = null;
+      } else if (checkOutTime.includes(':') && !checkOutTime.includes('T')) {
+        const [h, m] = checkOutTime.split(':').map(Number);
+        const outDt = new Date(now);
+        outDt.setHours(h, m, 0, 0);
+        attendance.lastLogoutTime = outDt;
+      } else {
+        attendance.lastLogoutTime = new Date(checkOutTime);
+      }
+    }
+
+    // Set Break & Lunch seconds
+    const breakSec = totalBreakDurationInSeconds !== undefined 
+      ? Number(totalBreakDurationInSeconds) 
+      : (breakMinutes !== undefined ? Number(breakMinutes) * 60 : (attendance.totalBreakDurationInSeconds || 0));
+    
+    const lunchSec = totalLunchDurationInSeconds !== undefined 
+      ? Number(totalLunchDurationInSeconds) 
+      : (lunchMinutes !== undefined ? Number(lunchMinutes) * 60 : (attendance.totalLunchDurationInSeconds || 0));
+
+    attendance.totalBreakDurationInSeconds = Math.max(0, breakSec);
+    attendance.totalLunchDurationInSeconds = Math.max(0, lunchSec);
+
+    // Calculate Net Work Hours:
+    // (outTime - inTime) - (breakSec + lunchSec)
+    const inTimeMs = attendance.firstLoginTime ? new Date(attendance.firstLoginTime).getTime() : now.getTime();
+    const outTimeMs = attendance.lastLogoutTime ? new Date(attendance.lastLogoutTime).getTime() : now.getTime();
+    const grossElapsedSec = Math.max(0, Math.floor((outTimeMs - inTimeMs) / 1000));
+    const totalBreakLunchSec = attendance.totalBreakDurationInSeconds + attendance.totalLunchDurationInSeconds;
+
+    attendance.totalWorkDurationInSeconds = Math.max(0, grossElapsedSec - totalBreakLunchSec);
+
+    if (status) {
+      attendance.status = status;
+    } else if (attendance.lastLogoutTime) {
+      attendance.status = 'Checked Out';
+    }
+
+    attendance.isManualCorrection = true;
+    attendance.correctionReason = req.body.reason || 'Manual break, lunch, and timing adjustment';
+
+    await attendance.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Today attendance, break, and lunch updated successfully',
+      data: { attendance }
+    });
+  } catch (err) {
+    console.error('Error in updateTodayAttendance:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
