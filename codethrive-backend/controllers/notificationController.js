@@ -106,3 +106,24 @@ exports.createNotification = async (recipientId, title, description, notificatio
     console.error('Failed to create notification', error);
   }
 };
+
+// Utility function to broadcast notification to all Admin & HR users
+exports.notifyAdminsAndHR = async (title, description, notificationType, priority = 'Medium', actionLink = null) => {
+  try {
+    const adminUsers = await User.find({ role: { $in: ['admin', 'superadmin', 'hr'] } });
+    if (adminUsers && adminUsers.length > 0) {
+      for (const admin of adminUsers) {
+        await Notification.create({
+          recipient: admin._id || admin.id,
+          title,
+          description,
+          notificationType,
+          priority,
+          actionLink
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Failed to notify admins and HR', error);
+  }
+};

@@ -1,6 +1,6 @@
 const DailyReport = require('../models/DailyReport');
 const Employee = require('../models/Employee');
-const { createNotification } = require('./notificationController');
+const { createNotification, notifyAdminsAndHR } = require('./notificationController');
 const path = require('path');
 const fs = require('fs');
 
@@ -75,6 +75,16 @@ exports.submitReport = async (req, res) => {
         );
       }
     }
+
+    // Always notify all Admin & HR members so notification icon alerts persistently
+    const hasSrc = !!(srcFileUrl || srcFileName);
+    await notifyAdminsAndHR(
+      hasSrc ? 'New Daily Report & SRC Code Uploaded' : 'New Daily Report Submitted',
+      `${employee.fullName} submitted worklog${hasSrc ? ` with SRC source code (${srcFileName || 'attached file'})` : ''}.`,
+      'Report',
+      hasSrc ? 'High' : 'Medium',
+      '/admin/reports'
+    );
 
     res.status(201).json({ success: true, data: populatedReport || createdReport });
   } catch (err) {

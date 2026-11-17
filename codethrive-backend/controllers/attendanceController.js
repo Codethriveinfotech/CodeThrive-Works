@@ -3,6 +3,7 @@ const AttendanceSession = require('../models/AttendanceSession');
 const Employee = require('../models/Employee');
 const AttendanceCorrection = require('../models/AttendanceCorrection');
 const LeaveRequest = require('../models/LeaveRequest');
+const { notifyAdminsAndHR } = require('./notificationController');
 
 // Helper to get today's start and end date for queries
 const getTodayRange = () => {
@@ -725,6 +726,16 @@ exports.submitRegularization = async (req, res) => {
       status: 'Pending'
     });
 
+    // Notify admins of attendance correction request
+    const dateFormatted = date ? new Date(date).toLocaleDateString('en-IN') : 'Recent Date';
+    await notifyAdminsAndHR(
+      'Attendance Correction Request',
+      `${employee.fullName} submitted attendance correction request for ${dateFormatted}: "${reason || 'Timing adjustment'}".`,
+      'Attendance',
+      'Medium',
+      '/admin/attendance'
+    );
+
     res.status(201).json({ success: true, message: 'Regularization request submitted for approval', data: correction });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -747,6 +758,15 @@ exports.applyLeave = async (req, res) => {
       reason,
       status: 'Pending'
     });
+
+    // Notify admins of leave application
+    await notifyAdminsAndHR(
+      'New Leave Request Applied',
+      `${employee.fullName} applied for ${totalDays || 1} day(s) of ${leaveType || 'General'} leave: "${reason || 'Leave application'}".`,
+      'Leave',
+      'High',
+      '/admin/leave'
+    );
 
     res.status(201).json({ success: true, message: 'Leave application submitted successfully', data: leave });
   } catch (err) {

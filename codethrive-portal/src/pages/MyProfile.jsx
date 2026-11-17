@@ -1417,6 +1417,20 @@ const MyProfile = () => {
                 {profile.upiId || <span className="val-not-set">Not Provided</span>}
               </div>
             </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Permanent Account Number (PAN)</span>
+              <div className="field-tile-val mono highlight-blue">
+                {profile.panNumber || <span className="val-not-set">Not Provided</span>}
+              </div>
+            </div>
+
+            <div className="profile-field-tile">
+              <span className="field-tile-label">Aadhaar / National ID</span>
+              <div className="field-tile-val mono">
+                {profile.aadhaarOrIdentityProofNumber || <span className="val-not-set">Not Provided</span>}
+              </div>
+            </div>
           </div>
         </Card>
 
@@ -1793,6 +1807,28 @@ const MyProfile = () => {
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label>UPI ID *</label>
                 <input type="text" className="input-field" placeholder="e.g. username@okhdfcbank" value={formData.upiId} onChange={e => setFormData({ ...formData, upiId: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label>Permanent Account Number (PAN)</label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder="e.g. ABCDE1234F" 
+                  value={formData.panNumber} 
+                  onChange={e => setFormData({ ...formData, panNumber: e.target.value.toUpperCase() })} 
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Aadhaar / National ID Number</label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder="e.g. 1234 5678 9012" 
+                  value={formData.aadhaarOrIdentityProofNumber} 
+                  onChange={e => setFormData({ ...formData, aadhaarOrIdentityProofNumber: e.target.value })} 
+                />
               </div>
             </div>
           )}

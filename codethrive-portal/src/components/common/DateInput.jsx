@@ -62,7 +62,7 @@ const DateInput = ({
   className = 'input-box',
   style = {},
   wrapperStyle = {},
-  placeholder = 'dd/mm/yyyy',
+  placeholder = 'DD/MM/YYYY',
   min,
   max,
   disabled = false,
@@ -72,6 +72,7 @@ const DateInput = ({
   showIcon = true,
   ...rest
 }) => {
+  const effectivePlaceholder = (!placeholder || placeholder.toLowerCase() === 'dd/mm/yyyy') ? 'DD/MM/YYYY' : placeholder;
   const hiddenPickerRef = useRef(null);
 
   // Derive initial values safely
@@ -163,7 +164,7 @@ const DateInput = ({
         type="text"
         id={id}
         name={name}
-        placeholder={placeholder}
+        placeholder={effectivePlaceholder}
         value={inputText}
         onChange={handleTextChange}
         disabled={disabled}

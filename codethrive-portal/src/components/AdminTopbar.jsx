@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, Settings, ChevronDown, UserCheck, ChevronRight, User, RefreshCw, Menu,
-  Bell, BellRing, Download, MessageCircle, FileText, CheckCircle2, Calendar, ShieldCheck
+  Bell, BellRing, Download, MessageCircle, FileText, CheckCircle2, Calendar, ShieldCheck,
+  Clock, CheckCheck, Sparkles, ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -29,24 +30,97 @@ const AdminTopbar = () => {
     return `cti_month_end_notif_seen_${now.getFullYear()}_${now.getMonth() + 1}`;
   };
 
-  // Only show the alert badge if today is month-end AND the user hasn't already opened/dismissed it for this month
-  const [hasUnreadNotif, setHasUnreadNotif] = useState(() => {
-    try {
-      const isMonthEnd = isMonthEndToday();
-      const seenKey = getMonthNotifKey();
-      const alreadySeen = localStorage.getItem(seenKey) === 'true';
-      return isMonthEnd && !alreadySeen;
-    } catch {
-      return false;
-    }
-  });
-
+  const [notifications, setNotifications] = useState([]);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [registeredStaff, setRegisteredStaff] = useState([]);
 
   const notifRef = useRef(null);
   const regRef = useRef(null);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get('/notifications').catch(() => null);
+      if (res && res.data && res.data.success && Array.isArray(res.data.data)) {
+        setNotifications(res.data.data);
+      }
+    } catch (e) {
+      console.warn('Failed to fetch notifications:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 20000);
+    const handleRefresh = () => fetchNotifications();
+    window.addEventListener('cti_global_refresh', handleRefresh);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('cti_global_refresh', handleRefresh);
+    };
+  }, []);
+
+  const unreadNotifications = notifications.filter(n => !n.isRead);
+  const isMonthEndAlertActive = isMonthEndToday() && localStorage.getItem(getMonthNotifKey()) !== 'true';
+  const unreadCount = unreadNotifications.length + (isMonthEndAlertActive ? 1 : 0);
+  const hasUnreadNotif = unreadCount > 0;
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.put('/notifications/read-all').catch(() => null);
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      if (isMonthEndToday()) {
+        localStorage.setItem(getMonthNotifKey(), 'true');
+      }
+    } catch (e) {
+      console.warn('Failed to mark all read:', e);
+    }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    try {
+      if (!notif.isRead) {
+        await api.put(`/notifications/${notif._id || notif.id}/read`).catch(() => null);
+        setNotifications(prev => prev.map(n => ((n._id && n._id === notif._id) || (n.id && n.id === notif.id)) ? { ...n, isRead: true } : n));
+      }
+      setShowNotifDropdown(false);
+      if (notif.actionLink) {
+        navigate(notif.actionLink);
+      }
+    } catch (e) {
+      console.warn('Error clicking notification:', e);
+      if (notif.actionLink) navigate(notif.actionLink);
+    }
+  };
+
+  const formatTimeAgo = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+      if (diffSec < 60) return 'Just now';
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    } catch {
+      return '';
+    }
+  };
+
+  const getNotifIcon = (type) => {
+    switch (type) {
+      case 'Report':
+        return <FileText size={16} color="#38bdf8" />;
+      case 'Leave':
+        return <Calendar size={16} color="#f59e0b" />;
+      case 'Document':
+        return <FileText size={16} color="#a855f7" />;
+      case 'Attendance':
+        return <Clock size={16} color="#34d399" />;
+      default:
+        return <Bell size={16} color="#38bdf8" />;
+    }
+  };
 
   // Check month-end notification on mount & automatically trigger WhatsApp alert to MD (7812864905)
   useEffect(() => {
@@ -422,9 +496,10 @@ const AdminTopbar = () => {
                   position: 'absolute',
                   top: '-2px',
                   right: '-2px',
-                  width: '18px',
+                  minWidth: '18px',
                   height: '18px',
-                  borderRadius: '50%',
+                  padding: '0 4px',
+                  borderRadius: '10px',
                   background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                   color: '#ffffff',
                   fontSize: '0.65rem',
@@ -435,7 +510,7 @@ const AdminTopbar = () => {
                   border: '2px solid #0f172a',
                   boxShadow: '0 0 10px rgba(239, 68, 68, 0.8)'
                 }}>
-                  1
+                  {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
@@ -448,7 +523,7 @@ const AdminTopbar = () => {
                   position: 'absolute',
                   top: '125%',
                   right: 0,
-                  width: '360px',
+                  width: '390px',
                   maxWidth: 'calc(100vw - 24px)',
                   background: 'linear-gradient(150deg, #0e1726 0%, #0a0f1d 100%)',
                   border: '1.5px solid rgba(52, 211, 153, 0.45)',
@@ -473,20 +548,46 @@ const AdminTopbar = () => {
                     <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#ffffff' }}>
                       Notification Center
                     </span>
+                    {unreadCount > 0 && (
+                      <span style={{
+                        fontSize: '0.68rem',
+                        padding: '1px 6px',
+                        borderRadius: '8px',
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        color: '#f87171',
+                        border: '1px solid rgba(239, 68, 68, 0.4)',
+                        fontWeight: 700
+                      }}>
+                        {unreadCount} unread
+                      </span>
+                    )}
                   </div>
-                  <span style={{
-                    fontSize: '0.72rem',
-                    padding: '2px 8px',
-                    borderRadius: '10px',
-                    background: isMonthEndToday() ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                    color: isMonthEndToday() ? '#34d399' : '#94a3b8',
-                    fontWeight: 700
-                  }}>
-                    {isMonthEndToday() ? 'Month-End Notice' : 'Notice'}
-                  </span>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllRead}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#38bdf8',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '3px 6px',
+                        borderRadius: '6px'
+                      }}
+                      title="Mark all as read"
+                    >
+                      <CheckCheck size={13} />
+                      <span>Mark all read</span>
+                    </button>
+                  )}
                 </div>
 
-                <div style={{ padding: '1rem' }}>
+                <div style={{ padding: '0.9rem' }}>
                   {/* Month End Badge */}
                   {isMonthEndToday() && (
                     <div style={{
@@ -495,83 +596,157 @@ const AdminTopbar = () => {
                       borderRadius: '10px',
                       padding: '0.65rem 0.85rem',
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.65rem',
+                      flexDirection: 'column',
+                      gap: '0.5rem',
                       marginBottom: '0.75rem'
                     }}>
-                      <Calendar size={18} color="#34d399" />
-                      <div>
-                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#34d399', display: 'block' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Calendar size={16} color="#34d399" />
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#34d399' }}>
                           Today is Month-End Date!
                         </span>
-                        <span style={{ fontSize: '0.73rem', color: '#cbd5e1', lineHeight: '1.3', display: 'block' }}>
-                          Staff database records are consolidated. Ready to send WhatsApp alert to MD or download Monthly Employee Full Pdf.
-                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadMonthlyMasterDossier()}
+                          disabled={isGeneratingPdf}
+                          style={{
+                            flex: 1,
+                            padding: '0.45rem 0.6rem',
+                            borderRadius: '8px',
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            border: 'none',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            fontSize: '0.74rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.35rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Download size={13} />
+                          <span>{isGeneratingPdf ? 'PDF...' : 'Master PDF'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSendMonthEndWhatsAppAlert}
+                          style={{
+                            flex: 1,
+                            padding: '0.45rem 0.6rem',
+                            borderRadius: '8px',
+                            background: 'rgba(37, 211, 102, 0.15)',
+                            border: '1px solid rgba(37, 211, 102, 0.45)',
+                            color: '#25d366',
+                            fontWeight: 700,
+                            fontSize: '0.74rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.35rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <MessageCircle size={13} />
+                          <span>WhatsApp MD</span>
+                        </button>
                       </div>
                     </div>
                   )}
 
-                  <div style={{
-                    background: 'rgba(15, 23, 42, 0.75)',
-                    border: '1px solid rgba(52, 211, 153, 0.35)',
-                    borderRadius: '14px',
-                    padding: '1rem',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px'
-                  }}>
-                    {/* Action 1: Download Monthly Employee Full Pdf */}
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadMonthlyMasterDossier()}
-                      disabled={isGeneratingPdf}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        border: 'none',
-                        color: '#ffffff',
-                        fontWeight: 800,
-                        fontSize: '0.86rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        cursor: isGeneratingPdf ? 'wait' : 'pointer',
-                        boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <Download size={16} />
-                      <span>{isGeneratingPdf ? 'Generating PDF...' : 'Monthly Employee Full Pdf'}</span>
-                    </button>
-
-                    {/* Action 2: Send WhatsApp Alert */}
-                    <button
-                      type="button"
-                      onClick={handleSendMonthEndWhatsAppAlert}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '10px',
-                        background: 'rgba(37, 211, 102, 0.12)',
-                        border: '1.5px solid rgba(37, 211, 102, 0.45)',
-                        color: '#25d366',
-                        fontWeight: 800,
-                        fontSize: '0.84rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <MessageCircle size={16} />
-                      <span>Send WhatsApp Alert to MD (7812864905)</span>
-                    </button>
-                  </div>
+                  {/* Employee Live Notifications List */}
+                  {notifications && notifications.length > 0 ? (
+                    <div style={{ maxHeight: '340px', overflowY: 'auto', paddingRight: '2px' }}>
+                      {notifications.map((notif) => (
+                        <div
+                          key={notif._id || notif.id}
+                          onClick={() => handleNotificationClick(notif)}
+                          style={{
+                            padding: '0.75rem 0.85rem',
+                            borderRadius: '12px',
+                            background: notif.isRead ? 'rgba(255, 255, 255, 0.02)' : 'rgba(56, 189, 248, 0.09)',
+                            border: notif.isRead ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(56, 189, 248, 0.35)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            gap: '0.75rem',
+                            alignItems: 'flex-start',
+                            transition: 'all 0.2s ease',
+                            marginBottom: '0.5rem',
+                            position: 'relative'
+                          }}
+                          onMouseOver={e => e.currentTarget.style.background = notif.isRead ? 'rgba(255, 255, 255, 0.06)' : 'rgba(56, 189, 248, 0.16)'}
+                          onMouseOut={e => e.currentTarget.style.background = notif.isRead ? 'rgba(255, 255, 255, 0.02)' : 'rgba(56, 189, 248, 0.09)'}
+                        >
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.06)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            marginTop: '2px'
+                          }}>
+                            {getNotifIcon(notif.notificationType)}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                              <span style={{
+                                fontSize: '0.82rem',
+                                fontWeight: notif.isRead ? 600 : 800,
+                                color: notif.isRead ? '#cbd5e1' : '#ffffff',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}>
+                                {notif.title}
+                              </span>
+                              <span style={{ fontSize: '0.67rem', color: '#94a3b8', flexShrink: 0, marginLeft: '6px' }}>
+                                {formatTimeAgo(notif.createdAt)}
+                              </span>
+                            </div>
+                            <p style={{
+                              margin: 0,
+                              fontSize: '0.74rem',
+                              color: notif.isRead ? '#94a3b8' : '#e2e8f0',
+                              lineHeight: 1.35,
+                              wordBreak: 'break-word'
+                            }}>
+                              {notif.description}
+                            </p>
+                            {notif.actionLink && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', fontSize: '0.7rem', color: '#38bdf8', fontWeight: 600 }}>
+                                <span>Open module</span>
+                                <ArrowRight size={11} />
+                              </div>
+                            )}
+                          </div>
+                          {!notif.isRead && (
+                            <span style={{
+                              width: '7px',
+                              height: '7px',
+                              borderRadius: '50%',
+                              background: '#38bdf8',
+                              flexShrink: 0,
+                              marginTop: '6px',
+                              boxShadow: '0 0 6px rgba(56, 189, 248, 0.9)'
+                            }}></span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    !isMonthEndToday() && (
+                      <div style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
+                        <CheckCircle2 size={32} color="#10b981" style={{ margin: '0 auto 0.5rem auto', display: 'block', opacity: 0.8 }} />
+                        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#f1f5f9' }}>All Caught Up!</div>
+                        <div style={{ fontSize: '0.76rem', marginTop: '4px' }}>No pending employee notifications.</div>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
             )}

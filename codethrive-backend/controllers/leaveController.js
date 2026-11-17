@@ -1,5 +1,6 @@
 const LeaveRequest = require('../models/LeaveRequest');
 const Employee = require('../models/Employee');
+const { notifyAdminsAndHR } = require('./notificationController');
 
 // Default allocations (Can be moved to DB settings later)
 const LEAVE_ALLOCATIONS = {
@@ -90,6 +91,15 @@ exports.applyLeave = async (req, res) => {
       reason,
       status: 'Pending'
     });
+
+    // Notify Admins & HR for review
+    await notifyAdminsAndHR(
+      'New Leave Request Applied',
+      `${employee.fullName} submitted a ${leaveType} leave request from ${new Date(startDate).toLocaleDateString('en-IN')} to ${new Date(endDate).toLocaleDateString('en-IN')}: "${reason}".`,
+      'Leave',
+      'High',
+      '/admin/leave'
+    );
 
     res.status(201).json({ success: true, data: leave });
   } catch (err) {

@@ -85,8 +85,8 @@ const DEFAULT_DEMO_EMPLOYEES = [
     accountNumber: '50200088991122',
     ifscCode: 'CNRB0001234',
     branchName: 'Tech Park Branch, Coimbatore',
-    panNumber: 'ABCDE1234F',
-    aadhaarOrIdentityProofNumber: 'XXXX-XXXX-9842',
+    panNumber: '',
+    aadhaarOrIdentityProofNumber: '',
     upiId: 'mahadevan@okaxis',
     qualification: 'Bachelor of Technology (B.Tech Information Technology)',
     collegeName: 'PSG College of Technology',
@@ -134,8 +134,8 @@ const DEFAULT_DEMO_EMPLOYEES = [
     accountNumber: '000401567891',
     ifscCode: 'ICIC0000004',
     branchName: 'Koramangala Branch, Bengaluru',
-    panNumber: 'PQRSW5678G',
-    aadhaarOrIdentityProofNumber: 'XXXX-XXXX-4512',
+    panNumber: '',
+    aadhaarOrIdentityProofNumber: '',
     upiId: 'priyasharma@okaxis',
     qualification: 'Master of Design (M.Des Interaction Design)',
     collegeName: 'National Institute of Design (NID)',
@@ -183,8 +183,8 @@ const DEFAULT_DEMO_EMPLOYEES = [
     accountNumber: '9180200345678',
     ifscCode: 'UTIB0000180',
     branchName: 'Tech Park Branch, Chennai',
-    panNumber: 'LMNOP9012K',
-    aadhaarOrIdentityProofNumber: 'XXXX-XXXX-7721',
+    panNumber: '',
+    aadhaarOrIdentityProofNumber: '',
     upiId: 'rahulverma@okaxis',
     qualification: 'Bachelor of Engineering (B.E. Computer Science)',
     collegeName: 'College of Engineering, Guindy (CEG)',
@@ -232,8 +232,8 @@ const DEFAULT_DEMO_EMPLOYEES = [
     accountNumber: '50100987654321',
     ifscCode: 'HDFC0001234',
     branchName: 'Anna Nagar Branch, Chennai',
-    panNumber: 'XYZZZ4321M',
-    aadhaarOrIdentityProofNumber: 'XXXX-XXXX-1934',
+    panNumber: '',
+    aadhaarOrIdentityProofNumber: '',
     upiId: 'ananyaroy@okaxis',
     qualification: 'Master of Business Administration (MBA HR)',
     collegeName: 'Loyola Institute of Business Administration (LIBA)',
@@ -324,6 +324,8 @@ const EmployeeDetail = () => {
     status: 'Present',
     inTime: '09:30',
     outTime: '18:30',
+    breakMinutes: 0,
+    lunchMinutes: 0,
     reason: 'Management Adjustment'
   });
 
@@ -422,11 +424,16 @@ const EmployeeDetail = () => {
         outTime = `${hh}:${mm}`;
       }
 
+      const bMinutes = record.totalBreakDurationInSeconds ? Math.round(record.totalBreakDurationInSeconds / 60) : 0;
+      const lMinutes = record.totalLunchDurationInSeconds ? Math.round(record.totalLunchDurationInSeconds / 60) : 0;
+
       setRectifyForm({
         date: recDate,
         status: record.status || computeAttendanceStatus(record) || 'Present',
         inTime,
         outTime,
+        breakMinutes: bMinutes,
+        lunchMinutes: lMinutes,
         reason: record.correctionReason || 'Management Adjustment'
       });
       setEditingAttendanceRecord(record);
@@ -437,6 +444,8 @@ const EmployeeDetail = () => {
         status: 'Present',
         inTime: '09:30',
         outTime: '18:30',
+        breakMinutes: 0,
+        lunchMinutes: 0,
         reason: 'Management Adjustment'
       });
       setEditingAttendanceRecord({});
@@ -470,10 +479,16 @@ const EmployeeDetail = () => {
         lastLogoutTime = dtOut.toISOString();
       }
 
-      let durationSec = 32400; // default 9 hours
+      const bMin = Math.max(0, parseInt(rectifyForm.breakMinutes || 0, 10));
+      const lMin = Math.max(0, parseInt(rectifyForm.lunchMinutes || 0, 10));
+      const totalBreakSec = bMin * 60;
+      const totalLunchSec = lMin * 60;
+
+      let grossDurationSec = 32400; // default 9 hours
       if (firstLoginTime && lastLogoutTime) {
-        durationSec = Math.max(0, Math.floor((new Date(lastLogoutTime) - new Date(firstLoginTime)) / 1000));
+        grossDurationSec = Math.max(0, Math.floor((new Date(lastLogoutTime) - new Date(firstLoginTime)) / 1000));
       }
+      const netWorkDurationSec = Math.max(0, grossDurationSec - (totalBreakSec + totalLunchSec));
 
       await api.post('/admin/attendance/mark', {
         employeeId: employee._id || employee.id,
@@ -481,6 +496,10 @@ const EmployeeDetail = () => {
         status: rectifyForm.status,
         firstLoginTime,
         lastLogoutTime,
+        breakMinutes: bMin,
+        lunchMinutes: lMin,
+        totalBreakDurationInSeconds: totalBreakSec,
+        totalLunchDurationInSeconds: totalLunchSec,
         correctionReason: rectifyForm.reason || 'Management Adjustment'
       }).catch(err => {
         console.warn('API error (saved locally):', err);
@@ -501,7 +520,9 @@ const EmployeeDetail = () => {
           status: rectifyForm.status,
           firstLoginTime,
           lastLogoutTime,
-          totalWorkDurationInSeconds: durationSec,
+          totalBreakDurationInSeconds: totalBreakSec,
+          totalLunchDurationInSeconds: totalLunchSec,
+          totalWorkDurationInSeconds: netWorkDurationSec,
           isManualCorrection: true,
           correctionReason: rectifyForm.reason
         };
@@ -2168,12 +2189,16 @@ CodeThrive Infotech • Confidential Personnel Archive
               <div className="profile-tiles-grid">
                 <div className="profile-field-tile">
                   <span className="field-tile-label">Permanent Account Number (PAN)</span>
-                  <div className="field-tile-val mono highlight-blue">{employee.panNumber || 'ABCDE1234F'}</div>
+                  <div className="field-tile-val mono highlight-blue">
+                    {employee.panNumber || <span className="val-not-set">Not Provided</span>}
+                  </div>
                 </div>
 
                 <div className="profile-field-tile">
                   <span className="field-tile-label">Aadhaar / National ID</span>
-                  <div className="field-tile-val mono">{employee.aadhaarOrIdentityProofNumber || 'XXXX-XXXX-9842'}</div>
+                  <div className="field-tile-val mono">
+                    {employee.aadhaarOrIdentityProofNumber || <span className="val-not-set">Not Provided</span>}
+                  </div>
                 </div>
               </div>
             </Card>
@@ -4104,6 +4129,80 @@ CodeThrive Infotech • Confidential Personnel Archive
               </span>
             </div>
           </div>
+
+          {/* Break & Lunch Durations */}
+          <div className="form-grid-2">
+            <div className="form-field">
+              <label style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                ☕ Break Duration (Minutes)
+              </label>
+              <input 
+                type="number" 
+                min="0"
+                max="300"
+                className="input-box" 
+                placeholder="e.g. 30"
+                value={rectifyForm.breakMinutes} 
+                onChange={e => setRectifyForm({ ...rectifyForm, breakMinutes: e.target.value })} 
+              />
+              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
+                Standard tea/refreshment break
+              </span>
+            </div>
+
+            <div className="form-field">
+              <label style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                🍽️ Lunch Duration (Minutes)
+              </label>
+              <input 
+                type="number" 
+                min="0"
+                max="300"
+                className="input-box" 
+                placeholder="e.g. 60"
+                value={rectifyForm.lunchMinutes} 
+                onChange={e => setRectifyForm({ ...rectifyForm, lunchMinutes: e.target.value })} 
+              />
+              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
+                Standard afternoon lunch interval
+              </span>
+            </div>
+          </div>
+
+          {/* Live Calculated Net Work Hours Preview */}
+          {(() => {
+            let grossMin = 0;
+            if (rectifyForm.inTime && rectifyForm.outTime) {
+              const [ih, im] = rectifyForm.inTime.split(':').map(Number);
+              const [oh, om] = rectifyForm.outTime.split(':').map(Number);
+              grossMin = (oh * 60 + om) - (ih * 60 + im);
+            }
+            const bMin = Math.max(0, parseInt(rectifyForm.breakMinutes || 0, 10));
+            const lMin = Math.max(0, parseInt(rectifyForm.lunchMinutes || 0, 10));
+            const netMin = Math.max(0, grossMin - (bMin + lMin));
+            const netH = Math.floor(netMin / 60);
+            const netM = netMin % 60;
+            return (
+              <div style={{
+                background: 'rgba(56, 189, 248, 0.08)',
+                border: '1px solid rgba(56, 189, 248, 0.25)',
+                borderRadius: '8px',
+                padding: '0.65rem 0.85rem',
+                fontSize: '0.82rem',
+                color: '#cbd5e1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <span>
+                  <strong>Calculated Net Work Hours:</strong> (Shift Duration - {bMin}m Break - {lMin}m Lunch)
+                </span>
+                <span style={{ color: '#38bdf8', fontWeight: 800, fontFamily: 'monospace', fontSize: '0.95rem' }}>
+                  {netH}h {netM}m
+                </span>
+              </div>
+            );
+          })()}
 
           <div className="form-field">
             <label style={{ fontWeight: 600 }}>Remarks / Reason (Optional)</label>

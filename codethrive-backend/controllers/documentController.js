@@ -1,5 +1,6 @@
 const Document = require('../models/Document');
 const Employee = require('../models/Employee');
+const { notifyAdminsAndHR } = require('./notificationController');
 
 // @desc    Upload a document
 // @route   POST /api/v1/documents
@@ -26,6 +27,18 @@ exports.uploadDocument = async (req, res) => {
       fileUrl: req.file.path.startsWith('http') ? req.file.path : `uploads/${req.file.filename}`,
       isPublic: isPublic === 'true'
     });
+
+    // Notify admins if uploaded by an employee
+    if (req.user.role === 'employee' || !['admin', 'superadmin', 'hr'].includes(req.user.role)) {
+      const uploaderName = (req.user && (req.user.fullName || req.user.name)) || 'An employee';
+      await notifyAdminsAndHR(
+        'New Document Uploaded',
+        `${uploaderName} uploaded "${title || documentType || 'Document'}".`,
+        'Document',
+        'Low',
+        '/admin/documents'
+      );
+    }
 
     res.status(201).json({ success: true, data: doc });
   } catch (err) {
