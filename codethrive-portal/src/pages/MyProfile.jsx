@@ -67,39 +67,18 @@ const MyProfile = () => {
     if (saved) {
       try { 
         const parsed = JSON.parse(saved);
-        let updated = false;
-        // Force update leadership & headquarters if old dummy data, Chennai address, or old CTO/SuperAdmin roles exist
-        if (!parsed.leadershipMembers || !Array.isArray(parsed.leadershipMembers) || (parsed.headquarters && parsed.headquarters.includes('Chennai')) || parsed.leadershipMembers.some(m => m?.role === 'SuperAdmin' || m?.name?.includes('Sarah') || m?.email?.includes('@codethrive.com') || (m?.title && m.title.includes('CTO')))) {
-          parsed.headquarters = defaultData.headquarters;
-          parsed.branchName = defaultData.branchName;
-          parsed.leadershipMembers = defaultData.leadershipMembers;
-          updated = true;
+        if (parsed && typeof parsed === 'object') {
+          return {
+            ...defaultData,
+            ...parsed,
+            leadershipMembers: (Array.isArray(parsed.leadershipMembers) && parsed.leadershipMembers.length > 0)
+              ? parsed.leadershipMembers
+              : defaultData.leadershipMembers
+          };
         }
-        if (parsed.companyName && parsed.companyName.includes('Pvt Ltd')) {
-          parsed.companyName = parsed.companyName.replace(/\s*Pvt\s*Ltd/gi, '').trim();
-          updated = true;
-        }
-        if (!parsed.registrationNumber || parsed.registrationNumber.includes('CIN')) {
-          parsed.registrationNumber = defaultData.registrationNumber;
-          updated = true;
-        }
-        if (!parsed.coreServicesDomain) {
-          parsed.coreServicesDomain = defaultData.coreServicesDomain;
-          updated = true;
-        }
-        if (!parsed.headquartersHub) {
-          parsed.headquartersHub = defaultData.headquartersHub;
-          updated = true;
-        }
-        if (!parsed.headquartersRegion) {
-          parsed.headquartersRegion = defaultData.headquartersRegion;
-          updated = true;
-        }
-        if (updated) {
-          localStorage.setItem('cti_company_profile', JSON.stringify(parsed));
-        }
-        return parsed; 
-      } catch (e) { console.warn(e); }
+      } catch (e) {
+        console.warn('Failed to parse saved company profile:', e);
+      }
     }
     return defaultData;
   });
@@ -114,11 +93,14 @@ const MyProfile = () => {
     const updated = {
       ...companyProfile,
       ...companyFormData,
-      leadershipMembers: companyProfile.leadershipMembers || []
+      leadershipMembers: (companyFormData.leadershipMembers && companyFormData.leadershipMembers.length > 0)
+        ? companyFormData.leadershipMembers
+        : (companyProfile.leadershipMembers || [])
     };
     setCompanyProfile(updated);
     setCompanyFormData(updated);
     localStorage.setItem('cti_company_profile', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('cti_company_profile_updated', { detail: updated }));
     setIsCompanyEditModalOpen(false);
   };
 
@@ -132,8 +114,20 @@ const MyProfile = () => {
     setCompanyProfile(updatedCompany);
     setCompanyFormData(updatedCompany);
     localStorage.setItem('cti_company_profile', JSON.stringify(updatedCompany));
+    window.dispatchEvent(new CustomEvent('cti_company_profile_updated', { detail: updatedCompany }));
     setEditingDirector(null);
   };
+
+  useEffect(() => {
+    const handleCompanyUpdate = (e) => {
+      if (e.detail) {
+        setCompanyProfile(e.detail);
+        setCompanyFormData(e.detail);
+      }
+    };
+    window.addEventListener('cti_company_profile_updated', handleCompanyUpdate);
+    return () => window.removeEventListener('cti_company_profile_updated', handleCompanyUpdate);
+  }, []);
 
   const [modalFormTab, setModalFormTab] = useState('personal');
 

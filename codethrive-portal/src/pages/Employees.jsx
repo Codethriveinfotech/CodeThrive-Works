@@ -66,7 +66,12 @@ const Employees = () => {
       const filtered = dbEmps.filter(e => {
         const email = (e.personalEmailAddress || e.email || '').toLowerCase();
         const id = (e.employeeId || '').toLowerCase();
-        return email !== 'admin@codethrive.com' && id !== 'cti-adm-001';
+        const name = (e.fullName || '').toLowerCase();
+        const role = (e.user?.role || e.role || '').toLowerCase();
+        if (role === 'admin' || role === 'superadmin' || role === 'management') return false;
+        if (id === 'cti-adm-001' || id.startsWith('cti-adm')) return false;
+        if (name.includes('codethrive admin') || name === 'system administrator') return false;
+        return email !== 'admin@codethrive.com';
       });
       setEmployees(filtered);
     } catch (err) {

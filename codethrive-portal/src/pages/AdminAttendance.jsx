@@ -3,7 +3,7 @@ import api from '../utils/api';
 import {
   Search, Save, CheckCircle2, RefreshCw,
   ChevronLeft, ChevronRight, CalendarDays, AlertCircle,
-  Pencil, Clock
+  Pencil, Clock, LogIn, LogOut, Coffee, Utensils
 } from 'lucide-react';
 import DateInput, { toIsoDate } from '../components/common/DateInput';
 import Modal from '../components/common/Modal';
@@ -157,6 +157,16 @@ const AdminAttendance = () => {
     toastTimer.current = setTimeout(() => setToast(null), 3500);
   }, []);
 
+  const isRealEmployeeRow = (row) => {
+    const role = (row.role || '').toLowerCase();
+    const empId = (row.empCode || row.employeeId || '').toUpperCase();
+    const name = (row.fullName || '').toLowerCase();
+    if (role.includes('admin') || role.includes('superadmin') || role.includes('management')) return false;
+    if (empId === 'CTI-ADM-001' || empId.startsWith('CTI-ADM')) return false;
+    if (name.includes('codethrive admin') || name === 'system administrator') return false;
+    return true;
+  };
+
   // ─── Fetch daily register ──────────────────────────────────
   const fetchRegister = useCallback(async (date) => {
     setLoading(true);
@@ -164,15 +174,28 @@ const AdminAttendance = () => {
     try {
       const res = await api.get(`/admin/attendance/register?date=${date}`);
       if (res.data.success) {
+        // Filter out admin users so only real employees appear
+        const cleanList = (res.data.data || []).filter(isRealEmployeeRow);
         // Add local editable fields to each row
-        const rows = res.data.data.map(row => ({
+        const rows = cleanList.map(row => ({
           ...row,
           _localStatus: row.status,
           _localIn: row.firstLoginTime ? new Date(row.firstLoginTime).toTimeString().slice(0,5) : '',
           _localOut: row.lastLogoutTime ? new Date(row.lastLogoutTime).toTimeString().slice(0,5) : '',
         }));
         setRegister(rows);
-        setSummary(res.data.summary || {});
+        
+        // Recalculate summary strictly for real employees
+        const summaryObj = {
+          total: rows.length,
+          present: rows.filter(r => ['Working', 'Checked Out', 'On Break', 'On Lunch', 'Present', 'Late', 'Permission'].includes(r._localStatus)).length,
+          absent: rows.filter(r => r._localStatus === 'Absent').length,
+          permission: rows.filter(r => r._localStatus === 'Permission').length,
+          onLeave: rows.filter(r => r._localStatus === 'On Leave').length,
+          halfDay: rows.filter(r => r._localStatus === 'Half Day').length,
+          late: rows.filter(r => r._localStatus === 'Late').length,
+        };
+        setSummary(summaryObj);
       }
     } catch {
       showToast('Failed to load attendance register', 'error');
@@ -190,7 +213,17 @@ const AdminAttendance = () => {
     setMonthlyLoading(true);
     try {
       const res = await api.get(`/admin/attendance/monthly?month=${reportMonth}&year=${reportYear}`);
-      if (res.data.success) setMonthlyData(res.data.data);
+      if (res.data.success) {
+        const cleanData = (res.data.data || []).filter(r => {
+          const emp = r.employee || {};
+          const empId = (emp.employeeId || r.empCode || '').toUpperCase();
+          const name = (emp.fullName || r.fullName || '').toLowerCase();
+          if (empId === 'CTI-ADM-001' || empId.startsWith('CTI-ADM')) return false;
+          if (name.includes('codethrive admin') || name === 'system administrator') return false;
+          return true;
+        });
+        setMonthlyData(cleanData);
+      }
     } catch {
       showToast('Failed to load monthly report', 'error');
     } finally {
@@ -437,12 +470,16 @@ const AdminAttendance = () => {
                 <table className="aa-table">
                   <thead>
                     <tr>
-                      <th style={{ width: '40px' }}>#</th>
+                      <th style={{ width: '35px' }}>#</th>
                       <th>Employee</th>
                       <th>Department</th>
-                      <th style={{ width: '180px' }}>Attendance Status</th>
-                      <th>Logged Punch</th>
-                      <th style={{ width: '160px' }}>Action</th>
+                      <th>Check In</th>
+                      <th>Check Out</th>
+                      <th>Work Duration</th>
+                      <th>Break</th>
+                      <th>Lunch</th>
+                      <th style={{ width: '160px' }}>Status</th>
+                      <th style={{ width: '150px' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -450,10 +487,12 @@ const AdminAttendance = () => {
                       const isSaved = savedRows.has(row.employeeId);
                       const isSaving = savingId === row.employeeId;
                       const initial = (row.fullName || '?')[0].toUpperCase();
+                      const bSec = row.totalBreakDurationInSeconds || (row.breakMinutes ? row.breakMinutes * 60 : 0);
+                      const lSec = row.totalLunchDurationInSeconds || (row.lunchMinutes ? row.lunchMinutes * 60 : 0);
 
                       return (
                         <tr key={row.employeeId}>
-                          <td style={{ color: 'rgba(255,255,255,0.3)', width: '40px' }}>{idx + 1}</td>
+                          <td style={{ color: 'rgba(255,255,255,0.3)', width: '35px' }}>{idx + 1}</td>
 
                           {/* Employee cell */}
                           <td>
@@ -465,48 +504,81 @@ const AdminAttendance = () => {
                               <div>
                                 <div className="aa-emp-name">
                                   {row.fullName}
-                                  {row.isManualCorrection && <span className="aa-correction-dot" title={row.correctionReason || 'Admin edited'} />}
                                 </div>
-                                <div className="aa-emp-code">{row.empCode}</div>
+                                <div className="aa-emp-code">{row.empCode || row.employeeId}</div>
                               </div>
                             </div>
                           </td>
 
-                          <td style={{ color: 'rgba(255,255,255,0.55)' }}>{row.department}</td>
+                          <td style={{ color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>{row.department || 'General'}</td>
 
-                          {/* Status Dropdown */}
-                          <td>
-                            <select
-                              className="aa-status-select"
-                              value={row._localStatus}
-                              onChange={e => handleFieldChange(row.employeeId, '_localStatus', e.target.value)}
-                              id={`aa-status-${row.employeeId}`}
-                            >
-                              {STATUS_OPTIONS.map(s => (
-                                <option key={s} value={s}>{s}</option>
-                              ))}
-                              {!STATUS_OPTIONS.includes(row._localStatus) && <option value={row._localStatus}>{row._localStatus}</option>}
-                            </select>
-                          </td>
-
-                          {/* Logged Punch (Automated or recorded checkin/checkout) */}
+                          {/* Check In Time */}
                           <td>
                             {row.firstLoginTime ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <span style={{ color: '#34d399', fontSize: '0.82rem', fontFamily: 'monospace', fontWeight: 600 }}>
-                                  In: {fmtTime(row.firstLoginTime)}
-                                </span>
-                                {row.lastLogoutTime && (
-                                  <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.74rem', fontFamily: 'monospace' }}>
-                                    Out: {fmtTime(row.lastLogoutTime)} {row.totalWorkDurationInSeconds > 0 ? `(${fmtDuration(row.totalWorkDurationInSeconds)})` : ''}
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>
-                                Not Checked In
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#34d399', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.82rem' }}>
+                                <LogIn size={13} /> {fmtTime(row.firstLoginTime)}
                               </span>
+                            ) : (
+                              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--:--</span>
                             )}
+                          </td>
+
+                          {/* Check Out Time */}
+                          <td>
+                            {row.lastLogoutTime ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#f43f5e', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.82rem' }}>
+                                <LogOut size={13} /> {fmtTime(row.lastLogoutTime)}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--:--</span>
+                            )}
+                          </td>
+
+                          {/* Net Work Duration */}
+                          <td>
+                            {row.totalWorkDurationInSeconds > 0 ? (
+                              <span style={{ fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace', fontSize: '0.84rem' }}>
+                                {fmtDuration(row.totalWorkDurationInSeconds)}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--</span>
+                            )}
+                          </td>
+
+                          {/* Break Time */}
+                          <td>
+                            <span style={{ color: '#fbbf24', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace' }}>
+                              <Coffee size={13} /> {bSec > 0 ? fmtDuration(bSec) : '0h 0m'}
+                            </span>
+                          </td>
+
+                          {/* Lunch Time */}
+                          <td>
+                            <span style={{ color: '#60a5fa', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace' }}>
+                              <Utensils size={13} /> {lSec > 0 ? fmtDuration(lSec) : '0h 0m'}
+                            </span>
+                          </td>
+
+                          {/* Status Dropdown with Edited tag */}
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <select
+                                className="aa-status-select"
+                                value={row._localStatus}
+                                onChange={e => handleFieldChange(row.employeeId, '_localStatus', e.target.value)}
+                                id={`aa-status-${row.employeeId}`}
+                              >
+                                {STATUS_OPTIONS.map(s => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                                {!STATUS_OPTIONS.includes(row._localStatus) && <option value={row._localStatus}>{row._localStatus}</option>}
+                              </select>
+                              {row.isManualCorrection && (
+                                <span style={{ fontSize: '0.68rem', background: 'rgba(99, 102, 241, 0.25)', color: '#a5b4fc', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, border: '1px solid rgba(99, 102, 241, 0.4)' }} title={row.correctionReason || 'Admin Edited'}>
+                                  Edited
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           {/* Actions: Save button & Edit button */}
@@ -528,7 +600,7 @@ const AdminAttendance = () => {
                                 className="aa-edit-btn"
                                 onClick={() => handleOpenEditModal(row)}
                                 id={`aa-edit-row-${row.employeeId}`}
-                                title="Edit Attendance Details"
+                                title="Adjust timing, break and lunch"
                               >
                                 <Pencil size={12} /> Edit
                               </button>

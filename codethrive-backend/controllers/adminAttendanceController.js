@@ -19,12 +19,24 @@ exports.getAttendanceRegister = async (req, res) => {
     const { date } = req.query;
     const { start, end } = getDayRange(date);
 
-    // Fetch all active employees
-    const employees = await Employee.find({
+    // Fetch all active employees (excluding Admin/Superadmin accounts)
+    const allEmployees = await Employee.find({
       status: { $in: ['Active', 'Approved'] }
     })
       .populate('user', 'email role status')
       .sort({ fullName: 1 });
+
+    const employees = allEmployees.filter(emp => {
+      const role = (emp.user?.role || emp.role || '').toLowerCase();
+      const empId = (emp.employeeId || '').toUpperCase();
+      const name = (emp.fullName || '').toLowerCase();
+      const email = (emp.personalEmailAddress || emp.email || emp.user?.email || '').toLowerCase();
+      if (['admin', 'superadmin', 'management'].includes(role)) return false;
+      if (empId === 'CTI-ADM-001' || empId.startsWith('CTI-ADM')) return false;
+      if (name.includes('codethrive admin') || name === 'system administrator') return false;
+      if (email === 'admin@codethrive.com') return false;
+      return true;
+    });
 
     // Fetch all attendance records for the given date
     const attendances = await Attendance.find({
@@ -293,12 +305,22 @@ exports.getMonthlyReport = async (req, res) => {
       .sort({ date: -1, 'employee.fullName': 1 })
       .lean();
 
+    const cleanRecords = records.filter(r => {
+      const emp = r.employee;
+      if (!emp) return false;
+      const empId = (emp.employeeId || '').toUpperCase();
+      const name = (emp.fullName || '').toLowerCase();
+      if (empId === 'CTI-ADM-001' || empId.startsWith('CTI-ADM')) return false;
+      if (name.includes('codethrive admin') || name === 'system administrator') return false;
+      return true;
+    });
+
     res.status(200).json({
       success: true,
       month: m,
       year: y,
-      count: records.length,
-      data: records,
+      count: cleanRecords.length,
+      data: cleanRecords,
     });
   } catch (err) {
     console.error('getMonthlyReport error:', err);

@@ -17,7 +17,18 @@ exports.getEmployees = async (req, res) => {
       }
     }
     
-    const employees = await Employee.find(query).populate('user', 'email role status');
+    const allEmployees = await Employee.find(query).populate('user', 'email role status');
+    const employees = allEmployees.filter(emp => {
+      const role = (emp.user?.role || emp.role || '').toLowerCase();
+      const empId = (emp.employeeId || '').toUpperCase();
+      const name = (emp.fullName || '').toLowerCase();
+      const email = (emp.personalEmailAddress || emp.email || emp.user?.email || '').toLowerCase();
+      if (['admin', 'superadmin'].includes(role)) return false;
+      if (empId === 'CTI-ADM-001' || empId.startsWith('CTI-ADM')) return false;
+      if (name.includes('codethrive admin') || name === 'system administrator') return false;
+      if (email === 'admin@codethrive.com') return false;
+      return true;
+    });
     res.status(200).json({ success: true, count: employees.length, data: employees });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

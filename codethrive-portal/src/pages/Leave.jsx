@@ -308,7 +308,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
             <p className="stat-title">Sick Leave Balance</p>
           </div>
           <div className="stat-card-footer">
-            <span className="stat-subtext">Annual Quota: 6 Days</span>
+            <span className="stat-subtext">Annual Quota: 12 Days</span>
             <span className="stat-active-pill pill-amber">Sick</span>
           </div>
         </div>

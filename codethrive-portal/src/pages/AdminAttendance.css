@@ -259,7 +259,7 @@
 .aa-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  min-width: 1050px;
 }
 .aa-table thead th {
   padding: 0.7rem 1rem;
