@@ -305,6 +305,37 @@ exports.login = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Admin credentials cannot be used here. Please use the Admin Portal login.' });
     }
 
+    // Office Wi-Fi Network Check (Strictly for Employee Portal)
+    try {
+      const { pool } = require('../config/db');
+      if (pool) {
+        const companyRes = await pool.query("SELECT value FROM system_settings WHERE key = 'company_profile' LIMIT 1");
+        if (companyRes.rows.length > 0 && companyRes.rows[0].value) {
+          const company = companyRes.rows[0].value;
+          const officeWifiOnly = Boolean(company.officeWifiOnly);
+          const officeWifiIps = Array.isArray(company.officeWifiIps) 
+            ? company.officeWifiIps 
+            : (company.officeWifiIp ? [company.officeWifiIp] : []);
+          
+          if (officeWifiOnly && officeWifiIps.length > 0) {
+            const rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '';
+            const clientIp = rawIp.split(',')[0].trim();
+            const isOffice = officeWifiIps.some(ip => ip && clientIp.includes(ip.trim()));
+            
+            if (!isOffice) {
+              return res.status(403).json({
+                success: false,
+                wifiRestricted: true,
+                message: '🔒 CodeThrive Infotech Office Wi-Fi connect panuga. Office Wi-Fi connect panna mattum thaan Employee Portal access panna mudiyum. Work from home iruntha Admin-kitta Remote Access allow panna sollunga.'
+              });
+            }
+          }
+        }
+      }
+    } catch (netErr) {
+      console.warn('Network Wi-Fi check warning:', netErr);
+    }
+
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Incorrect password. Please try again.' });

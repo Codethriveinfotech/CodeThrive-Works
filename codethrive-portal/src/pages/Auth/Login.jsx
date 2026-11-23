@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, WifiOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 
@@ -11,16 +11,19 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ employeeId: '', password: '' });
   const [error, setError] = useState('');
+  const [isWifiError, setIsWifiError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
+    setIsWifiError(false);
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setIsWifiError(false);
     
     if (!formData.employeeId.trim()) {
       setError('Employee ID is required');
@@ -38,12 +41,17 @@ const Login = () => {
     if (result.success) {
       navigate('/employee/dashboard');
     } else {
-      if (result.notRegistered) {
+      if (result.wifiRestricted) {
+        setIsWifiError(true);
+        setError(result.message || '🔒 CodeThrive Infotech Office Wi-Fi connect panuga. Office Wi-Fi connect panna mattum thaan Employee Portal login aagum.');
+      } else if (result.notRegistered) {
+        setIsWifiError(false);
         setError('No registered account found! You need to register first. Redirecting to Registration page...');
         setTimeout(() => {
           navigate('/employee/register');
         }, 1800);
       } else {
+        setIsWifiError(false);
         setError(result.message || 'Login failed.');
       }
     }
@@ -61,16 +69,31 @@ const Login = () => {
         </div>
 
         {error && (
-          <div className="auth-error-msg" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <span>{error}</span>
-            <button 
-              type="button"
-              className="btn btn-outline"
-              style={{ padding: '0.5rem', width: '100%', borderColor: 'rgba(255,255,255,0.4)', color: 'var(--text-main)', fontWeight: '600' }}
-              onClick={() => navigate('/employee/register')}
-            >
-              Go to Registration Page
-            </button>
+          <div className="auth-error-msg" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '10px',
+            background: isWifiError ? 'rgba(239, 68, 68, 0.15)' : undefined,
+            border: isWifiError ? '1.5px solid rgba(239, 68, 68, 0.5)' : undefined,
+            borderRadius: '12px',
+            padding: '0.85rem 1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              {isWifiError && <WifiOff size={22} color="#f87171" style={{ flexShrink: 0 }} />}
+              <span style={{ color: isWifiError ? '#fca5a5' : undefined, fontWeight: isWifiError ? 600 : undefined, fontSize: '0.88rem', lineHeight: '1.45' }}>
+                {error}
+              </span>
+            </div>
+            {!isWifiError && (
+              <button 
+                type="button"
+                className="btn btn-outline"
+                style={{ padding: '0.5rem', width: '100%', borderColor: 'rgba(255,255,255,0.4)', color: 'var(--text-main)', fontWeight: '600' }}
+                onClick={() => navigate('/employee/register')}
+              >
+                Go to Registration Page
+              </button>
+            )}
           </div>
         )}
 

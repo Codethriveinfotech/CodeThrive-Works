@@ -9,7 +9,7 @@ import {
   Briefcase, Shield, Camera, Edit3, GraduationCap,
   Sparkles, Trophy, CreditCard, Calendar,
   ShieldCheck, Zap, Landmark, CheckCircle2, Sliders,
-  RotateCw, ZoomIn, Building2, Globe, Users
+  RotateCw, ZoomIn, Building2, Globe, Users, Wifi, WifiOff
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
@@ -87,6 +87,58 @@ const MyProfile = () => {
   const [companyFormData, setCompanyFormData] = useState(companyProfile);
   const [companyEditModalTab, setCompanyEditModalTab] = useState('general');
   const [editingDirector, setEditingDirector] = useState(null);
+  const [currentNetworkIp, setCurrentNetworkIp] = useState('');
+  const [isUpdatingNetwork, setIsUpdatingNetwork] = useState(false);
+
+  const fetchNetworkInfo = async () => {
+    try {
+      const res = await api.get('/company/network-info');
+      if (res.data?.clientIp) {
+        setCurrentNetworkIp(res.data.clientIp);
+      }
+    } catch {}
+  };
+
+  const handleToggleWifiRestriction = async (enableWifiOnly) => {
+    setIsUpdatingNetwork(true);
+    const updated = {
+      ...companyProfile,
+      officeWifiOnly: enableWifiOnly
+    };
+    setCompanyProfile(updated);
+    setCompanyFormData(updated);
+    localStorage.setItem('cti_company_profile', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('cti_company_profile_updated', { detail: updated }));
+    try {
+      await api.put('/company', updated);
+    } catch (err) {
+      console.warn('Network setting save warning:', err);
+    } finally {
+      setIsUpdatingNetwork(false);
+    }
+  };
+
+  const handleSaveOfficeIp = async (ipToSave) => {
+    setIsUpdatingNetwork(true);
+    const trimmed = (ipToSave || '').trim();
+    const updated = {
+      ...companyProfile,
+      officeWifiIp: trimmed,
+      officeWifiIps: trimmed ? [trimmed] : []
+    };
+    setCompanyProfile(updated);
+    setCompanyFormData(updated);
+    localStorage.setItem('cti_company_profile', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('cti_company_profile_updated', { detail: updated }));
+    try {
+      await api.put('/company', updated);
+      alert('✓ Office Wi-Fi IP address saved successfully!');
+    } catch (err) {
+      alert('Failed to save Office Wi-Fi IP');
+    } finally {
+      setIsUpdatingNetwork(false);
+    }
+  };
 
   const handleCompanySave = async (e) => {
     e.preventDefault();
@@ -133,6 +185,7 @@ const MyProfile = () => {
   };
 
   useEffect(() => {
+    fetchNetworkInfo();
     // Fetch saved company profile from backend server on initial load
     api.get('/company').then(res => {
       if (res.data?.success && res.data.data) {
@@ -943,6 +996,131 @@ const MyProfile = () => {
                 <div>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Branch Name</span>
                   <div style={{ fontWeight: 600, color: '#e2e8f0', marginTop: '0.2rem' }}>{companyProfile.branchName}</div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Section: Office Wi-Fi & Employee Access Network Security Control */}
+          <div style={{ marginTop: '1.5rem' }}>
+            <Card title={
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '0.6rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Wifi size={20} color="#38bdf8" />
+                  <span style={{ fontWeight: 700 }}>Office Wi-Fi & Employee Network Security Control</span>
+                </div>
+                <span style={{
+                  fontSize: '0.75rem',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontWeight: 700,
+                  background: companyProfile.officeWifiOnly ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                  color: companyProfile.officeWifiOnly ? '#f87171' : '#4ade80',
+                  border: companyProfile.officeWifiOnly ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(34, 197, 94, 0.4)'
+                }}>
+                  {companyProfile.officeWifiOnly ? '🔒 Office Wi-Fi Enforced' : '🌐 Remote / Other Wi-Fi Allowed'}
+                </span>
+              </div>
+            }>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '0.5rem 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '0.98rem', color: '#fff', fontWeight: 600 }}>
+                      Enforce Office Wi-Fi for Employee Portal Login
+                    </h4>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: '#94a3b8', maxWidth: '650px' }}>
+                      When turned <strong>ON</strong>, employees can only log in when connected to CodeThrive Infotech Office Wi-Fi. When turned <strong>OFF</strong> (or during Work From Home), employees can log in from home or any Wi-Fi.
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.6rem' }}>
+                    <button
+                      type="button"
+                      disabled={isUpdatingNetwork}
+                      onClick={() => handleToggleWifiRestriction(false)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: !companyProfile.officeWifiOnly ? '1.5px solid #22c55e' : '1px solid rgba(255,255,255,0.15)',
+                        background: !companyProfile.officeWifiOnly ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
+                        color: !companyProfile.officeWifiOnly ? '#4ade80' : '#94a3b8'
+                      }}
+                    >
+                      Allow Other Wi-Fi / WFH
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isUpdatingNetwork}
+                      onClick={() => handleToggleWifiRestriction(true)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: companyProfile.officeWifiOnly ? '1.5px solid #ef4444' : '1px solid rgba(255,255,255,0.15)',
+                        background: companyProfile.officeWifiOnly ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                        color: companyProfile.officeWifiOnly ? '#f87171' : '#94a3b8'
+                      }}
+                    >
+                      Office Wi-Fi Only
+                    </button>
+                  </div>
+                </div>
+
+                {/* Office Wi-Fi Public IP Configuration */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', alignItems: 'center' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                      Configured Office Wi-Fi Public IP Address
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        placeholder="e.g. 122.164.88.10 or leave empty"
+                        defaultValue={companyProfile.officeWifiIp || ''}
+                        id="office-wifi-ip-input"
+                        className="input-field"
+                        style={{ padding: '0.55rem', fontSize: '0.88rem', fontFamily: 'monospace' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const val = document.getElementById('office-wifi-ip-input')?.value;
+                          handleSaveOfficeIp(val || '');
+                        }}
+                        className="btn btn-primary"
+                        style={{ padding: '0.55rem 1rem', fontSize: '0.82rem', whiteSpace: 'nowrap' }}
+                      >
+                        Save IP
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '10px', padding: '0.75rem 1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Your Current Connected Network IP:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          fetchNetworkInfo();
+                          if (currentNetworkIp) {
+                            const inp = document.getElementById('office-wifi-ip-input');
+                            if (inp) inp.value = currentNetworkIp;
+                            handleSaveOfficeIp(currentNetworkIp);
+                          }
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+                      >
+                        Set as Office IP
+                      </button>
+                    </div>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace', marginTop: '0.2rem' }}>
+                      {currentNetworkIp || 'Detecting network IP...'}
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>

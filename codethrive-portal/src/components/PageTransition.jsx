@@ -1,19 +1,11 @@
 import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 
+// Lightweight, rock-solid page container with zero animation failure or opacity-0 blank screen risk
 const PageTransition = ({ children }) => {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 1 }}
-      transition={{ duration: 0.08, ease: 'easeOut' }}
-      style={{ width: '100%', willChange: 'opacity' }}
-    >
+    <div style={{ width: '100%', minHeight: '100%' }}>
       {children}
-    </motion.div>
+    </div>
   );
 };
 

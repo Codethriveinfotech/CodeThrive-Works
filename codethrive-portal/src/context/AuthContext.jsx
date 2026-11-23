@@ -115,6 +115,7 @@ export const AuthProvider = ({ children }) => {
       return { 
         success: false, 
         notRegistered: isNotFound,
+        wifiRestricted: Boolean(err.response?.data?.wifiRestricted),
         message: extractErrorMessage(err, 'No account found. You need to register first.') 
       };
     }

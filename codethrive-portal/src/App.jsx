@@ -52,14 +52,11 @@ const Toast = ({ message, show }) => {
 };
 
 const PageLoader = () => (
-  <motion.div 
-    initial={{ opacity: 0 }} 
-    animate={{ opacity: 1 }} 
-    exit={{ opacity: 0 }}
+  <div 
     style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem 0', flexDirection: 'column' }}
   >
     <div className="loader-small" style={{ width: '30px', height: '30px', borderColor: 'var(--primary)', borderTopColor: 'transparent', animation: 'spin 0.6s linear infinite' }}></div>
-  </motion.div>
+  </div>
 );
 
 // Error Boundary to prevent blank screen crashes

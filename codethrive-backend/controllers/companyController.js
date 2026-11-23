@@ -109,3 +109,36 @@ exports.updateCompanyProfile = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// @desc    Get client IP & Office Wi-Fi access status
+// @route   GET /api/v1/company/network-info
+// @access  Public
+exports.getClientNetworkInfo = async (req, res) => {
+  try {
+    await ensureTable();
+    const result = await pool.query("SELECT value FROM system_settings WHERE key = 'company_profile' LIMIT 1");
+    const company = (result.rows.length > 0 && result.rows[0].value) ? result.rows[0].value : defaultCompanyData;
+
+    const rawIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip || '';
+    const clientIp = rawIp.split(',')[0].trim();
+
+    const officeWifiOnly = Boolean(company.officeWifiOnly);
+    const officeWifiIps = Array.isArray(company.officeWifiIps) 
+      ? company.officeWifiIps 
+      : (company.officeWifiIp ? [company.officeWifiIp] : []);
+
+    const isOfficeWifi = officeWifiIps.length === 0 || officeWifiIps.some(ip => ip && clientIp.includes(ip.trim()));
+    const isAllowed = !officeWifiOnly || isOfficeWifi;
+
+    res.status(200).json({
+      success: true,
+      clientIp,
+      officeWifiOnly,
+      officeWifiIps,
+      isOfficeWifi,
+      isAllowed
+    });
+  } catch (err) {
+    res.status(200).json({ success: true, clientIp: 'unknown', officeWifiOnly: false, isAllowed: true });
+  }
+};
