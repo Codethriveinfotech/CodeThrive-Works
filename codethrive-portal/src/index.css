@@ -633,3 +633,28 @@ body.light-mode .search-results-popover {
     font-size: 0.82rem !important;
   }
 }
+
+/* ============================================================
+   GLOBAL HIGH PERFORMANCE & DATE UPPERCASE FORMAT ENFORCEMENT
+   ============================================================ */
+
+html, body {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+}
+
+/* Force full uppercase format DD/MM/YYYY for all date inputs across desktop & mobile */
+input[type="date"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  text-transform: uppercase !important;
+}
+
+.date-input-container input {
+  text-transform: uppercase !important;
+}
+

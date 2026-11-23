@@ -158,12 +158,16 @@ const AdminAttendance = () => {
   }, []);
 
   const isRealEmployeeRow = (row) => {
-    const role = (row.role || '').toLowerCase();
+    const role = (row.role || row.user?.role || '').toLowerCase();
     const empId = (row.empCode || row.employeeId || '').toUpperCase();
-    const name = (row.fullName || '').toLowerCase();
-    if (role.includes('admin') || role.includes('superadmin') || role.includes('management')) return false;
+    const name = (row.fullName || row.name || '').toLowerCase();
+    const dept = (row.department || '').toLowerCase();
+    const email = (row.email || row.personalEmailAddress || '').toLowerCase();
+
+    if (role.includes('admin') || role.includes('superadmin') || dept === 'management') return false;
     if (empId === 'CTI-ADM-001' || empId.startsWith('CTI-ADM')) return false;
-    if (name.includes('codethrive admin') || name === 'system administrator') return false;
+    if (name.includes('codethrive admin') || name.includes('admin') || name === 'system administrator') return false;
+    if (email === 'admin@codethrive.com') return false;
     return true;
   };
 
@@ -218,8 +222,11 @@ const AdminAttendance = () => {
           const emp = r.employee || {};
           const empId = (emp.employeeId || r.empCode || '').toUpperCase();
           const name = (emp.fullName || r.fullName || '').toLowerCase();
+          const dept = (emp.department || r.department || '').toLowerCase();
+          const role = (emp.role || r.role || '').toLowerCase();
+          if (role.includes('admin') || role.includes('superadmin') || dept === 'management') return false;
           if (empId === 'CTI-ADM-001' || empId.startsWith('CTI-ADM')) return false;
-          if (name.includes('codethrive admin') || name === 'system administrator') return false;
+          if (name.includes('codethrive admin') || name.includes('admin') || name === 'system administrator') return false;
           return true;
         });
         setMonthlyData(cleanData);

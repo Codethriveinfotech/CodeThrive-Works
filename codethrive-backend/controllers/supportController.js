@@ -1,6 +1,6 @@
 const SupportTicket = require('../models/SupportTicket');
 const Employee = require('../models/Employee');
-const { createNotification } = require('./notificationController');
+const { createNotification, notifyAdminsAndHR } = require('./notificationController');
 
 // @desc    Create a support ticket
 // @route   POST /api/v1/support
@@ -24,6 +24,15 @@ exports.createTicket = async (req, res) => {
       employee: employee._id,
       attachments: attachmentUrl ? [attachmentUrl] : []
     });
+
+    // Notify Admins and HR of new service request ticket
+    await notifyAdminsAndHR(
+      `New Service Request (${ticketId})`,
+      `${employee.fullName} submitted a service request / ticket: "${ticket.subject || ticket.category || 'General Support'}"`,
+      'Support',
+      'Medium',
+      '/admin/support'
+    );
 
     res.status(201).json({ success: true, data: ticket });
   } catch (err) {

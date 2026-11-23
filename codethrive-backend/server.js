@@ -27,6 +27,7 @@ const documentRoutes = require('./routes/documentRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const adminAttendanceRoutes = require('./routes/adminAttendanceRoutes');
+const companyRoutes = require('./routes/companyRoutes');
 
 const app = express();
 
@@ -72,6 +73,11 @@ app.use('/api/v1/documents', documentRoutes);
 app.use('/api/v1/support', supportRoutes);
 app.use('/api/v1/leaves', leaveRoutes);
 app.use('/api/v1/admin/attendance', adminAttendanceRoutes);
+app.use('/api/v1/company', companyRoutes);
+
+app.get('/api/v1/health', (req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime(), timestamp: Date.now() });
+});
 
 app.get('/', (req, res) => {
   res.send('CodeThrive API is running...');
@@ -94,5 +100,11 @@ connectDB().then(async () => {
 
   app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+
+    // Self-ping to keep Render cloud server continuously warm and prevent cold-start lag
+    const https = require('https');
+    setInterval(() => {
+      https.get('https://codethrive-backend.onrender.com/api/v1/health', () => {}).on('error', () => {});
+    }, 10 * 60 * 1000); // Every 10 mins
   });
 });

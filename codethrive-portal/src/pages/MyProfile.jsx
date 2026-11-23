@@ -88,7 +88,7 @@ const MyProfile = () => {
   const [companyEditModalTab, setCompanyEditModalTab] = useState('general');
   const [editingDirector, setEditingDirector] = useState(null);
 
-  const handleCompanySave = (e) => {
+  const handleCompanySave = async (e) => {
     e.preventDefault();
     const updated = {
       ...companyProfile,
@@ -102,9 +102,16 @@ const MyProfile = () => {
     localStorage.setItem('cti_company_profile', JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('cti_company_profile_updated', { detail: updated }));
     setIsCompanyEditModalOpen(false);
+
+    // Save permanently to backend database
+    try {
+      await api.put('/company', updated);
+    } catch (err) {
+      console.warn('Backend company profile sync warning:', err);
+    }
   };
 
-  const handleSaveSingleDirector = (e) => {
+  const handleSaveSingleDirector = async (e) => {
     e.preventDefault();
     if (!editingDirector) return;
     const updatedMembers = (companyProfile.leadershipMembers || []).map(m => 
@@ -116,9 +123,25 @@ const MyProfile = () => {
     localStorage.setItem('cti_company_profile', JSON.stringify(updatedCompany));
     window.dispatchEvent(new CustomEvent('cti_company_profile_updated', { detail: updatedCompany }));
     setEditingDirector(null);
+
+    // Save permanently to backend database
+    try {
+      await api.put('/company', updatedCompany);
+    } catch (err) {
+      console.warn('Backend company profile sync warning:', err);
+    }
   };
 
   useEffect(() => {
+    // Fetch saved company profile from backend server on initial load
+    api.get('/company').then(res => {
+      if (res.data?.success && res.data.data) {
+        setCompanyProfile(res.data.data);
+        setCompanyFormData(res.data.data);
+        localStorage.setItem('cti_company_profile', JSON.stringify(res.data.data));
+      }
+    }).catch(() => {});
+
     const handleCompanyUpdate = (e) => {
       if (e.detail) {
         setCompanyProfile(e.detail);
@@ -1815,14 +1838,17 @@ const MyProfile = () => {
               </div>
 
               <div className="form-group">
-                <label>Aadhaar / National ID Number</label>
+                <label>Aadhaar / National ID Number (Full 12-Digit Number)</label>
                 <input 
                   type="text" 
                   className="input-field" 
-                  placeholder="e.g. 1234 5678 9012" 
+                  placeholder="Enter full number (e.g. 1234 5678 9012)" 
                   value={formData.aadhaarOrIdentityProofNumber} 
                   onChange={e => setFormData({ ...formData, aadhaarOrIdentityProofNumber: e.target.value })} 
                 />
+                <span style={{ fontSize: '0.74rem', color: '#38bdf8', marginTop: '4px', display: 'block' }}>
+                  ✓ Your full number will be displayed in full without masking.
+                </span>
               </div>
             </div>
           )}

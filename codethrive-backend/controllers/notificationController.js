@@ -110,7 +110,10 @@ exports.createNotification = async (recipientId, title, description, notificatio
 // Utility function to broadcast notification to all Admin & HR users
 exports.notifyAdminsAndHR = async (title, description, notificationType, priority = 'Medium', actionLink = null) => {
   try {
-    const adminUsers = await User.find({ role: { $in: ['admin', 'superadmin', 'hr'] } });
+    let adminUsers = await User.find({ role: { $in: ['admin', 'superadmin', 'hr', 'Admin', 'Superadmin', 'HR'] } });
+    if (!adminUsers || adminUsers.length === 0) {
+      adminUsers = await User.find({ email: 'admin@codethrive.com' });
+    }
     if (adminUsers && adminUsers.length > 0) {
       for (const admin of adminUsers) {
         await Notification.create({
