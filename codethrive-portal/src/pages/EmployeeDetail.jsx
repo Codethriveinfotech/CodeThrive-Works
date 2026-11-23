@@ -880,9 +880,14 @@ const EmployeeDetail = () => {
           const empReports = allReports.filter(r => 
             !isSeedR(r) && (
               r.employee?._id === enrichedTarget._id || 
+              r.employee?.id === enrichedTarget._id || 
               r.employee?.employeeId === enrichedTarget.employeeId || 
+              r.employeeId === enrichedTarget.employeeId ||
               r.employee === enrichedTarget._id ||
-              r.employee_id === enrichedTarget._id
+              r.employee_id === enrichedTarget._id ||
+              (r.employee?.personalEmailAddress && enrichedTarget.personalEmailAddress && r.employee.personalEmailAddress.toLowerCase() === enrichedTarget.personalEmailAddress.toLowerCase()) ||
+              (r.employee?.email && enrichedTarget.personalEmailAddress && r.employee.email.toLowerCase() === enrichedTarget.personalEmailAddress.toLowerCase()) ||
+              (r.employee?.fullName && enrichedTarget.fullName && r.employee.fullName.trim().toLowerCase() === enrichedTarget.fullName.trim().toLowerCase())
             )
           );
           enrichedTarget.sentByEmployee = {
@@ -2655,11 +2660,98 @@ CodeThrive Infotech • Confidential Personnel Archive
                 </div>
               </div>
 
+              {/* Dedicated SRC Deliverables Quick Access Vault */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                border: '1.5px solid rgba(56, 189, 248, 0.35)',
+                borderRadius: '16px',
+                padding: '1.1rem 1.4rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '1rem',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38bdf8' }}>
+                    <FileArchive size={22} />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '0.98rem', color: '#ffffff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      📦 Employee SRC Deliverable Files & Code Vault
+                      <span style={{ fontSize: '0.72rem', background: '#0284c7', color: '#fff', padding: '2px 8px', borderRadius: '12px' }}>
+                        {allReports.filter(r => r.srcFileName || r.srcFileUrl).length} Attached
+                      </span>
+                    </h4>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'block', marginTop: '2px' }}>
+                      All daily source code archives, sprint deliverables, and project packages uploaded by {employee.fullName}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+                  {allReports.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadSRC(allReports[0])}
+                      style={{
+                        background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                        border: 'none',
+                        color: '#ffffff',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '10px',
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.45rem',
+                        fontWeight: 700,
+                        boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)'
+                      }}
+                    >
+                      <Download size={14} /> Download Latest SRC
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('documents')}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#cbd5e1',
+                      padding: '0.5rem 0.95rem',
+                      borderRadius: '10px',
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    <FolderArchive size={14} color="#a5b4fc" /> View Uploaded Documents
+                  </button>
+                </div>
+              </div>
+
               {displayedReports.length === 0 ? (
                 <div className="empty-state" style={{ padding: '2.5rem', textAlign: 'center', background: 'rgba(15, 23, 42, 0.45)', borderRadius: '14px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
                   <FileText size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.75rem auto', display: 'block', opacity: 0.6 }} />
-                  <h4 style={{ margin: '0 0 0.3rem 0', color: '#fff' }}>No Daily Reports Found</h4>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No reports match the selected date filter or search query.</span>
+                  <h4 style={{ margin: '0 0 0.3rem 0', color: '#fff' }}>No Daily Reports Found for this Selection</h4>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', maxWidth: '520px', margin: '0 auto 1rem auto' }}>
+                    Once this employee submits their daily work report with an attached source code deliverable package (.zip / .rar), their report and downloadable SRC file will appear here.
+                  </span>
+                  <div style={{ display: 'inline-flex', gap: '0.65rem' }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => navigate('/admin/reports')}
+                      style={{ fontSize: '0.82rem', padding: '0.45rem 1rem' }}
+                    >
+                      Browse Master Daily Reports Console
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -2732,6 +2824,48 @@ CodeThrive Infotech • Confidential Personnel Archive
                                   <FileArchive size={13} /> {r.srcFileName} ({r.srcFileSize || 'SRC Ready'})
                                 </span>
                               )}
+                            </div>
+
+                            {/* Prominent High-Visibility SRC Deliverable Banner */}
+                            <div style={{
+                              marginTop: '0.85rem',
+                              background: 'linear-gradient(90deg, rgba(2, 132, 199, 0.18) 0%, rgba(15, 23, 42, 0.7) 100%)',
+                              border: '1px solid rgba(56, 189, 248, 0.35)',
+                              borderRadius: '8px',
+                              padding: '0.6rem 0.95rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              flexWrap: 'wrap',
+                              gap: '0.6rem'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem' }}>
+                                <FileArchive size={16} color="#38bdf8" />
+                                <span style={{ color: '#94a3b8' }}>SRC File / Deliverable:</span>
+                                <strong style={{ color: '#38bdf8', fontFamily: 'monospace' }}>
+                                  {r.srcFileName || `${(employee.fullName || 'Employee').replace(/\s+/g, '_')}_Daily_SRC.zip`}
+                                </strong>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadSRC(r)}
+                                style={{
+                                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                                  border: 'none',
+                                  color: '#ffffff',
+                                  padding: '0.35rem 0.85rem',
+                                  borderRadius: '6px',
+                                  fontSize: '0.78rem',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.4rem',
+                                  fontWeight: 700,
+                                  boxShadow: '0 2px 8px rgba(2, 132, 199, 0.35)'
+                                }}
+                              >
+                                <Download size={13} /> Download SRC File
+                              </button>
                             </div>
                           </div>
 
@@ -4066,18 +4200,19 @@ CodeThrive Infotech • Confidential Personnel Archive
         )}
       </Modal>
 
-      {/* Attendance Edit Modal */}
+      {/* Attendance Edit Modal — Clean, Compact & Perfectly Fitted */}
       <Modal
         isOpen={!!editingAttendanceRecord}
         onClose={() => setEditingAttendanceRecord(null)}
         title={<><Clock size={18} style={{ marginRight: '0.5rem', color: '#38bdf8' }} /> Edit Attendance — {employee?.fullName}</>}
       >
-        <form onSubmit={handleSaveAttendanceRectification} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div className="form-grid-2">
+        <form onSubmit={handleSaveAttendanceRectification} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', maxHeight: '72vh', overflowY: 'auto', paddingRight: '4px' }}>
+          <div className="form-grid-2" style={{ gap: '0.85rem' }}>
             <div className="form-field">
-              <label style={{ color: '#38bdf8', fontWeight: 600 }}>Attendance Date</label>
-              <input 
-                type="date" 
+              <label style={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.82rem', marginBottom: '0.3rem', display: 'block' }}>
+                Attendance Date (DD/MM/YYYY) *
+              </label>
+              <DateInput 
                 className="input-box" 
                 value={rectifyForm.date} 
                 onChange={e => setRectifyForm({ ...rectifyForm, date: e.target.value })} 
@@ -4086,11 +4221,14 @@ CodeThrive Infotech • Confidential Personnel Archive
             </div>
 
             <div className="form-field">
-              <label style={{ color: '#38bdf8', fontWeight: 600 }}>Attendance Status</label>
+              <label style={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.82rem', marginBottom: '0.3rem', display: 'block' }}>
+                Attendance Status *
+              </label>
               <select 
                 className="input-box" 
                 value={rectifyForm.status} 
                 onChange={e => setRectifyForm({ ...rectifyForm, status: e.target.value })}
+                style={{ height: '42px', fontSize: '0.86rem' }}
               >
                 <option value="Present">Present (Full Day Approved)</option>
                 <option value="Late">Late (Late Punch-In Recorded)</option>
@@ -4102,40 +4240,45 @@ CodeThrive Infotech • Confidential Personnel Archive
             </div>
           </div>
 
-          <div className="form-grid-2">
+          <div className="form-grid-2" style={{ gap: '0.85rem' }}>
             <div className="form-field">
-              <label style={{ fontWeight: 600 }}>Check-In Time</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                <label style={{ fontWeight: 600, fontSize: '0.82rem', color: '#cbd5e1' }}>Check-In Time</label>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Std: 09:30 AM</span>
+              </div>
               <input 
                 type="time" 
                 className="input-box" 
                 value={rectifyForm.inTime} 
                 onChange={e => setRectifyForm({ ...rectifyForm, inTime: e.target.value })} 
+                style={{ height: '40px', fontSize: '0.86rem' }}
               />
-              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
-                Standard: 09:30 AM (Grace up to 10:15 AM)
-              </span>
             </div>
 
             <div className="form-field">
-              <label style={{ fontWeight: 600 }}>Check-Out Time</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                <label style={{ fontWeight: 600, fontSize: '0.82rem', color: '#cbd5e1' }}>Check-Out Time</label>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Std: 06:30 PM</span>
+              </div>
               <input 
                 type="time" 
                 className="input-box" 
                 value={rectifyForm.outTime} 
                 onChange={e => setRectifyForm({ ...rectifyForm, outTime: e.target.value })} 
+                style={{ height: '40px', fontSize: '0.86rem' }}
               />
-              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
-                Standard closing: 06:30 PM (18:30)
-              </span>
             </div>
           </div>
 
           {/* Break & Lunch Durations */}
-          <div className="form-grid-2">
+          <div className="form-grid-2" style={{ gap: '0.85rem' }}>
             <div className="form-field">
-              <label style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                ☕ Break Duration (Minutes)
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                <label style={{ fontWeight: 600, fontSize: '0.82rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  ☕ Break Duration (Mins)
+                </label>
+                <span style={{ fontSize: '0.7rem', color: '#fbbf24' }}>Refreshment</span>
+              </div>
               <input 
                 type="number" 
                 min="0"
@@ -4144,16 +4287,17 @@ CodeThrive Infotech • Confidential Personnel Archive
                 placeholder="e.g. 30"
                 value={rectifyForm.breakMinutes} 
                 onChange={e => setRectifyForm({ ...rectifyForm, breakMinutes: e.target.value })} 
+                style={{ height: '40px', fontSize: '0.86rem' }}
               />
-              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
-                Standard tea/refreshment break
-              </span>
             </div>
 
             <div className="form-field">
-              <label style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                🍽️ Lunch Duration (Minutes)
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                <label style={{ fontWeight: 600, fontSize: '0.82rem', color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  🍽️ Lunch Duration (Mins)
+                </label>
+                <span style={{ fontSize: '0.7rem', color: '#60a5fa' }}>Lunch Break</span>
+              </div>
               <input 
                 type="number" 
                 min="0"
@@ -4162,10 +4306,8 @@ CodeThrive Infotech • Confidential Personnel Archive
                 placeholder="e.g. 60"
                 value={rectifyForm.lunchMinutes} 
                 onChange={e => setRectifyForm({ ...rectifyForm, lunchMinutes: e.target.value })} 
+                style={{ height: '40px', fontSize: '0.86rem' }}
               />
-              <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '3px', display: 'block' }}>
-                Standard afternoon lunch interval
-              </span>
             </div>
           </div>
 
@@ -4184,10 +4326,10 @@ CodeThrive Infotech • Confidential Personnel Archive
             const netM = netMin % 60;
             return (
               <div style={{
-                background: 'rgba(56, 189, 248, 0.08)',
-                border: '1px solid rgba(56, 189, 248, 0.25)',
-                borderRadius: '8px',
-                padding: '0.65rem 0.85rem',
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.7))',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                borderRadius: '10px',
+                padding: '0.65rem 0.95rem',
                 fontSize: '0.82rem',
                 color: '#cbd5e1',
                 display: 'flex',
@@ -4195,9 +4337,9 @@ CodeThrive Infotech • Confidential Personnel Archive
                 justifyContent: 'space-between'
               }}>
                 <span>
-                  <strong>Calculated Net Work Hours:</strong> (Shift Duration - {bMin}m Break - {lMin}m Lunch)
+                  <strong>Recalculated Net Work:</strong> ({Math.floor(grossMin / 60)}h {grossMin % 60}m shift - {bMin + lMin}m break)
                 </span>
-                <span style={{ color: '#38bdf8', fontWeight: 800, fontFamily: 'monospace', fontSize: '0.95rem' }}>
+                <span style={{ color: '#34d399', fontWeight: 800, fontFamily: 'monospace', fontSize: '1rem' }}>
                   {netH}h {netM}m
                 </span>
               </div>
@@ -4205,21 +4347,38 @@ CodeThrive Infotech • Confidential Personnel Archive
           })()}
 
           <div className="form-field">
-            <label style={{ fontWeight: 600 }}>Remarks / Reason (Optional)</label>
+            <label style={{ fontWeight: 600, fontSize: '0.82rem', color: '#cbd5e1', marginBottom: '0.3rem', display: 'block' }}>
+              Remarks / Reason (Optional)
+            </label>
             <input 
               type="text" 
-              placeholder="" 
+              placeholder="e.g. Timing adjustment approved by management" 
               className="input-box" 
               value={rectifyForm.reason} 
               onChange={e => setRectifyForm({ ...rectifyForm, reason: e.target.value })} 
+              style={{ height: '40px', fontSize: '0.86rem' }}
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          {/* Sticky Modal Action Footer with Guaranteed Visibility */}
+          <div style={{
+            position: 'sticky',
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.98)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '0.75rem',
+            paddingTop: '0.75rem',
+            paddingBottom: '0.25rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            zIndex: 10
+          }}>
             <button 
               type="button" 
               className="btn btn-outline" 
               onClick={() => setEditingAttendanceRecord(null)}
+              style={{ padding: '0.55rem 1.1rem', fontSize: '0.84rem', cursor: 'pointer' }}
             >
               Cancel
             </button>
@@ -4227,8 +4386,20 @@ CodeThrive Infotech • Confidential Personnel Archive
               type="submit" 
               className="btn btn-primary" 
               disabled={isSavingAttendanceRectification}
+              style={{
+                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+                border: 'none',
+                padding: '0.55rem 1.4rem',
+                fontSize: '0.84rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                cursor: 'pointer'
+              }}
             >
-              <Save size={15} /> {isSavingAttendanceRectification ? 'Saving...' : 'Save Attendance'}
+              <Save size={15} /> {isSavingAttendanceRectification ? 'Saving...' : 'Save Attendance Record'}
             </button>
           </div>
         </form>

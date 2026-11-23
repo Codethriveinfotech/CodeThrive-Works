@@ -29,6 +29,14 @@ exports.getEmployees = async (req, res) => {
       if (email === 'admin@codethrive.com') return false;
       return true;
     });
+
+    // Always sort employees alphabetically A-Z by full name
+    employees.sort((a, b) => {
+      const nameA = (a.fullName || '').trim().toLowerCase();
+      const nameB = (b.fullName || '').trim().toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+
     res.status(200).json({ success: true, count: employees.length, data: employees });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

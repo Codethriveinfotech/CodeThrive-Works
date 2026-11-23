@@ -47,6 +47,27 @@ const getBadgeClass = (status) => {
   return map[status] || 'not-in';
 };
 
+const getStatusPillStyle = (status) => {
+  switch ((status || '').toLowerCase()) {
+    case 'present':
+    case 'working':
+      return { background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.4)' };
+    case 'absent':
+      return { background: 'rgba(248, 113, 113, 0.15)', color: '#f87171', border: '1px solid rgba(248, 113, 113, 0.4)' };
+    case 'on leave':
+    case 'leave':
+      return { background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.4)' };
+    case 'half day':
+      return { background: 'rgba(251, 146, 60, 0.15)', color: '#fb923c', border: '1px solid rgba(251, 146, 60, 0.4)' };
+    case 'late':
+      return { background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.4)' };
+    case 'permission':
+      return { background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.4)' };
+    default:
+      return { background: 'rgba(255, 255, 255, 0.08)', color: '#e2e8f0', border: '1px solid rgba(255, 255, 255, 0.15)' };
+  }
+};
+
 const MONTHS = [
   'January','February','March','April','May','June',
   'July','August','September','October','November','December'
@@ -297,14 +318,20 @@ const AdminAttendance = () => {
   };
 
   // ─── Filtered list ─────────────────────────────────────────
-  const filteredRegister = register.filter(r => {
-    const matchSearch = search === '' ||
-      r.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-      r.empCode?.toLowerCase().includes(search.toLowerCase()) ||
-      r.department?.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filterStatus === 'ALL' || r._localStatus === filterStatus;
-    return matchSearch && matchFilter;
-  });
+  const filteredRegister = register
+    .filter(r => {
+      const matchSearch = search === '' ||
+        r.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+        r.empCode?.toLowerCase().includes(search.toLowerCase()) ||
+        r.department?.toLowerCase().includes(search.toLowerCase());
+      const matchFilter = filterStatus === 'ALL' || r._localStatus === filterStatus;
+      return matchSearch && matchFilter;
+    })
+    .sort((a, b) => {
+      const nameA = (a.fullName || '').trim().toLowerCase();
+      const nameB = (b.fullName || '').trim().toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
   // ─── Nav date ──────────────────────────────────────────────
   const shiftDate = (days) => {
@@ -566,7 +593,7 @@ const AdminAttendance = () => {
                             </span>
                           </td>
 
-                          {/* Status Dropdown with Edited tag */}
+                          {/* Status Dropdown with Capsule Pill Badge & Edited tag */}
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                               <select
@@ -574,6 +601,18 @@ const AdminAttendance = () => {
                                 value={row._localStatus}
                                 onChange={e => handleFieldChange(row.employeeId, '_localStatus', e.target.value)}
                                 id={`aa-status-${row.employeeId}`}
+                                style={{
+                                  ...getStatusPillStyle(row._localStatus),
+                                  borderRadius: '20px',
+                                  fontWeight: 700,
+                                  fontSize: '0.74rem',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.04em',
+                                  padding: '0.28rem 0.75rem',
+                                  cursor: 'pointer',
+                                  outline: 'none',
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                                }}
                               >
                                 {STATUS_OPTIONS.map(s => (
                                   <option key={s} value={s}>{s}</option>
@@ -588,7 +627,7 @@ const AdminAttendance = () => {
                             </div>
                           </td>
 
-                          {/* Actions: Save button & Edit button */}
+                          {/* Actions: Save button & Edit button matching Employee page */}
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                               <button
@@ -608,6 +647,20 @@ const AdminAttendance = () => {
                                 onClick={() => handleOpenEditModal(row)}
                                 id={`aa-edit-row-${row.employeeId}`}
                                 title="Adjust timing, break and lunch"
+                                style={{
+                                  padding: '0.35rem 0.65rem',
+                                  fontSize: '0.78rem',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.35rem',
+                                  borderRadius: '8px',
+                                  border: '1px solid rgba(99, 102, 241, 0.4)',
+                                  color: '#a5b4fc',
+                                  background: 'rgba(99, 102, 241, 0.1)',
+                                  cursor: 'pointer',
+                                  fontWeight: 600,
+                                  whiteSpace: 'nowrap'
+                                }}
                               >
                                 <Pencil size={12} /> Edit
                               </button>
@@ -730,16 +783,13 @@ const AdminAttendance = () => {
         onClose={() => setEditingRow(null)}
         title={<><Clock size={18} style={{ marginRight: '0.5rem', color: '#38bdf8' }} /> Edit Attendance — {editingRow?.fullName}</>}
       >
-        <form onSubmit={handleSaveModal} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <form onSubmit={handleSaveModal} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', maxHeight: '72vh', overflowY: 'auto', paddingRight: '4px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div>
-              <label style={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem' }}>Attendance Date</label>
-              <input 
-                type="text" 
-                className="aa-time-input" 
-                value={selectedDate} 
-                disabled 
-                style={{ width: '100%', padding: '0.55rem', opacity: 0.7, cursor: 'not-allowed', color: '#fff' }}
+              <label style={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.82rem', display: 'block', marginBottom: '0.35rem' }}>Attendance Date (DD/MM/YYYY)</label>
+              <DateInput
+                value={selectedDate}
+                disabled
               />
             </div>
 
@@ -858,12 +908,24 @@ const AdminAttendance = () => {
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.75rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{
+            position: 'sticky',
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.98)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '0.75rem',
+            paddingTop: '0.75rem',
+            paddingBottom: '0.25rem',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            zIndex: 10
+          }}>
             <button 
               type="button" 
               className="btn btn-outline" 
               onClick={() => setEditingRow(null)}
-              style={{ padding: '0.5rem 1rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff', cursor: 'pointer' }}
+              style={{ padding: '0.55rem 1.1rem', fontSize: '0.84rem', cursor: 'pointer' }}
             >
               Cancel
             </button>
@@ -871,7 +933,18 @@ const AdminAttendance = () => {
               type="submit" 
               className="btn btn-primary" 
               disabled={modalSaving}
-              style={{ padding: '0.5rem 1.25rem', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}
+              style={{
+                background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+                border: 'none',
+                padding: '0.55rem 1.4rem',
+                fontSize: '0.84rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                cursor: 'pointer'
+              }}
             >
               <Save size={15} /> {modalSaving ? 'Saving...' : 'Save Attendance'}
             </button>

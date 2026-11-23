@@ -73,6 +73,14 @@ const Employees = () => {
         if (name.includes('codethrive admin') || name === 'system administrator') return false;
         return email !== 'admin@codethrive.com';
       });
+
+      // Strictly enforce Alphabetical Order A-Z by full name
+      filtered.sort((a, b) => {
+        const nameA = (a.fullName || a.name || '').trim().toLowerCase();
+        const nameB = (b.fullName || b.name || '').trim().toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+
       setEmployees(filtered);
     } catch (err) {
       console.warn('API error fetching employees:', err);
@@ -169,22 +177,28 @@ const Employees = () => {
     }
   };
 
-  const filteredEmployees = employees.filter(emp => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = !q || 
-      emp.fullName?.toLowerCase().includes(q) || 
-      emp.employeeId?.toLowerCase().includes(q) || 
-      emp.personalEmailAddress?.toLowerCase().includes(q) ||
-      emp.email?.toLowerCase().includes(q) ||
-      emp.designation?.toLowerCase().includes(q) ||
-      emp.role?.toLowerCase().includes(q);
+  const filteredEmployees = employees
+    .filter(emp => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch = !q || 
+        emp.fullName?.toLowerCase().includes(q) || 
+        emp.employeeId?.toLowerCase().includes(q) || 
+        emp.personalEmailAddress?.toLowerCase().includes(q) ||
+        emp.email?.toLowerCase().includes(q) ||
+        emp.designation?.toLowerCase().includes(q) ||
+        emp.role?.toLowerCase().includes(q);
 
-    const matchesDept = !filterDept || emp.department === filterDept;
-    const matchesStatus = !filterStatus || emp.status === filterStatus;
-    const matchesRole = !filterRole || emp.user?.role === filterRole || emp.role === filterRole;
+      const matchesDept = !filterDept || emp.department === filterDept;
+      const matchesStatus = !filterStatus || emp.status === filterStatus;
+      const matchesRole = !filterRole || emp.user?.role === filterRole || emp.role === filterRole;
 
-    return matchesSearch && matchesDept && matchesStatus && matchesRole;
-  });
+      return matchesSearch && matchesDept && matchesStatus && matchesRole;
+    })
+    .sort((a, b) => {
+      const nameA = (a.fullName || a.name || '').trim().toLowerCase();
+      const nameB = (b.fullName || b.name || '').trim().toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
   const totalRegistered = employees.length;
   const activeWorking = employees.filter(e => e.status !== 'Inactive').length;
