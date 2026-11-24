@@ -74,6 +74,12 @@ class ErrorBoundary extends React.Component {
     console.error("UI Render Error Caught:", error, errorInfo);
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.location !== prevProps.location && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       return (

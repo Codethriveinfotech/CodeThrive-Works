@@ -14,7 +14,7 @@ import { generateEmployeeMasterDossierPDF } from '../utils/employeeMasterDossier
 import { 
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
   KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard,
-  GraduationCap, Sparkles, Landmark, CheckCircle2, Search, Eye, FileCode, CheckSquare, Layers, AlertCircle, FileArchive,
+  GraduationCap, Sparkles, Landmark, CheckCircle2, Search, Eye, FileCode, CheckSquare, Layers, AlertCircle, FileArchive, FolderArchive,
   Trash2, AlignLeft, Settings, Pencil
 } from 'lucide-react';
 import Card from '../components/common/Card';
@@ -260,14 +260,76 @@ const DEFAULT_DEMO_EMPLOYEES = [
   }
 ];
 
+// High-performance clean employee normalizer
+const enrichEmployee = (target) => {
+  if (!target) return null;
+  return {
+    ...target,
+    qualification: target.qualification || '',
+    collegeName: target.collegeName || '',
+    universityName: target.universityName || '',
+    graduationYear: target.graduationYear || '',
+    cgpaOrPercentage: target.cgpaOrPercentage || '',
+    previousCompany: target.previousCompany || '',
+    bankAccountHolderName: target.bankAccountHolderName || target.fullName || '',
+    bankName: target.bankName || '',
+    accountNumber: target.accountNumber || '',
+    ifscCode: target.ifscCode || '',
+    branchName: target.branchName || '',
+    panNumber: target.panNumber || '',
+    aadhaarOrIdentityProofNumber: target.aadhaarOrIdentityProofNumber || '',
+    upiId: target.upiId || '',
+    dateOfBirth: target.dateOfBirth || '',
+    gender: target.gender || 'Not Specified',
+    bloodGroup: target.bloodGroup || '',
+    maritalStatus: target.maritalStatus || '',
+    nationality: target.nationality || 'Indian',
+    workLocation: target.workLocation || 'Office',
+    skills: Array.isArray(target.skills) ? target.skills : [],
+    currentAddress: target.currentAddress || '',
+    permanentAddress: target.permanentAddress || '',
+    emergencyContact: (() => {
+      let ec = target.emergencyContact || target.emergency_contact_details || target.emergency_contact;
+      if (typeof ec === 'string') {
+        try { ec = JSON.parse(ec); } catch { ec = { name: ec, phone: '', relationship: '' }; }
+      }
+      return (ec && typeof ec === 'object') ? ec : null;
+    })(),
+    sentByEmployee: {
+      dailyReports: target.sentByEmployee?.dailyReports || [],
+      leaveApplications: target.sentByEmployee?.leaveApplications || [],
+      uploadedDocs: target.sentByEmployee?.uploadedDocs || [],
+      payslips: target.sentByEmployee?.payslips || []
+    },
+    assignedByAdmin: {
+      tasks: target.assignedByAdmin?.tasks || [],
+      notificationsSent: target.assignedByAdmin?.notificationsSent || []
+    }
+  };
+};
+
 const EmployeeDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Instant 0ms Paint: Read cached employee record immediately so page renders with zero spinner delay
+  const getInitialEmployee = () => {
+    try {
+      const cached = sessionStorage.getItem('cti_cached_employees');
+      if (cached) {
+        const list = JSON.parse(cached);
+        const found = list.find(e => e._id === id || e.employeeId === id) || (id ? null : list[0]);
+        if (found) return enrichEmployee(found);
+      }
+    } catch {}
+    return null;
+  };
+
+  const initialEmp = getInitialEmployee();
   const [allEmployees, setAllEmployees] = useState(DEFAULT_DEMO_EMPLOYEES);
-  const [employee, setEmployee] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [employee, setEmployee] = useState(initialEmp);
+  const [loading, setLoading] = useState(!initialEmp);
   const [contactModal, setContactModal] = useState({ isOpen: false, name: '', phone: '' });
 
   // Month Audit Filter State: Default 'All' (All-Time Continuous History)
@@ -334,10 +396,10 @@ const EmployeeDetail = () => {
   }, [id]);
 
   useEffect(() => {
-    if (employee) {
+    if (employee?._id || employee?.employeeId) {
       fetchEmployeeAttendance(employee);
     }
-  }, [employee, selectedAuditMonth]);
+  }, [employee?._id, employee?.employeeId, selectedAuditMonth]);
 
   const fetchEmployeeAttendance = async (emp) => {
     try {
@@ -778,147 +840,91 @@ const EmployeeDetail = () => {
 
   const fetchEmployeeData = async () => {
     try {
-      setLoading(true);
-      const res = await api.get('/employees');
+      if (!employee) {
+        setLoading(true);
+      }
+
+      // Fast Concurrent Data Loading (all 4 APIs run in parallel in a single roundtrip)
+      const [empResult, taskResult, reportResult, payResult] = await Promise.allSettled([
+        api.get('/employees').catch(() => null),
+        api.get('/tasks').catch(() => null),
+        api.get('/daily-reports').catch(() => null),
+        api.get('/payroll').catch(() => null)
+      ]);
+
+      const empRes = empResult.status === 'fulfilled' ? empResult.value : null;
+      const taskRes = taskResult.status === 'fulfilled' ? taskResult.value : null;
+      const reportRes = reportResult.status === 'fulfilled' ? reportResult.value : null;
+      const payRes = payResult.status === 'fulfilled' ? payResult.value : null;
+
       let list = DEFAULT_DEMO_EMPLOYEES;
-      if (res.data.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        list = res.data.data.map((emp) => ({
-          ...emp,
-          sentByEmployee: {
-            dailyReports: [],
-            leaveApplications: [],
-            uploadedDocs: [],
-            payslips: []
-          },
-          assignedByAdmin: {
-            tasks: [],
-            notificationsSent: []
-          }
-        }));
+      if (empRes?.data?.success && Array.isArray(empRes.data.data) && empRes.data.data.length > 0) {
+        list = empRes.data.data.map(enrichEmployee);
+        try {
+          sessionStorage.setItem('cti_cached_employees', JSON.stringify(list));
+        } catch {}
       }
       setAllEmployees(list);
 
-      const target = list.find(e => e._id === id || e.employeeId === id) || list[0] || {};
-      
-      // Enrich target with clean profile fields without fake dummy fallbacks
-      const enrichedTarget = {
-        ...target,
-        qualification: target.qualification || '',
-        collegeName: target.collegeName || '',
-        universityName: target.universityName || '',
-        graduationYear: target.graduationYear || '',
-        cgpaOrPercentage: target.cgpaOrPercentage || '',
-        previousCompany: target.previousCompany || '',
-        bankAccountHolderName: target.bankAccountHolderName || target.fullName || '',
-        bankName: target.bankName || '',
-        accountNumber: target.accountNumber || '',
-        ifscCode: target.ifscCode || '',
-        branchName: target.branchName || '',
-        panNumber: target.panNumber || '',
-        aadhaarOrIdentityProofNumber: target.aadhaarOrIdentityProofNumber || '',
-        upiId: target.upiId || '',
-        dateOfBirth: target.dateOfBirth || '',
-        gender: target.gender || 'Not Specified',
-        bloodGroup: target.bloodGroup || '',
-        maritalStatus: target.maritalStatus || '',
-        nationality: target.nationality || 'Indian',
-        workLocation: target.workLocation || 'Office',
-        skills: Array.isArray(target.skills) ? target.skills : [],
-        currentAddress: target.currentAddress || '',
-        permanentAddress: target.permanentAddress || '',
-        emergencyContact: (() => {
-          let ec = target.emergencyContact || target.emergency_contact_details || target.emergency_contact;
-          if (typeof ec === 'string') {
-            try { ec = JSON.parse(ec); } catch { ec = { name: ec, phone: '', relationship: '' }; }
-          }
-          return (ec && typeof ec === 'object') ? ec : null;
-        })(),
-        sentByEmployee: {
-          dailyReports: [],
-          leaveApplications: [],
-          uploadedDocs: [],
-          payslips: []
-        },
-        assignedByAdmin: {
-          tasks: [],
-          notificationsSent: []
-        }
-      };
+      const targetRaw = list.find(e => e._id === id || e.employeeId === id) || (employee || list[0] || {});
+      const enrichedTarget = enrichEmployee(targetRaw);
 
       // Helpers to exclude seed/dummy records
       const isSeedT = (t) => ['TSK-101', 'TSK-102', 'TSK-103'].includes(t?.taskId) || (t?.title && t.title.includes('OAuth Authentication'));
       const isSeedR = (r) => (r?.tasksWorked && r.tasksWorked.includes('authentication API unit tests')) || (r?.srcFileName === 'CodeThrive_Audit_Engine_SRC.zip');
       const isSeedP = (p) => p?.payslipId === 'PAY-2026-09-001' || p?.month === 'September 2026' || p?._id === 'psl_demo_001';
 
-      // Fetch tasks for this employee from backend
-      try {
-        const taskRes = await api.get('/tasks');
-        const allTasks = taskRes?.data?.data || taskRes?.data || [];
-        if (Array.isArray(allTasks) && allTasks.length > 0) {
-          const empTasks = allTasks.filter(t => 
-            !isSeedT(t) && (
-              t.assignedTo?._id === enrichedTarget._id || 
-              t.assignedTo?.employeeId === enrichedTarget.employeeId || 
-              t.assignedTo === enrichedTarget._id ||
-              t.assignedTo === enrichedTarget.employeeId
-            )
-          );
-          enrichedTarget.assignedByAdmin = {
-            ...enrichedTarget.assignedByAdmin,
-            tasks: empTasks
-          };
-        }
-      } catch (taskErr) {
-        console.warn('Could not fetch tasks from server', taskErr);
+      // Match Tasks for this employee
+      const allTasks = taskRes?.data?.data || taskRes?.data || [];
+      if (Array.isArray(allTasks) && allTasks.length > 0) {
+        const empTasks = allTasks.filter(t => 
+          !isSeedT(t) && (
+            t.assignedTo?._id === enrichedTarget._id || 
+            t.assignedTo?.employeeId === enrichedTarget.employeeId || 
+            t.assignedTo === enrichedTarget._id ||
+            t.assignedTo === enrichedTarget.employeeId
+          )
+        );
+        enrichedTarget.assignedByAdmin.tasks = empTasks;
       }
 
-      // Fetch daily reports for this employee from backend
-      try {
-        const reportRes = await api.get('/daily-reports');
-        const allReports = reportRes?.data?.data || reportRes?.data || [];
-        if (Array.isArray(allReports) && allReports.length > 0) {
-          const empReports = allReports.filter(r => 
-            !isSeedR(r) && (
-              r.employee?._id === enrichedTarget._id || 
-              r.employee?.id === enrichedTarget._id || 
-              r.employee?.employeeId === enrichedTarget.employeeId || 
-              r.employeeId === enrichedTarget.employeeId ||
-              r.employee === enrichedTarget._id ||
-              r.employee_id === enrichedTarget._id ||
-              (r.employee?.personalEmailAddress && enrichedTarget.personalEmailAddress && r.employee.personalEmailAddress.toLowerCase() === enrichedTarget.personalEmailAddress.toLowerCase()) ||
-              (r.employee?.email && enrichedTarget.personalEmailAddress && r.employee.email.toLowerCase() === enrichedTarget.personalEmailAddress.toLowerCase()) ||
-              (r.employee?.fullName && enrichedTarget.fullName && r.employee.fullName.trim().toLowerCase() === enrichedTarget.fullName.trim().toLowerCase())
-            )
-          );
-          enrichedTarget.sentByEmployee = {
-            ...enrichedTarget.sentByEmployee,
-            dailyReports: empReports
-          };
-        }
-      } catch (repErr) {
-        console.warn('Could not fetch daily reports from server', repErr);
+      // Match Daily Reports (Comprehensive match across ID, EmployeeID, Email, and Name)
+      const allReports = reportRes?.data?.data || reportRes?.data || [];
+      if (Array.isArray(allReports) && allReports.length > 0) {
+        const empReports = allReports.filter(r => {
+          if (isSeedR(r)) return false;
+          const rEmp = r.employee || {};
+          const rId = typeof rEmp === 'object' ? (rEmp._id || rEmp.id || rEmp.employeeId) : rEmp;
+          if (rId && (rId === enrichedTarget._id || rId === enrichedTarget.employeeId)) return true;
+          if (r.employeeId && (r.employeeId === enrichedTarget.employeeId || r.employeeId === enrichedTarget._id)) return true;
+          if (r.employee_id && (r.employee_id === enrichedTarget._id || r.employee_id === enrichedTarget.employeeId)) return true;
+          if (r.employee === enrichedTarget._id || r.employee === enrichedTarget.employeeId) return true;
+
+          const rEmail = (rEmp.personalEmailAddress || rEmp.email || r.email || '').toLowerCase();
+          const targetEmail = (enrichedTarget.personalEmailAddress || enrichedTarget.email || '').toLowerCase();
+          if (targetEmail && rEmail && targetEmail === rEmail) return true;
+
+          const rName = (rEmp.fullName || r.employeeName || r.fullName || '').trim().toLowerCase();
+          const targetName = (enrichedTarget.fullName || '').trim().toLowerCase();
+          if (targetName && rName && targetName === rName) return true;
+
+          return false;
+        });
+        enrichedTarget.sentByEmployee.dailyReports = empReports;
       }
 
-      // Fetch payslips for this employee from backend
-      try {
-        const payRes = await api.get('/payroll');
-        const allPayslips = payRes?.data?.data || payRes?.data || [];
-        if (Array.isArray(allPayslips) && allPayslips.length > 0) {
-          const empPayslips = allPayslips.filter(p => 
-            !isSeedP(p) && (
-              p.employee?._id === enrichedTarget._id || 
-              p.employee?.employeeId === enrichedTarget.employeeId || 
-              p.employee === enrichedTarget._id ||
-              p.employee === enrichedTarget.employeeId
-            )
-          );
-          enrichedTarget.sentByEmployee = {
-            ...enrichedTarget.sentByEmployee,
-            payslips: empPayslips
-          };
-        }
-      } catch (payErr) {
-        console.warn('Could not fetch payroll from server', payErr);
+      // Match Payslips
+      const allPayslips = payRes?.data?.data || payRes?.data || [];
+      if (Array.isArray(allPayslips) && allPayslips.length > 0) {
+        const empPayslips = allPayslips.filter(p => 
+          !isSeedP(p) && (
+            p.employee?._id === enrichedTarget._id || 
+            p.employee?.employeeId === enrichedTarget.employeeId || 
+            p.employee === enrichedTarget._id ||
+            p.employee === enrichedTarget.employeeId
+          )
+        );
+        enrichedTarget.sentByEmployee.payslips = empPayslips;
       }
 
       // Merge localStorage payslips
@@ -928,7 +934,7 @@ const EmployeeDetail = () => {
         if (localPayslips.length > 0) {
           const existingMonths = new Set((enrichedTarget.sentByEmployee?.payslips || []).map(p => p.month || p.payslipId));
           const merged = [...localPayslips.filter(p => !existingMonths.has(p.month || p.payslipId)), ...(enrichedTarget.sentByEmployee?.payslips || [])];
-          enrichedTarget.sentByEmployee = { ...enrichedTarget.sentByEmployee, payslips: merged };
+          enrichedTarget.sentByEmployee.payslips = merged;
         }
       } catch (e) {}
 
@@ -939,7 +945,7 @@ const EmployeeDetail = () => {
         if (localTasks.length > 0) {
           const existingIds = new Set((enrichedTarget.assignedByAdmin?.tasks || []).map(t => t._id || t.taskId));
           const merged = [...localTasks.filter(t => !existingIds.has(t._id || t.taskId)), ...(enrichedTarget.assignedByAdmin?.tasks || [])];
-          enrichedTarget.assignedByAdmin = { ...enrichedTarget.assignedByAdmin, tasks: merged };
+          enrichedTarget.assignedByAdmin.tasks = merged;
         }
       } catch (e) {}
 
@@ -955,30 +961,11 @@ const EmployeeDetail = () => {
       }
       initFormState(enrichedTarget);
     } catch (err) {
-      console.warn('API Offline. Using default employee data.', err);
-      const target = DEFAULT_DEMO_EMPLOYEES.find(e => e._id === id || e.employeeId === id) || DEFAULT_DEMO_EMPLOYEES[0];
-      // Merge localStorage payslips if offline
-      try {
-        const cachedPayKey = `cti_payslips_${target._id || target.employeeId}`;
-        const localPayslips = (JSON.parse(localStorage.getItem(cachedPayKey) || '[]')).filter(p => !isSeedP(p));
-        if (localPayslips.length > 0) {
-          const existingMonths = new Set((target.sentByEmployee?.payslips || []).map(p => p.month || p.payslipId));
-          const merged = [...localPayslips.filter(p => !existingMonths.has(p.month || p.payslipId)), ...(target.sentByEmployee?.payslips || [])];
-          target.sentByEmployee = { ...target.sentByEmployee, payslips: merged };
-        }
-      } catch (e) {}
-
-      setEmployee(target);
-      if (target) {
-        sessionStorage.setItem('cti_current_viewed_emp', JSON.stringify({
-          id: target._id || target.employeeId,
-          _id: target._id,
-          employeeId: target.employeeId,
-          fullName: target.fullName
-        }));
-        window.dispatchEvent(new Event('storage'));
-      }
-      initFormState(target);
+      console.warn('API error in employee details:', err);
+      const fallback = DEFAULT_DEMO_EMPLOYEES.find(e => e._id === id || e.employeeId === id) || DEFAULT_DEMO_EMPLOYEES[0];
+      const enrichedFallback = enrichEmployee(fallback);
+      setEmployee(enrichedFallback);
+      initFormState(enrichedFallback);
     } finally {
       setLoading(false);
     }

@@ -82,6 +82,9 @@ const Employees = () => {
       });
 
       setEmployees(filtered);
+      try {
+        sessionStorage.setItem('cti_cached_employees', JSON.stringify(filtered));
+      } catch {}
     } catch (err) {
       console.warn('API error fetching employees:', err);
       setEmployees([]);
@@ -91,6 +94,9 @@ const Employees = () => {
   };
 
   const handleOpenEmployeePage = (empId) => {
+    try {
+      sessionStorage.setItem('cti_cached_employees', JSON.stringify(employees));
+    } catch {}
     navigate(`/admin/employees/${empId}`);
   };
 
