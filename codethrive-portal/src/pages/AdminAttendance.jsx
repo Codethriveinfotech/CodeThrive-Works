@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import {
   Search, Save, CheckCircle2, RefreshCw,
   ChevronLeft, ChevronRight, CalendarDays, AlertCircle,
-  Pencil, Clock, LogIn, LogOut, Coffee, Utensils
+  Pencil, Clock, LogIn, LogOut, Coffee, Utensils,
+  Users, UserCheck, UserX, CalendarOff, AlertTriangle, Sparkles, BarChart2,
+  CalendarCheck
 } from 'lucide-react';
 import DateInput, { toIsoDate } from '../components/common/DateInput';
 import Modal from '../components/common/Modal';
@@ -347,26 +350,60 @@ const AdminAttendance = () => {
   return (
     <div className="aa-page">
       {/* Hero */}
-      <div className="aa-hero">
+      <motion.div 
+        className="aa-hero"
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+      >
+        <div className="aa-hero-ambient" />
         <div className="aa-hero-content">
-          <h1>📋 Attendance Register</h1>
-          <p>Mark and manage daily employee attendance — school/college style register for your entire team</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <div className="aa-hero-badge">
+                <Sparkles size={13} className="aa-spin-slow" />
+                <span>Executive Personnel Vault</span>
+                <span className="aa-live-pulse-dot" />
+                <span style={{ color: '#34d399', fontSize: '0.72rem', fontWeight: 700 }}>LIVE AUDIT</span>
+              </div>
+              <h1 className="aa-hero-title">Attendance Register</h1>
+              <p className="aa-hero-desc">
+                Real-time operational audit • Mark and manage daily employee attendance with instantaneous session sync
+              </p>
+            </div>
+
+            {selectedDate !== today && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedDate(today)}
+                className="aa-today-jump-btn"
+                title="Jump to Today's Register"
+              >
+                <CalendarCheck size={14} /> Jump to Today
+              </motion.button>
+            )}
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Tabs */}
-      <div className="aa-tabs">
+      <div className="aa-tabs-container">
         <button
-          className={`aa-tab ${activeTab === 'daily' ? 'active' : ''}`}
+          className={`aa-tab-btn ${activeTab === 'daily' ? 'active' : ''}`}
           onClick={() => setActiveTab('daily')}
+          id="aa-tab-daily"
         >
-          Daily Register
+          <CalendarDays size={15} />
+          <span>Daily Register</span>
         </button>
         <button
-          className={`aa-tab ${activeTab === 'monthly' ? 'active' : ''}`}
+          className={`aa-tab-btn ${activeTab === 'monthly' ? 'active' : ''}`}
           onClick={() => setActiveTab('monthly')}
+          id="aa-tab-monthly"
         >
-          Monthly Report
+          <BarChart2 size={15} />
+          <span>Monthly Report</span>
         </button>
       </div>
 
@@ -377,12 +414,14 @@ const AdminAttendance = () => {
           <div className="aa-toolbar">
             {/* Date Nav */}
             <div className="aa-date-picker">
-              <button
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              <motion.button
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                 onClick={() => shiftDate(-1)} title="Previous Day"
               >
                 <ChevronLeft size={16} />
-              </button>
+              </motion.button>
               <label>Date</label>
               <DateInput
                 value={selectedDate}
@@ -394,13 +433,15 @@ const AdminAttendance = () => {
                 style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '0.875rem', padding: '0.2rem 0' }}
                 showIcon={false}
               />
-              <button
-                style={{ background: 'none', border: 'none', color: selectedDate >= today ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)', cursor: selectedDate >= today ? 'default' : 'pointer', display: 'flex', alignItems: 'center' }}
+              <motion.button
+                whileHover={{ scale: selectedDate >= today ? 1 : 1.15 }}
+                whileTap={{ scale: selectedDate >= today ? 1 : 0.9 }}
+                style={{ background: 'none', border: 'none', color: selectedDate >= today ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.6)', cursor: selectedDate >= today ? 'default' : 'pointer', display: 'flex', alignItems: 'center' }}
                 onClick={() => selectedDate < today && shiftDate(1)} title="Next Day"
                 disabled={selectedDate >= today}
               >
                 <ChevronRight size={16} />
-              </button>
+              </motion.button>
             </div>
 
             {/* Search */}
@@ -428,59 +469,79 @@ const AdminAttendance = () => {
             </div>
 
             {/* Refresh */}
-            <button
-              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '0.5rem', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex' }}
-              onClick={() => fetchRegister(selectedDate)} title="Refresh"
+            <motion.button
+              whileHover={{ scale: 1.08, rotate: 90 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '10px', padding: '0.55rem', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'flex' }}
+              onClick={() => fetchRegister(selectedDate)} title="Refresh Data"
             >
-              <RefreshCw size={16} />
-            </button>
+              <RefreshCw size={15} />
+            </motion.button>
 
             {/* Bulk Save */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               className="aa-btn-save-all"
               onClick={saveAll}
               disabled={bulkSaving || loading}
               id="aa-bulk-save-btn"
             >
               {bulkSaving ? <><div className="aa-spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Saving…</> : <><Save size={16} /> Save All</>}
-            </button>
+            </motion.button>
           </div>
 
-          {/* Summary Cards */}
+          {/* Summary Cards with Framer Motion and Click-to-Filter */}
           {!loading && (
-            <div className="aa-summary-grid">
-              <div className="aa-stat-card total">
-                <div className="aa-stat-num">{summary.total ?? 0}</div>
-                <div className="aa-stat-label">Total</div>
-              </div>
-              <div className="aa-stat-card present">
-                <div className="aa-stat-num">{summary.present ?? 0}</div>
-                <div className="aa-stat-label">Present</div>
-              </div>
-              <div className="aa-stat-card absent">
-                <div className="aa-stat-num">{summary.absent ?? 0}</div>
-                <div className="aa-stat-label">Absent</div>
-              </div>
-              <div className="aa-stat-card leave">
-                <div className="aa-stat-num">{summary.onLeave ?? 0}</div>
-                <div className="aa-stat-label">On Leave</div>
-              </div>
-              <div className="aa-stat-card half">
-                <div className="aa-stat-num">{summary.halfDay ?? 0}</div>
-                <div className="aa-stat-label">Half Day</div>
-              </div>
-              <div className="aa-stat-card late">
-                <div className="aa-stat-num">{summary.late ?? 0}</div>
-                <div className="aa-stat-label">Late</div>
-              </div>
-            </div>
+            <motion.div 
+              className="aa-summary-grid"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.08 }}
+            >
+              {[
+                { key: 'ALL', label: 'Total', count: summary.total ?? 0, icon: Users, cls: 'total', color: '#a5b4fc', bg: 'rgba(99, 102, 241, 0.12)' },
+                { key: 'Present', label: 'Present', count: summary.present ?? 0, icon: UserCheck, cls: 'present', color: '#34d399', bg: 'rgba(52, 211, 153, 0.12)' },
+                { key: 'Absent', label: 'Absent', count: summary.absent ?? 0, icon: UserX, cls: 'absent', color: '#f87171', bg: 'rgba(248, 113, 113, 0.12)' },
+                { key: 'On Leave', label: 'On Leave', count: summary.onLeave ?? 0, icon: CalendarOff, cls: 'leave', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.12)' },
+                { key: 'Half Day', label: 'Half Day', count: summary.halfDay ?? 0, icon: Clock, cls: 'half', color: '#fb923c', bg: 'rgba(251, 146, 60, 0.12)' },
+                { key: 'Late', label: 'Late', count: summary.late ?? 0, icon: AlertTriangle, cls: 'late', color: '#e879f9', bg: 'rgba(232, 121, 249, 0.12)' },
+              ].map(item => {
+                const IconComponent = item.icon;
+                const isSelected = filterStatus === item.key;
+                return (
+                  <motion.div
+                    key={item.key}
+                    whileHover={{ y: -4, scale: 1.025 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`aa-stat-card ${item.cls} ${isSelected ? 'active-filter' : ''}`}
+                    onClick={() => setFilterStatus(item.key)}
+                    style={{
+                      cursor: 'pointer',
+                      border: isSelected ? `1.5px solid ${item.color}` : undefined,
+                      boxShadow: isSelected ? `0 0 16px ${item.bg}` : undefined
+                    }}
+                    title={`Click to filter by ${item.label}`}
+                  >
+                    <div className="aa-stat-top">
+                      <span className="aa-stat-icon-wrap" style={{ color: item.color, background: item.bg }}>
+                        <IconComponent size={14} />
+                      </span>
+                      <span className="aa-stat-label">{item.label}</span>
+                    </div>
+                    <div className="aa-stat-num" style={{ color: item.color }}>{item.count}</div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           )}
 
           {/* Register Table */}
           <div className="aa-table-wrap">
             <div className="aa-table-header-bar">
               <h3>
-                <CalendarDays size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
+                <CalendarDays size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle', color: '#818cf8' }} />
                 {(() => {
                   const iso = (selectedDate && typeof selectedDate === 'string' && selectedDate.includes('/')) ? toIsoDate(selectedDate) : selectedDate;
                   const d = new Date((iso || today) + 'T00:00:00');
@@ -524,7 +585,13 @@ const AdminAttendance = () => {
                       const lSec = row.totalLunchDurationInSeconds || (row.lunchMinutes ? row.lunchMinutes * 60 : 0);
 
                       return (
-                        <tr key={row.employeeId}>
+                        <motion.tr 
+                          key={row.employeeId}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.22, delay: Math.min(idx * 0.03, 0.3) }}
+                          className="aa-row-animated"
+                        >
                           <td style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', width: '40px' }}>{idx + 1}</td>
 
                           {/* Employee cell */}
@@ -543,13 +610,15 @@ const AdminAttendance = () => {
                             </div>
                           </td>
 
-                          <td style={{ color: 'rgba(255,255,255,0.65)', fontWeight: 500, whiteSpace: 'nowrap' }}>{row.department || 'General'}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <span className="aa-dept-pill">{row.department || 'General'}</span>
+                          </td>
 
                           {/* Check In Time */}
                           <td style={{ whiteSpace: 'nowrap' }}>
                             {row.firstLoginTime ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#10b981', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.84rem', whiteSpace: 'nowrap' }}>
-                                <LogIn size={14} /> {new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              <span className="aa-pill-in">
+                                <LogIn size={13} /> {new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             ) : (
                               <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--:--</span>
@@ -559,8 +628,8 @@ const AdminAttendance = () => {
                           {/* Check Out Time */}
                           <td style={{ whiteSpace: 'nowrap' }}>
                             {row.lastLogoutTime ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#f43f5e', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.84rem', whiteSpace: 'nowrap' }}>
-                                <LogOut size={14} /> {new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              <span className="aa-pill-out">
+                                <LogOut size={13} /> {new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             ) : (
                               <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--:--</span>
@@ -570,7 +639,7 @@ const AdminAttendance = () => {
                           {/* Net Work Duration */}
                           <td style={{ whiteSpace: 'nowrap' }}>
                             {row.totalWorkDurationInSeconds > 0 ? (
-                              <span style={{ fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace', fontSize: '0.84rem', whiteSpace: 'nowrap' }}>
+                              <span className="aa-pill-duration">
                                 {fmtDuration(row.totalWorkDurationInSeconds)}
                               </span>
                             ) : (
@@ -580,14 +649,14 @@ const AdminAttendance = () => {
 
                           {/* Break Time */}
                           <td style={{ whiteSpace: 'nowrap' }}>
-                            <span style={{ color: '#fbbf24', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                            <span className="aa-pill-break">
                               <Coffee size={13} /> {bSec > 0 ? fmtDuration(bSec) : '0h 0m'}
                             </span>
                           </td>
 
                           {/* Lunch Time */}
                           <td style={{ whiteSpace: 'nowrap' }}>
-                            <span style={{ color: '#60a5fa', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                            <span className="aa-pill-lunch">
                               <Utensils size={13} /> {lSec > 0 ? fmtDuration(lSec) : '0h 0m'}
                             </span>
                           </td>
@@ -597,7 +666,7 @@ const AdminAttendance = () => {
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
                               <StatusBadge status={row._localStatus || row.status || 'Present'} />
                               {row.isManualCorrection && (
-                                <span style={{ fontSize: '0.68rem', background: 'rgba(99, 102, 241, 0.25)', color: '#a5b4fc', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, border: '1px solid rgba(99, 102, 241, 0.4)', whiteSpace: 'nowrap' }} title={row.correctionReason || 'Admin Edited'}>
+                                <span className="aa-edited-tag" title={row.correctionReason || 'Admin Edited'}>
                                   Edited
                                 </span>
                               )}
@@ -606,31 +675,19 @@ const AdminAttendance = () => {
 
                           {/* Actions: Edit button matching Employee page */}
                           <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
-                            <button
+                            <motion.button
+                              whileHover={{ scale: 1.06 }}
+                              whileTap={{ scale: 0.94 }}
                               type="button"
-                              className="btn btn-outline"
+                              className="aa-action-edit-btn"
                               onClick={() => handleOpenEditModal(row)}
                               id={`aa-edit-row-${row.employeeId}`}
                               title="Edit Attendance for this day"
-                              style={{
-                                padding: '0.35rem 0.75rem',
-                                fontSize: '0.78rem',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.35rem',
-                                borderRadius: '8px',
-                                border: '1px solid rgba(99, 102, 241, 0.4)',
-                                color: '#a5b4fc',
-                                background: 'rgba(99, 102, 241, 0.1)',
-                                cursor: 'pointer',
-                                fontWeight: 600,
-                                whiteSpace: 'nowrap'
-                              }}
                             >
                               <Pencil size={13} /> Edit
-                            </button>
+                            </motion.button>
                           </td>
-                        </tr>
+                        </motion.tr>
                       );
                     })}
                   </tbody>
