@@ -283,6 +283,7 @@
   font-size: 0.85rem;
   color: rgba(255,255,255,0.8);
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 /* Employee cell */
@@ -290,6 +291,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  white-space: nowrap;
 }
 .aa-avatar {
   width: 36px;
@@ -312,8 +314,8 @@
   color: #fff;
   flex-shrink: 0;
 }
-.aa-emp-name { font-weight: 600; color: #fff; font-size: 0.875rem; }
-.aa-emp-code { font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+.aa-emp-name { font-weight: 600; color: #fff; font-size: 0.875rem; white-space: nowrap; }
+.aa-emp-code { font-size: 0.7rem; color: rgba(255,255,255,0.4); white-space: nowrap; }
 
 /* Status select dropdown */
 .aa-status-select {

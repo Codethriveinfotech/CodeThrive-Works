@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import DateInput, { toIsoDate } from '../components/common/DateInput';
 import Modal from '../components/common/Modal';
+import StatusBadge from '../components/common/StatusBadge';
 import './AdminAttendance.css';
 
 
@@ -504,39 +505,37 @@ const AdminAttendance = () => {
                 <table className="aa-table">
                   <thead>
                     <tr>
-                      <th style={{ width: '35px' }}>#</th>
-                      <th>Employee</th>
-                      <th>Department</th>
-                      <th>Check In</th>
-                      <th>Check Out</th>
-                      <th>Work Duration</th>
-                      <th>Break</th>
-                      <th>Lunch</th>
-                      <th style={{ width: '160px' }}>Status</th>
-                      <th style={{ width: '150px' }}>Action</th>
+                      <th style={{ width: '40px', textAlign: 'center' }}>#</th>
+                      <th style={{ whiteSpace: 'nowrap' }}>Employee</th>
+                      <th style={{ whiteSpace: 'nowrap' }}>Department</th>
+                      <th style={{ whiteSpace: 'nowrap' }}>Check In</th>
+                      <th style={{ whiteSpace: 'nowrap' }}>Check Out</th>
+                      <th style={{ whiteSpace: 'nowrap' }}>Work Duration</th>
+                      <th style={{ whiteSpace: 'nowrap' }}>Break Time</th>
+                      <th style={{ whiteSpace: 'nowrap' }}>Lunch Time</th>
+                      <th style={{ whiteSpace: 'nowrap', minWidth: '130px' }}>Status</th>
+                      <th style={{ whiteSpace: 'nowrap', width: '100px', textAlign: 'center' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredRegister.map((row, idx) => {
-                      const isSaved = savedRows.has(row.employeeId);
-                      const isSaving = savingId === row.employeeId;
                       const initial = (row.fullName || '?')[0].toUpperCase();
                       const bSec = row.totalBreakDurationInSeconds || (row.breakMinutes ? row.breakMinutes * 60 : 0);
                       const lSec = row.totalLunchDurationInSeconds || (row.lunchMinutes ? row.lunchMinutes * 60 : 0);
 
                       return (
                         <tr key={row.employeeId}>
-                          <td style={{ color: 'rgba(255,255,255,0.3)', width: '35px' }}>{idx + 1}</td>
+                          <td style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', width: '40px' }}>{idx + 1}</td>
 
                           {/* Employee cell */}
-                          <td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
                             <div className="aa-emp-cell">
                               {row.profilePhoto
                                 ? <img src={row.profilePhoto} alt={row.fullName} className="aa-avatar" />
                                 : <div className="aa-avatar-fallback">{initial}</div>
                               }
                               <div>
-                                <div className="aa-emp-name">
+                                <div className="aa-emp-name" style={{ whiteSpace: 'nowrap' }}>
                                   {row.fullName}
                                 </div>
                                 <div className="aa-emp-code">{row.empCode || row.employeeId}</div>
@@ -544,13 +543,13 @@ const AdminAttendance = () => {
                             </div>
                           </td>
 
-                          <td style={{ color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>{row.department || 'General'}</td>
+                          <td style={{ color: 'rgba(255,255,255,0.65)', fontWeight: 500, whiteSpace: 'nowrap' }}>{row.department || 'General'}</td>
 
                           {/* Check In Time */}
-                          <td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
                             {row.firstLoginTime ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#34d399', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.82rem' }}>
-                                <LogIn size={13} /> {fmtTime(row.firstLoginTime)}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#10b981', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.84rem', whiteSpace: 'nowrap' }}>
+                                <LogIn size={14} /> {new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             ) : (
                               <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--:--</span>
@@ -558,10 +557,10 @@ const AdminAttendance = () => {
                           </td>
 
                           {/* Check Out Time */}
-                          <td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
                             {row.lastLogoutTime ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#f43f5e', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.82rem' }}>
-                                <LogOut size={13} /> {fmtTime(row.lastLogoutTime)}
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#f43f5e', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.84rem', whiteSpace: 'nowrap' }}>
+                                <LogOut size={14} /> {new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             ) : (
                               <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--:--</span>
@@ -569,102 +568,67 @@ const AdminAttendance = () => {
                           </td>
 
                           {/* Net Work Duration */}
-                          <td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
                             {row.totalWorkDurationInSeconds > 0 ? (
-                              <span style={{ fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace', fontSize: '0.84rem' }}>
+                              <span style={{ fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace', fontSize: '0.84rem', whiteSpace: 'nowrap' }}>
                                 {fmtDuration(row.totalWorkDurationInSeconds)}
                               </span>
                             ) : (
-                              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--</span>
+                              <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--:--</span>
                             )}
                           </td>
 
                           {/* Break Time */}
-                          <td>
-                            <span style={{ color: '#fbbf24', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace' }}>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <span style={{ color: '#fbbf24', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                               <Coffee size={13} /> {bSec > 0 ? fmtDuration(bSec) : '0h 0m'}
                             </span>
                           </td>
 
                           {/* Lunch Time */}
-                          <td>
-                            <span style={{ color: '#60a5fa', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace' }}>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <span style={{ color: '#60a5fa', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
                               <Utensils size={13} /> {lSec > 0 ? fmtDuration(lSec) : '0h 0m'}
                             </span>
                           </td>
 
-                          {/* Status Dropdown with Capsule Pill Badge & Edited tag */}
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              <select
-                                className="aa-status-select"
-                                value={row._localStatus}
-                                onChange={e => handleFieldChange(row.employeeId, '_localStatus', e.target.value)}
-                                id={`aa-status-${row.employeeId}`}
-                                style={{
-                                  ...getStatusPillStyle(row._localStatus),
-                                  borderRadius: '20px',
-                                  fontWeight: 700,
-                                  fontSize: '0.74rem',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.04em',
-                                  padding: '0.28rem 0.75rem',
-                                  cursor: 'pointer',
-                                  outline: 'none',
-                                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-                                }}
-                              >
-                                {STATUS_OPTIONS.map(s => (
-                                  <option key={s} value={s}>{s}</option>
-                                ))}
-                                {!STATUS_OPTIONS.includes(row._localStatus) && <option value={row._localStatus}>{row._localStatus}</option>}
-                              </select>
+                          {/* Status Capsule Badge with Edited tag matching Employee detail audit */}
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
+                              <StatusBadge status={row._localStatus || row.status || 'Present'} />
                               {row.isManualCorrection && (
-                                <span style={{ fontSize: '0.68rem', background: 'rgba(99, 102, 241, 0.25)', color: '#a5b4fc', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, border: '1px solid rgba(99, 102, 241, 0.4)' }} title={row.correctionReason || 'Admin Edited'}>
+                                <span style={{ fontSize: '0.68rem', background: 'rgba(99, 102, 241, 0.25)', color: '#a5b4fc', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, border: '1px solid rgba(99, 102, 241, 0.4)', whiteSpace: 'nowrap' }} title={row.correctionReason || 'Admin Edited'}>
                                   Edited
                                 </span>
                               )}
                             </div>
                           </td>
 
-                          {/* Actions: Save button & Edit button matching Employee page */}
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                              <button
-                                className={`aa-save-btn ${isSaved ? 'saved' : ''}`}
-                                onClick={() => saveRow(row)}
-                                disabled={isSaving}
-                                id={`aa-save-row-${row.employeeId}`}
-                                title="Save Attendance Status"
-                              >
-                                {isSaving ? <><div className="aa-spinner" style={{ width: 12, height: 12, borderWidth: 2 }} /> Saving</> :
-                                 isSaved ? <><CheckCircle2 size={13} /> Saved</> :
-                                 <><Save size={13} /> Save</>}
-                              </button>
-                              <button
-                                type="button"
-                                className="aa-edit-btn"
-                                onClick={() => handleOpenEditModal(row)}
-                                id={`aa-edit-row-${row.employeeId}`}
-                                title="Adjust timing, break and lunch"
-                                style={{
-                                  padding: '0.35rem 0.65rem',
-                                  fontSize: '0.78rem',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '0.35rem',
-                                  borderRadius: '8px',
-                                  border: '1px solid rgba(99, 102, 241, 0.4)',
-                                  color: '#a5b4fc',
-                                  background: 'rgba(99, 102, 241, 0.1)',
-                                  cursor: 'pointer',
-                                  fontWeight: 600,
-                                  whiteSpace: 'nowrap'
-                                }}
-                              >
-                                <Pencil size={12} /> Edit
-                              </button>
-                            </div>
+                          {/* Actions: Edit button matching Employee page */}
+                          <td style={{ whiteSpace: 'nowrap', textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              className="btn btn-outline"
+                              onClick={() => handleOpenEditModal(row)}
+                              id={`aa-edit-row-${row.employeeId}`}
+                              title="Edit Attendance for this day"
+                              style={{
+                                padding: '0.35rem 0.75rem',
+                                fontSize: '0.78rem',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(99, 102, 241, 0.4)',
+                                color: '#a5b4fc',
+                                background: 'rgba(99, 102, 241, 0.1)',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              <Pencil size={13} /> Edit
+                            </button>
                           </td>
                         </tr>
                       );
@@ -759,14 +723,36 @@ const AdminAttendance = () => {
                           </div>
                         </td>
                         <td style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.8rem' }}>{rec.employee?.department || '—'}</td>
-                        <td>
-                          <span className={`aa-badge ${getBadgeClass(rec.status)}`}>
-                            {rec.status}
-                          </span>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <StatusBadge status={rec.status || 'Present'} />
                         </td>
-                        <td style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem' }}>{fmtTime(rec.firstLoginTime)}</td>
-                        <td style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem' }}>{fmtTime(rec.lastLogoutTime)}</td>
-                        <td style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.8rem' }}>{fmtDuration(rec.totalWorkDurationInSeconds)}</td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {rec.firstLoginTime ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#10b981', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.84rem' }}>
+                              <LogIn size={13} /> {new Date(rec.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--:--</span>
+                          )}
+                        </td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {rec.lastLogoutTime ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#f43f5e', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.84rem' }}>
+                              <LogOut size={13} /> {new Date(rec.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--:--</span>
+                          )}
+                        </td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          {rec.totalWorkDurationInSeconds > 0 ? (
+                            <span style={{ fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace', fontSize: '0.84rem' }}>
+                              {fmtDuration(rec.totalWorkDurationInSeconds)}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem' }}>--</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
