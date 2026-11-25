@@ -3214,11 +3214,6 @@ CodeThrive Infotech • Confidential Personnel Archive
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             <StatusBadge status={computed} text={computed} />
-                            {row.isManualCorrection && (
-                              <span style={{ fontSize: '0.68rem', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', padding: '1px 5px', borderRadius: '4px', fontWeight: 600 }} title={row.correctionReason || 'Admin Edited'}>
-                                Edited
-                              </span>
-                            )}
                           </div>
                         );
                       }

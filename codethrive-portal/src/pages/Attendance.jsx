@@ -623,7 +623,7 @@ const Attendance = () => {
         return [
           `${formatDate(row.date)} (${dayName})`,
           row.status || 'Present',
-          row.correctionReason || (row.isManualCorrection ? 'Admin Marked' : 'Standard Shift')
+          row.correctionReason || 'Standard Shift'
         ];
       });
 
@@ -704,7 +704,7 @@ const Attendance = () => {
         return {
           'Date & Day': `${formatDate(row.date)} (${dayName})`,
           'Attendance Status': row.status || 'Present',
-          'Remarks / Shift': row.correctionReason || (row.isManualCorrection ? 'Admin Marked' : 'Standard Shift')
+          'Remarks / Shift': row.correctionReason || 'Standard Shift'
         };
       });
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -1326,7 +1326,7 @@ const Attendance = () => {
 
                       <td>
                         <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                          {row.correctionReason || (row.isManualCorrection ? 'Admin Marked' : 'Standard Shift')}
+                          {row.correctionReason || 'Standard Shift'}
                         </span>
                       </td>
                     </tr>

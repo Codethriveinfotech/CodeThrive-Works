@@ -153,7 +153,7 @@ const AdminAttendance = () => {
         lunchMinutes: Number(editForm.lunchMinutes) || 0,
         totalBreakDurationInSeconds: bSec,
         totalLunchDurationInSeconds: lSec,
-        correctionReason: editForm.reason || 'Admin manual update'
+        correctionReason: editForm.reason || ''
       });
 
       showToast(`✓ Updated attendance for ${editingRow.fullName}`, 'success');
@@ -661,15 +661,10 @@ const AdminAttendance = () => {
                             </span>
                           </td>
 
-                          {/* Status Capsule Badge with Edited tag matching Employee detail audit */}
+                          {/* Status Capsule Badge */}
                           <td style={{ whiteSpace: 'nowrap' }}>
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}>
                               <StatusBadge status={row._localStatus || row.status || 'Present'} />
-                              {row.isManualCorrection && (
-                                <span className="aa-edited-tag" title={row.correctionReason || 'Admin Edited'}>
-                                  Edited
-                                </span>
-                              )}
                             </div>
                           </td>
 
