@@ -76,6 +76,7 @@ const Attendance = () => {
 
   // Modal State
   const [showCorrectionModal, setShowCorrectionModal] = useState(false);
+  const [myCorrections, setMyCorrections] = useState([]);
   const [correctionPayload, setCorrectionPayload] = useState({
     date: new Date().toISOString().split('T')[0],
     correctionType: 'Missed Check-In',
@@ -85,6 +86,89 @@ const Attendance = () => {
     breakMinutes: '30',
     lunchMinutes: '45'
   });
+
+  const fetchMyCorrections = useCallback(async () => {
+    try {
+      const res = await api.get('/attendance/my-corrections');
+      if (res.data?.success) {
+        setMyCorrections(res.data.data || []);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    fetchMyCorrections();
+  }, [fetchMyCorrections]);
+
+  const correctionMap = useMemo(() => {
+    const map = {};
+    (myCorrections || []).forEach(c => {
+      if (c.date) {
+        const dStr = new Date(c.date).toISOString().split('T')[0];
+        if (!map[dStr]) map[dStr] = c;
+      }
+    });
+    return map;
+  }, [myCorrections]);
+
+  // Live Shift Preview in Correction Modal
+  const shiftPreview = useMemo(() => {
+    if (!correctionPayload.checkInTime || !correctionPayload.checkOutTime) return null;
+    const [ih, im] = correctionPayload.checkInTime.split(':').map(Number);
+    const [oh, om] = correctionPayload.checkOutTime.split(':').map(Number);
+    let totalMins = (oh * 60 + om) - (ih * 60 + im);
+    if (totalMins < 0) totalMins += 24 * 60;
+    const breakTotal = (Number(correctionPayload.breakMinutes) || 0) + (Number(correctionPayload.lunchMinutes) || 0);
+    const netMins = Math.max(0, totalMins - breakTotal);
+    const h = Math.floor(netMins / 60);
+    const m = netMins % 60;
+    return { netH: h, netM: m, breakTotal };
+  }, [correctionPayload.checkInTime, correctionPayload.checkOutTime, correctionPayload.breakMinutes, correctionPayload.lunchMinutes]);
+
+  const getRemarksDisplay = (row) => {
+    const rowDateStr = row.date ? new Date(row.date).toISOString().split('T')[0] : '';
+    const matching = correctionMap[rowDateStr];
+
+    const cleanLabel = (str) => {
+      if (!str) return 'Correction Requested';
+      let clean = str.replace(/^Approved Correction:\s*/i, '').trim();
+      if (clean.includes('|')) {
+        clean = clean.split('|')[0].replace(/^Type:\s*/i, '').trim();
+      }
+      return clean;
+    };
+
+    // 1. If user filed a correction request for this date:
+    if (matching) {
+      const isPending = (matching.status || 'Pending').toLowerCase() === 'pending';
+      const label = cleanLabel(matching.reason);
+      return {
+        text: label,
+        status: isPending ? 'pending' : 'approved',
+        isPending
+      };
+    }
+
+    // 2. If row has approved correction reason from database (and not generic placeholder):
+    if (row.correctionReason && 
+        row.correctionReason !== 'Management Adjustment' && 
+        row.correctionReason !== 'Admin manual mark' &&
+        row.correctionReason !== 'Admin bulk mark') {
+      const label = cleanLabel(row.correctionReason);
+      return {
+        text: label,
+        status: 'approved',
+        isPending: false
+      };
+    }
+
+    // 3. Otherwise Standard Shift
+    return {
+      text: 'Standard Shift',
+      status: 'standard',
+      isPending: false
+    };
+  };
 
   // Dedicated Break & Lunch Adjustment Modal State
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
@@ -625,7 +709,7 @@ const Attendance = () => {
         return [
           `${formatDate(row.date)} (${dayName})`,
           row.status || 'Present',
-          row.correctionReason || 'Standard Shift'
+          getRemarksDisplay(row).text
         ];
       });
 
@@ -706,7 +790,7 @@ const Attendance = () => {
         return {
           'Date & Day': `${formatDate(row.date)} (${dayName})`,
           'Attendance Status': row.status || 'Present',
-          'Remarks / Shift': row.correctionReason || 'Standard Shift'
+          'Remarks / Shift': getRemarksDisplay(row).text
         };
       });
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -724,14 +808,17 @@ const Attendance = () => {
       await api.post('/attendance/request-correction', correctionPayload);
       alert('Attendance correction request submitted to Admin/HR.');
       setShowCorrectionModal(false);
+      fetchMyCorrections();
     } catch (err) {
       try {
         await api.post('/attendance/regularize', correctionPayload);
         alert('Attendance correction request submitted to Admin/HR.');
         setShowCorrectionModal(false);
+        fetchMyCorrections();
       } catch (e2) {
         alert('Attendance correction request submitted to Admin/HR.');
         setShowCorrectionModal(false);
+        fetchMyCorrections();
       }
     }
   };
@@ -1355,9 +1442,16 @@ const Attendance = () => {
                       </td>
 
                       <td>
-                        <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
-                          {row.correctionReason || 'Standard Shift'}
-                        </span>
+                        {(() => {
+                          const rem = getRemarksDisplay(row);
+                          return (
+                            <span className={`att-remarks-badge ${rem.status}`}>
+                              {rem.isPending && <Clock size={12} />}
+                              {!rem.isPending && rem.status === 'approved' && <CheckCircle2 size={12} />}
+                              {rem.text} {rem.isPending && '(Pending)'}
+                            </span>
+                          );
+                        })()}
                       </td>
                     </tr>
                   );
@@ -1383,15 +1477,27 @@ const Attendance = () => {
       <Modal 
         isOpen={showCorrectionModal} 
         onClose={() => setShowCorrectionModal(false)} 
-        title="Request Attendance Correction"
+        title={<span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc' }}><AlertCircle size={20} color="#38bdf8" /> Request Attendance Correction</span>}
       >
-        <form onSubmit={submitCorrection} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>
-            Missed a punch, break, lunch or had a system issue? Submit a correction request with proposed times for Admin/HR review.
-          </p>
+        <form onSubmit={submitCorrection} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+          <div className="correction-modal-banner">
+            <div className="cm-icon-ring">
+              <Sparkles size={18} className="text-amber-400" />
+            </div>
+            <div>
+              <h4 style={{ margin: '0 0 0.2rem 0', fontSize: '0.92rem', color: '#f8fafc', fontWeight: 700 }}>
+                Attendance Regularization & Correction
+              </h4>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.4 }}>
+                Submit proposed times for missed punch, break / lunch duration adjustment, or system glitch for Admin review.
+              </p>
+            </div>
+          </div>
 
           <div className="form-group">
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Date *</label>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <CalIcon size={14} color="#38bdf8" /> Date *
+            </label>
             <DateInput 
               className="input-field" 
               required 
@@ -1401,11 +1507,14 @@ const Attendance = () => {
           </div>
 
           <div className="form-group">
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Correction Type *</label>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Clock size={14} color="#a855f7" /> Correction Type *
+            </label>
             <select 
               className="input-field" 
               value={correctionPayload.correctionType}
               onChange={e => setCorrectionPayload({ ...correctionPayload, correctionType: e.target.value })}
+              style={{ background: 'rgba(15, 23, 42, 0.85)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '10px', padding: '0.6rem 0.8rem' }}
             >
               <option value="Missed Check-In">Missed Check-In</option>
               <option value="Missed Check-Out">Missed Check-Out</option>
@@ -1417,7 +1526,7 @@ const Attendance = () => {
           </div>
 
           {correctionPayload.correctionType === 'Others' && (
-            <div className="form-group">
+            <div className="form-group" style={{ animation: 'fadeIn 0.25s ease' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38bdf8', marginBottom: '0.35rem', display: 'block' }}>
                 Specify Other Issue / Correction *
               </label>
@@ -1434,7 +1543,9 @@ const Attendance = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Correct Check-In</label>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <LogIn size={13} color="#34d399" /> Correct Check-In
+              </label>
               <input 
                 type="time" 
                 className="input-field" 
@@ -1443,7 +1554,9 @@ const Attendance = () => {
               />
             </div>
             <div className="form-group">
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Correct Check-Out</label>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <LogOut size={13} color="#f87171" /> Correct Check-Out
+              </label>
               <input 
                 type="time" 
                 className="input-field" 
@@ -1452,7 +1565,9 @@ const Attendance = () => {
               />
             </div>
             <div className="form-group">
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Break Duration (Mins)</label>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Coffee size={13} color="#fbbf24" /> Break Duration (Mins)
+              </label>
               <input 
                 type="number" 
                 min="0"
@@ -1464,7 +1579,9 @@ const Attendance = () => {
               />
             </div>
             <div className="form-group">
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'block' }}>Lunch Duration (Mins)</label>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Utensils size={13} color="#60a5fa" /> Lunch Duration (Mins)
+              </label>
               <input 
                 type="number" 
                 min="0"
@@ -1477,6 +1594,20 @@ const Attendance = () => {
             </div>
           </div>
 
+          {/* Live Shift Preview Card */}
+          {shiftPreview && (
+            <div className="correction-preview-banner">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#38bdf8', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <Sparkles size={14} /> Calculated Shift Preview
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.35rem', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.82rem', color: '#e2e8f0' }}>
+                <span>{correctionPayload.checkInTime} → {correctionPayload.checkOutTime}</span>
+                <span style={{ color: '#34d399', fontWeight: 700 }}>Net Work: {shiftPreview.netH}H {shiftPreview.netM}M</span>
+                <span style={{ color: '#fbbf24', fontSize: '0.78rem' }}>Total Breaks: {shiftPreview.breakTotal}M</span>
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.85rem', marginTop: '0.75rem' }}>
             <button 
               type="button" 
@@ -1488,8 +1619,9 @@ const Attendance = () => {
             <button 
               type="submit" 
               className="btn btn-primary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              Submit Request
+              <Sparkles size={15} /> Submit Request
             </button>
           </div>
         </form>

@@ -767,6 +767,18 @@ exports.submitRegularization = async (req, res) => {
   }
 };
 
+// @desc    Get logged in employee's correction requests
+// @route   GET /api/v1/attendance/my-corrections
+exports.getMyCorrections = async (req, res) => {
+  try {
+    const employee = await getOrCreateEmployee(req.user);
+    const corrections = await AttendanceCorrection.find({ employee: employee._id }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: corrections || [] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // @desc    Apply Leave
 // @route   POST /api/v1/attendance/apply-leave
 exports.applyLeave = async (req, res) => {

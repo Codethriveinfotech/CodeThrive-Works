@@ -388,7 +388,7 @@ const EmployeeDetail = () => {
     outTime: '18:30',
     breakMinutes: 0,
     lunchMinutes: 0,
-    reason: 'Management Adjustment'
+    reason: ''
   });
 
   useEffect(() => {
@@ -496,7 +496,7 @@ const EmployeeDetail = () => {
         outTime,
         breakMinutes: bMinutes,
         lunchMinutes: lMinutes,
-        reason: record.correctionReason || 'Management Adjustment'
+        reason: record.correctionReason || ''
       });
       setEditingAttendanceRecord(record);
     } else {
@@ -508,7 +508,7 @@ const EmployeeDetail = () => {
         outTime: '18:30',
         breakMinutes: 0,
         lunchMinutes: 0,
-        reason: 'Management Adjustment'
+        reason: ''
       });
       setEditingAttendanceRecord({});
     }
@@ -562,7 +562,7 @@ const EmployeeDetail = () => {
         lunchMinutes: lMin,
         totalBreakDurationInSeconds: totalBreakSec,
         totalLunchDurationInSeconds: totalLunchSec,
-        correctionReason: rectifyForm.reason || 'Management Adjustment'
+        correctionReason: rectifyForm.reason || ''
       }).catch(err => {
         console.warn('API error (saved locally):', err);
       });

@@ -2,7 +2,7 @@ const express = require('express');
 const { 
   startWorkSession, startBreak, startLunch, resumeWork, checkout, 
   getTodayAttendance, updateTodayAttendance, getAttendanceHistory, getAttendanceSummary, 
-  submitRegularization, getLeaveBalances, applyLeave 
+  submitRegularization, getMyCorrections, getLeaveBalances, applyLeave 
 } = require('../controllers/attendanceController');
 const { protect } = require('../middleware/authMiddleware');
 const { upload } = require('../utils/upload');
@@ -22,6 +22,7 @@ router.post('/checkout', checkout);
 
 router.get('/history', getAttendanceHistory);
 router.get('/summary', getAttendanceSummary);
+router.get('/my-corrections', getMyCorrections);
 router.post('/regularize', upload.single('attachment'), submitRegularization);
 router.post('/correction', upload.single('attachment'), submitRegularization);
 router.post('/request-correction', upload.single('attachment'), submitRegularization);
