@@ -451,6 +451,27 @@ const Dashboard = () => {
     return `${m.toString().padStart(2, '0')}M ${s.toString().padStart(2, '0')}S`;
   };
 
+  const renderDuration = (seconds) => {
+    const totalSec = Math.max(0, Math.floor(seconds || 0));
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    if (h > 0) {
+      return (
+        <>
+          {h.toString().padStart(2, '0')}<span className="unit-letter">H</span>{' '}
+          {m.toString().padStart(2, '0')}<span className="unit-letter">M</span>
+        </>
+      );
+    }
+    return (
+      <>
+        {m.toString().padStart(2, '0')}<span className="unit-letter">M</span>{' '}
+        {s.toString().padStart(2, '0')}<span className="unit-letter">S</span>
+      </>
+    );
+  };
+
   if (loading) return (
     <div className="dashboard-container">
       <SkeletonLoader type="dashboard" />
@@ -700,7 +721,7 @@ const Dashboard = () => {
           </div>
           <div className="metric-content">
             <span className="metric-label">Work Logged</span>
-            <span className="metric-value">{formatDuration(liveWorkDuration)}</span>
+            <span className="metric-value">{renderDuration(liveWorkDuration)}</span>
             <span className="metric-subtext">Today's total session</span>
           </div>
           <div className="metric-action-arrow">
@@ -735,7 +756,7 @@ const Dashboard = () => {
               {isWorking && <div className="timer-ring"></div>}
               {isOnBreak && <div className="timer-ring ring-break"></div>}
               {isOnLunch && <div className="timer-ring ring-lunch"></div>}
-              <span className="timer-value">{formatDuration(displayMainTimer)}</span>
+              <span className="timer-value">{renderDuration(displayMainTimer)}</span>
               <span className="timer-label">{timerLabelText}</span>
             </div>
 
@@ -743,15 +764,15 @@ const Dashboard = () => {
             <div className="timer-breakdown-grid">
               <div className="timer-breakdown-item">
                 <span className="tb-label"><Clock size={12} /> Work</span>
-                <span className="tb-value" style={{ color: 'var(--primary-light)' }}>{formatDuration(liveWorkDuration)}</span>
+                <span className="tb-value" style={{ color: 'var(--primary-light)' }}>{renderDuration(liveWorkDuration)}</span>
               </div>
               <div className="timer-breakdown-item">
                 <span className="tb-label"><Coffee size={12} /> Break</span>
-                <span className="tb-value" style={{ color: '#fbbf24' }}>{formatDuration(liveBreakDuration)}</span>
+                <span className="tb-value" style={{ color: '#fbbf24' }}>{renderDuration(liveBreakDuration)}</span>
               </div>
               <div className="timer-breakdown-item">
                 <span className="tb-label"><Utensils size={12} /> Lunch</span>
-                <span className="tb-value" style={{ color: '#60a5fa' }}>{formatDuration(liveLunchDuration)}</span>
+                <span className="tb-value" style={{ color: '#60a5fa' }}>{renderDuration(liveLunchDuration)}</span>
               </div>
             </div>
 

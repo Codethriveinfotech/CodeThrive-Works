@@ -1,5 +1,6 @@
 const Attendance = require('../models/Attendance');
 const Employee = require('../models/Employee');
+const AttendanceCorrection = require('../models/AttendanceCorrection');
 
 // Helper: Get start & end of a given date (or today)
 const getDayRange = (dateStr) => {
@@ -324,6 +325,126 @@ exports.getMonthlyReport = async (req, res) => {
     });
   } catch (err) {
     console.error('getMonthlyReport error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Get all attendance correction requests
+// @route   GET /api/v1/admin/attendance/corrections
+exports.getAttendanceCorrections = async (req, res) => {
+  try {
+    const corrections = await AttendanceCorrection.find()
+      .populate('employee', 'fullName employeeId department designation email profilePhoto')
+      .populate('approvedBy', 'email name')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: corrections || []
+    });
+  } catch (err) {
+    console.error('getAttendanceCorrections error:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @desc    Approve or Reject attendance correction request
+// @route   PUT /api/v1/admin/attendance/corrections/:id/status
+exports.updateCorrectionStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // 'Approved' | 'Rejected'
+
+    const correction = await AttendanceCorrection.findById(id);
+    if (!correction) {
+      return res.status(404).json({ success: false, message: 'Attendance correction request not found.' });
+    }
+
+    correction.status = status;
+    correction.approvedBy = req.user ? req.user._id : null;
+    correction.approvedAt = new Date();
+    await correction.save();
+
+    if (status === 'Approved') {
+      const { start, end } = getDayRange(correction.date);
+      let attendance = await Attendance.findOne({
+        employee: correction.employee,
+        date: { $gte: start, $lte: end }
+      });
+
+      const reasonStr = correction.reason || '';
+      let inTimeStr = null;
+      let outTimeStr = null;
+      let breakMins = 0;
+      let lunchMins = 0;
+
+      const inMatch = reasonStr.match(/Check-In:\s*([0-9:]+\s*(?:AM|PM)?)/i);
+      const outMatch = reasonStr.match(/Check-Out:\s*([0-9:]+\s*(?:AM|PM)?)/i);
+      const breakMatch = reasonStr.match(/Break:\s*(\d+)m/i);
+      const lunchMatch = reasonStr.match(/Lunch:\s*(\d+)m/i);
+
+      if (inMatch) inTimeStr = inMatch[1].trim();
+      if (outMatch) outTimeStr = outMatch[1].trim();
+      if (breakMatch) breakMins = parseInt(breakMatch[1], 10);
+      if (lunchMatch) lunchMins = parseInt(lunchMatch[1], 10);
+
+      const toDateObj = (tStr, baseDate) => {
+        if (!tStr) return null;
+        const d = new Date(baseDate);
+        if (tStr.includes(':')) {
+          let [hh, mm] = tStr.replace(/[^\d:]/g, '').split(':').map(Number);
+          if (tStr.toLowerCase().includes('pm') && hh < 12) hh += 12;
+          if (tStr.toLowerCase().includes('am') && hh === 12) hh = 0;
+          d.setHours(hh || 0, mm || 0, 0, 0);
+          return d;
+        }
+        return null;
+      };
+
+      const loginTime = toDateObj(inTimeStr, correction.date) || new Date(correction.date);
+      const logoutTime = toDateObj(outTimeStr, correction.date);
+      const breakSec = (breakMins || 0) * 60;
+      const lunchSec = (lunchMins || 0) * 60;
+
+      let netWorkSec = 28800;
+      if (loginTime && logoutTime) {
+        const totalShiftSec = Math.max(0, Math.floor((logoutTime - loginTime) / 1000));
+        netWorkSec = Math.max(0, totalShiftSec - (breakSec + lunchSec));
+      }
+
+      if (!attendance) {
+        attendance = await Attendance.create({
+          employee: correction.employee,
+          date: new Date(correction.date),
+          firstLoginTime: loginTime,
+          lastLogoutTime: logoutTime,
+          totalWorkDurationInSeconds: netWorkSec,
+          totalBreakDurationInSeconds: breakSec,
+          totalLunchDurationInSeconds: lunchSec,
+          status: 'Present',
+          isManualCorrection: true,
+          correctionReason: `Approved Correction: ${reasonStr}`
+        });
+      } else {
+        attendance.status = 'Present';
+        if (loginTime) attendance.firstLoginTime = loginTime;
+        if (logoutTime) attendance.lastLogoutTime = logoutTime;
+        if (breakSec > 0) attendance.totalBreakDurationInSeconds = breakSec;
+        if (lunchSec > 0) attendance.totalLunchDurationInSeconds = lunchSec;
+        attendance.totalWorkDurationInSeconds = netWorkSec;
+        attendance.isManualCorrection = true;
+        attendance.correctionReason = `Approved Correction: ${reasonStr}`;
+        await attendance.save();
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Correction request marked as ${status}.`,
+      data: correction
+    });
+  } catch (err) {
+    console.error('updateCorrectionStatus error:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };

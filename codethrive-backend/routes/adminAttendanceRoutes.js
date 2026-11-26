@@ -4,6 +4,8 @@ const {
   markAttendance,
   bulkMarkAttendance,
   getMonthlyReport,
+  getAttendanceCorrections,
+  updateCorrectionStatus
 } = require('../controllers/adminAttendanceController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -24,5 +26,11 @@ router.post('/bulk-mark', bulkMarkAttendance);
 
 // GET  /api/v1/admin/attendance/monthly?month=M&year=YYYY&employeeId=optional
 router.get('/monthly', getMonthlyReport);
+
+// GET  /api/v1/admin/attendance/corrections
+router.get('/corrections', getAttendanceCorrections);
+
+// PUT  /api/v1/admin/attendance/corrections/:id/status
+router.put('/corrections/:id/status', updateCorrectionStatus);
 
 module.exports = router;

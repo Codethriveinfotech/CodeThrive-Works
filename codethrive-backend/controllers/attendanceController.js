@@ -715,14 +715,35 @@ exports.getLeaveBalances = async (req, res) => {
 exports.submitRegularization = async (req, res) => {
   try {
     const employee = await getOrCreateEmployee(req.user);
-    const { date, requestedFirstLoginTime, requestedLastLogoutTime, reason } = req.body;
+    const { 
+      date, 
+      correctionType,
+      customType,
+      checkInTime, 
+      checkOutTime, 
+      breakMinutes, 
+      lunchMinutes,
+      reason 
+    } = req.body;
+
+    const typeLabel = correctionType === 'Others' 
+      ? `Other: ${customType || 'Custom Adjustment'}` 
+      : (correctionType || 'Timing Adjustment');
+    
+    // Build comprehensive readable explanation in reason
+    const parts = [typeLabel];
+    if (checkInTime) parts.push(`Check-In: ${checkInTime}`);
+    if (checkOutTime) parts.push(`Check-Out: ${checkOutTime}`);
+    if (breakMinutes !== undefined && breakMinutes !== '' && Number(breakMinutes) > 0) parts.push(`Break: ${breakMinutes}m`);
+    if (lunchMinutes !== undefined && lunchMinutes !== '' && Number(lunchMinutes) > 0) parts.push(`Lunch: ${lunchMinutes}m`);
+    if (reason) parts.push(`Note: ${reason}`);
+    const fullReason = parts.join(' | ');
 
     const correction = await AttendanceCorrection.create({
       employee: employee._id,
-      date,
-      requestedFirstLoginTime,
-      requestedLastLogoutTime,
-      reason,
+      date: date ? new Date(date) : new Date(),
+      reason: fullReason,
+      requested_checkout_time: checkOutTime || null,
       status: 'Pending'
     });
 
@@ -730,13 +751,17 @@ exports.submitRegularization = async (req, res) => {
     const dateFormatted = date ? new Date(date).toLocaleDateString('en-IN') : 'Recent Date';
     await notifyAdminsAndHR(
       'Attendance Correction Request',
-      `${employee.fullName} submitted attendance correction request for ${dateFormatted}: "${reason || 'Timing adjustment'}".`,
+      `${employee.fullName} submitted attendance correction for ${dateFormatted}: "${typeLabel}".`,
       'Attendance',
-      'Medium',
+      'High',
       '/admin/attendance'
     );
 
-    res.status(201).json({ success: true, message: 'Regularization request submitted for approval', data: correction });
+    res.status(201).json({ 
+      success: true, 
+      message: 'Attendance correction request submitted to Admin/HR successfully', 
+      data: correction 
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

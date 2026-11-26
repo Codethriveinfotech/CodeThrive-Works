@@ -565,6 +565,17 @@
   letter-spacing: -0.02em;
 }
 
+.unit-letter {
+  font-size: 0.58em;
+  font-weight: 700;
+  margin-left: 2px;
+  margin-right: 4px;
+  opacity: 0.85;
+  display: inline-block;
+  vertical-align: baseline;
+  letter-spacing: normal;
+}
+
 .attendance-workspace .timer-label {
   font-size: 0.8rem;
   color: #818cf8;

@@ -24,6 +24,7 @@ router.get('/history', getAttendanceHistory);
 router.get('/summary', getAttendanceSummary);
 router.post('/regularize', upload.single('attachment'), submitRegularization);
 router.post('/correction', upload.single('attachment'), submitRegularization);
+router.post('/request-correction', upload.single('attachment'), submitRegularization);
 router.route('/leaves')
   .get(getLeaveBalances)
   .post(applyLeave);

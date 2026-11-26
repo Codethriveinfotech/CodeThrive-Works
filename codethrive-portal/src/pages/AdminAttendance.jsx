@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, CalendarDays, AlertCircle,
   Pencil, Clock, LogIn, LogOut, Coffee, Utensils,
   Users, UserCheck, UserX, CalendarOff, AlertTriangle, Sparkles, BarChart2,
-  CalendarCheck
+  CalendarCheck, FileCheck, Check, X
 } from 'lucide-react';
 import DateInput, { toIsoDate } from '../components/common/DateInput';
 import Modal from '../components/common/Modal';
@@ -94,6 +94,46 @@ const AdminAttendance = () => {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [bulkSaving, setBulkSaving] = useState(false);
+
+  // Correction Requests State
+  const [corrections, setCorrections] = useState([]);
+  const [correctionsLoading, setCorrectionsLoading] = useState(false);
+
+  const fetchCorrections = useCallback(async () => {
+    setCorrectionsLoading(true);
+    try {
+      const res = await api.get('/admin/attendance/corrections');
+      if (res.data.success) {
+        setCorrections(res.data.data || []);
+      }
+    } catch (err) {
+      console.error('fetchCorrections error:', err);
+    } finally {
+      setCorrectionsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCorrections();
+  }, [fetchCorrections]);
+
+  const handleUpdateCorrectionStatus = async (id, status) => {
+    try {
+      const res = await api.put(`/admin/attendance/corrections/${id}/status`, { status });
+      if (res.data.success) {
+        showToast(
+          status === 'Approved'
+            ? '✓ Correction request approved & attendance updated!'
+            : '✕ Correction request rejected.',
+          status === 'Approved' ? 'success' : 'info'
+        );
+        setCorrections(prev => prev.map(c => (c._id === id || c.id === id) ? { ...c, status } : c));
+        fetchRegister();
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to update correction status', 'error');
+    }
+  };
 
   // Edit Modal State
   const [editingRow, setEditingRow] = useState(null);
@@ -404,6 +444,19 @@ const AdminAttendance = () => {
         >
           <BarChart2 size={15} />
           <span>Monthly Report</span>
+        </button>
+        <button
+          className={`aa-tab-btn ${activeTab === 'corrections' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('corrections'); fetchCorrections(); }}
+          id="aa-tab-corrections"
+        >
+          <FileCheck size={15} />
+          <span>Correction Requests</span>
+          {corrections.filter(c => c.status === 'Pending').length > 0 && (
+            <span className="aa-badge-count-pill">
+              {corrections.filter(c => c.status === 'Pending').length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -813,6 +866,144 @@ const AdminAttendance = () => {
             )}
           </div>
         </>
+      )}
+
+      {/* ═══════════════ CORRECTION REQUESTS TAB ═══════════════ */}
+      {activeTab === 'corrections' && (
+        <div className="aa-table-card">
+          <div className="aa-table-header-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <FileCheck size={18} style={{ color: '#38bdf8' }} />
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', color: '#f8fafc', fontWeight: 700 }}>Attendance Correction Requests</h3>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>
+                  Employee-submitted punch corrections, break adjustments, and system issues
+                </span>
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="aa-btn aa-btn-secondary"
+              onClick={fetchCorrections}
+              title="Refresh Corrections"
+              style={{ padding: '0.45rem 0.85rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            >
+              <RefreshCw size={13} className={correctionsLoading ? 'aa-spin' : ''} /> Refresh
+            </motion.button>
+          </div>
+
+          {correctionsLoading ? (
+            <div className="aa-empty" style={{ padding: '3.5rem 0' }}>
+              <div className="aa-spinner" />
+              <p style={{ marginTop: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>Loading correction requests...</p>
+            </div>
+          ) : corrections.length === 0 ? (
+            <div className="aa-empty" style={{ padding: '3.5rem 0' }}>
+              <CheckCircle2 size={38} style={{ color: '#34d399', opacity: 0.6, marginBottom: '0.6rem' }} />
+              <p style={{ color: '#f8fafc', fontWeight: 600, fontSize: '0.95rem', margin: '0 0 0.35rem 0' }}>No Correction Requests Pending</p>
+              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.82rem' }}>All attendance records are synchronized.</span>
+            </div>
+          ) : (
+            <div className="aa-table-wrapper">
+              <table className="aa-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>EMPLOYEE</th>
+                    <th>DATE</th>
+                    <th>CORRECTION DETAILS</th>
+                    <th>STATUS</th>
+                    <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {corrections.map((item, idx) => {
+                    const empName = item.employee?.fullName || 'Employee';
+                    const empId = item.employee?.employeeId || 'CTI-EMP';
+                    const dept = item.employee?.department || 'General';
+                    const reqDateStr = item.date ? new Date(item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                    const isPending = (item.status || 'Pending').toLowerCase() === 'pending';
+                    const isApproved = (item.status || '').toLowerCase() === 'approved';
+
+                    return (
+                      <tr key={item._id || item.id || idx}>
+                        <td style={{ color: 'rgba(255,255,255,0.3)', width: '30px' }}>{idx + 1}</td>
+                        <td>
+                          <div className="aa-emp-cell">
+                            <div className="aa-avatar-circle">
+                              {item.employee?.profilePhoto ? (
+                                <img src={item.employee.profilePhoto} alt={empName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                              ) : (
+                                empName.charAt(0).toUpperCase()
+                              )}
+                            </div>
+                            <div className="aa-emp-meta">
+                              <span className="aa-emp-name">{empName}</span>
+                              <span className="aa-emp-code">{empId} • {dept}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ whiteSpace: 'nowrap', fontWeight: 600, color: '#e2e8f0', fontSize: '0.84rem' }}>
+                          {reqDateStr}
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', maxWidth: '420px' }}>
+                            <span style={{ color: '#cbd5e1', fontSize: '0.84rem', fontWeight: 600 }}>
+                              {item.reason || 'Attendance Timing Correction'}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`status-badge-capsule ${isPending ? 'warning' : isApproved ? 'success' : 'danger'}`} style={{
+                            padding: '0.25rem 0.65rem',
+                            borderRadius: '20px',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            background: isPending ? 'rgba(245, 158, 11, 0.15)' : isApproved ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                            color: isPending ? '#fbbf24' : isApproved ? '#34d399' : '#f87171',
+                            border: `1px solid ${isPending ? 'rgba(245, 158, 11, 0.35)' : isApproved ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`
+                          }}>
+                            {isPending ? 'Pending Review' : item.status}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          {isPending ? (
+                            <div style={{ display: 'inline-flex', gap: '0.45rem', alignItems: 'center' }}>
+                              <button
+                                type="button"
+                                className="aa-action-btn-approve"
+                                onClick={() => handleUpdateCorrectionStatus(item._id || item.id, 'Approved')}
+                                title="Approve and apply correction to attendance"
+                              >
+                                <Check size={13} /> Approve
+                              </button>
+                              <button
+                                type="button"
+                                className="aa-action-btn-reject"
+                                onClick={() => handleUpdateCorrectionStatus(item._id || item.id, 'Rejected')}
+                                title="Reject request"
+                              >
+                                <X size={13} /> Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.78rem', color: isApproved ? '#34d399' : '#94a3b8', fontWeight: 600 }}>
+                              {isApproved ? '✓ Applied to Register' : 'Rejected'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Edit Attendance Modal */}

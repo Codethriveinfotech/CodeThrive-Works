@@ -970,6 +970,17 @@
   letter-spacing: -1px;
 }
 
+.unit-letter {
+  font-size: 0.58em;
+  font-weight: 700;
+  margin-left: 2px;
+  margin-right: 4px;
+  opacity: 0.85;
+  display: inline-block;
+  vertical-align: baseline;
+  letter-spacing: normal;
+}
+
 .timer-label {
   font-size: 0.85rem;
   color: var(--primary);
