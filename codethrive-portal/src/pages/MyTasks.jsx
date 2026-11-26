@@ -249,7 +249,7 @@ const MyTasks = () => {
          -------------------------------------------------------------------------- */}
       <div className="task-stats-grid">
         <motion.div 
-          className={`task-stat-card clickable ${activeChip === 'All' && statusFilter === 'All' ? 'active' : ''}`} 
+          className={`task-stat-card stat-total clickable ${activeChip === 'All' && statusFilter === 'All' ? 'active' : ''}`} 
           variants={itemVariants}
           onClick={() => { setActiveChip('All'); setStatusFilter('All'); openStatBreakdownModal('All'); }}
           title="Click to view all assigned tasks"
@@ -267,7 +267,7 @@ const MyTasks = () => {
         </motion.div>
 
         <motion.div 
-          className={`task-stat-card clickable ${activeChip === 'Pending' ? 'active' : ''}`} 
+          className={`task-stat-card stat-pending clickable ${activeChip === 'Pending' ? 'active' : ''}`} 
           variants={itemVariants}
           onClick={() => { setActiveChip('Pending'); setStatusFilter('All'); openStatBreakdownModal('Pending'); }}
           title="Click to view pending tasks"
@@ -285,7 +285,7 @@ const MyTasks = () => {
         </motion.div>
 
         <motion.div 
-          className={`task-stat-card clickable ${activeChip === 'In Progress' ? 'active' : ''}`} 
+          className={`task-stat-card stat-progress clickable ${activeChip === 'In Progress' ? 'active' : ''}`} 
           variants={itemVariants}
           onClick={() => { setActiveChip('In Progress'); setStatusFilter('All'); openStatBreakdownModal('In Progress'); }}
           title="Click to view in-progress tasks"
@@ -303,7 +303,7 @@ const MyTasks = () => {
         </motion.div>
 
         <motion.div 
-          className={`task-stat-card clickable ${activeChip === 'Completed' ? 'active' : ''}`} 
+          className={`task-stat-card stat-completed clickable ${activeChip === 'Completed' ? 'active' : ''}`} 
           variants={itemVariants}
           onClick={() => { setActiveChip('Completed'); setStatusFilter('All'); openStatBreakdownModal('Completed'); }}
           title="Click to view completed tasks"

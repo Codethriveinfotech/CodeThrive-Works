@@ -471,7 +471,7 @@ const DailyReports = () => {
          -------------------------------------------------------------------------- */}
       <div className="reports-metrics-grid">
         <div 
-          className={`metric-card-exec ${activeFilterTab === 'All' ? 'active-filter' : ''}`}
+          className={`metric-card-exec card-total ${activeFilterTab === 'All' ? 'active-filter' : ''}`}
           onClick={() => setActiveFilterTab('All')}
           title="Click to view all project reports"
         >
@@ -489,7 +489,7 @@ const DailyReports = () => {
         </div>
 
         <div 
-          className={`metric-card-exec ${activeFilterTab === 'Submitted' ? 'active-filter' : ''}`}
+          className={`metric-card-exec card-pending ${activeFilterTab === 'Submitted' ? 'active-filter' : ''}`}
           onClick={() => setActiveFilterTab('Submitted')}
           title="Click to view reports pending review"
         >
@@ -507,7 +507,7 @@ const DailyReports = () => {
         </div>
 
         <div 
-          className={`metric-card-exec ${activeFilterTab === 'Reviewed' ? 'active-filter' : ''}`}
+          className={`metric-card-exec card-approved ${activeFilterTab === 'Reviewed' ? 'active-filter' : ''}`}
           onClick={() => setActiveFilterTab('Reviewed')}
           title="Click to view approved reports"
         >
@@ -525,7 +525,7 @@ const DailyReports = () => {
         </div>
 
         <div 
-          className="metric-card-exec"
+          className="metric-card-exec card-projects"
           title="Total distinct projects reported"
         >
           <div className="metric-icon-box purple">

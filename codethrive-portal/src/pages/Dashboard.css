@@ -272,36 +272,76 @@
 }
 
 .quick-hub-card {
-  background: rgba(17, 24, 39, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 1.15rem 1.25rem;
+  border-radius: 18px;
+  padding: 1.25rem 1.35rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.15rem;
   text-decoration: none;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
+
+.quick-hub-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  opacity: 0.85;
+  transition: opacity 0.3s ease, height 0.3s ease;
+}
+
+.quick-hub-card.hub-report::before { background: linear-gradient(90deg, #6366f1, #a5b4fc); }
+.quick-hub-card.hub-attendance::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.quick-hub-card.hub-leave::before { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.quick-hub-card.hub-payroll::before { background: linear-gradient(90deg, #059669, #34d399); }
+
+.quick-hub-card::after {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.15;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.quick-hub-card.hub-report::after { background: radial-gradient(circle, #6366f1 0%, transparent 70%); }
+.quick-hub-card.hub-attendance::after { background: radial-gradient(circle, #0ea5e9 0%, transparent 70%); }
+.quick-hub-card.hub-leave::after { background: radial-gradient(circle, #f59e0b 0%, transparent 70%); }
+.quick-hub-card.hub-payroll::after { background: radial-gradient(circle, #10b981 0%, transparent 70%); }
 
 .quick-hub-card:hover {
-  transform: translateY(-3px);
-  background: rgba(30, 41, 59, 0.85);
-  box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.5);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.65);
 }
 
-.quick-hub-card.hub-report:hover { border-color: rgba(99, 102, 241, 0.4); }
-.quick-hub-card.hub-attendance:hover { border-color: rgba(56, 189, 248, 0.4); }
-.quick-hub-card.hub-leave:hover { border-color: rgba(245, 158, 11, 0.4); }
-.quick-hub-card.hub-payroll:hover { border-color: rgba(16, 185, 129, 0.4); }
+.quick-hub-card:hover::after {
+  opacity: 0.35;
+  transform: scale(1.2);
+}
+
+.quick-hub-card.hub-report:hover { border-color: rgba(99, 102, 241, 0.6); box-shadow: 0 16px 36px -10px rgba(0,0,0,0.6), 0 0 20px rgba(99, 102, 241, 0.25); }
+.quick-hub-card.hub-attendance:hover { border-color: rgba(56, 189, 248, 0.6); box-shadow: 0 16px 36px -10px rgba(0,0,0,0.6), 0 0 20px rgba(56, 189, 248, 0.25); }
+.quick-hub-card.hub-leave:hover { border-color: rgba(245, 158, 11, 0.6); box-shadow: 0 16px 36px -10px rgba(0,0,0,0.6), 0 0 20px rgba(245, 158, 11, 0.25); }
+.quick-hub-card.hub-payroll:hover { border-color: rgba(16, 185, 129, 0.6); box-shadow: 0 16px 36px -10px rgba(0,0,0,0.6), 0 0 20px rgba(16, 185, 129, 0.25); }
 
 .hub-icon-wrapper {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -309,10 +349,10 @@
   transition: all 0.3s ease;
 }
 
-.quick-hub-card.hub-report .hub-icon-wrapper { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
-.quick-hub-card.hub-attendance .hub-icon-wrapper { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
-.quick-hub-card.hub-leave .hub-icon-wrapper { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-.quick-hub-card.hub-payroll .hub-icon-wrapper { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.quick-hub-card.hub-report .hub-icon-wrapper { background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(99, 102, 241, 0.35); color: #a5b4fc; }
+.quick-hub-card.hub-attendance .hub-icon-wrapper { background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; }
+.quick-hub-card.hub-leave .hub-icon-wrapper { background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; }
+.quick-hub-card.hub-payroll .hub-icon-wrapper { background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; }
 
 .quick-hub-card:hover .hub-icon-wrapper {
   transform: scale(1.08);
@@ -505,34 +545,54 @@
 }
 
 .metric-card {
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  padding: 1.4rem 1.5rem;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.35rem 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1.15rem;
+  gap: 1.25rem;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
-.metric-glow-accent {
+.metric-card::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 2.5px;
+  right: 0;
+  height: 3px;
   opacity: 0.85;
+  transition: opacity 0.3s ease;
 }
 
-.metric-glow-accent.primary { background: linear-gradient(90deg, #6366f1, #818cf8); box-shadow: 0 0 10px #6366f1; }
-.metric-glow-accent.warning { background: linear-gradient(90deg, #f59e0b, #fbbf24); box-shadow: 0 0 10px #f59e0b; }
-.metric-glow-accent.success { background: linear-gradient(90deg, #10b981, #34d399); box-shadow: 0 0 10px #10b981; }
-.metric-glow-accent.info    { background: linear-gradient(90deg, #06b6d4, #38bdf8); box-shadow: 0 0 10px #06b6d4; }
+.metric-card.metric-tasks::before { background: linear-gradient(90deg, #6366f1, #a5b4fc); }
+.metric-card.metric-pending::before { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.metric-card.metric-completed::before { background: linear-gradient(90deg, #059669, #34d399); }
+.metric-card.metric-work::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+
+.metric-card::after {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.15;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.metric-card.metric-tasks::after { background: radial-gradient(circle, #6366f1 0%, transparent 70%); }
+.metric-card.metric-pending::after { background: radial-gradient(circle, #f59e0b 0%, transparent 70%); }
+.metric-card.metric-completed::after { background: radial-gradient(circle, #10b981 0%, transparent 70%); }
+.metric-card.metric-work::after { background: radial-gradient(circle, #0ea5e9 0%, transparent 70%); }
 
 .metric-card.clickable {
   cursor: pointer;
@@ -540,20 +600,50 @@
 
 .metric-card.clickable:hover {
   transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.45);
-  background: rgba(30, 41, 59, 0.85);
-  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.4),
-              0 0 20px rgba(99, 102, 241, 0.2);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.65);
 }
 
-.metric-card.metric-tasks:hover { border-color: rgba(99, 102, 241, 0.5); box-shadow: 0 12px 30px -8px rgba(99, 102, 241, 0.35); }
-.metric-card.metric-pending:hover { border-color: rgba(245, 158, 11, 0.5); box-shadow: 0 12px 30px -8px rgba(245, 158, 11, 0.35); }
-.metric-card.metric-completed:hover { border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 12px 30px -8px rgba(16, 185, 129, 0.35); }
-.metric-card.metric-work:hover { border-color: rgba(6, 182, 212, 0.5); box-shadow: 0 12px 30px -8px rgba(6, 182, 212, 0.35); }
+.metric-card.clickable:hover::after {
+  opacity: 0.35;
+  transform: scale(1.2);
+}
+
+.metric-card.metric-tasks:hover { border-color: rgba(99, 102, 241, 0.6); box-shadow: 0 16px 36px -10px rgba(0,0,0,0.6), 0 0 20px rgba(99, 102, 241, 0.25); }
+.metric-card.metric-pending:hover { border-color: rgba(245, 158, 11, 0.6); box-shadow: 0 16px 36px -10px rgba(0,0,0,0.6), 0 0 20px rgba(245, 158, 11, 0.25); }
+.metric-card.metric-completed:hover { border-color: rgba(16, 185, 129, 0.6); box-shadow: 0 16px 36px -10px rgba(0,0,0,0.6), 0 0 20px rgba(16, 185, 129, 0.25); }
+.metric-card.metric-work:hover { border-color: rgba(56, 189, 248, 0.6); box-shadow: 0 16px 36px -10px rgba(0,0,0,0.6), 0 0 20px rgba(56, 189, 248, 0.25); }
 
 .metric-card.clickable:active {
   transform: scale(0.98);
 }
+
+.metric-value {
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.metric-card.metric-tasks .metric-value { color: #a5b4fc; }
+.metric-card.metric-pending .metric-value { color: #fbbf24; }
+.metric-card.metric-completed .metric-value { color: #34d399; }
+.metric-card.metric-work .metric-value { color: #38bdf8; }
+
+.metric-icon-wrapper {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metric-icon-wrapper.primary { background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(99, 102, 241, 0.35); color: #a5b4fc; }
+.metric-icon-wrapper.warning { background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; }
+.metric-icon-wrapper.success { background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; }
+.metric-icon-wrapper.info    { background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; }
 
 .metric-content {
   display: flex;

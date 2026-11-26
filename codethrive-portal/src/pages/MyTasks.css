@@ -171,31 +171,91 @@
 
 .task-stat-card {
   position: relative;
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  padding: 1.4rem 1.5rem;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 1.35rem 1.5rem;
   display: flex;
   align-items: center;
-  gap: 1.15rem;
+  gap: 1.25rem;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
+
+.task-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  opacity: 0.85;
+  transition: opacity 0.3s ease;
+}
+
+.task-stat-card.stat-total::before { background: linear-gradient(90deg, #6366f1, #a5b4fc); }
+.task-stat-card.stat-pending::before { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.task-stat-card.stat-progress::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.task-stat-card.stat-completed::before { background: linear-gradient(90deg, #059669, #34d399); }
+
+.task-stat-card::after {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.15;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.task-stat-card.stat-total::after { background: radial-gradient(circle, #6366f1 0%, transparent 70%); }
+.task-stat-card.stat-pending::after { background: radial-gradient(circle, #f59e0b 0%, transparent 70%); }
+.task-stat-card.stat-progress::after { background: radial-gradient(circle, #0ea5e9 0%, transparent 70%); }
+.task-stat-card.stat-completed::after { background: radial-gradient(circle, #10b981 0%, transparent 70%); }
 
 .task-stat-card.clickable {
   cursor: pointer;
 }
 
-.task-stat-card:hover,
-.task-stat-card.clickable.active {
+.task-stat-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.45);
-  background: rgba(30, 41, 59, 0.85);
-  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.4),
-              0 0 20px rgba(99, 102, 241, 0.2);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.65);
+}
+
+.task-stat-card:hover::after {
+  opacity: 0.35;
+  transform: scale(1.2);
+}
+
+.task-stat-card.stat-total:hover,
+.task-stat-card.stat-total.active {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.task-stat-card.stat-pending:hover,
+.task-stat-card.stat-pending.active {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.task-stat-card.stat-progress:hover,
+.task-stat-card.stat-progress.active {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.3);
+}
+
+.task-stat-card.stat-completed:hover,
+.task-stat-card.stat-completed.active {
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.3);
 }
 
 .stat-action-icon {
@@ -271,12 +331,18 @@
 }
 
 .stat-count {
-  font-size: 1.8rem;
+  font-size: 1.85rem;
   font-weight: 800;
   color: #f8fafc;
   line-height: 1.2;
   margin-top: 0.1rem;
+  letter-spacing: -0.02em;
 }
+
+.task-stat-card.stat-total .stat-count { color: #a5b4fc; }
+.task-stat-card.stat-pending .stat-count { color: #fbbf24; }
+.task-stat-card.stat-progress .stat-count { color: #38bdf8; }
+.task-stat-card.stat-completed .stat-count { color: #34d399; }
 
 
 /* --------------------------------------------------------------------------
