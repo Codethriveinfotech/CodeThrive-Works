@@ -412,7 +412,7 @@ const AdminReports = () => {
             <span className="stat-tag tag-cyan">TIME TRACKED</span>
           </div>
           <div className="stat-card-body">
-            <h3 className="stat-number">{totalHours.toFixed(1)}h</h3>
+            <h3 className="stat-number">{totalHours.toFixed(1)}H</h3>
             <p className="stat-title">Total Hours Logged</p>
           </div>
           <div className="stat-card-footer">

@@ -224,8 +224,15 @@ const MyTasks = () => {
           1. HERO HEADER BANNER
          -------------------------------------------------------------------------- */}
       <div className="tasks-hero">
+        <div className="tasks-hero-ambient" />
         <div className="hero-main-content">
-          <h1 className="tasks-hero-title">My Tasks</h1>
+          <div className="hero-top-badge">
+            <span className="pulse-dot"></span>
+            <span>Task Deliverables Workspace</span>
+          </div>
+          <h1 className="tasks-hero-title">
+            <CheckSquare size={28} className="tasks-title-icon" /> My Tasks
+          </h1>
           <p className="tasks-hero-subtitle">
             Manage, track, and complete your assigned project deliverables with real-time status updates and progress tracking.
           </p>

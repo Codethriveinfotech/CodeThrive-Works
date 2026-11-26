@@ -133,7 +133,7 @@ const Admin = () => {
     const sec = Math.max(0, Math.floor(seconds || 0));
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
-    return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
+    return `${h.toString().padStart(2, '0')}H ${m.toString().padStart(2, '0')}M`;
   };
 
   const formatTimeOnly = (isoString) => {

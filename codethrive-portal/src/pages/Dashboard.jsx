@@ -446,9 +446,9 @@ const Dashboard = () => {
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
     if (h > 0) {
-      return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
+      return `${h.toString().padStart(2, '0')}H ${m.toString().padStart(2, '0')}M`;
     }
-    return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+    return `${m.toString().padStart(2, '0')}M ${s.toString().padStart(2, '0')}S`;
   };
 
   if (loading) return (

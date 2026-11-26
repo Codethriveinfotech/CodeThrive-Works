@@ -46,7 +46,7 @@ const RegistrationHubModal = ({ isOpen, onClose }) => {
             dailyReports: [],
             leaveApplications: [],
             uploadedDocs: [],
-            attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '0h 0m', breakTime: '0m' },
+            attendanceLogs: { todayStatus: 'Working', checkIn: '09:00 AM', checkOut: '--:--', workTime: '0H 0M', breakTime: '0M' },
             supportTickets: []
           },
           assignedByAdmin: emp.assignedByAdmin || {

@@ -731,7 +731,7 @@ const Attendance = () => {
     const totalSec = Math.max(0, Math.floor(seconds || 0));
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
-    return `${h}h ${m}m`;
+    return `${h}H ${m}M`;
   };
 
   const formatDurationHMS = (seconds = 0) => {
@@ -769,9 +769,9 @@ const Attendance = () => {
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
     if (h > 0) {
-      return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
+      return `${h.toString().padStart(2, '0')}H ${m.toString().padStart(2, '0')}M`;
     }
-    return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+    return `${m.toString().padStart(2, '0')}M ${s.toString().padStart(2, '0')}S`;
   };
 
   const hasActiveSession = Boolean(activeSession && (activeSession.status === 'Active' || activeSession.startTime));
@@ -874,8 +874,8 @@ const Attendance = () => {
   const attendancePercentage = totalWorkingDays > 0 ? Math.min(100, Math.round((presentDaysCount / totalWorkingDays) * 100)) : 0;
   const lateDaysCount = dynamicLateDays;
   const absentDaysCount = dynamicAbsentDays;
-  const avgHoursDisplay = summary?.averageWorkingHours ? `${summary.averageWorkingHours}h` : '0h';
-  const totalHoursDisplay = summary?.totalWorkingHours ? `${summary.totalWorkingHours}h` : '0h';
+  const avgHoursDisplay = summary?.averageWorkingHours ? `${summary.averageWorkingHours}H` : '0H';
+  const totalHoursDisplay = summary?.totalWorkingHours ? `${summary.totalWorkingHours}H` : '0H';
 
   const monthNameFormatted = new Date(selectedYear, selectedMonth - 1, 1).toLocaleString('en', { month: 'long', year: 'numeric' });
   const todayFormatted = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -1637,12 +1637,12 @@ const Attendance = () => {
               }}>
                 <div>
                   <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.72rem', textTransform: 'uppercase' }}>Gross Shift</span>
-                  <strong style={{ color: '#fff' }}>{Math.floor(totalShiftMins / 60)}h {totalShiftMins % 60}m</strong>
-                  <span style={{ color: '#fbbf24', marginLeft: '0.5rem', fontSize: '0.76rem' }}>(Break & Lunch: {totalBreakMins}m)</span>
+                  <strong style={{ color: '#fff' }}>{Math.floor(totalShiftMins / 60)}H {totalShiftMins % 60}M</strong>
+                  <span style={{ color: '#fbbf24', marginLeft: '0.5rem', fontSize: '0.76rem' }}>(Break & Lunch: {totalBreakMins}M)</span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <span style={{ color: '#94a3b8', display: 'block', fontSize: '0.72rem', textTransform: 'uppercase' }}>Recalculated Net Work</span>
-                  <strong style={{ color: '#34d399', fontSize: '1rem' }}>{wh}h {wm}m</strong>
+                  <strong style={{ color: '#34d399', fontSize: '1rem' }}>{wh}H {wm}M</strong>
                 </div>
               </div>
             );

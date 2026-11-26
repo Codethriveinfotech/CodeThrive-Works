@@ -34,7 +34,7 @@ const fmtDuration = (secs) => {
   if (!secs || secs <= 0) return '—';
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);
-  return `${h}h ${m}m`;
+  return `${h}H ${m}M`;
 };
 
 const STATUS_OPTIONS = [
@@ -650,14 +650,14 @@ const AdminAttendance = () => {
                           {/* Break Time */}
                           <td style={{ whiteSpace: 'nowrap' }}>
                             <span className="aa-pill-break">
-                              <Coffee size={13} /> {bSec > 0 ? fmtDuration(bSec) : '0h 0m'}
+                              <Coffee size={13} /> {bSec > 0 ? fmtDuration(bSec) : '0H 0M'}
                             </span>
                           </td>
 
                           {/* Lunch Time */}
                           <td style={{ whiteSpace: 'nowrap' }}>
                             <span className="aa-pill-lunch">
-                              <Utensils size={13} /> {lSec > 0 ? fmtDuration(lSec) : '0h 0m'}
+                              <Utensils size={13} /> {lSec > 0 ? fmtDuration(lSec) : '0H 0M'}
                             </span>
                           </td>
 
@@ -929,8 +929,8 @@ const AdminAttendance = () => {
             const wm = netWorkMins % 60;
             return (
               <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '8px', padding: '0.65rem 0.9rem', fontSize: '0.8rem', color: '#93c5fd', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Shift Duration: <strong>{Math.floor(totalShiftMins / 60)}h {totalShiftMins % 60}m</strong> (Break: {totalBreakMins}m)</span>
-                <span style={{ color: '#34d399', fontWeight: 700 }}>Net Working Hours: {wh}h {wm}m</span>
+                <span>Shift Duration: <strong>{Math.floor(totalShiftMins / 60)}H {totalShiftMins % 60}M</strong> (Break: {totalBreakMins}M)</span>
+                <span style={{ color: '#34d399', fontWeight: 700 }}>Net Working Hours: {wh}H {wm}M</span>
               </div>
             );
           })()}

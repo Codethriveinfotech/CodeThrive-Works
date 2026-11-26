@@ -696,7 +696,7 @@ const EmployeeDetail = () => {
     const totalSec = Math.max(0, Math.floor(seconds || 0));
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
-    return `${h}h ${m}m`;
+    return `${h}H ${m}M`;
   };
 
   const exportEmpAttendancePDF = async () => {
@@ -4319,10 +4319,10 @@ CodeThrive Infotech • Confidential Personnel Archive
                 justifyContent: 'space-between'
               }}>
                 <span>
-                  <strong>Recalculated Net Work:</strong> ({Math.floor(grossMin / 60)}h {grossMin % 60}m shift - {bMin + lMin}m break)
+                  <strong>Recalculated Net Work:</strong> ({Math.floor(grossMin / 60)}H {grossMin % 60}M shift - {bMin + lMin}M break)
                 </span>
                 <span style={{ color: '#34d399', fontWeight: 800, fontFamily: 'monospace', fontSize: '1rem' }}>
-                  {netH}h {netM}m
+                  {netH}H {netM}M
                 </span>
               </div>
             );
