@@ -9,7 +9,7 @@ import {
   CheckCircle2, Clock, AlertCircle, Play, 
   Search, Filter, Calendar, RefreshCw, LayoutGrid, 
   List, ArrowUpRight, Sparkles, AlertTriangle, ChevronRight,
-  Layers, CheckSquare, Edit3, Eye, X, SlidersHorizontal
+  Layers, CheckSquare, Edit3, Eye, X, SlidersHorizontal, Award
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
@@ -227,34 +227,44 @@ const MyTasks = () => {
       <div className="tasks-hero">
         <div className="tasks-hero-ambient" />
         <div className="hero-main-content">
-          <div className="hero-top-badge">
-            <span className="pulse-dot"></span>
-            <span>Task Deliverables Workspace</span>
+          <div className="hero-meta-row">
+            <span className="tasks-hero-badge">
+              <CheckSquare size={13} /> Project Deliverables Hub
+            </span>
+            <span className="tasks-sprint-badge">
+              <Sparkles size={12} /> Active Sprint
+            </span>
           </div>
           <h1 className="tasks-hero-title">
-            <CheckSquare size={28} className="tasks-title-icon" /> My Tasks
+            <CheckSquare size={26} className="tasks-title-icon" /> My Tasks
           </h1>
           <p className="tasks-hero-subtitle">
-            Manage, track, and complete your assigned project deliverables with real-time status updates and progress tracking.
+            Track and complete your assigned deliverables with real-time status updates.
           </p>
-          <DailyQuoteBanner variant="compact" />
+          <DailyQuoteBanner variant="hero-quote" showBadge={false} />
         </div>
 
         <div className="hero-right-actions">
-          <div className="tasks-user-pill">
-            <div className="user-avatar-circle">
-              {userNameDisplay.charAt(0).toUpperCase()}
+          <div className="tasks-assignee-card">
+            <div className="assignee-avatar-frame">
+              {user?.profilePhoto ? (
+                <img src={user.profilePhoto} alt={userNameDisplay} className="assignee-avatar-img" />
+              ) : (
+                <span className="assignee-avatar-initials">{userNameDisplay.charAt(0).toUpperCase()}</span>
+              )}
+              <span className="assignee-status-dot" title="Active Lead"></span>
             </div>
-            <div className="user-pill-text">
-              <span className="user-pill-label">Assigned To</span>
-              <span className="user-pill-name">{userNameDisplay}</span>
+            <div className="assignee-info">
+              <span className="assignee-label">Assigned Lead</span>
+              <span className="assignee-name">{userNameDisplay}</span>
+              <span className="assignee-role">{user?.designation || 'Software Developer'}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* --------------------------------------------------------------------------
-          2. STAT METRICS CARDS
+          2. STAT METRICS CARDS (RICH INTERACTIVE STATUS)
          -------------------------------------------------------------------------- */}
       <div className="task-stats-grid">
         <motion.div 
@@ -263,16 +273,28 @@ const MyTasks = () => {
           onClick={() => { setActiveChip('All'); setStatusFilter('All'); openStatBreakdownModal('All'); }}
           title="Click to view all assigned tasks"
         >
-          <div className="stat-icon-wrapper total">
-            <Layers size={24} />
+          <div className="stat-card-top-row">
+            <div className="stat-icon-wrapper total">
+              <Layers size={22} />
+            </div>
+            <span className="stat-header-pill total">All Tasks</span>
+            <div className="stat-action-icon">
+              <ArrowUpRight size={15} />
+            </div>
           </div>
-          <div className="stat-details">
-            <span className="stat-title">Total Assigned</span>
+          <div className="stat-body">
             <span className="stat-count">{totalTasks}</span>
+            <div className="stat-title-group">
+              <span className="stat-title">Total Assigned</span>
+              <span className="stat-subtext">Project backlog scope</span>
+            </div>
           </div>
-          <div className="stat-action-icon">
-            <ArrowUpRight size={16} />
+          <div className="stat-card-footer">
+            <span className="stat-status-pill total">
+              <Sparkles size={11} /> {totalTasks > 0 ? `${totalTasks} Active Deliverables` : 'Zero Backlog • Ready'}
+            </span>
           </div>
+          <div className="stat-accent-bar total"></div>
         </motion.div>
 
         <motion.div 
@@ -281,16 +303,32 @@ const MyTasks = () => {
           onClick={() => { setActiveChip('Pending'); setStatusFilter('All'); openStatBreakdownModal('Pending'); }}
           title="Click to view pending tasks"
         >
-          <div className="stat-icon-wrapper pending">
-            <Clock size={24} />
+          <div className="stat-card-top-row">
+            <div className="stat-icon-wrapper pending">
+              <Clock size={22} />
+            </div>
+            <span className="stat-header-pill pending">Pending</span>
+            <div className="stat-action-icon">
+              <ArrowUpRight size={15} />
+            </div>
           </div>
-          <div className="stat-details">
-            <span className="stat-title">Pending Action</span>
+          <div className="stat-body">
             <span className="stat-count">{pendingTasks}</span>
+            <div className="stat-title-group">
+              <span className="stat-title">Pending Action</span>
+              <span className="stat-subtext">Requires action or review</span>
+            </div>
           </div>
-          <div className="stat-action-icon">
-            <ArrowUpRight size={16} />
+          <div className="stat-card-footer">
+            <span className={`stat-status-pill ${pendingTasks > 0 ? 'pending-warn' : 'pending-clear'}`}>
+              {pendingTasks > 0 ? (
+                <><AlertTriangle size={11} /> {pendingTasks} Needs Attention</>
+              ) : (
+                <><CheckCircle2 size={11} /> All Clear • 0 Pending</>
+              )}
+            </span>
           </div>
+          <div className="stat-accent-bar pending"></div>
         </motion.div>
 
         <motion.div 
@@ -299,16 +337,28 @@ const MyTasks = () => {
           onClick={() => { setActiveChip('In Progress'); setStatusFilter('All'); openStatBreakdownModal('In Progress'); }}
           title="Click to view in-progress tasks"
         >
-          <div className="stat-icon-wrapper progress">
-            <Play size={24} />
+          <div className="stat-card-top-row">
+            <div className="stat-icon-wrapper progress">
+              <Play size={22} />
+            </div>
+            <span className="stat-header-pill progress">Live Sprint</span>
+            <div className="stat-action-icon">
+              <ArrowUpRight size={15} />
+            </div>
           </div>
-          <div className="stat-details">
-            <span className="stat-title">In Progress</span>
+          <div className="stat-body">
             <span className="stat-count">{inProgressTasks}</span>
+            <div className="stat-title-group">
+              <span className="stat-title">In Progress</span>
+              <span className="stat-subtext">Active ongoing execution</span>
+            </div>
           </div>
-          <div className="stat-action-icon">
-            <ArrowUpRight size={16} />
+          <div className="stat-card-footer">
+            <span className={`stat-status-pill ${inProgressTasks > 0 ? 'progress-active' : 'progress-idle'}`}>
+              <Clock size={11} /> {inProgressTasks > 0 ? `${inProgressTasks} Sprints Active` : 'Standby • No Blockers'}
+            </span>
           </div>
+          <div className="stat-accent-bar progress"></div>
         </motion.div>
 
         <motion.div 
@@ -317,16 +367,28 @@ const MyTasks = () => {
           onClick={() => { setActiveChip('Completed'); setStatusFilter('All'); openStatBreakdownModal('Completed'); }}
           title="Click to view completed tasks"
         >
-          <div className="stat-icon-wrapper completed">
-            <CheckCircle2 size={24} />
+          <div className="stat-card-top-row">
+            <div className="stat-icon-wrapper completed">
+              <CheckCircle2 size={22} />
+            </div>
+            <span className="stat-header-pill completed">Verified</span>
+            <div className="stat-action-icon">
+              <ArrowUpRight size={15} />
+            </div>
           </div>
-          <div className="stat-details">
-            <span className="stat-title">Completed</span>
+          <div className="stat-body">
             <span className="stat-count">{completedTasks}</span>
+            <div className="stat-title-group">
+              <span className="stat-title">Completed</span>
+              <span className="stat-subtext">Delivered & verified</span>
+            </div>
           </div>
-          <div className="stat-action-icon">
-            <ArrowUpRight size={16} />
+          <div className="stat-card-footer">
+            <span className="stat-status-pill completed">
+              <Award size={11} /> {completedTasks > 0 ? `${completedTasks} Verified Done` : '100% Quality Target'}
+            </span>
           </div>
+          <div className="stat-accent-bar completed"></div>
         </motion.div>
       </div>
 
