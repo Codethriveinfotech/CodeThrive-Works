@@ -59,7 +59,7 @@ const PageLoader = () => (
   </div>
 );
 
-// Error Boundary to prevent blank screen crashes
+// Error Boundary to prevent blank screen crashes with instant recovery
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -85,26 +85,57 @@ class ErrorBoundary extends React.Component {
       sessionStorage.clear();
       localStorage.removeItem('cti_dash_stats');
       localStorage.removeItem('cti_dash_tasks');
+      localStorage.removeItem('codethrive_session');
     } catch (e) {}
     this.setState({ hasError: false, error: null });
-    window.location.reload();
+    window.location.href = window.location.pathname + '?refresh=' + Date.now();
+  };
+
+  handleHardReset = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+    window.location.href = '/employee/dashboard?reset=' + Date.now();
   };
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', padding: '2rem', textAlign: 'center', color: '#fff' }}>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: '#00d2ff' }}>Application Workspace Ready</h2>
-          <p style={{ color: 'rgba(255,255,255,0.7)', maxWidth: '500px', marginBottom: '1.5rem' }}>
-            We updated your view. Click below to continue seamlessly.
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', padding: '2rem', textAlign: 'center', color: '#fff' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
+            <span style={{ fontSize: '1.75rem' }}>⚡</span>
+          </div>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 700, marginBottom: '0.5rem', color: '#38bdf8' }}>Application Workspace Ready</h2>
+          <p style={{ color: 'rgba(255,255,255,0.7)', maxWidth: '520px', marginBottom: '1.75rem', lineHeight: 1.5, fontSize: '0.95rem' }}>
+            We updated your view to the latest version. Click below to refresh your workspace seamlessly.
           </p>
-          <button 
-            className="btn btn-primary"
-            onClick={this.handleReload}
-            style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer' }}
-          >
-            Reload Page
-          </button>
+
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button 
+              className="btn btn-primary"
+              onClick={this.handleReload}
+              style={{ padding: '0.65rem 1.6rem', borderRadius: '10px', cursor: 'pointer', fontWeight: 600, background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)' }}
+            >
+              Reload Workspace
+            </button>
+            <button 
+              className="btn btn-outline"
+              onClick={this.handleHardReset}
+              style={{ padding: '0.65rem 1.4rem', borderRadius: '10px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.85)' }}
+            >
+              Clear Cache & Reset
+            </button>
+          </div>
+
+          {this.state.error && (
+            <details style={{ marginTop: '2rem', maxWidth: '640px', width: '100%', textAlign: 'left', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(239, 68, 68, 0.25)', padding: '0.85rem 1.25rem', borderRadius: '10px' }}>
+              <summary style={{ cursor: 'pointer', color: '#f87171', fontSize: '0.82rem', fontWeight: 600 }}>Diagnostics / Technical Details</summary>
+              <pre style={{ color: '#fca5a5', fontSize: '0.72rem', overflowX: 'auto', whiteSpace: 'pre-wrap', marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(0,0,0,0.4)', borderRadius: '6px' }}>
+                {String(this.state.error?.stack || this.state.error?.message || this.state.error)}
+              </pre>
+            </details>
+          )}
         </div>
       );
     }

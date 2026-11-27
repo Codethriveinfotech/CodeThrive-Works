@@ -72,12 +72,13 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [dashRes, notifRes, tasksRes] = await Promise.all([
+      const [dashSettled, notifSettled, tasksSettled] = await Promise.allSettled([
         api.get('/dashboard/employee'),
         api.get('/notifications'),
         api.get('/tasks/my-tasks')
       ]);
       
+      const dashRes = dashSettled.status === 'fulfilled' ? dashSettled.value : null;
       const dashData = dashRes?.data?.data || dashRes?.data || {};
       if (dashData.attendance) {
         setAttendance(dashData.attendance);
@@ -86,10 +87,12 @@ const Dashboard = () => {
         setActiveSession(dashData.activeSession);
       }
       
+      const tasksRes = tasksSettled.status === 'fulfilled' ? tasksSettled.value : null;
       const tasksPayload = tasksRes?.data?.data || tasksRes?.data || [];
       const tasks = Array.isArray(tasksPayload) ? tasksPayload : [];
       setTasksData(tasks);
       
+      const notifRes = notifSettled.status === 'fulfilled' ? notifSettled.value : null;
       const notifPayload = notifRes?.data?.data || notifRes?.data || [];
       setNotifications(Array.isArray(notifPayload) ? notifPayload : []);
 
@@ -125,6 +128,7 @@ const Dashboard = () => {
       const deadlines = [];
       
       tasks.forEach(task => {
+        if (!task) return;
         if (task.status === 'Completed') completed++;
         else pending++; 
 
@@ -137,8 +141,10 @@ const Dashboard = () => {
         }
       });
 
-      priority.sort((a, b) => new Date(a.dueDate || '2099') - new Date(b.dueDate || '2099'));
-      deadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+      try {
+        priority.sort((a, b) => new Date(a.dueDate || '2099') - new Date(b.dueDate || '2099'));
+        deadlines.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+      } catch (e) {}
 
       const computedStats = { total: tasks.length, pending, completed };
       setTaskStats(computedStats);
@@ -218,9 +224,9 @@ const Dashboard = () => {
   useEffect(() => {
     let interval;
     const updateTimers = () => {
-      const prevWork = attendance?.totalWorkDurationInSeconds || 0;
-      const prevBreak = attendance?.totalBreakDurationInSeconds || 0;
-      const prevLunch = attendance?.totalLunchDurationInSeconds || 0;
+      const prevWork = Number(attendance?.totalWorkDurationInSeconds) || 0;
+      const prevBreak = Number(attendance?.totalBreakDurationInSeconds) || 0;
+      const prevLunch = Number(attendance?.totalLunchDurationInSeconds) || 0;
 
       const hasActive = Boolean(activeSession && activeSession.status === 'Active');
       const sessType = hasActive ? activeSession.sessionType : (attendance?.status === 'On Break' ? 'Break' : (attendance?.status === 'On Lunch' ? 'Lunch' : 'Work'));
@@ -236,20 +242,26 @@ const Dashboard = () => {
 
       if (sessionStartTime && (isCurrentlyWorking || sessType === 'Break' || sessType === 'Lunch')) {
         const startTime = new Date(sessionStartTime).getTime();
-        const elapsed = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
-        
-        if (sessType === 'Work') {
-          setLiveWorkDuration(prevWork + elapsed);
+        if (!isNaN(startTime)) {
+          const elapsed = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+          
+          if (sessType === 'Work') {
+            setLiveWorkDuration(prevWork + elapsed);
+            setLiveBreakDuration(prevBreak);
+            setLiveLunchDuration(prevLunch);
+          } else if (sessType === 'Break') {
+            setLiveWorkDuration(prevWork);
+            setLiveBreakDuration(prevBreak + elapsed);
+            setLiveLunchDuration(prevLunch);
+          } else if (sessType === 'Lunch') {
+            setLiveWorkDuration(prevWork);
+            setLiveBreakDuration(prevBreak);
+            setLiveLunchDuration(prevLunch + elapsed);
+          }
+        } else {
+          setLiveWorkDuration(prevWork);
           setLiveBreakDuration(prevBreak);
           setLiveLunchDuration(prevLunch);
-        } else if (sessType === 'Break') {
-          setLiveWorkDuration(prevWork);
-          setLiveBreakDuration(prevBreak + elapsed);
-          setLiveLunchDuration(prevLunch);
-        } else if (sessType === 'Lunch') {
-          setLiveWorkDuration(prevWork);
-          setLiveBreakDuration(prevBreak);
-          setLiveLunchDuration(prevLunch + elapsed);
         }
       } else {
         setLiveWorkDuration(prevWork);
@@ -462,14 +474,26 @@ const Dashboard = () => {
   };
 
   // Filter tasks for Breakdown Modal
-  const modalTasks = tasksData.filter(t => {
+  const modalTasks = (tasksData || []).filter(t => {
+    if (!t) return false;
     if (taskModalType === 'Pending') return t.status !== 'Completed' && t.status !== 'Approved';
     if (taskModalType === 'Completed') return t.status === 'Completed' || t.status === 'Approved';
     return true; // 'All' or 'Total'
   });
 
+  const formatTimeSafe = (timeInput) => {
+    if (!timeInput) return '--:--';
+    try {
+      const d = new Date(timeInput);
+      if (isNaN(d.getTime())) return String(timeInput);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return String(timeInput);
+    }
+  };
+
   const formatDuration = (seconds) => {
-    const totalSec = Math.max(0, Math.floor(seconds || 0));
+    const totalSec = Math.max(0, Math.floor(Number(seconds) || 0));
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
@@ -480,7 +504,7 @@ const Dashboard = () => {
   };
 
   const renderDuration = (seconds) => {
-    const totalSec = Math.max(0, Math.floor(seconds || 0));
+    const totalSec = Math.max(0, Math.floor(Number(seconds) || 0));
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
@@ -752,7 +776,7 @@ const Dashboard = () => {
       {/* -----------------------------
           Tier 2: Metric Cards Grid (Compact)
       ----------------------------- */}
-      <div className="metrics-grid">
+      <motion.div className="metrics-grid" variants={containerVariants}>
         <motion.div 
           className="metric-card metric-tasks clickable" 
           variants={itemVariants}
@@ -828,12 +852,12 @@ const Dashboard = () => {
             <ArrowUpRight size={16} />
           </div>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* -----------------------------
           Tier 3: Workspace Grid
       ----------------------------- */}
-      <div className="workspace-grid">
+      <motion.div className="workspace-grid" variants={containerVariants}>
         
         {/* Left Col: Work Session & Multi-Timer Widget */}
         <motion.div variants={itemVariants}>
@@ -880,16 +904,14 @@ const Dashboard = () => {
               <div className="timer-detail-item">
                 <span className="timer-detail-label">Check-In Time</span>
                 <span className="timer-detail-value">
-                  {attendance?.firstLoginTime 
-                    ? new Date(attendance.firstLoginTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                    : '--:--'}
+                  {formatTimeSafe(attendance?.firstLoginTime)}
                 </span>
               </div>
               <div className="timer-detail-item">
                 <span className="timer-detail-label">Check-Out Time</span>
                 <span className="timer-detail-value">
                   {isCheckedOut && attendance?.lastLogoutTime 
-                    ? new Date(attendance.lastLogoutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                    ? formatTimeSafe(attendance.lastLogoutTime) 
                     : '--:--'}
                 </span>
               </div>
@@ -1074,7 +1096,7 @@ const Dashboard = () => {
 
             {/* Mon - Fri Visual Day Strip */}
             <div className="weekly-days-strip">
-              {weekDays.map(day => (
+              {(weekDays || []).map(day => (
                 <div 
                   key={day.name} 
                   className={`week-day-pill ${day.isToday ? 'today' : (day.isPast ? 'past' : 'future')}`}
@@ -1124,7 +1146,7 @@ const Dashboard = () => {
 
         </motion.div>
 
-      </div>
+      </motion.div>
 
       {/* -----------------------------
           Task Breakdown Modal (Pop-up on Metric Card Click)
