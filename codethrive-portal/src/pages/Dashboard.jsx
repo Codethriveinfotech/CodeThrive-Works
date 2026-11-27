@@ -70,6 +70,70 @@ const Dashboard = () => {
   const [priorityTasks, setPriorityTasks] = useState([]);
   const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
 
+  // 8-hour target progress
+  const targetShiftSeconds = 8 * 3600; // 28,800s
+
+  // Dynamic estimated check-out time based on check-in + 8h target + breaks
+  const estimatedCheckOutTime = useMemo(() => {
+    if (!attendance || !attendance.firstLoginTime) return null;
+    try {
+      const loginDate = new Date(attendance.firstLoginTime);
+      const startMs = loginDate.getTime();
+      if (isNaN(startMs)) return null;
+      const breakAndLunchSec = (Number(liveBreakDuration) || 0) + (Number(liveLunchDuration) || 0);
+      const targetMs = startMs + (targetShiftSeconds + breakAndLunchSec) * 1000;
+      const d = new Date(targetMs);
+      if (isNaN(d.getTime())) return null;
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return null;
+    }
+  }, [attendance, liveBreakDuration, liveLunchDuration]);
+
+  // Punctuality check
+  const isPunctual = useMemo(() => {
+    if (!attendance || !attendance.firstLoginTime) return null;
+    try {
+      const d = new Date(attendance.firstLoginTime);
+      if (isNaN(d.getTime())) return null;
+      const hour = d.getHours();
+      const min = d.getMinutes();
+      return hour < 10 || (hour === 10 && min === 0);
+    } catch (e) {
+      return null;
+    }
+  }, [attendance]);
+
+  // Current work week days (Monday - Friday)
+  const weekDays = useMemo(() => {
+    try {
+      const today = new Date();
+      const currentDay = today.getDay();
+      const distanceToMon = currentDay === 0 ? -6 : 1 - currentDay;
+      const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + distanceToMon);
+
+      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+      const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      return dayNames.map((name, idx) => {
+        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + idx);
+        const dMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        const isToday = dMidnight === todayMidnight;
+        const isPast = dMidnight < todayMidnight;
+        const isFuture = dMidnight > todayMidnight;
+        return {
+          name,
+          dateNumber: d.getDate(),
+          isToday,
+          isPast,
+          isFuture,
+          dateStr: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        };
+      });
+    } catch (e) {
+      return [];
+    }
+  }, []);
+
   const fetchDashboardData = async () => {
     try {
       const [dashSettled, notifSettled, tasksSettled] = await Promise.allSettled([
@@ -524,12 +588,6 @@ const Dashboard = () => {
     );
   };
 
-  if (loading) return (
-    <div className="dashboard-container">
-      <SkeletonLoader type="dashboard" />
-    </div>
-  );
-
   const hr = new Date().getHours();
   const isMorning = hr < 12;
   const isEvening = hr >= 17;
@@ -567,73 +625,11 @@ const Dashboard = () => {
     .toUpperCase();
 
   // 8-hour target progress
-  const targetShiftSeconds = 8 * 3600; // 28,800s
   const safeLiveWork = Number(liveWorkDuration) || 0;
   const shiftProgressPercent = Math.min(100, Math.max(0, Math.round((safeLiveWork / targetShiftSeconds) * 100)));
   const workSecondsRemaining = Math.max(0, targetShiftSeconds - safeLiveWork);
   const hoursRemaining = Math.floor(workSecondsRemaining / 3600);
   const minsRemaining = Math.floor((workSecondsRemaining % 3600) / 60);
-
-  // Dynamic estimated check-out time based on check-in + 8h target + breaks
-  const estimatedCheckOutTime = useMemo(() => {
-    if (!attendance || !attendance.firstLoginTime) return null;
-    try {
-      const loginDate = new Date(attendance.firstLoginTime);
-      const startMs = loginDate.getTime();
-      if (isNaN(startMs)) return null;
-      const breakAndLunchSec = (Number(liveBreakDuration) || 0) + (Number(liveLunchDuration) || 0);
-      const targetMs = startMs + (targetShiftSeconds + breakAndLunchSec) * 1000;
-      const d = new Date(targetMs);
-      if (isNaN(d.getTime())) return null;
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      return null;
-    }
-  }, [attendance, liveBreakDuration, liveLunchDuration]);
-
-  // Punctuality check
-  const isPunctual = useMemo(() => {
-    if (!attendance || !attendance.firstLoginTime) return null;
-    try {
-      const d = new Date(attendance.firstLoginTime);
-      if (isNaN(d.getTime())) return null;
-      const hour = d.getHours();
-      const min = d.getMinutes();
-      return hour < 10 || (hour === 10 && min === 0);
-    } catch (e) {
-      return null;
-    }
-  }, [attendance]);
-
-  // Current work week days (Monday - Friday)
-  const weekDays = useMemo(() => {
-    try {
-      const today = new Date();
-      const currentDay = today.getDay();
-      const distanceToMon = currentDay === 0 ? -6 : 1 - currentDay;
-      const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + distanceToMon);
-
-      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-      const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-      return dayNames.map((name, idx) => {
-        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + idx);
-        const dMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-        const isToday = dMidnight === todayMidnight;
-        const isPast = dMidnight < todayMidnight;
-        const isFuture = dMidnight > todayMidnight;
-        return {
-          name,
-          dateNumber: d.getDate(),
-          isToday,
-          isPast,
-          isFuture,
-          dateStr: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        };
-      });
-    } catch (e) {
-      return [];
-    }
-  }, []);
 
   // Active Timer Value and Label Calculation
   let displayMainTimer = liveWorkDuration;
@@ -647,6 +643,14 @@ const Dashboard = () => {
   } else if (isCheckedOut) {
     displayMainTimer = liveWorkDuration;
     timerLabelText = "Total Work Logged";
+  }
+
+  if (loading) {
+    return (
+      <div className="dashboard-container">
+        <SkeletonLoader type="dashboard" />
+      </div>
+    );
   }
 
   return (
