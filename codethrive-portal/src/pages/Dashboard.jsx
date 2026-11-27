@@ -701,18 +701,8 @@ const Dashboard = () => {
             </div>
 
             {/* Daily Motivational & Strength Quote */}
-            <DailyQuoteBanner variant="hero-quote" />
+            <DailyQuoteBanner variant="hero-quote" showBadge={false} />
           </div>
-        </div>
-        
-        <div className="hero-actions">
-           <Link to="/employee/tasks" className="btn btn-outline hero-action-btn">
-             <CheckSquare size={16} /> My Tasks
-             {taskStats.pending > 0 && <span className="hero-badge-count">{taskStats.pending}</span>}
-           </Link>
-           <Link to="/employee/reports" className="btn btn-primary hero-action-btn hero-action-glow">
-             <Sparkles size={16} /> Submit Report
-           </Link>
         </div>
       </motion.div>
 
@@ -721,7 +711,6 @@ const Dashboard = () => {
       ----------------------------- */}
       <motion.div className="quick-hub-grid" variants={itemVariants}>
         <Link to="/employee/reports" className="quick-hub-card hub-report">
-          <span className="hub-badge-pill">Daily Log</span>
           <div className="hub-icon-wrapper">
             <FileText size={20} />
           </div>
@@ -735,7 +724,6 @@ const Dashboard = () => {
         </Link>
 
         <Link to="/employee/attendance" className="quick-hub-card hub-attendance">
-          <span className="hub-badge-pill">Live Session</span>
           <div className="hub-icon-wrapper">
             <Clock size={20} />
           </div>
@@ -749,7 +737,6 @@ const Dashboard = () => {
         </Link>
 
         <Link to="/employee/leave" className="quick-hub-card hub-leave">
-          <span className="hub-badge-pill">Time Off</span>
           <div className="hub-icon-wrapper">
             <Calendar size={20} />
           </div>
@@ -763,7 +750,6 @@ const Dashboard = () => {
         </Link>
 
         <Link to="/employee/payroll" className="quick-hub-card hub-payroll">
-          <span className="hub-badge-pill">Salary Hub</span>
           <div className="hub-icon-wrapper">
             <Award size={20} />
           </div>

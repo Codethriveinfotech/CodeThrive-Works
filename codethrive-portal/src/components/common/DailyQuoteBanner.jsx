@@ -10,7 +10,7 @@ const DEFAULT_QUOTE = {
   badge: "Focus"
 };
 
-const DailyQuoteBanner = ({ variant = 'default', className = '', showBadge = true }) => {
+const DailyQuoteBanner = ({ variant = 'default', className = '', showBadge = false }) => {
   const quote = useMemo(() => {
     try {
       const q = getDailyQuote();

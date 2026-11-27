@@ -221,9 +221,11 @@
 }
 
 .hero-badge.badge-id {
-  font-family: monospace;
+  font-family: inherit;
   font-size: 0.8rem;
-  letter-spacing: 0.5px;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #cbd5e1;
 }
 
 .hero-badge.badge-status {
@@ -575,7 +577,7 @@
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  gap: 1.15rem;
 }
 
 @media (max-width: 1024px) {
@@ -596,14 +598,15 @@
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
-  padding: 1.35rem 1.5rem;
+  padding: 1.15rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.95rem;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
 }
 
 .metric-card::before {
@@ -674,11 +677,15 @@
 .metric-card.metric-tasks .metric-value { color: #a5b4fc; }
 .metric-card.metric-pending .metric-value { color: #fbbf24; }
 .metric-card.metric-completed .metric-value { color: #34d399; }
-.metric-card.metric-work .metric-value { color: #38bdf8; }
+.metric-card.metric-work .metric-value { 
+  color: #38bdf8; 
+  font-size: 1.55rem;
+  white-space: nowrap;
+}
 
 .metric-icon-wrapper {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -695,6 +702,8 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .metric-action-arrow {
@@ -711,6 +720,8 @@
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .metric-card.clickable:hover .metric-action-arrow {
