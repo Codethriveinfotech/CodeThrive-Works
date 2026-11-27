@@ -278,6 +278,19 @@ const Payroll = () => {
   const _totalYTDGross = payslips.reduce((acc, p) => acc + (parseFloat(p.grossSalary) || 0), 0);
   const _totalYTDDeductions = payslips.reduce((acc, p) => acc + (parseFloat(p.deductions) || 0), 0);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 14 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } }
+  };
+
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column', gap: '1rem' }}>
       <div className="loader-small" style={{ width: '42px', height: '42px', borderWidth: '3px' }}></div>
@@ -288,38 +301,116 @@ const Payroll = () => {
   return (
     <motion.div 
       className="payroll-workspace-container"
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
     >
       {/* --------------------------------------------------------------------------
           1. HERO HEADER BANNER
          -------------------------------------------------------------------------- */}
-      <div className="payroll-hero-banner">
+      <motion.div className="payroll-hero-banner" variants={itemVariants}>
         <div className="hero-left-content">
+          <div className="hero-meta-row">
+            <span className="payroll-meta-badge">
+              <ShieldCheck size={13} /> Official Compensation Hub
+            </span>
+            <span className="payroll-cycle-badge">
+              <Calendar size={13} /> Active Pay Cycle • 2026
+            </span>
+          </div>
           <h1 className="hero-main-title">My Payslips & Compensation</h1>
           <p className="hero-subtext">
             Access monthly itemized salary statements, tax deduction breakdowns, and download official PDF payslips.
           </p>
-          <DailyQuoteBanner variant="compact" />
+          <DailyQuoteBanner variant="hero-quote" showBadge={false} />
         </div>
 
         <div className="hero-right-actions">
-          {latestPayslip && (
+          {latestPayslip ? (
             <button className="btn-primary-glow" onClick={() => downloadPayslip(latestPayslip)}>
               <Download size={18} />
               <span>Download Latest Slip ({latestPayslip.month})</span>
             </button>
+          ) : (
+            <div className="payroll-user-badge">
+              <div className="payroll-avatar-circle">
+                <Landmark size={20} />
+              </div>
+              <div className="payroll-badge-info">
+                <span className="p-tag">DIRECT TRANSFER</span>
+                <span className="p-name">{user?.fullName || user?.name || 'Employee'}</span>
+                <span className="p-sub">{user?.designation || 'Software Developer'}</span>
+              </div>
+            </div>
           )}
         </div>
+      </motion.div>
+
+      {/* --------------------------------------------------------------------------
+          2. FINANCIAL METRICS GRID (4 METRIC CARDS)
+         -------------------------------------------------------------------------- */}
+      <div className="payroll-metrics-grid">
+        <motion.div className="payroll-metric-card emerald" variants={itemVariants} whileHover={{ y: -4 }}>
+          <div className="metric-icon-wrapper emerald">
+            <Landmark size={24} />
+          </div>
+          <div className="metric-info-col">
+            <span className="metric-title">Total Disbursed (YTD)</span>
+            <span className="metric-val">₹{_totalYTDNet.toLocaleString()}</span>
+            <span className="metric-micro-tag">
+              <CheckCircle2 size={11} /> {_totalYTDNet > 0 ? 'Verified Direct Credits' : 'Disbursement Active'}
+            </span>
+          </div>
+          <div className="metric-ambient-accent emerald"></div>
+        </motion.div>
+
+        <motion.div className="payroll-metric-card blue" variants={itemVariants} whileHover={{ y: -4 }}>
+          <div className="metric-icon-wrapper blue">
+            <TrendingUp size={24} />
+          </div>
+          <div className="metric-info-col">
+            <span className="metric-title">Gross Earnings</span>
+            <span className="metric-val">₹{_totalYTDGross.toLocaleString()}</span>
+            <span className="metric-micro-tag">
+              <Sparkles size={11} /> Standard Pay Scale
+            </span>
+          </div>
+          <div className="metric-ambient-accent blue"></div>
+        </motion.div>
+
+        <motion.div className="payroll-metric-card amber" variants={itemVariants} whileHover={{ y: -4 }}>
+          <div className="metric-icon-wrapper amber">
+            <ShieldCheck size={24} />
+          </div>
+          <div className="metric-info-col">
+            <span className="metric-title">Statutory Deductions</span>
+            <span className="metric-val">₹{_totalYTDDeductions.toLocaleString()}</span>
+            <span className="metric-micro-tag">
+              <ShieldCheck size={11} /> 100% PF & TDS Compliant
+            </span>
+          </div>
+          <div className="metric-ambient-accent amber"></div>
+        </motion.div>
+
+        <motion.div className="payroll-metric-card purple" variants={itemVariants} whileHover={{ y: -4 }}>
+          <div className="metric-icon-wrapper purple">
+            <FileText size={24} />
+          </div>
+          <div className="metric-info-col">
+            <span className="metric-title">Latest Statement</span>
+            <span className="metric-val">{latestPayslip ? latestPayslip.month : 'November 2026'}</span>
+            <span className="metric-micro-tag">
+              <Calendar size={11} /> {latestPayslip ? 'Slip Available' : 'Current Pay Cycle'}
+            </span>
+          </div>
+          <div className="metric-ambient-accent purple"></div>
+        </motion.div>
       </div>
-
-
 
       {/* --------------------------------------------------------------------------
           3. PAYSLIPS FILTER TOOLBAR
          -------------------------------------------------------------------------- */}
-      <div className="payroll-toolbar-card">
+      <motion.div className="payroll-toolbar-card" variants={itemVariants}>
         <div className="payroll-search-box">
           <Search size={17} className="search-icon" />
           <input 
@@ -353,21 +444,64 @@ const Payroll = () => {
             <option value="2025">2025</option>
             <option value="2024">2024</option>
           </select>
+
+          <button className="btn-refresh-toolbar" onClick={handleRefresh} disabled={isRefreshing} title="Refresh Payslips">
+            <RefreshCw size={15} className={isRefreshing ? "spin-icon" : ""} />
+          </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* --------------------------------------------------------------------------
-          4. PAYSLIPS DATA TABLE
+          4. PAYSLIPS DATA TABLE & RICH EMPTY STATE
          -------------------------------------------------------------------------- */}
-      <div className="payroll-table-card">
+      <motion.div className="payroll-table-card" variants={itemVariants}>
         {(!payslips || payslips.length === 0) ? (
-          <div className="payroll-empty-state">
-            <div className="empty-icon-ring">
-              <CreditCard size={40} />
+          <motion.div 
+            className="payroll-rich-empty-card"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div className="empty-ambient-glow" />
+            <div className="empty-icon-ring-glow">
+              <CreditCard size={38} className="empty-card-icon" />
             </div>
-            <h3>No Payslips Available Yet</h3>
-            <p>Your payslips will appear here once your monthly compensation is processed by HR.</p>
-          </div>
+            <h3 className="empty-title">No Payslips Available Yet</h3>
+            <p className="empty-desc">
+              Your itemized monthly compensation statements and official PDF payslips will appear here automatically once processed by HR & accounts.
+            </p>
+
+            <div className="payroll-highlights-row">
+              <div className="highlight-pill">
+                <div className="hp-icon"><Download size={14} /></div>
+                <div className="hp-text">
+                  <strong>Official PDF Downloads</strong>
+                  <span>Standard verified corporate letterhead slips</span>
+                </div>
+              </div>
+              <div className="highlight-pill">
+                <div className="hp-icon"><ShieldCheck size={14} /></div>
+                <div className="hp-text">
+                  <strong>Tax & Deductions</strong>
+                  <span>Itemized PF, TDS, HRA and special allowances</span>
+                </div>
+              </div>
+              <div className="highlight-pill">
+                <div className="hp-icon"><CheckCircle2 size={14} /></div>
+                <div className="hp-text">
+                  <strong>Direct Bank Transfer</strong>
+                  <span>Direct NEFT / IMPS salary confirmations</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="empty-action-row">
+              <button className="btn-refresh-payroll" onClick={handleRefresh} disabled={isRefreshing}>
+                <RefreshCw size={15} className={isRefreshing ? "spin-icon" : ""} />
+                <span>{isRefreshing ? 'Checking Status...' : 'Check Payroll Status'}</span>
+              </button>
+            </div>
+          </motion.div>
         ) : filteredPayslips.length === 0 ? (
           <div className="payroll-empty-state">
             <p>No payslips found matching your search parameters.</p>
@@ -431,7 +565,7 @@ const Payroll = () => {
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* --------------------------------------------------------------------------
           5. DETAILED PAYSLIP BREAKDOWN MODAL

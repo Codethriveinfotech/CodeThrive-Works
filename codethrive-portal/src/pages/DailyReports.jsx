@@ -438,21 +438,7 @@ const DailyReports = () => {
           <p className="hero-subtext">
             Log project progress, daily task activities, work summaries, hours, and submit SRC project deliverables directly to administration.
           </p>
-          <div className="hero-date-strip">
-            <Calendar size={14} />
-            <span>{currentDateDisplay}</span>
-            <span className="dot-divider">•</span>
-            {todayReport ? (
-              <span className="today-logged-tag success">
-                <CheckCircle2 size={13} /> Today's Report Submitted ({todayReport.hoursWorked} hrs)
-              </span>
-            ) : (
-              <span className="today-logged-tag warning">
-                <Clock size={13} /> Today's Report Pending
-              </span>
-            )}
-          </div>
-          <DailyQuoteBanner variant="compact" />
+          <DailyQuoteBanner variant="hero-quote" showBadge={false} />
         </div>
 
         <div className="hero-right-actions">
