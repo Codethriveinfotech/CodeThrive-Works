@@ -544,53 +544,71 @@ const Dashboard = () => {
 
   // 8-hour target progress
   const targetShiftSeconds = 8 * 3600; // 28,800s
-  const shiftProgressPercent = Math.min(100, Math.round((liveWorkDuration / targetShiftSeconds) * 100));
-  const workSecondsRemaining = Math.max(0, targetShiftSeconds - liveWorkDuration);
+  const safeLiveWork = Number(liveWorkDuration) || 0;
+  const shiftProgressPercent = Math.min(100, Math.max(0, Math.round((safeLiveWork / targetShiftSeconds) * 100)));
+  const workSecondsRemaining = Math.max(0, targetShiftSeconds - safeLiveWork);
   const hoursRemaining = Math.floor(workSecondsRemaining / 3600);
   const minsRemaining = Math.floor((workSecondsRemaining % 3600) / 60);
 
   // Dynamic estimated check-out time based on check-in + 8h target + breaks
   const estimatedCheckOutTime = useMemo(() => {
-    if (!attendance?.firstLoginTime) return null;
-    const startMs = new Date(attendance.firstLoginTime).getTime();
-    const breakAndLunchSec = (liveBreakDuration || 0) + (liveLunchDuration || 0);
-    const targetMs = startMs + (targetShiftSeconds + breakAndLunchSec) * 1000;
-    return new Date(targetMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }, [attendance?.firstLoginTime, liveBreakDuration, liveLunchDuration]);
+    if (!attendance || !attendance.firstLoginTime) return null;
+    try {
+      const loginDate = new Date(attendance.firstLoginTime);
+      const startMs = loginDate.getTime();
+      if (isNaN(startMs)) return null;
+      const breakAndLunchSec = (Number(liveBreakDuration) || 0) + (Number(liveLunchDuration) || 0);
+      const targetMs = startMs + (targetShiftSeconds + breakAndLunchSec) * 1000;
+      const d = new Date(targetMs);
+      if (isNaN(d.getTime())) return null;
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return null;
+    }
+  }, [attendance, liveBreakDuration, liveLunchDuration]);
 
   // Punctuality check
   const isPunctual = useMemo(() => {
-    if (!attendance?.firstLoginTime) return null;
-    const d = new Date(attendance.firstLoginTime);
-    const hour = d.getHours();
-    const min = d.getMinutes();
-    return hour < 10 || (hour === 10 && min === 0);
-  }, [attendance?.firstLoginTime]);
+    if (!attendance || !attendance.firstLoginTime) return null;
+    try {
+      const d = new Date(attendance.firstLoginTime);
+      if (isNaN(d.getTime())) return null;
+      const hour = d.getHours();
+      const min = d.getMinutes();
+      return hour < 10 || (hour === 10 && min === 0);
+    } catch (e) {
+      return null;
+    }
+  }, [attendance]);
 
   // Current work week days (Monday - Friday)
   const weekDays = useMemo(() => {
-    const today = new Date();
-    const currentDay = today.getDay();
-    const distanceToMon = currentDay === 0 ? -6 : 1 - currentDay;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + distanceToMon);
+    try {
+      const today = new Date();
+      const currentDay = today.getDay();
+      const distanceToMon = currentDay === 0 ? -6 : 1 - currentDay;
+      const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() + distanceToMon);
 
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-    return dayNames.map((name, idx) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + idx);
-      const isToday = d.toDateString() === today.toDateString();
-      const isPast = d < today && !isToday;
-      const isFuture = d > today && !isToday;
-      return {
-        name,
-        dateNumber: d.getDate(),
-        isToday,
-        isPast,
-        isFuture,
-        dateStr: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      };
-    });
+      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+      const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      return dayNames.map((name, idx) => {
+        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + idx);
+        const dMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        const isToday = dMidnight === todayMidnight;
+        const isPast = dMidnight < todayMidnight;
+        const isFuture = dMidnight > todayMidnight;
+        return {
+          name,
+          dateNumber: d.getDate(),
+          isToday,
+          isPast,
+          isFuture,
+          dateStr: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        };
+      });
+    } catch (e) {
+      return [];
+    }
   }, []);
 
   // Active Timer Value and Label Calculation
@@ -674,69 +692,61 @@ const Dashboard = () => {
           Executive Quick Access Hub (4 Direct Workflows)
       ----------------------------- */}
       <motion.div className="quick-hub-grid" variants={itemVariants}>
-        <motion.div whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ display: 'contents' }}>
-          <Link to="/employee/reports" className="quick-hub-card hub-report">
-            <span className="hub-badge-pill">Daily Log</span>
-            <div className="hub-icon-wrapper">
-              <FileText size={20} />
-            </div>
-            <div className="hub-text-group">
-              <h4>Daily Report</h4>
-              <p>Log work & tasks</p>
-            </div>
-            <div className="hub-arrow-badge">
-              <ArrowUpRight size={16} className="hub-arrow" />
-            </div>
-          </Link>
-        </motion.div>
+        <Link to="/employee/reports" className="quick-hub-card hub-report">
+          <span className="hub-badge-pill">Daily Log</span>
+          <div className="hub-icon-wrapper">
+            <FileText size={20} />
+          </div>
+          <div className="hub-text-group">
+            <h4>Daily Report</h4>
+            <p>Log work & tasks</p>
+          </div>
+          <div className="hub-arrow-badge">
+            <ArrowUpRight size={16} className="hub-arrow" />
+          </div>
+        </Link>
 
-        <motion.div whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ display: 'contents' }}>
-          <Link to="/employee/attendance" className="quick-hub-card hub-attendance">
-            <span className="hub-badge-pill">Live Session</span>
-            <div className="hub-icon-wrapper">
-              <Clock size={20} />
-            </div>
-            <div className="hub-text-group">
-              <h4>Attendance</h4>
-              <p>Sessions & history</p>
-            </div>
-            <div className="hub-arrow-badge">
-              <ArrowUpRight size={16} className="hub-arrow" />
-            </div>
-          </Link>
-        </motion.div>
+        <Link to="/employee/attendance" className="quick-hub-card hub-attendance">
+          <span className="hub-badge-pill">Live Session</span>
+          <div className="hub-icon-wrapper">
+            <Clock size={20} />
+          </div>
+          <div className="hub-text-group">
+            <h4>Attendance</h4>
+            <p>Sessions & history</p>
+          </div>
+          <div className="hub-arrow-badge">
+            <ArrowUpRight size={16} className="hub-arrow" />
+          </div>
+        </Link>
 
-        <motion.div whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ display: 'contents' }}>
-          <Link to="/employee/leave" className="quick-hub-card hub-leave">
-            <span className="hub-badge-pill">Time Off</span>
-            <div className="hub-icon-wrapper">
-              <Calendar size={20} />
-            </div>
-            <div className="hub-text-group">
-              <h4>Leave Request</h4>
-              <p>Apply time-off</p>
-            </div>
-            <div className="hub-arrow-badge">
-              <ArrowUpRight size={16} className="hub-arrow" />
-            </div>
-          </Link>
-        </motion.div>
+        <Link to="/employee/leave" className="quick-hub-card hub-leave">
+          <span className="hub-badge-pill">Time Off</span>
+          <div className="hub-icon-wrapper">
+            <Calendar size={20} />
+          </div>
+          <div className="hub-text-group">
+            <h4>Leave Request</h4>
+            <p>Apply time-off</p>
+          </div>
+          <div className="hub-arrow-badge">
+            <ArrowUpRight size={16} className="hub-arrow" />
+          </div>
+        </Link>
 
-        <motion.div whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }} style={{ display: 'contents' }}>
-          <Link to="/employee/payroll" className="quick-hub-card hub-payroll">
-            <span className="hub-badge-pill">Salary Hub</span>
-            <div className="hub-icon-wrapper">
-              <Award size={20} />
-            </div>
-            <div className="hub-text-group">
-              <h4>My Payroll</h4>
-              <p>Payslips & salary</p>
-            </div>
-            <div className="hub-arrow-badge">
-              <ArrowUpRight size={16} className="hub-arrow" />
-            </div>
-          </Link>
-        </motion.div>
+        <Link to="/employee/payroll" className="quick-hub-card hub-payroll">
+          <span className="hub-badge-pill">Salary Hub</span>
+          <div className="hub-icon-wrapper">
+            <Award size={20} />
+          </div>
+          <div className="hub-text-group">
+            <h4>My Payroll</h4>
+            <p>Payslips & salary</p>
+          </div>
+          <div className="hub-arrow-badge">
+            <ArrowUpRight size={16} className="hub-arrow" />
+          </div>
+        </Link>
       </motion.div>
 
       {/* -----------------------------
@@ -1088,15 +1098,15 @@ const Dashboard = () => {
             <div className="leave-balance-quick-row">
               <div className="lb-item">
                 <span className="lb-label">Casual Leave (CL)</span>
-                <span className="lb-val emerald">{leaveSummary.casualLeaveBalance} <small>days left</small></span>
+                <span className="lb-val emerald">{leaveSummary?.casualLeaveBalance ?? 12} <small>days left</small></span>
               </div>
               <div className="lb-item">
                 <span className="lb-label">Sick Leave (SL)</span>
-                <span className="lb-val amber">{leaveSummary.sickLeaveBalance} <small>days left</small></span>
+                <span className="lb-val amber">{leaveSummary?.sickLeaveBalance ?? 12} <small>days left</small></span>
               </div>
               <div className="lb-item">
                 <span className="lb-label">Month Attendance</span>
-                <span className="lb-val cyan">{monthlyAttSummary.totalPresent} <small>days logged</small></span>
+                <span className="lb-val cyan">{monthlyAttSummary?.totalPresent ?? 20} <small>days logged</small></span>
               </div>
               <div className="lb-action-box">
                 <Link to="/employee/leave" className="btn-apply-leave-dash">

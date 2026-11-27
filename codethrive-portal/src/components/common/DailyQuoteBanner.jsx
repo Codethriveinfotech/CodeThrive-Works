@@ -1,10 +1,24 @@
 import React, { useMemo } from 'react';
-import { Sparkles, Zap, Flame, Compass } from 'lucide-react';
+import { Sparkles, Zap } from 'lucide-react';
 import { getDailyQuote } from '../../utils/dailyQuotes';
 import './DailyQuoteBanner.css';
 
+const DEFAULT_QUOTE = {
+  quote: "Your focus determines your reality. Push beyond limits and craft excellence today.",
+  author: "CodeThrive Inspiration",
+  theme: "Focus & Craft",
+  badge: "Focus"
+};
+
 const DailyQuoteBanner = ({ variant = 'default', className = '', showBadge = true }) => {
-  const quote = useMemo(() => getDailyQuote(), []);
+  const quote = useMemo(() => {
+    try {
+      const q = getDailyQuote();
+      return q && q.quote ? q : DEFAULT_QUOTE;
+    } catch {
+      return DEFAULT_QUOTE;
+    }
+  }, []);
 
   return (
     <div className={`daily-quote-card ${variant} ${className}`}>
@@ -18,15 +32,15 @@ const DailyQuoteBanner = ({ variant = 'default', className = '', showBadge = tru
           <div className="dq-badge-row">
             <span className="dq-category-badge">
               <Zap size={11} className="dq-badge-zap" />
-              Daily Strength &bull; {quote.badge}
+              Daily Strength &bull; {quote?.badge || 'Strength'}
             </span>
           </div>
         )}
         <div className="dq-text-row">
           <p className="dq-quote-text">
-            &ldquo;{quote.quote}&rdquo;
+            &ldquo;{quote?.quote || DEFAULT_QUOTE.quote}&rdquo;
           </p>
-          <span className="dq-author">&mdash; {quote.author}</span>
+          <span className="dq-author">&mdash; {quote?.author || DEFAULT_QUOTE.author}</span>
         </div>
       </div>
     </div>

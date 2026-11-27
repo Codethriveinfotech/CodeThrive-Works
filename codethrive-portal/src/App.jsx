@@ -75,10 +75,20 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.location !== prevProps.location && this.state.hasError) {
+    if (this.state.hasError && prevProps.children !== this.props.children) {
       this.setState({ hasError: false, error: null });
     }
   }
+
+  handleReload = () => {
+    try {
+      sessionStorage.clear();
+      localStorage.removeItem('cti_dash_stats');
+      localStorage.removeItem('cti_dash_tasks');
+    } catch (e) {}
+    this.setState({ hasError: false, error: null });
+    window.location.reload();
+  };
 
   render() {
     if (this.state.hasError) {
@@ -90,11 +100,8 @@ class ErrorBoundary extends React.Component {
           </p>
           <button 
             className="btn btn-primary"
-            onClick={() => {
-              this.setState({ hasError: false, error: null });
-              window.location.reload();
-            }}
-            style={{ padding: '0.75rem 1.5rem', borderRadius: '8px' }}
+            onClick={this.handleReload}
+            style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', cursor: 'pointer' }}
           >
             Reload Page
           </button>
