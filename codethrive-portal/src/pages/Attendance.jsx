@@ -186,6 +186,17 @@ const Attendance = () => {
     return { netH: h, netM: m, breakTotal };
   }, [correctionPayload.checkInTime, correctionPayload.checkOutTime, correctionPayload.breakMinutes, correctionPayload.lunchMinutes]);
 
+  const formatBreakLunch = (seconds, defaultVal = '–') => {
+    if (typeof seconds === 'number' && seconds > 0) {
+      const totalM = Math.round(seconds / 60);
+      const h = Math.floor(totalM / 60);
+      const m = totalM % 60;
+      if (h > 0) return `${h}h ${m.toString().padStart(2, '0')}m`;
+      return `${m}m`;
+    }
+    return defaultVal;
+  };
+
   const getRowAttendanceInfo = (row) => {
     const today = new Date();
     const todayDateStr = today.toISOString().split('T')[0];
@@ -193,6 +204,7 @@ const Attendance = () => {
     const rowDateStr = row.date ? rowDateObj.toISOString().split('T')[0] : '';
     const isToday = rowDateStr === todayDateStr;
     const dayOfWeek = rowDateObj.getDay(); // 0 is Sunday, 1-6 Mon-Sat
+    const currentHour = today.getHours();
 
     let rawStatus = row.status || 'Present';
     let resolvedStatus = rawStatus;
@@ -202,8 +214,12 @@ const Attendance = () => {
     if (matchingLeave) {
       resolvedStatus = 'Leave';
     } else if (isToday) {
-      // Today can keep active status (Working, On Break, Checked In, Present, Late)
-      resolvedStatus = rawStatus;
+      // If today employee hasn't checked in and it's after 1:00 PM (13:00) on Mon-Sat:
+      if (!row.firstLoginTime && (!rawStatus || rawStatus === 'Not Checked In') && currentHour >= 13 && dayOfWeek >= 1 && dayOfWeek <= 6) {
+        resolvedStatus = 'Absent';
+      } else {
+        resolvedStatus = rawStatus;
+      }
     } else {
       // For all past dates: Status 'Working' or 'Checked In' MUST NOT show!
       const lower = rawStatus.toLowerCase();
@@ -239,7 +255,7 @@ const Attendance = () => {
       remarksText = `${matchingLeave.leaveType || 'Approved'} Leave`;
       remarksType = 'approved';
     } else if (resolvedStatus === 'Absent') {
-      remarksText = 'Absent - No Punch-In';
+      remarksText = isToday && currentHour >= 13 ? 'Absent (Cutoff 1:00 PM Passed)' : 'Absent - No Punch-In';
       remarksType = 'standard';
     } else if (resolvedStatus === 'Late' || row.isLate) {
       remarksText = 'Late Login (>10:15 AM)';
@@ -531,7 +547,33 @@ const Attendance = () => {
         } catch (e) {}
       }
 
-      if (todayData) {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const todayDateKey = now.toISOString().split('T')[0];
+      const isApprovedLeaveToday = leaveMap[todayDateKey];
+      const isPast1PM = currentHour >= 13;
+      const isWorkingDay = now.getDay() >= 1 && now.getDay() <= 6;
+
+      if (todayData && todayData.firstLoginTime) {
+        setTodayAttendance(todayData);
+        setActiveSession(activeSessData);
+      } else if (isApprovedLeaveToday) {
+        setTodayAttendance({
+          status: 'Leave',
+          totalWorkDurationInSeconds: 0,
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0
+        });
+        setActiveSession(null);
+      } else if (isPast1PM && isWorkingDay) {
+        setTodayAttendance({
+          status: 'Absent',
+          totalWorkDurationInSeconds: 0,
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0
+        });
+        setActiveSession(null);
+      } else if (todayData) {
         setTodayAttendance(todayData);
         setActiveSession(activeSessData);
       } else {
@@ -871,14 +913,26 @@ const Attendance = () => {
 
   const exportExcel = () => {
     try {
+      const todayStr = new Date().toISOString().split('T')[0];
       const exportData = filteredHistory.map(row => {
         const dateObj = row.date ? new Date(row.date) : new Date();
         const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
         const attInfo = getRowAttendanceInfo(row);
+        const rowStr = row.date ? new Date(row.date).toISOString().split('T')[0] : '';
+        const isRowToday = rowStr === todayStr;
+        const breakStr = attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'Weekend'
+          ? '–'
+          : (isRowToday ? formatBreakLunch(liveBreakDuration, '30m') : formatBreakLunch(row.totalBreakDurationInSeconds, '30m'));
+        const lunchStr = attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'Weekend'
+          ? '–'
+          : (isRowToday ? formatBreakLunch(liveLunchDuration, '1h 00m') : formatBreakLunch(row.totalLunchDurationInSeconds, '1h 00m'));
+
         return {
           'Date': formatDate(row.date),
           'Day': dayName,
           'Shift Timing': '10:00 AM – 06:00 PM',
+          'Break': breakStr,
+          'Lunch': lunchStr,
           'Attendance Status': attInfo.status,
           'Remarks / Shift': attInfo.remarksText
         };
@@ -904,13 +958,13 @@ const Attendance = () => {
     };
     try {
       await api.post('/attendance/request-correction', payload);
-      alert('Attendance correction request submitted to Admin/HR.');
+      alert('Attendance correction request submitted! It will appear in Admin Portal Attendance for review and approval.');
       setShowCorrectionModal(false);
       fetchMyCorrections();
     } catch (err) {
       try {
         await api.post('/attendance/regularize', payload);
-        alert('Attendance correction request submitted to Admin/HR.');
+        alert('Attendance correction request submitted! It will appear in Admin Portal Attendance for review and approval.');
         setShowCorrectionModal(false);
         fetchMyCorrections();
       } catch (e2) {
@@ -925,7 +979,7 @@ const Attendance = () => {
           localStorage.setItem('cti_my_corrections', JSON.stringify(localCorrections));
           fetchMyCorrections();
         } catch (e3) {}
-        alert('Attendance correction request submitted to Admin/HR.');
+        alert('Attendance correction request submitted! It will appear in Admin Portal Attendance for review and approval.');
         setShowCorrectionModal(false);
       }
     }
@@ -1258,32 +1312,11 @@ const Attendance = () => {
             <span className="timer-label">{timerLabelText}</span>
           </div>
 
-          {/* 3-Way Duration Breakdown & Edit Option */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '0 0.5rem', marginBottom: '0.4rem' }}>
+          {/* 3-Way Duration Breakdown */}
+          <div style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '0 0.5rem', marginBottom: '0.4rem' }}>
             <span style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>
               Duration Breakdown
             </span>
-            <button
-              type="button"
-              onClick={handleOpenAdjustModal}
-              style={{
-                background: 'rgba(56, 189, 248, 0.12)',
-                border: '1px solid rgba(56, 189, 248, 0.35)',
-                color: '#38bdf8',
-                fontSize: '0.74rem',
-                fontWeight: 600,
-                borderRadius: '8px',
-                padding: '0.25rem 0.65rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                transition: 'all 0.2s ease'
-              }}
-              title="Edit & Recalculate Today's Break & Lunch Timings"
-            >
-              <Pencil size={12} /> Adjust Break & Lunch
-            </button>
           </div>
 
           <div className="timer-breakdown-grid">
@@ -1515,11 +1548,13 @@ const Attendance = () => {
           <table className="att-custom-table">
             <thead>
               <tr>
-                <th style={{ width: '135px' }}>Date</th>
-                <th style={{ width: '125px' }}>Day</th>
-                <th style={{ width: '165px' }}>Shift Timing</th>
+                <th style={{ width: '130px' }}>Date</th>
+                <th style={{ width: '120px' }}>Day</th>
+                <th style={{ width: '155px' }}>Shift Timing</th>
+                <th style={{ width: '105px' }}>Break</th>
+                <th style={{ width: '105px' }}>Lunch</th>
                 {(isAdminHR || isTeamLead) && <th>Employee</th>}
-                <th style={{ width: '155px' }}>Attendance Status</th>
+                <th style={{ width: '150px' }}>Attendance Status</th>
                 <th>Remarks / Shift</th>
               </tr>
             </thead>
@@ -1530,6 +1565,9 @@ const Attendance = () => {
                   const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
                   const dateStr = formatDate(row.date);
                   const attInfo = getRowAttendanceInfo(row);
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  const rowStr = row.date ? new Date(row.date).toISOString().split('T')[0] : '';
+                  const isRowToday = rowStr === todayStr;
 
                   return (
                     <tr key={row._id || idx}>
@@ -1543,6 +1581,26 @@ const Attendance = () => {
 
                       <td>
                         <span className="att-shift-time">10:00 AM – 06:00 PM</span>
+                      </td>
+
+                      <td>
+                        {attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'Weekend' ? (
+                          <span className="att-na-dash">–</span>
+                        ) : (
+                          <span className="att-break-badge">
+                            {isRowToday ? formatBreakLunch(liveBreakDuration, '30m') : formatBreakLunch(row.totalBreakDurationInSeconds, '30m')}
+                          </span>
+                        )}
+                      </td>
+
+                      <td>
+                        {attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'Weekend' ? (
+                          <span className="att-na-dash">–</span>
+                        ) : (
+                          <span className="att-lunch-badge">
+                            {isRowToday ? formatBreakLunch(liveLunchDuration, '1h 00m') : formatBreakLunch(row.totalLunchDurationInSeconds, '1h 00m')}
+                          </span>
+                        )}
                       </td>
 
                       {(isAdminHR || isTeamLead) && (
@@ -1570,7 +1628,7 @@ const Attendance = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={(isAdminHR || isTeamLead) ? 6 : 5} className="att-empty-row">
+                  <td colSpan={(isAdminHR || isTeamLead) ? 8 : 7} className="att-empty-row">
                     <div className="att-empty-icon">
                       <CalIcon size={32} />
                     </div>
@@ -1592,20 +1650,6 @@ const Attendance = () => {
         title={<span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc' }}><AlertCircle size={20} color="#38bdf8" /> Request Attendance Correction</span>}
       >
         <form onSubmit={submitCorrection} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
-          <div className="correction-modal-banner">
-            <div className="cm-icon-ring">
-              <Sparkles size={18} className="text-amber-400" />
-            </div>
-            <div>
-              <h4 style={{ margin: '0 0 0.2rem 0', fontSize: '0.92rem', color: '#f8fafc', fontWeight: 700 }}>
-                Attendance Regularization & Correction
-              </h4>
-              <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.4 }}>
-                Submit proposed times for missed punch, break / lunch duration adjustment, or system glitch for Admin review.
-              </p>
-            </div>
-          </div>
-
           <div className="correction-standard-shift-badge">
             <Clock size={13} color="#818cf8" />
             <span>Shift Target: <strong>10:00 AM – 06:00 PM</strong> &bull; Break Allowance: <strong>1h 30m</strong></span>
@@ -1637,41 +1681,26 @@ const Attendance = () => {
               <option value="Missed Check-Out">Missed Check-Out</option>
               <option value="Break / Lunch Correction">Break / Lunch Correction</option>
               <option value="Incorrect Status">Incorrect Status Marked</option>
-              <option value="System Glitch">Network / Device Issue</option>
               <option value="Others">Others</option>
             </select>
           </div>
 
           {correctionPayload.correctionType === 'Others' && (
             <div className="form-group" style={{ animation: 'fadeIn 0.25s ease' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38bdf8', marginBottom: '0.35rem', display: 'block' }}>
-                Specify Other Issue / Correction *
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38bdf8', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <FileText size={14} color="#38bdf8" /> Reason / Notes for Admin/HR *
               </label>
-              <input 
-                type="text" 
+              <textarea 
                 className="input-field" 
+                rows={2} 
                 required 
-                placeholder="Type your specific attendance issue here..."
-                value={correctionPayload.customType || ''}
-                onChange={e => setCorrectionPayload({ ...correctionPayload, customType: e.target.value })}
+                placeholder="State your reason for attendance correction..."
+                value={correctionPayload.reason || ''}
+                onChange={e => setCorrectionPayload({ ...correctionPayload, reason: e.target.value })}
+                style={{ resize: 'vertical', minHeight: '62px', fontSize: '0.84rem' }}
               />
             </div>
           )}
-
-          <div className="form-group">
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <FileText size={14} color="#38bdf8" /> Reason / Notes for Admin/HR *
-            </label>
-            <textarea 
-              className="input-field" 
-              rows={2} 
-              required 
-              placeholder="State reason for this attendance correction (e.g. system punch missed, client meeting, network delay)..."
-              value={correctionPayload.reason || ''}
-              onChange={e => setCorrectionPayload({ ...correctionPayload, reason: e.target.value })}
-              style={{ resize: 'vertical', minHeight: '62px', fontSize: '0.84rem' }}
-            />
-          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
