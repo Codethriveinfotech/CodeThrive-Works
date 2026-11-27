@@ -32,7 +32,8 @@ const sendTokenResponse = async (user, statusCode, res) => {
         employeeId: employee ? employee.employeeId : null,
         phoneNumber: employee ? employee.personalPhoneNumber : null,
         designation: employee ? employee.designation : null,
-        department: employee ? employee.department : null
+        department: employee ? employee.department : null,
+        profilePhoto: employee ? (employee.profilePhoto || null) : (user.profilePhoto || null)
       }
     });
 };

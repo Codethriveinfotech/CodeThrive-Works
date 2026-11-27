@@ -6,7 +6,7 @@ import {
   Bell, Activity, AlertTriangle, 
   CheckSquare, Calendar, FileText, Sun, Moon, Briefcase, ListTodo, MoreHorizontal, UserCircle,
   Coffee, Utensils, Play, ArrowUpRight, Edit3, ExternalLink, Sparkles,
-  TrendingUp, Zap, ChevronRight, Award, ShieldCheck, Compass
+  TrendingUp, Zap, ChevronRight, Award, ShieldCheck, Compass, Camera
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
@@ -29,6 +29,7 @@ const Dashboard = () => {
   const [liveWorkDuration, setLiveWorkDuration] = useState(0);
   const [liveBreakDuration, setLiveBreakDuration] = useState(0);
   const [liveLunchDuration, setLiveLunchDuration] = useState(0);
+  const [employeeProfile, setEmployeeProfile] = useState(null);
 
   const [tasksData, setTasksData] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -128,6 +129,14 @@ const Dashboard = () => {
       const notifRes = notifSettled.status === 'fulfilled' ? notifSettled.value : null;
       const notifPayload = notifRes?.data?.data || notifRes?.data || [];
       setNotifications(Array.isArray(notifPayload) ? notifPayload : []);
+
+      // Fetch employee profile details (including passport photo)
+      api.get('/employees/me').then(res => {
+        const emp = res.data?.data || res.data;
+        if (emp) {
+          setEmployeeProfile(emp);
+        }
+      }).catch(() => {});
 
       // Fetch supplementary leave and attendance summaries for executive dashboard
       try {
@@ -593,6 +602,8 @@ const Dashboard = () => {
     .join('')
     .toUpperCase();
 
+  const displayPhoto = employeeProfile?.profilePhoto || user?.profilePhoto || null;
+
   // 8-hour target progress (Work + Break + Lunch all combined)
   const safeLiveWork = Number(liveWorkDuration) || 0;
   const safeLiveBreak = Number(liveBreakDuration) || 0;
@@ -637,45 +648,57 @@ const Dashboard = () => {
           Tier 1: Ultra-Modern Hero Banner
       ----------------------------- */}
       <motion.div className="dashboard-hero" variants={itemVariants}>
-        <div className="hero-left-wrapper">
-          <div className="hero-avatar-box">
-            <div className="hero-avatar-circle">
-              {user?.profilePhoto ? (
-                <img src={user.profilePhoto} alt={displayName} className="hero-avatar-img" />
-              ) : (
-                <span className="hero-avatar-initials">{userInitials}</span>
-              )}
-              <span className={`hero-status-dot ${isWorking ? 'active' : ''}`} title={isWorking ? 'Session Active' : 'User Active'}></span>
-            </div>
+        <div className="hero-content">
+          <div className="hero-meta-row">
+            <span className="hero-date-badge">
+              <Calendar size={13} />
+              {todayDateStr}
+            </span>
           </div>
 
-          <div className="hero-content">
-            <div className="hero-meta-row">
-              <span className="hero-date-badge">
-                <Calendar size={13} />
-                {todayDateStr}
-              </span>
+          <h1 className="hero-title">
+            <GreetingIcon size={26} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
+            <div className="hero-greeting-text">
+              {greeting}, <span>{displayName}</span>
             </div>
+          </h1>
 
-            <h1 className="hero-title">
-              <GreetingIcon size={26} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
-              <div className="hero-greeting-text">
-                {greeting}, <span>{displayName}</span>
+          <div className="hero-badges">
+            <span className="hero-badge badge-role">
+              <Briefcase size={13} /> {roleDisplay}
+            </span>
+            <span className="hero-badge badge-id">
+              <UserCircle size={13} /> ID: {user?.employeeId || user?.id || 'CTI-EMP'}
+            </span>
+          </div>
+
+          {/* Daily Motivational & Strength Quote */}
+          <DailyQuoteBanner variant="hero-quote" showBadge={false} />
+        </div>
+
+        {/* Passport Size Photo Frame on Right Side */}
+        <div className="hero-passport-container">
+          <Link to="/employee/profile" className="hero-passport-card" title="Click to view or update Profile Photo">
+            <div className="passport-photo-frame">
+              <div className="passport-photo-inner">
+                {displayPhoto ? (
+                  <img src={displayPhoto} alt={displayName} className="passport-photo-img" />
+                ) : (
+                  <div className="passport-photo-placeholder">
+                    <span className="passport-initials">{userInitials}</span>
+                    <span className="passport-label">Photo</span>
+                  </div>
+                )}
+                <span 
+                  className={`passport-status-dot ${isWorking ? 'active' : ''}`} 
+                  title={isWorking ? 'Session Active' : 'User Active'}
+                ></span>
               </div>
-            </h1>
-
-            <div className="hero-badges">
-              <span className="hero-badge badge-role">
-                <Briefcase size={13} /> {roleDisplay}
-              </span>
-              <span className="hero-badge badge-id">
-                <UserCircle size={13} /> ID: {user?.employeeId || user?.id || 'CTI-EMP'}
-              </span>
             </div>
-
-            {/* Daily Motivational & Strength Quote */}
-            <DailyQuoteBanner variant="hero-quote" showBadge={false} />
-          </div>
+            <span className="passport-badge-label">
+              <Camera size={10} /> Official Photo
+            </span>
+          </Link>
         </div>
       </motion.div>
 
