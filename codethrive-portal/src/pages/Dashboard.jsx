@@ -73,37 +73,6 @@ const Dashboard = () => {
   // 8-hour target progress
   const targetShiftSeconds = 8 * 3600; // 28,800s
 
-  // Dynamic estimated check-out time based on check-in + 8h target + breaks
-  const estimatedCheckOutTime = useMemo(() => {
-    if (!attendance || !attendance.firstLoginTime) return null;
-    try {
-      const loginDate = new Date(attendance.firstLoginTime);
-      const startMs = loginDate.getTime();
-      if (isNaN(startMs)) return null;
-      const breakAndLunchSec = (Number(liveBreakDuration) || 0) + (Number(liveLunchDuration) || 0);
-      const targetMs = startMs + (targetShiftSeconds + breakAndLunchSec) * 1000;
-      const d = new Date(targetMs);
-      if (isNaN(d.getTime())) return null;
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      return null;
-    }
-  }, [attendance, liveBreakDuration, liveLunchDuration]);
-
-  // Punctuality check
-  const isPunctual = useMemo(() => {
-    if (!attendance || !attendance.firstLoginTime) return null;
-    try {
-      const d = new Date(attendance.firstLoginTime);
-      if (isNaN(d.getTime())) return null;
-      const hour = d.getHours();
-      const min = d.getMinutes();
-      return hour < 10 || (hour === 10 && min === 0);
-    } catch (e) {
-      return null;
-    }
-  }, [attendance]);
-
   // Current work week days (Monday - Friday)
   const weekDays = useMemo(() => {
     try {
@@ -624,12 +593,16 @@ const Dashboard = () => {
     .join('')
     .toUpperCase();
 
-  // 8-hour target progress
+  // 8-hour target progress (Work + Break + Lunch all combined)
   const safeLiveWork = Number(liveWorkDuration) || 0;
-  const shiftProgressPercent = Math.min(100, Math.max(0, Math.round((safeLiveWork / targetShiftSeconds) * 100)));
-  const workSecondsRemaining = Math.max(0, targetShiftSeconds - safeLiveWork);
-  const hoursRemaining = Math.floor(workSecondsRemaining / 3600);
-  const minsRemaining = Math.floor((workSecondsRemaining % 3600) / 60);
+  const safeLiveBreak = Number(liveBreakDuration) || 0;
+  const safeLiveLunch = Number(liveLunchDuration) || 0;
+  const totalShiftLoggedSeconds = safeLiveWork + safeLiveBreak + safeLiveLunch;
+
+  const shiftProgressPercent = Math.min(100, Math.max(0, Math.round((totalShiftLoggedSeconds / targetShiftSeconds) * 100)));
+  const shiftSecondsRemaining = Math.max(0, targetShiftSeconds - totalShiftLoggedSeconds);
+  const hoursRemaining = Math.floor(shiftSecondsRemaining / 3600);
+  const minsRemaining = Math.floor((shiftSecondsRemaining % 3600) / 60);
 
   // Active Timer Value and Label Calculation
   let displayMainTimer = liveWorkDuration;
@@ -1013,11 +986,11 @@ const Dashboard = () => {
 
               <div className="shift-gauge-stats">
                 <span>
-                  Logged: <strong>{renderDuration(liveWorkDuration)}</strong> of <strong>8h 00m</strong>
+                  Logged: <strong>{renderDuration(totalShiftLoggedSeconds)}</strong> of <strong>8h 00m</strong>
                 </span>
                 <span>
                   {shiftProgressPercent >= 100 ? (
-                    <span className="text-emerald-400 font-semibold">&bull; Overtime Active</span>
+                    <span className="text-emerald-400 font-semibold">&bull; Shift Target Completed</span>
                   ) : (
                     <span>&bull; {hoursRemaining}h {minsRemaining}m remaining</span>
                   )}
@@ -1029,36 +1002,14 @@ const Dashboard = () => {
             <div className="shift-milestones-grid">
               <div className="sm-item">
                 <span className="sm-label"><Clock size={12} /> Standard Shift</span>
-                <span className="sm-value">09:30 AM &ndash; 06:30 PM</span>
-              </div>
-
-              <div className="sm-item">
-                <span className="sm-label"><ShieldCheck size={12} /> Punctuality Status</span>
-                <span className="sm-value">
-                  {attendance?.firstLoginTime ? (
-                    isPunctual ? (
-                      <span className="punctual-tag on-time"><CheckCircle2 size={12}/> On-Time Punch</span>
-                    ) : (
-                      <span className="punctual-tag late"><AlertTriangle size={12}/> Grace / Late</span>
-                    )
-                  ) : (
-                    <span className="punctual-tag awaiting">Awaiting Punch-In</span>
-                  )}
-                </span>
-              </div>
-
-              <div className="sm-item">
-                <span className="sm-label"><TrendingUp size={12} /> Estimated Check-Out</span>
-                <span className="sm-value highlight">
-                  {estimatedCheckOutTime ? `${estimatedCheckOutTime}` : '06:30 PM (Standard)'}
-                </span>
+                <span className="sm-value">10:00 AM &ndash; 06:00 PM</span>
               </div>
 
               <div className="sm-item">
                 <span className="sm-label"><Coffee size={12} /> Break Allowance</span>
                 <div className="break-budget-bar-wrap">
                   <span className="sm-value" style={{ fontSize: '0.82rem' }}>
-                    Tea: {renderDuration(liveBreakDuration)} / 30m &bull; Lunch: {renderDuration(liveLunchDuration)} / 45m
+                    Tea: {renderDuration(liveBreakDuration)} / 30m &bull; Lunch: {renderDuration(liveLunchDuration)} / 1h 00m
                   </span>
                 </div>
               </div>
