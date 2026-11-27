@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import DateInput from '../components/common/DateInput';
+import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import './Admin.css';
 import './Leave.css';
 
@@ -250,6 +251,7 @@ _Submitted automatically via CodeThrive HR Portal_`;
           <p className="hero-subtext">
             Track casual and sick balances, monitor unpaid leaves (when monthly limit exceeds 2 days), and submit time-off requests seamlessly.
           </p>
+          <DailyQuoteBanner variant="compact" />
         </div>
 
         <div className="hero-right-actions">

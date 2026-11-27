@@ -15,6 +15,7 @@ import { createOfficialCodeThriveDoc, exportOfficialWordDoc, getCorporateTableSt
 import { generatePsgStylePayslipPdf } from '../utils/psgPayslipPdf.js';
 import { Printer } from 'lucide-react';
 import DateInput from '../components/common/DateInput';
+import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import './Payroll.css';
 
 const DEMO_PAYSLIPS = [];
@@ -300,6 +301,7 @@ const Payroll = () => {
           <p className="hero-subtext">
             Access monthly itemized salary statements, tax deduction breakdowns, and download official PDF payslips.
           </p>
+          <DailyQuoteBanner variant="compact" />
         </div>
 
         <div className="hero-right-actions">

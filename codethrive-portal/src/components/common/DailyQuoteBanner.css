@@ -1,0 +1,177 @@
+/* ==========================================================================
+   DAILY MOTIVATIONAL & STRENGTH QUOTE CARD
+   Ultra-modern glassmorphic banner with subtle ambient neon shimmer
+   ========================================================================== */
+
+.daily-quote-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 14px;
+  padding: 0.65rem 1rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 0.35rem;
+}
+
+.daily-quote-card:hover {
+  border-color: rgba(129, 140, 248, 0.45);
+  box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.45), 0 0 16px rgba(99, 102, 241, 0.2);
+  transform: translateY(-1px);
+}
+
+.daily-quote-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3.5px;
+  background: linear-gradient(180deg, #6366f1 0%, #38bdf8 50%, #a855f7 100%);
+  border-radius: 4px 0 0 4px;
+}
+
+.dq-glow-accent {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(18px);
+  pointer-events: none;
+}
+
+.dq-icon-container {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a5b4fc;
+  flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+}
+
+.dq-sparkle-icon {
+  animation: dqSparkleSpin 4s ease-in-out infinite alternate;
+}
+
+@keyframes dqSparkleSpin {
+  0% { transform: scale(0.9) rotate(0deg); opacity: 0.8; }
+  50% { transform: scale(1.15) rotate(15deg); opacity: 1; filter: drop-shadow(0 0 6px #818cf8); }
+  100% { transform: scale(0.9) rotate(0deg); opacity: 0.8; }
+}
+
+.dq-content-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.dq-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dq-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  padding: 0.12rem 0.5rem;
+  border-radius: 12px;
+}
+
+.dq-badge-zap {
+  color: #f59e0b;
+}
+
+.dq-text-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dq-quote-text {
+  font-size: 0.85rem;
+  color: #f1f5f9;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1.4;
+  margin: 0;
+  letter-spacing: 0.1px;
+}
+
+.dq-author {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* Variant: Compact (Inside Hero Header Banners) */
+.daily-quote-card.compact {
+  padding: 0.45rem 0.8rem;
+  border-radius: 10px;
+  gap: 0.65rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.daily-quote-card.compact .dq-icon-container {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+}
+
+.daily-quote-card.compact .dq-quote-text {
+  font-size: 0.8rem;
+}
+
+.daily-quote-card.compact .dq-author {
+  font-size: 0.72rem;
+}
+
+/* Variant: Hero Integrated */
+.daily-quote-card.hero-quote {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid #6366f1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .daily-quote-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  .dq-icon-container {
+    display: none;
+  }
+  .dq-quote-text {
+    font-size: 0.8rem;
+  }
+}

@@ -14,6 +14,7 @@ import { formatDate } from '../utils/dateUtils';
 import DateInput from '../components/common/DateInput';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
+import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import { createOfficialCodeThriveDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
 import './Attendance.css';
 
@@ -1022,6 +1023,7 @@ const Attendance = () => {
             <span className="att-live-dot"></span>
             {todayFormatted} &bull; Real-time tracking and automated session logging
           </p>
+          <DailyQuoteBanner variant="compact" />
         </div>
 
         <div className="att-header-controls">

@@ -15,6 +15,7 @@ import {
 import { zipSync } from 'fflate';
 import { formatDate } from '../utils/dateUtils';
 import DateInput from '../components/common/DateInput';
+import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import './DailyReports.css';
 
 const DEMO_REPORTS = [];
@@ -451,6 +452,7 @@ const DailyReports = () => {
               </span>
             )}
           </div>
+          <DailyQuoteBanner variant="compact" />
         </div>
 
         <div className="hero-right-actions">

@@ -9,6 +9,7 @@ import {
   UserCheck, GraduationCap, Globe, Eye, Lock, AlertCircle, CheckCircle2, Layers, Calendar, Plus
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import './Documents.css';
 
 const SUPPORTED_CATEGORIES = [
@@ -349,6 +350,7 @@ const Documents = () => {
           <p className="hero-subtext">
             Upload, store, and organize your official identity proofs, educational certificates, employment contracts, tax filings, and company policies.
           </p>
+          <DailyQuoteBanner variant="compact" />
         </div>
 
         <div className="hero-right-actions">

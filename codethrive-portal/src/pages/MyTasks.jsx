@@ -12,6 +12,7 @@ import {
   Layers, CheckSquare, Edit3, Eye, X, SlidersHorizontal
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import './MyTasks.css';
 
 const MyTasks = () => {
@@ -236,6 +237,7 @@ const MyTasks = () => {
           <p className="tasks-hero-subtitle">
             Manage, track, and complete your assigned project deliverables with real-time status updates and progress tracking.
           </p>
+          <DailyQuoteBanner variant="compact" />
         </div>
 
         <div className="hero-right-actions">
