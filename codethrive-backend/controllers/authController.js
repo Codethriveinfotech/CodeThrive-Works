@@ -38,6 +38,7 @@ const sendTokenResponse = async (user, statusCode, res, extraData = {}) => {
         designation: employee ? employee.designation : null,
         department: employee ? employee.department : null,
         profilePhoto: employee ? (employee.profilePhoto || null) : (user.profilePhoto || null),
+        wifiAccessPolicy: user.wifiAccessPolicy || employee?.wifiAccessPolicy || 'any',
         isFirstLogin: isFirstLogin,
         isNewRegisteredUser: Boolean(extraData.isNewRegisteredUser),
         loginCount: user.loginCount || 1
@@ -318,12 +319,13 @@ exports.login = async (req, res) => {
 
     // Office Wi-Fi Network Check (Strictly for Employee Portal)
     try {
+      const empWifiPolicy = user.wifiAccessPolicy || employee?.wifiAccessPolicy || 'any';
       const { pool } = require('../config/db');
       if (pool) {
         const companyRes = await pool.query("SELECT value FROM system_settings WHERE key = 'company_profile' LIMIT 1");
         if (companyRes.rows.length > 0 && companyRes.rows[0].value) {
           const company = companyRes.rows[0].value;
-          const officeWifiOnly = Boolean(company.officeWifiOnly);
+          const officeWifiOnly = Boolean(company.officeWifiOnly) || empWifiPolicy === 'office';
           const officeWifiIps = Array.isArray(company.officeWifiIps) 
             ? company.officeWifiIps 
             : (company.officeWifiIp ? [company.officeWifiIp] : []);

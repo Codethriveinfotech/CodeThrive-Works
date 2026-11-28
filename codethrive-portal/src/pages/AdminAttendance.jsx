@@ -83,6 +83,42 @@ const MONTHS = [
   'July','August','September','October','November','December'
 ];
 
+const TN_GOVT_HOLIDAYS = {
+  '01-01': "New Year's Day",
+  '01-15': 'Pongal',
+  '01-16': 'Thiruvalluvar Day',
+  '01-17': 'Uzhavar Thirunal',
+  '01-26': 'Republic Day',
+  '03-19': 'Telugu New Year',
+  '03-21': 'Ramzan (Id-ul-Fitr)',
+  '03-31': 'Mahaveer Jayanthi',
+  '04-03': 'Good Friday',
+  '04-14': 'Tamil New Year / Dr. Ambedkar Jayanti',
+  '05-01': 'May Day (Labour Day)',
+  '05-28': 'Bakrid (Eid al-Adha)',
+  '06-26': 'Muharram',
+  '08-15': 'Independence Day',
+  '08-26': 'Milad-un-Nabi',
+  '09-04': 'Krishna Jayanthi',
+  '09-14': 'Vinayakar Chathurthi',
+  '10-02': 'Gandhi Jayanthi',
+  '10-19': 'Ayutha Pooja',
+  '10-20': 'Vijaya Dasami',
+  '11-08': 'Deepavali',
+  '12-25': 'Christmas'
+};
+
+const getGovtHolidayName = (dateStr) => {
+  if (!dateStr) return null;
+  const iso = typeof dateStr === 'string' && dateStr.includes('/') ? toIsoDate(dateStr) : String(dateStr);
+  const parts = iso.split('T')[0].split('-');
+  if (parts.length >= 3) {
+    const mmdd = `${parts[1]}-${parts[2]}`;
+    return TN_GOVT_HOLIDAYS[mmdd] || null;
+  }
+  return null;
+};
+
 // ─── Component ──────────────────────────────────────────────
 const AdminAttendance = () => {
   const today = toLocalDateStr(new Date());
@@ -154,15 +190,65 @@ const AdminAttendance = () => {
   const [modalSaving, setModalSaving] = useState(false);
 
   const handleOpenEditModal = (row) => {
+    const currentStatus = row._localStatus || row.status || 'Present';
+    const isGovt = currentStatus === 'Government Holiday';
+    const holName = getGovtHolidayName(selectedDate);
+    let defaultReason = row.correctionReason || '';
+    if (!defaultReason && (isGovt || holName)) {
+      defaultReason = `Government Holiday - ${holName || 'Public Holiday'}`;
+    }
+
     setEditingRow(row);
     setEditForm({
-      status: row._localStatus || row.status || 'Present',
+      status: isGovt ? 'Government Holiday' : (holName && !row.firstLoginTime ? 'Government Holiday' : currentStatus),
       inTime: row.firstLoginTime ? new Date(row.firstLoginTime).toTimeString().slice(0, 5) : '',
       outTime: row.lastLogoutTime ? new Date(row.lastLogoutTime).toTimeString().slice(0, 5) : '',
-      breakMinutes: row.totalBreakDurationInSeconds !== undefined ? Math.round(row.totalBreakDurationInSeconds / 60) : 15,
-      lunchMinutes: row.totalLunchDurationInSeconds !== undefined ? Math.round(row.totalLunchDurationInSeconds / 60) : 45,
-      reason: row.correctionReason || ''
+      breakMinutes: row.totalBreakDurationInSeconds !== undefined ? Math.round(row.totalBreakDurationInSeconds / 60) : (isGovt ? 0 : 15),
+      lunchMinutes: row.totalLunchDurationInSeconds !== undefined ? Math.round(row.totalLunchDurationInSeconds / 60) : (isGovt ? 0 : 45),
+      reason: defaultReason
     });
+  };
+
+  const handleEditStatusChange = (newStatus) => {
+    if (newStatus === 'Government Holiday') {
+      const holName = getGovtHolidayName(selectedDate) || 'Public Holiday';
+      setEditForm(prev => ({
+        ...prev,
+        status: newStatus,
+        inTime: '',
+        outTime: '',
+        breakMinutes: 0,
+        lunchMinutes: 0,
+        reason: `Government Holiday - ${holName}`
+      }));
+    } else if (newStatus === 'Sunday Holiday') {
+      setEditForm(prev => ({
+        ...prev,
+        status: newStatus,
+        inTime: '',
+        outTime: '',
+        breakMinutes: 0,
+        lunchMinutes: 0,
+        reason: 'Sunday Holiday - Weekly Off'
+      }));
+    } else if (newStatus === 'Office Holiday') {
+      setEditForm(prev => ({
+        ...prev,
+        status: newStatus,
+        inTime: '',
+        outTime: '',
+        breakMinutes: 0,
+        lunchMinutes: 0,
+        reason: prev.reason || 'Office Holiday Declared'
+      }));
+    } else {
+      setEditForm(prev => ({
+        ...prev,
+        status: newStatus,
+        inTime: prev.inTime || '09:30',
+        outTime: prev.outTime || '18:30'
+      }));
+    }
   };
 
   const handleSaveModal = async (e) => {
@@ -1033,7 +1119,7 @@ const AdminAttendance = () => {
               <select 
                 className="aa-status-select" 
                 value={editForm.status} 
-                onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                onChange={e => handleEditStatusChange(e.target.value)}
                 style={{ width: '100%', padding: '0.55rem' }}
               >
                 <option value="Present">Present (Full Day Approved)</option>

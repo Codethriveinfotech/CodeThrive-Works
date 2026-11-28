@@ -15,7 +15,7 @@ import {
   User, X, Briefcase, FileText, Calendar, Clock, Banknote,
   KeyRound, Plus, Download, Save, ArrowLeft, Mail, Phone, MapPin, Check, FileCheck, Filter, ShieldCheck, Printer, LogIn, LogOut, Coffee, Utensils, CreditCard,
   GraduationCap, Sparkles, Landmark, CheckCircle2, Search, Eye, FileCode, CheckSquare, Layers, AlertCircle, FileArchive, FolderArchive,
-  Trash2, AlignLeft, Settings, Pencil
+  Trash2, AlignLeft, Settings, Pencil, Wifi
 } from 'lucide-react';
 import Card from '../components/common/Card';
 import Modal from '../components/common/Modal';
@@ -84,6 +84,17 @@ const TN_GOVT_HOLIDAYS = {
   '10-20': 'Vijaya Dasami',
   '11-08': 'Deepavali',
   '12-25': 'Christmas'
+};
+
+const getGovtHolidayName = (dateStr) => {
+  if (!dateStr) return null;
+  const iso = typeof dateStr === 'string' && dateStr.includes('/') ? toIsoDate(dateStr) : String(dateStr);
+  const parts = iso.split('T')[0].split('-');
+  if (parts.length >= 3) {
+    const mmdd = `${parts[1]}-${parts[2]}`;
+    return TN_GOVT_HOLIDAYS[mmdd] || null;
+  }
+  return null;
 };
 
 const DEFAULT_DEMO_EMPLOYEES = [
@@ -412,6 +423,7 @@ const EmployeeDetail = () => {
   // Management State
   const [editRole, setEditRole] = useState('employee');
   const [editStatus, setEditStatus] = useState('Active');
+  const [editWifiPolicy, setEditWifiPolicy] = useState('any');
   const [newPassword, setNewPassword] = useState('');
   
   // Salary State
@@ -567,28 +579,96 @@ const EmployeeDetail = () => {
       const bMinutes = record.totalBreakDurationInSeconds ? Math.round(record.totalBreakDurationInSeconds / 60) : 0;
       const lMinutes = record.totalLunchDurationInSeconds ? Math.round(record.totalLunchDurationInSeconds / 60) : 0;
 
+      const holName = getGovtHolidayName(recDate);
+      const isGovt = currentStatus === 'Government Holiday';
+      let defaultReason = record.correctionReason || record.remarks || '';
+      if (!defaultReason && (isGovt || holName)) {
+        defaultReason = `Government Holiday - ${holName || 'Public Holiday'}`;
+      }
+
       setRectifyForm({
         date: recDate,
-        status: currentStatus,
-        inTime,
-        outTime,
-        breakMinutes: bMinutes,
-        lunchMinutes: lMinutes,
-        reason: record.correctionReason || record.remarks || ''
+        status: isGovt ? 'Government Holiday' : (holName && !record.firstLoginTime ? 'Government Holiday' : currentStatus),
+        inTime: isGovt ? '' : inTime,
+        outTime: isGovt ? '' : outTime,
+        breakMinutes: isGovt ? 0 : bMinutes,
+        lunchMinutes: isGovt ? 0 : lMinutes,
+        reason: defaultReason
       });
       setEditingAttendanceRecord(record);
     } else {
       const todayStr = new Date().toISOString().split('T')[0];
+      const todayHol = getGovtHolidayName(todayStr);
       setRectifyForm({
         date: todayStr,
-        status: 'Present',
-        inTime: '09:30',
-        outTime: '18:30',
+        status: todayHol ? 'Government Holiday' : 'Present',
+        inTime: todayHol ? '' : '09:30',
+        outTime: todayHol ? '' : '18:30',
         breakMinutes: 0,
         lunchMinutes: 0,
-        reason: ''
+        reason: todayHol ? `Government Holiday - ${todayHol}` : ''
       });
       setEditingAttendanceRecord({});
+    }
+  };
+
+  const handleRectifyDateChange = (newDate) => {
+    const holName = getGovtHolidayName(newDate);
+    if (holName) {
+      setRectifyForm(prev => ({
+        ...prev,
+        date: newDate,
+        status: 'Government Holiday',
+        inTime: '',
+        outTime: '',
+        breakMinutes: 0,
+        lunchMinutes: 0,
+        reason: `Government Holiday - ${holName}`
+      }));
+    } else {
+      setRectifyForm(prev => ({ ...prev, date: newDate }));
+    }
+  };
+
+  const handleRectifyStatusChange = (newStatus) => {
+    if (newStatus === 'Government Holiday') {
+      const holName = getGovtHolidayName(rectifyForm.date) || 'Public Holiday';
+      setRectifyForm(prev => ({
+        ...prev,
+        status: newStatus,
+        inTime: '',
+        outTime: '',
+        breakMinutes: 0,
+        lunchMinutes: 0,
+        reason: `Government Holiday - ${holName}`
+      }));
+    } else if (newStatus === 'Sunday Holiday') {
+      setRectifyForm(prev => ({
+        ...prev,
+        status: newStatus,
+        inTime: '',
+        outTime: '',
+        breakMinutes: 0,
+        lunchMinutes: 0,
+        reason: 'Sunday Holiday - Weekly Off'
+      }));
+    } else if (newStatus === 'Office Holiday') {
+      setRectifyForm(prev => ({
+        ...prev,
+        status: newStatus,
+        inTime: '',
+        outTime: '',
+        breakMinutes: 0,
+        lunchMinutes: 0,
+        reason: prev.reason || 'Office Holiday Declared'
+      }));
+    } else {
+      setRectifyForm(prev => ({
+        ...prev,
+        status: newStatus,
+        inTime: prev.inTime || '09:30',
+        outTime: prev.outTime || '18:30'
+      }));
     }
   };
 
@@ -1163,6 +1243,7 @@ const EmployeeDetail = () => {
     if (!emp) return;
     setEditRole(emp.user?.role || 'employee');
     setEditStatus(emp.status || 'Active');
+    setEditWifiPolicy(emp.wifiAccessPolicy || emp.user?.wifiAccessPolicy || 'any');
     const defaultSal = emp.salaryAmount || (emp.fullName?.toLowerCase().includes('kirubakaran') ? 85000 : 75000);
     setEditSalary(defaultSal);
     setEditBank(emp.bankName || 'Canara Bank');
@@ -1775,7 +1856,8 @@ CodeThrive Infotech • Confidential Personnel Archive
         userRole: editRole,
         status: editStatus,
         userStatus: editStatus,
-        password: newPassword
+        password: newPassword,
+        wifiAccessPolicy: editWifiPolicy
       });
     } catch (err) {
       console.warn('Updated locally');
@@ -1783,11 +1865,12 @@ CodeThrive Infotech • Confidential Personnel Archive
     const updated = {
       ...employee,
       status: editStatus,
-      user: { ...employee.user, role: editRole, status: editStatus }
+      wifiAccessPolicy: editWifiPolicy,
+      user: { ...employee.user, role: editRole, status: editStatus, wifiAccessPolicy: editWifiPolicy }
     };
     setEmployee(updated);
     setNewPassword('');
-    alert(`Access Role set to '${editRole}' and Account Status set to '${editStatus}' for ${employee.fullName}!`);
+    alert(`Access Role set to '${editRole}', Status to '${editStatus}', Wi-Fi Policy to '${editWifiPolicy === 'office' ? 'Office Wi-Fi Only' : 'Other Wi-Fi (Any Network)'}' for ${employee.fullName}!`);
   };
 
   const handleSaveSalary = async () => {
@@ -4331,7 +4414,7 @@ CodeThrive Infotech • Confidential Personnel Archive
               </div>
 
               {/* Account Overview Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Employee ID</div>
                   <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc', marginTop: '3px' }}>{employee.employeeId || 'N/A'}</div>
@@ -4347,6 +4430,26 @@ CodeThrive Infotech • Confidential Personnel Archive
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Status</div>
                   <div style={{ marginTop: '3px' }}><StatusBadge status={employee.status || 'Active'} /></div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Wi-Fi Access Policy</div>
+                  <div style={{ marginTop: '3px' }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.2rem 0.55rem',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      background: (employee.wifiAccessPolicy || employee.user?.wifiAccessPolicy) === 'office' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(52, 211, 153, 0.15)',
+                      color: (employee.wifiAccessPolicy || employee.user?.wifiAccessPolicy) === 'office' ? '#38bdf8' : '#34d399',
+                      border: `1px solid ${(employee.wifiAccessPolicy || employee.user?.wifiAccessPolicy) === 'office' ? 'rgba(56, 189, 248, 0.35)' : 'rgba(52, 211, 153, 0.35)'}`
+                    }}>
+                      <Wifi size={13} />
+                      {(employee.wifiAccessPolicy || employee.user?.wifiAccessPolicy) === 'office' ? 'Office Wi-Fi Only' : 'Other Wi-Fi (Any)'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -4376,6 +4479,32 @@ CodeThrive Infotech • Confidential Personnel Archive
                     Suspended or inactive accounts cannot authenticate into the employee portal.
                   </span>
                 </div>
+              </div>
+
+              <div className="form-field" style={{ marginTop: '1.25rem' }}>
+                <label style={{ fontWeight: 600, color: '#e2e8f0', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <Wifi size={16} style={{ color: '#38bdf8' }} /> Wi-Fi Access Security Policy
+                </label>
+                <select 
+                  className="input-box" 
+                  value={editWifiPolicy} 
+                  onChange={e => setEditWifiPolicy(e.target.value)}
+                  style={{ height: '42px', fontSize: '0.88rem' }}
+                >
+                  <option value="any">🌐 Other Wi-Fi (Any Network / Work from Anywhere Allowed)</option>
+                  <option value="office">🏢 Office Wi-Fi Only (CodeThrive Office Network Required)</option>
+                </select>
+                <span style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '5px', display: 'block', lineHeight: 1.45 }}>
+                  {editWifiPolicy === 'office' ? (
+                    <span style={{ color: '#38bdf8' }}>
+                      🔒 <strong>Office Wi-Fi Only:</strong> Employee must connect strictly to CodeThrive Office Wi-Fi. Access from any other network will be blocked with: "CodeThrive Infotech Office Wi-Fi connect panuga".
+                    </span>
+                  ) : (
+                    <span style={{ color: '#34d399' }}>
+                      ✓ <strong>Other Wi-Fi:</strong> Employee is permitted to connect and work using home broadband, mobile hotspot, or any Wi-Fi network.
+                    </span>
+                  )}
+                </span>
               </div>
 
               <div className="form-field" style={{ marginTop: '1.25rem' }}>
@@ -4772,7 +4901,7 @@ CodeThrive Infotech • Confidential Personnel Archive
               <DateInput 
                 className="input-box" 
                 value={rectifyForm.date} 
-                onChange={e => setRectifyForm({ ...rectifyForm, date: e.target.value })} 
+                onChange={e => handleRectifyDateChange(e.target.value)} 
                 required 
               />
             </div>
@@ -4784,7 +4913,7 @@ CodeThrive Infotech • Confidential Personnel Archive
               <select 
                 className="input-box" 
                 value={rectifyForm.status} 
-                onChange={e => setRectifyForm({ ...rectifyForm, status: e.target.value })}
+                onChange={e => handleRectifyStatusChange(e.target.value)}
                 style={{ height: '42px', fontSize: '0.86rem' }}
               >
                 <option value="Present">Present (Full Day Approved)</option>

@@ -207,6 +207,10 @@ exports.updateEmployee = async (req, res) => {
           userDoc.email = req.body.personalEmailAddress;
           userChanged = true;
         }
+        if (req.body.wifiAccessPolicy !== undefined) {
+          userDoc.wifiAccessPolicy = req.body.wifiAccessPolicy;
+          userChanged = true;
+        }
         if (userChanged) {
           await userDoc.save();
         }

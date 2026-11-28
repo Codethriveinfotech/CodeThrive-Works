@@ -142,7 +142,7 @@ exports.getAttendanceRegister = async (req, res) => {
         lastLogoutTime: att ? att.lastLogoutTime : null,
         totalWorkDurationInSeconds: att ? att.totalWorkDurationInSeconds : 0,
         isManualCorrection: att ? att.isManualCorrection : false,
-        correctionReason: att ? att.correctionReason : null,
+        correctionReason: att?.correctionReason || (isGovtHoliday ? `Government Holiday - ${govtHolidayName}` : (isSunday ? 'Sunday Holiday' : null)),
       };
     });
 
@@ -221,6 +221,15 @@ exports.markAttendance = async (req, res) => {
     const now = new Date();
     const loginTime = firstLoginTime ? new Date(firstLoginTime) : now;
 
+    let finalReason = correctionReason;
+    if (status === 'Government Holiday' && !finalReason) {
+      const dt = new Date(date);
+      const mStr = String(dt.getMonth() + 1).padStart(2, '0');
+      const dStr = String(dt.getDate()).padStart(2, '0');
+      const hol = TN_GOVT_HOLIDAYS[`${mStr}-${dStr}`] || 'Public Holiday';
+      finalReason = `Government Holiday - ${hol}`;
+    }
+
     const breakSec = totalBreakDurationInSeconds !== undefined
       ? Number(totalBreakDurationInSeconds)
       : (breakMinutes !== undefined ? Number(breakMinutes) * 60 : (attendance?.totalBreakDurationInSeconds || 0));
@@ -231,7 +240,7 @@ exports.markAttendance = async (req, res) => {
     if (attendance) {
       attendance.status = status;
       attendance.isManualCorrection = true;
-      attendance.correctionReason = correctionReason || 'Admin manual mark';
+      attendance.correctionReason = finalReason || 'Admin manual mark';
       if (firstLoginTime) attendance.firstLoginTime = loginTime;
       if (lastLogoutTime) attendance.lastLogoutTime = new Date(lastLogoutTime);
       attendance.totalBreakDurationInSeconds = breakSec;
