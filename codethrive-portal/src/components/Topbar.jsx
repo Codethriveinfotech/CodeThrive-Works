@@ -56,26 +56,28 @@ const Topbar = () => {
                 flexShrink: 0
               }} 
             />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', lineHeight: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', lineHeight: 1 }}>
               <span style={{ 
                 fontSize: '1.15rem', 
-                fontWeight: 800, 
-                letterSpacing: '0.3px',
+                fontWeight: 900, 
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
                 background: 'linear-gradient(135deg, #ffffff 0%, #38bdf8 65%, #0072ff 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}>
-                CodeThrive
+                CODETHRIVE
               </span>
               <span style={{ 
                 fontSize: '1.12rem', 
-                fontWeight: 800, 
-                letterSpacing: '0.3px',
+                fontWeight: 900, 
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
                 background: 'linear-gradient(135deg, #00ff87 0%, #60efff 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}>
-                Infotech
+                INFOTECH
               </span>
             </div>
           </div>

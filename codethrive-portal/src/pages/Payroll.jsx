@@ -310,14 +310,6 @@ const Payroll = () => {
          -------------------------------------------------------------------------- */}
       <motion.div className="payroll-hero-banner" variants={itemVariants}>
         <div className="hero-left-content">
-          <div className="hero-meta-row">
-            <span className="payroll-meta-badge">
-              <ShieldCheck size={13} /> Official Compensation Hub
-            </span>
-            <span className="payroll-cycle-badge">
-              <Calendar size={13} /> Active Pay Cycle • 2026
-            </span>
-          </div>
           <h1 className="hero-main-title">My Payslips & Compensation</h1>
           <p className="hero-subtext">
             Access monthly itemized salary statements, tax deduction breakdowns, and download official PDF payslips.

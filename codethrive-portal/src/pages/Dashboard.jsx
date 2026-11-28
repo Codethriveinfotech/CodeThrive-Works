@@ -658,21 +658,10 @@ const Dashboard = () => {
           </div>
 
           <h1 className="hero-title">
-            {isFirstTimeOnboarding ? (
-              <>
-                <Sparkles size={26} className="text-amber-400" />
-                <div className="hero-greeting-text">
-                  Welcome To CTI, <span>{displayName}</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <GreetingIcon size={26} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
-                <div className="hero-greeting-text">
-                  {greeting}, <span>{displayName}</span>
-                </div>
-              </>
-            )}
+            <GreetingIcon size={26} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
+            <div className="hero-greeting-text">
+              {greeting}, <span>{displayName}</span>
+            </div>
           </h1>
 
           <div className="hero-badges">
