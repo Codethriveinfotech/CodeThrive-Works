@@ -1,3 +1,4 @@
+import logoImg from '../assets/logo.png';
 import './SplashScreen.css';
 
 const SplashScreen = ({ isFading }) => {
@@ -27,7 +28,7 @@ const SplashScreen = ({ isFading }) => {
         {/* User Official Logo Emblem */}
         <div className="logo-wrapper">
           <img 
-            src="/logo.png" 
+            src={logoImg} 
             alt="CodeThrive Infotech Logo" 
             className="splash-logo"
           />

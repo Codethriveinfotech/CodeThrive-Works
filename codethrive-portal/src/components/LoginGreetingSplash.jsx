@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Sunrise, Moon, Sparkles, ShieldCheck } from 'lucide-react';
+import logoImg from '../assets/logo.png';
 import './LoginGreetingSplash.css';
 
 const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText }) => {
@@ -80,7 +81,7 @@ const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText 
         <div className="greeting-logo-wrapper">
           <div className="greeting-logo-glow"></div>
           <img
-            src="/logo.png"
+            src={logoImg}
             alt="CodeThrive Logo"
             className="greeting-splash-logo"
           />
@@ -146,7 +147,7 @@ const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText 
             </div>
           </div>
           <span className="greeting-loading-text">
-            {customRedirectText || 'Entering CodeThrive Infotech...'}
+            {customRedirectText || 'Entering CodeThrive Infotech Workspace...'}
           </span>
         </div>
       </div>
