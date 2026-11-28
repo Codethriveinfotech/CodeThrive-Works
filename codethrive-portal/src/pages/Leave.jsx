@@ -70,7 +70,14 @@ const Leave = () => {
       localStorage.setItem('cti_shared_leaves', JSON.stringify(localShared));
 
       const myEmpId = user?.employeeId;
-      const myLocal = myEmpId ? localShared.filter(l => l.employeeId === myEmpId || l.employee?.employeeId === myEmpId) : [];
+      const myUserId = user?._id || user?.id;
+      const myEmail = (user?.email || '').toLowerCase();
+      const myLocal = localShared.filter(l => {
+        if (myEmpId && (l.employeeId === myEmpId || l.employee?.employeeId === myEmpId)) return true;
+        if (myUserId && (l.employee?._id === myUserId || l.employee === myUserId)) return true;
+        if (myEmail && (l.employee?.email?.toLowerCase() === myEmail || l.email?.toLowerCase() === myEmail)) return true;
+        return false;
+      });
 
       // Merge localShared and API requests
       const mergedMap = new Map();

@@ -845,18 +845,22 @@ const EmployeeDetail = () => {
         setLoading(true);
       }
 
-      // Fast Concurrent Data Loading (all 4 APIs run in parallel in a single roundtrip)
-      const [empResult, taskResult, reportResult, payResult] = await Promise.allSettled([
+      // Fast Concurrent Data Loading (all 6 APIs run in parallel in a single roundtrip)
+      const [empResult, taskResult, reportResult, payResult, leaveResult, docResult] = await Promise.allSettled([
         api.get('/employees').catch(() => null),
         api.get('/tasks').catch(() => null),
         api.get('/daily-reports').catch(() => null),
-        api.get('/payroll').catch(() => null)
+        api.get('/payroll').catch(() => null),
+        api.get('/leaves').catch(() => null),
+        api.get('/documents').catch(() => null)
       ]);
 
       const empRes = empResult.status === 'fulfilled' ? empResult.value : null;
       const taskRes = taskResult.status === 'fulfilled' ? taskResult.value : null;
       const reportRes = reportResult.status === 'fulfilled' ? reportResult.value : null;
       const payRes = payResult.status === 'fulfilled' ? payResult.value : null;
+      const leaveRes = leaveResult.status === 'fulfilled' ? leaveResult.value : null;
+      const docRes = docResult.status === 'fulfilled' ? docResult.value : null;
 
       let list = DEFAULT_DEMO_EMPLOYEES;
       if (empRes?.data?.success && Array.isArray(empRes.data.data) && empRes.data.data.length > 0) {
@@ -875,9 +879,19 @@ const EmployeeDetail = () => {
       const isSeedR = (r) => (r?.tasksWorked && r.tasksWorked.includes('authentication API unit tests')) || (r?.srcFileName === 'CodeThrive_Audit_Engine_SRC.zip');
       const isSeedP = (p) => p?.payslipId === 'PAY-2026-09-001' || p?.month === 'September 2026' || p?._id === 'psl_demo_001';
 
-      // Match Tasks for this employee
-      const allTasks = taskRes?.data?.data || taskRes?.data || [];
-      if (Array.isArray(allTasks) && allTasks.length > 0) {
+      // 1. Match Tasks for this employee
+      let allTasks = taskRes?.data?.data || taskRes?.data || [];
+      if (!Array.isArray(allTasks)) allTasks = [];
+      try {
+        const localTasks = JSON.parse(localStorage.getItem('cti_admin_tasks') || '[]');
+        if (Array.isArray(localTasks)) {
+          localTasks.forEach(lt => {
+            if (!allTasks.some(t => t._id === lt._id)) allTasks.push(lt);
+          });
+        }
+      } catch (e) {}
+
+      if (allTasks.length > 0) {
         const empTasks = allTasks.filter(t => 
           !isSeedT(t) && (
             t.assignedTo?._id === enrichedTarget._id || 
@@ -886,10 +900,11 @@ const EmployeeDetail = () => {
             t.assignedTo === enrichedTarget.employeeId
           )
         );
+        empTasks.sort((a, b) => new Date(b.createdAt || b.dueDate || 0) - new Date(a.createdAt || a.dueDate || 0));
         enrichedTarget.assignedByAdmin.tasks = empTasks;
       }
 
-      // Match Daily Reports (Comprehensive match across ID, EmployeeID, Email, and Name)
+      // 2. Match Daily Reports & SRC (Comprehensive match across ID, EmployeeID, Email, and Name)
       let allReports = reportRes?.data?.data || reportRes?.data || [];
       if (!Array.isArray(allReports)) allReports = [];
       try {
@@ -923,10 +938,90 @@ const EmployeeDetail = () => {
 
           return false;
         });
+        // Sort newest first
+        empReports.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
         enrichedTarget.sentByEmployee.dailyReports = empReports;
       }
 
-      // Match Payslips
+      // 3. Match Leave Applications for this employee
+      let allLeaves = leaveRes?.data?.data || leaveRes?.data || [];
+      if (!Array.isArray(allLeaves)) allLeaves = [];
+      try {
+        const localLeaves = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
+        if (Array.isArray(localLeaves)) {
+          localLeaves.forEach(ll => {
+            if (!allLeaves.some(l => l._id === ll._id)) allLeaves.push(ll);
+          });
+        }
+      } catch (e) {}
+
+      if (allLeaves.length > 0) {
+        const empLeaves = allLeaves.filter(l => {
+          const lEmp = l.employee || {};
+          const lId = typeof lEmp === 'object' ? (lEmp._id || lEmp.id || lEmp.employeeId) : lEmp;
+          if (lId && (lId === enrichedTarget._id || lId === enrichedTarget.employeeId)) return true;
+          if (l.employeeId && (l.employeeId === enrichedTarget.employeeId || l.employeeId === enrichedTarget._id)) return true;
+          if (l.employee_id && (l.employee_id === enrichedTarget._id || l.employee_id === enrichedTarget.employeeId)) return true;
+          if (l.employee === enrichedTarget._id || l.employee === enrichedTarget.employeeId) return true;
+
+          const lEmail = (lEmp.personalEmailAddress || lEmp.email || l.email || '').toLowerCase();
+          const targetEmail = (enrichedTarget.personalEmailAddress || enrichedTarget.email || '').toLowerCase();
+          if (targetEmail && lEmail && targetEmail === lEmail) return true;
+
+          const lName = (lEmp.fullName || l.employeeName || l.fullName || '').trim().toLowerCase();
+          const targetName = (enrichedTarget.fullName || '').trim().toLowerCase();
+          if (targetName && lName && (targetName === lName || targetName.includes(lName) || lName.includes(targetName))) return true;
+
+          return false;
+        });
+
+        empLeaves.forEach(l => {
+          if (!l.dates) {
+            const s = l.startDate ? (new Date(l.startDate).toLocaleDateString('en-GB') || l.startDate) : '';
+            const e = l.endDate ? (new Date(l.endDate).toLocaleDateString('en-GB') || l.endDate) : '';
+            l.dates = s ? (e && e !== s ? `${s} - ${e}` : s) : 'Active Period';
+          }
+        });
+        // Sort newest first
+        empLeaves.sort((a, b) => new Date(b.createdAt || b.startDate || 0) - new Date(a.createdAt || a.startDate || 0));
+        enrichedTarget.sentByEmployee.leaveApplications = empLeaves;
+      }
+
+      // 4. Match Documents for this employee
+      let allDocs = docRes?.data?.data || docRes?.data || [];
+      if (!Array.isArray(allDocs)) allDocs = [];
+      try {
+        const localDocs = JSON.parse(localStorage.getItem('cti_shared_documents') || '[]');
+        if (Array.isArray(localDocs)) {
+          localDocs.forEach(ld => {
+            if (!allDocs.some(d => d._id === ld._id)) allDocs.push(ld);
+          });
+        }
+      } catch (e) {}
+
+      if (allDocs.length > 0) {
+        const empDocs = allDocs.filter(d => {
+          const dEmp = d.employee || {};
+          const dId = typeof dEmp === 'object' ? (dEmp._id || dEmp.id || dEmp.employeeId) : dEmp;
+          if (dId && (dId === enrichedTarget._id || dId === enrichedTarget.employeeId)) return true;
+          if (d.employeeId && (d.employeeId === enrichedTarget.employeeId || d.employeeId === enrichedTarget._id)) return true;
+          if (d.employee_id && (d.employee_id === enrichedTarget._id || d.employee_id === enrichedTarget.employeeId)) return true;
+          if (d.employee === enrichedTarget._id || d.employee === enrichedTarget.employeeId) return true;
+
+          const dEmail = (dEmp.personalEmailAddress || dEmp.email || d.email || '').toLowerCase();
+          const targetEmail = (enrichedTarget.personalEmailAddress || enrichedTarget.email || '').toLowerCase();
+          if (targetEmail && dEmail && targetEmail === dEmail) return true;
+
+          const dName = (dEmp.fullName || d.employeeName || d.fullName || '').trim().toLowerCase();
+          const targetName = (enrichedTarget.fullName || '').trim().toLowerCase();
+          if (targetName && dName && targetName === dName) return true;
+
+          return false;
+        });
+        enrichedTarget.sentByEmployee.uploadedDocs = empDocs;
+      }
+
+      // 5. Match Payslips
       const allPayslips = payRes?.data?.data || payRes?.data || [];
       if (Array.isArray(allPayslips) && allPayslips.length > 0) {
         const empPayslips = allPayslips.filter(p => 
@@ -1109,10 +1204,20 @@ const EmployeeDetail = () => {
 
   const handleLeaveAction = async (leaveId, newStatus) => {
     try {
-      await api.put(`/leaves/${leaveId}/status`, { status: newStatus });
+      await api.put(`/leaves/${leaveId}`, { status: newStatus }).catch(() => 
+        api.put(`/leaves/${leaveId}/status`, { status: newStatus })
+      );
     } catch (err) {
-      console.warn('Leave status updated locally', err);
+      console.warn('Leave status update API error (syncing locally):', err);
     } finally {
+      // 1. Update localStorage cti_shared_leaves so change is 100% persistent across reloads
+      try {
+        const rawShared = JSON.parse(localStorage.getItem('cti_shared_leaves') || '[]');
+        const updatedShared = rawShared.map(l => l._id === leaveId ? { ...l, status: newStatus } : l);
+        localStorage.setItem('cti_shared_leaves', JSON.stringify(updatedShared));
+      } catch (e) {}
+
+      // 2. Update local state immediately
       setEmployee(prev => {
         if (!prev) return prev;
         const updatedLeaves = (prev.sentByEmployee?.leaveApplications || []).map(l => 
@@ -1193,10 +1298,10 @@ CodeThrive Infotech • Confidential Personnel Archive
     });
   };
 
-  const filteredTasks = filterByMonth(employee?.assignedByAdmin?.tasks, t => t.dueDate || t.month || '');
-  const filteredReports = filterByMonth(employee?.sentByEmployee?.dailyReports, r => r.date || r.month || '');
-  const filteredLeaves = filterByMonth(employee?.sentByEmployee?.leaveApplications, l => l.dates || l.month || '');
-  const filteredPayslips = filterByMonth(employee?.sentByEmployee?.payslips, p => p.monthCode || p.month || '');
+  const filteredTasks = filterByMonth(employee?.assignedByAdmin?.tasks, t => t.dueDate || t.date || t.createdAt || t.month || '');
+  const filteredReports = filterByMonth(employee?.sentByEmployee?.dailyReports, r => r.date || r.createdAt || r.month || '');
+  const filteredLeaves = filterByMonth(employee?.sentByEmployee?.leaveApplications, l => l.startDate || l.dates || l.createdAt || l.month || '');
+  const filteredPayslips = filterByMonth(employee?.sentByEmployee?.payslips, p => p.monthCode || p.month || p.createdAt || '');
 
   const handleDownloadMonthlyAuditPDF = async () => {
     if (!employee) return;
@@ -1850,21 +1955,21 @@ CodeThrive Infotech • Confidential Personnel Archive
           className={`tab-btn ${activeTab === 'tasks' ? 'active' : ''}`}
           onClick={() => setActiveTab('tasks')}
         >
-          <Briefcase size={15} /> Tasks <span className="tab-count-badge">{filteredTasks.length}</span>
+          <Briefcase size={15} /> Tasks <span className="tab-count-badge">{employee?.assignedByAdmin?.tasks?.length || 0}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
           onClick={() => setActiveTab('reports')}
         >
-          <FileText size={15} /> Daily Reports <span className="tab-count-badge">{filteredReports.length}</span>
+          <FileText size={15} /> Daily Reports <span className="tab-count-badge">{employee?.sentByEmployee?.dailyReports?.length || 0}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'leaves' ? 'active' : ''}`}
           onClick={() => setActiveTab('leaves')}
         >
-          <Calendar size={15} /> Leaves <span className="tab-count-badge">{filteredLeaves.length}</span>
+          <Calendar size={15} /> Leaves <span className="tab-count-badge">{employee?.sentByEmployee?.leaveApplications?.length || 0}</span>
         </button>
 
         {/* 5. Attendance Audit */}
@@ -1880,14 +1985,14 @@ CodeThrive Infotech • Confidential Personnel Archive
           className={`tab-btn ${activeTab === 'documents' ? 'active' : ''}`}
           onClick={() => setActiveTab('documents')}
         >
-          <FileCheck size={15} /> Documents <span className="tab-count-badge">{employee.sentByEmployee?.uploadedDocs?.length || 0}</span>
+          <FileCheck size={15} /> Documents <span className="tab-count-badge">{employee?.sentByEmployee?.uploadedDocs?.length || 0}</span>
         </button>
 
         <button 
           className={`tab-btn ${activeTab === 'management' || activeTab === 'payroll' ? 'active' : ''}`}
           onClick={() => setActiveTab('management')}
         >
-          <Banknote size={15} /> Payroll <span className="tab-count-badge">{filteredPayslips.length}</span>
+          <Banknote size={15} /> Payroll <span className="tab-count-badge">{employee?.sentByEmployee?.payslips?.length || 0}</span>
         </button>
 
         <button 
@@ -2605,7 +2710,7 @@ CodeThrive Infotech • Confidential Personnel Archive
               (r.srcFileName && r.srcFileName.toLowerCase().includes(searchLower)) ||
               (r.date && r.date.includes(searchLower));
             return matchesDate && matchesSearch;
-          });
+          }).sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -3109,40 +3214,130 @@ CodeThrive Infotech • Confidential Personnel Archive
 
         {/* TAB 4: LEAVE APPLICATIONS SUBMITTED BY THIS EMPLOYEE */}
         {activeTab === 'leaves' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary-light)' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Calendar size={18} color="var(--primary-light)" />
                 Leave Applications Submitted by {employee.fullName} ({selectedAuditMonth === 'All' ? 'All-Time' : selectedAuditMonth})
               </h3>
               <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Showing {filteredLeaves.length} leaves</span>
             </div>
 
             {filteredLeaves.length === 0 ? (
-              <div className="empty-state">No leave applications submitted by {employee.fullName} for selected audit period.</div>
+              <div className="empty-state" style={{ padding: '2.5rem', textAlign: 'center', background: 'rgba(15, 23, 42, 0.45)', borderRadius: '14px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
+                <Calendar size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.75rem auto', display: 'block', opacity: 0.6 }} />
+                <h4 style={{ margin: '0 0 0.3rem 0', color: '#fff' }}>No Leave Applications Found</h4>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  When {employee.fullName} submits a leave application from their employee portal, it will immediately appear here for admin review and approval.
+                </span>
+              </div>
             ) : (
-              filteredLeaves.map(l => (
-                <div key={l._id} className="item-row">
-                  <div>
-                    <strong style={{ fontSize: '0.95rem', color: '#fff' }}>{l.leaveType} ({l.dates})</strong>
-                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>Reason: {l.reason}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {filteredLeaves.map(l => (
+                  <div 
+                    key={l._id} 
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.75)',
+                      borderRadius: '14px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      padding: '1.2rem 1.4rem',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '1.2rem',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', minWidth: '280px', flex: '1 1 400px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                        <span style={{
+                          background: 'rgba(99, 102, 241, 0.15)',
+                          border: '1px solid rgba(99, 102, 241, 0.35)',
+                          color: '#a5b4fc',
+                          padding: '3px 10px',
+                          borderRadius: '6px',
+                          fontSize: '0.82rem',
+                          fontWeight: 700
+                        }}>
+                          {l.leaveType || 'General Leave'}
+                        </span>
+                        <strong style={{ fontSize: '0.94rem', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <Calendar size={14} color="#38bdf8" />
+                          {l.dates || (l.startDate ? `${formatDate(l.startDate)} - ${formatDate(l.endDate || l.startDate)}` : 'Requested Period')}
+                        </strong>
+                        {l.totalDays && (
+                          <span style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: 600 }}>
+                            ({l.totalDays} {l.totalDays === 1 ? 'day' : 'days'})
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ background: 'rgba(0,0,0,0.22)', padding: '0.6rem 0.85rem', borderRadius: '8px', borderLeft: '3px solid #6366f1' }}>
+                        <span style={{ fontSize: '0.84rem', color: '#e2e8f0', lineHeight: 1.5 }}>
+                          <strong style={{ color: '#94a3b8' }}>Reason:</strong> {l.reason || 'No detailed reason provided.'}
+                        </span>
+                      </div>
+
+                      {l.createdAt && (
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                          Applied on: {new Date(l.createdAt).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Interactive Admin Approve / Reject Buttons */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                      <StatusBadge status={l.status || 'Pending'} />
+                      {l.status !== 'Approved' && (
+                        <button 
+                          className="action-btn-approve" 
+                          title="Approve Leave" 
+                          onClick={() => handleLeaveAction(l._id, 'Approved')}
+                          style={{
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            border: 'none',
+                            color: '#fff',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            boxShadow: '0 2px 10px rgba(16, 185, 129, 0.35)'
+                          }}
+                        >
+                          <Check size={14} /> Approve
+                        </button>
+                      )}
+                      {l.status !== 'Rejected' && (
+                        <button 
+                          className="action-btn-reject" 
+                          title="Reject Leave" 
+                          onClick={() => handleLeaveAction(l._id, 'Rejected')}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            color: '#f87171',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem'
+                          }}
+                        >
+                          <X size={14} /> Reject
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  
-                  {/* Interactive Admin Approve / Reject Buttons */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <StatusBadge status={l.status} />
-                    {l.status !== 'Approved' && (
-                      <button className="action-btn-approve" title="Approve Leave" onClick={() => handleLeaveAction(l._id, 'Approved')}>
-                        <Check size={14} /> Approve
-                      </button>
-                    )}
-                    {l.status !== 'Rejected' && (
-                      <button className="action-btn-reject" title="Reject Leave" onClick={() => handleLeaveAction(l._id, 'Rejected')}>
-                        <X size={14} /> Reject
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         )}
