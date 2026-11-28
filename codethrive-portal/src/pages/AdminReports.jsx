@@ -607,15 +607,15 @@ const AdminReports = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {selectedReport.status !== 'Approved' && (
-                  <button className="action-btn-approve" onClick={() => handleReportAction(selectedReport._id, 'Approved')}>
-                    <Check size={16} /> Approve Report
-                  </button>
-                )}
-                {selectedReport.status !== 'Rejected' && (
-                  <button className="action-btn-reject" onClick={() => handleReportAction(selectedReport._id, 'Rejected')}>
-                    <X size={16} /> Reject Report
-                  </button>
+                {(!selectedReport.status || selectedReport.status.toLowerCase() === 'pending' || selectedReport.status.toLowerCase() === 'submitted') && (
+                  <>
+                    <button className="action-btn-approve" onClick={() => handleReportAction(selectedReport._id, 'Approved')}>
+                      <Check size={16} /> Approve Report
+                    </button>
+                    <button className="action-btn-reject" onClick={() => handleReportAction(selectedReport._id, 'Rejected')}>
+                      <X size={16} /> Reject Report
+                    </button>
+                  </>
                 )}
               </div>
               <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Close</button>

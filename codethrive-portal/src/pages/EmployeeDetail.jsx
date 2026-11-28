@@ -308,6 +308,48 @@ const enrichEmployee = (target) => {
   };
 };
 
+// Calculate Profile Strength percentage out of standard employee fields
+const calculateProfileCompleteness = (emp) => {
+  if (!emp) return 0;
+  let count = 0;
+  const fields = [
+    emp.fullName,
+    emp.profilePhoto,
+    emp.dateOfBirth,
+    emp.gender,
+    emp.bloodGroup,
+    emp.maritalStatus,
+    emp.nationality,
+    emp.personalPhoneNumber,
+    emp.personalEmailAddress,
+    emp.department,
+    emp.designation,
+    emp.employmentType,
+    emp.dateOfJoining,
+    emp.workLocation,
+    emp.bankAccountHolderName || emp.bankName,
+    emp.accountNumber,
+    emp.ifscCode,
+    emp.panNumber,
+    emp.aadhaarOrIdentityProofNumber,
+    emp.currentAddress,
+    emp.permanentAddress,
+    emp.emergencyContact?.name,
+    emp.emergencyContact?.phone,
+    emp.qualification,
+    emp.collegeName,
+    emp.graduationYear,
+    emp.totalExperience,
+    emp.skills?.length
+  ];
+  fields.forEach(f => {
+    if (f !== undefined && f !== null && String(f).trim().length > 0 && String(f) !== '0') {
+      count++;
+    }
+  });
+  return Math.min(100, Math.round((count / fields.length) * 100));
+};
+
 const EmployeeDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -1302,6 +1344,7 @@ CodeThrive Infotech • Confidential Personnel Archive
   const filteredReports = filterByMonth(employee?.sentByEmployee?.dailyReports, r => r.date || r.createdAt || r.month || '');
   const filteredLeaves = filterByMonth(employee?.sentByEmployee?.leaveApplications, l => l.startDate || l.dates || l.createdAt || l.month || '');
   const filteredPayslips = filterByMonth(employee?.sentByEmployee?.payslips, p => p.monthCode || p.month || p.createdAt || '');
+  const completenessPct = calculateProfileCompleteness(employee);
 
   const handleDownloadMonthlyAuditPDF = async () => {
     if (!employee) return;
@@ -2009,26 +2052,28 @@ CodeThrive Infotech • Confidential Personnel Archive
         {/* TAB 1: 100% COMPREHENSIVE FULL PROFILE */}
         {activeTab === 'profile' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* Profile Strength 100% Banner */}
+            {/* Dynamic Profile Strength Completeness Banner */}
             <div className="profile-strength-bar-card" style={{ margin: 0 }}>
               <div className="strength-info">
-                <div className="strength-icon-box" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                <div className="strength-icon-box" style={{ background: completenessPct === 100 ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #6366f1, #3b82f6)' }}>
                   <Sparkles size={20} color="#ffffff" />
                 </div>
                 <div>
                   <div className="strength-title-row">
                     <span className="strength-title">Profile Vault Completeness</span>
-                    <span className="strength-pct done">100%</span>
+                    <span className={`strength-pct ${completenessPct === 100 ? 'done' : ''}`}>{completenessPct}%</span>
                   </div>
                   <span className="strength-sub">
-                    🎉 Verified 100% Corporate Personnel Profile • Audited & Approved by CodeThrive Compliance Vault
+                    {completenessPct === 100
+                      ? '🎉 Verified 100% Corporate Personnel Profile • Audited & Approved by CodeThrive Compliance Vault'
+                      : `Corporate Personnel Profile is ${completenessPct}% complete based on filled information.`}
                   </span>
                 </div>
               </div>
 
               <div className="strength-track-wrapper">
                 <div className="strength-track">
-                  <div className="strength-fill" style={{ width: '100%' }}></div>
+                  <div className="strength-fill" style={{ width: `${completenessPct}%` }}></div>
                 </div>
               </div>
             </div>
@@ -2387,20 +2432,11 @@ CodeThrive Infotech • Confidential Personnel Archive
         {/* TAB 2: TASKS ASSIGNED TO THIS EMPLOYEE (STORED IN DB & IN-PORTAL AUDIT HISTORY) */}
         {activeTab === 'tasks' && (() => {
           const allEmpTasks = employee.assignedByAdmin?.tasks || [];
-          const searchLower = taskSearchTerm.toLowerCase();
-          const displayedTasks = allEmpTasks.filter(t => {
-            const matchesSearch = !taskSearchTerm || 
-              (t.title && t.title.toLowerCase().includes(searchLower)) ||
-              (t.taskId && t.taskId.toLowerCase().includes(searchLower)) ||
-              (t.description && t.description.toLowerCase().includes(searchLower));
-            const matchesStatus = taskStatusFilter === 'All' || 
-              (t.status && t.status.toLowerCase() === taskStatusFilter.toLowerCase());
-            return matchesSearch && matchesStatus;
-          });
+          const displayedTasks = allEmpTasks;
 
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {/* Header with Search and Status Filter */}
+              {/* Header */}
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -2420,46 +2456,6 @@ CodeThrive Infotech • Confidential Personnel Archive
                   <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
                     Complete task assignment history stored in database ({allEmpTasks.length} total tasks)
                   </span>
-                </div>
-
-                {/* Search & Filter Toolbar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                  <div style={{ position: 'relative', minWidth: '220px' }}>
-                    <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input 
-                      type="text"
-                      placeholder="Search tasks or ID..."
-                      value={taskSearchTerm}
-                      onChange={e => setTaskSearchTerm(e.target.value)}
-                      className="input-box"
-                      style={{ paddingLeft: '2.4rem', height: '40px', fontSize: '0.86rem', background: 'rgba(15, 23, 42, 0.85)', borderRadius: '10px' }}
-                    />
-                  </div>
-
-                  <select 
-                    value={taskStatusFilter}
-                    onChange={e => setTaskStatusFilter(e.target.value)}
-                    className="input-box filter-select"
-                    style={{ 
-                      width: 'auto', 
-                      minWidth: '145px', 
-                      height: '40px', 
-                      padding: '0 2.4rem 0 0.9rem', 
-                      fontSize: '0.86rem', 
-                      lineHeight: '38px',
-                      background: 'rgba(15, 23, 42, 0.85)',
-                      borderRadius: '10px',
-                      color: '#ffffff',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    <option value="All">All Statuses</option>
-                    <option value="Assigned">Assigned</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Under Review">Under Review</option>
-                    <option value="Completed">Completed</option>
-                  </select>
                 </div>
               </div>
 
@@ -2923,19 +2919,9 @@ CodeThrive Infotech • Confidential Personnel Archive
                 <div className="empty-state" style={{ padding: '2.5rem', textAlign: 'center', background: 'rgba(15, 23, 42, 0.45)', borderRadius: '14px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
                   <FileText size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.75rem auto', display: 'block', opacity: 0.6 }} />
                   <h4 style={{ margin: '0 0 0.3rem 0', color: '#fff' }}>No Daily Reports Found for this Selection</h4>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', maxWidth: '520px', margin: '0 auto 1rem auto' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', maxWidth: '520px', margin: '0 auto' }}>
                     Once this employee submits their daily work report with an attached source code deliverable package (.zip / .rar), their report and downloadable SRC file will appear here.
                   </span>
-                  <div style={{ display: 'inline-flex', gap: '0.65rem' }}>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => navigate('/admin/reports')}
-                      style={{ fontSize: '0.82rem', padding: '0.45rem 1rem' }}
-                    >
-                      Browse Master Daily Reports Console
-                    </button>
-                  </div>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -3056,28 +3042,26 @@ CodeThrive Infotech • Confidential Personnel Archive
                           {/* Approval / Status Controls */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexShrink: 0 }}>
                             <StatusBadge status={r.status || 'Submitted'} />
-                            <button 
-                              className="action-btn-approve" 
-                              title="Approve Report" 
-                              onClick={() => handleReportAction(r._id, 'Approved')}
-                              style={{ 
-                                opacity: r.status === 'Approved' ? 0.7 : 1,
-                                cursor: 'pointer'
-                              }}
-                            >
-                              <Check size={14} /> Approve
-                            </button>
-                            <button 
-                              className="action-btn-reject" 
-                              title="Reject Report" 
-                              onClick={() => handleReportAction(r._id, 'Rejected')}
-                              style={{ 
-                                opacity: r.status === 'Rejected' ? 0.7 : 1,
-                                cursor: 'pointer'
-                              }}
-                            >
-                              <X size={14} /> Reject
-                            </button>
+                            {(!r.status || r.status.toLowerCase() === 'submitted' || r.status.toLowerCase() === 'pending') && (
+                              <>
+                                <button 
+                                  className="action-btn-approve" 
+                                  title="Approve Report" 
+                                  onClick={() => handleReportAction(r._id, 'Approved')}
+                                  style={{ cursor: 'pointer' }}
+                                >
+                                  <Check size={14} /> Approve
+                                </button>
+                                <button 
+                                  className="action-btn-reject" 
+                                  title="Reject Report" 
+                                  onClick={() => handleReportAction(r._id, 'Rejected')}
+                                  style={{ cursor: 'pointer' }}
+                                >
+                                  <X size={14} /> Reject
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -3289,50 +3273,50 @@ CodeThrive Infotech • Confidential Personnel Archive
                     {/* Interactive Admin Approve / Reject Buttons */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
                       <StatusBadge status={l.status || 'Pending'} />
-                      {l.status !== 'Approved' && (
-                        <button 
-                          className="action-btn-approve" 
-                          title="Approve Leave" 
-                          onClick={() => handleLeaveAction(l._id, 'Approved')}
-                          style={{
-                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                            border: 'none',
-                            color: '#fff',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '8px',
-                            fontWeight: 700,
-                            fontSize: '0.82rem',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                            boxShadow: '0 2px 10px rgba(16, 185, 129, 0.35)'
-                          }}
-                        >
-                          <Check size={14} /> Approve
-                        </button>
-                      )}
-                      {l.status !== 'Rejected' && (
-                        <button 
-                          className="action-btn-reject" 
-                          title="Reject Leave" 
-                          onClick={() => handleLeaveAction(l._id, 'Rejected')}
-                          style={{
-                            background: 'rgba(239, 68, 68, 0.15)',
-                            border: '1px solid rgba(239, 68, 68, 0.4)',
-                            color: '#f87171',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '8px',
-                            fontWeight: 700,
-                            fontSize: '0.82rem',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.4rem'
-                          }}
-                        >
-                          <X size={14} /> Reject
-                        </button>
+                      {(!l.status || l.status.toLowerCase() === 'pending') && (
+                        <>
+                          <button 
+                            className="action-btn-approve" 
+                            title="Approve Leave" 
+                            onClick={() => handleLeaveAction(l._id, 'Approved')}
+                            style={{
+                              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                              border: 'none',
+                              color: '#fff',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '8px',
+                              fontWeight: 700,
+                              fontSize: '0.82rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              boxShadow: '0 2px 10px rgba(16, 185, 129, 0.35)'
+                            }}
+                          >
+                            <Check size={14} /> Approve
+                          </button>
+                          <button 
+                            className="action-btn-reject" 
+                            title="Reject Leave" 
+                            onClick={() => handleLeaveAction(l._id, 'Rejected')}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.15)',
+                              border: '1px solid rgba(239, 68, 68, 0.4)',
+                              color: '#f87171',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '8px',
+                              fontWeight: 700,
+                              fontSize: '0.82rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.4rem'
+                            }}
+                          >
+                            <X size={14} /> Reject
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
