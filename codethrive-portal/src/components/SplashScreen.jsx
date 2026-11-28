@@ -27,7 +27,7 @@ const SplashScreen = ({ isFading }) => {
         {/* User Official Logo Emblem */}
         <div className="logo-wrapper">
           <img 
-            src="/logo-clean.png" 
+            src="/logo.png" 
             alt="CodeThrive Infotech Logo" 
             className="splash-logo"
           />
