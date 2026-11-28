@@ -2187,7 +2187,7 @@ CodeThrive Infotech • Confidential Personnel Archive
                 </div>
 
                 <div className="profile-field-tile">
-                  <span className="field-tile-label">Aadhaar / National ID</span>
+                  <span className="field-tile-label">Aadhaar Number</span>
                   <div className="field-tile-val mono">
                     {employee.aadhaarOrIdentityProofNumber || <span className="val-not-set">Not Provided</span>}
                   </div>

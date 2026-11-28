@@ -398,7 +398,7 @@ const Payroll = () => {
           </div>
           <div className="metric-info-col">
             <span className="metric-title">Latest Statement</span>
-            <span className="metric-val">{latestPayslip ? latestPayslip.month : 'November 2026'}</span>
+            <span className="metric-val statement-month">{latestPayslip ? latestPayslip.month : 'November 2026'}</span>
             <span className="metric-micro-tag">
               <Calendar size={11} /> {latestPayslip ? 'Slip Available' : 'Current Pay Cycle'}
             </span>

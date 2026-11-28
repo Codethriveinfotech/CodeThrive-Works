@@ -2010,140 +2010,156 @@ const Attendance = () => {
       <Modal 
         isOpen={showCorrectionModal} 
         onClose={() => setShowCorrectionModal(false)} 
-        title={<span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f8fafc' }}><AlertCircle size={20} color="#38bdf8" /> Request Attendance Correction</span>}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.2))', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(56, 189, 248, 0.4)' }}>
+              <AlertCircle size={18} color="#38bdf8" />
+            </div>
+            <div>
+              <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: '1.08rem' }}>Request Attendance Correction</div>
+              <div style={{ color: '#94a3b8', fontSize: '0.74rem', fontWeight: 500 }}>Submit timing adjustments for admin verification</div>
+            </div>
+          </div>
+        }
       >
-        <form onSubmit={submitCorrection} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
-          <div className="correction-standard-shift-badge">
-            <Clock size={13} color="#818cf8" />
-            <span>Shift Target: <strong>10:00 AM – 06:00 PM</strong> &bull; Break Allowance: <strong>1h 30m</strong></span>
+        <form onSubmit={submitCorrection} className="correction-modal-form">
+          <div className="correction-shift-target-card">
+            <div className="target-pill-item">
+              <Clock size={13} color="#818cf8" />
+              <span>Shift: <strong>10:00 AM – 06:00 PM</strong></span>
+            </div>
+            <div className="target-pill-divider"></div>
+            <div className="target-pill-item">
+              <Coffee size={13} color="#fbbf24" />
+              <span>Break Allowance: <strong>1h 30m</strong></span>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <CalIcon size={14} color="#38bdf8" /> Date *
-            </label>
-            <DateInput 
-              className="input-field" 
-              required 
-              value={correctionPayload.date}
-              onChange={e => setCorrectionPayload({ ...correctionPayload, date: e.target.value })} 
-            />
-          </div>
+          <div className="correction-fields-grid">
+            <div className="correction-input-group">
+              <label>
+                <CalIcon size={14} color="#38bdf8" /> Target Date <span className="req-star">*</span>
+              </label>
+              <DateInput 
+                className="correction-text-input" 
+                required 
+                value={correctionPayload.date}
+                onChange={e => setCorrectionPayload({ ...correctionPayload, date: e.target.value })} 
+              />
+            </div>
 
-          <div className="form-group">
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Clock size={14} color="#a855f7" /> Correction Type *
-            </label>
-            <select 
-              className="input-field" 
-              value={correctionPayload.correctionType}
-              onChange={e => setCorrectionPayload({ ...correctionPayload, correctionType: e.target.value })}
-              style={{ background: 'rgba(15, 23, 42, 0.85)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '10px', padding: '0.6rem 0.8rem' }}
-            >
-              <option value="Missed Check-In">Missed Check-In</option>
-              <option value="Missed Check-Out">Missed Check-Out</option>
-              <option value="Break / Lunch Correction">Break / Lunch Correction</option>
-              <option value="Incorrect Status">Incorrect Status Marked</option>
-              <option value="Others">Others</option>
-            </select>
+            <div className="correction-input-group">
+              <label>
+                <Clock size={14} color="#a855f7" /> Correction Type <span className="req-star">*</span>
+              </label>
+              <select 
+                className="correction-select-input" 
+                value={correctionPayload.correctionType}
+                onChange={e => setCorrectionPayload({ ...correctionPayload, correctionType: e.target.value })}
+              >
+                <option value="Missed Check-In">Missed Check-In</option>
+                <option value="Missed Check-Out">Missed Check-Out</option>
+                <option value="Break / Lunch Correction">Break / Lunch Correction</option>
+                <option value="Incorrect Status">Incorrect Status Marked</option>
+                <option value="Others">Others</option>
+              </select>
+            </div>
           </div>
 
           {correctionPayload.correctionType === 'Others' && (
-            <div className="form-group" style={{ animation: 'fadeIn 0.25s ease' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38bdf8', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FileText size={14} color="#38bdf8" /> Reason / Notes for Admin/HR *
+            <div className="correction-input-group others-note-group">
+              <label>
+                <FileText size={14} color="#38bdf8" /> Specific Reason for Correction <span className="req-star">*</span>
               </label>
               <textarea 
-                className="input-field" 
+                className="correction-textarea-input" 
                 rows={2} 
                 required 
-                placeholder="State your reason for attendance correction..."
+                placeholder="Describe why this correction is required..."
                 value={correctionPayload.reason || ''}
                 onChange={e => setCorrectionPayload({ ...correctionPayload, reason: e.target.value })}
-                style={{ resize: 'vertical', minHeight: '62px', fontSize: '0.84rem' }}
               />
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <LogIn size={13} color="#34d399" /> Correct Check-In
-              </label>
-              <input 
-                type="time" 
-                className="input-field" 
-                value={correctionPayload.checkInTime}
-                onChange={e => setCorrectionPayload({ ...correctionPayload, checkInTime: e.target.value })} 
-              />
-            </div>
-            <div className="form-group">
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <LogOut size={13} color="#f87171" /> Correct Check-Out
-              </label>
-              <input 
-                type="time" 
-                className="input-field" 
-                value={correctionPayload.checkOutTime}
-                onChange={e => setCorrectionPayload({ ...correctionPayload, checkOutTime: e.target.value })} 
-              />
-            </div>
-            <div className="form-group">
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Coffee size={13} color="#fbbf24" /> Break Duration (Mins)
-              </label>
-              <input 
-                type="number" 
-                min="0"
-                max="180"
-                placeholder="e.g. 30"
-                className="input-field" 
-                value={correctionPayload.breakMinutes}
-                onChange={e => setCorrectionPayload({ ...correctionPayload, breakMinutes: e.target.value })} 
-              />
-            </div>
-            <div className="form-group">
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Utensils size={13} color="#60a5fa" /> Lunch Duration (Mins)
-              </label>
-              <input 
-                type="number" 
-                min="0"
-                max="180"
-                placeholder="e.g. 60"
-                className="input-field" 
-                value={correctionPayload.lunchMinutes}
-                onChange={e => setCorrectionPayload({ ...correctionPayload, lunchMinutes: e.target.value })} 
-              />
+          <div className="correction-timing-card">
+            <div className="timing-card-title">Adjust Shift Punches & Durations</div>
+            <div className="timing-inputs-row">
+              <div className="timing-field-box checkin">
+                <label><LogIn size={13} color="#34d399" /> Check-In</label>
+                <input 
+                  type="time" 
+                  value={correctionPayload.checkInTime}
+                  onChange={e => setCorrectionPayload({ ...correctionPayload, checkInTime: e.target.value })} 
+                />
+              </div>
+
+              <div className="timing-field-box checkout">
+                <label><LogOut size={13} color="#f87171" /> Check-Out</label>
+                <input 
+                  type="time" 
+                  value={correctionPayload.checkOutTime}
+                  onChange={e => setCorrectionPayload({ ...correctionPayload, checkOutTime: e.target.value })} 
+                />
+              </div>
+
+              <div className="timing-field-box break-box">
+                <label><Coffee size={13} color="#fbbf24" /> Break (Mins)</label>
+                <input 
+                  type="number" 
+                  min="0"
+                  max="180"
+                  placeholder="30"
+                  value={correctionPayload.breakMinutes}
+                  onChange={e => setCorrectionPayload({ ...correctionPayload, breakMinutes: e.target.value })} 
+                />
+              </div>
+
+              <div className="timing-field-box lunch-box">
+                <label><Utensils size={13} color="#60a5fa" /> Lunch (Mins)</label>
+                <input 
+                  type="number" 
+                  min="0"
+                  max="180"
+                  placeholder="60"
+                  value={correctionPayload.lunchMinutes}
+                  onChange={e => setCorrectionPayload({ ...correctionPayload, lunchMinutes: e.target.value })} 
+                />
+              </div>
             </div>
           </div>
 
           {/* Live Shift Preview Card */}
           {shiftPreview && (
-            <div className="correction-preview-banner">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#38bdf8', fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                <Sparkles size={14} /> Calculated Shift Preview
+            <div className="correction-live-preview-card">
+              <div className="preview-top-row">
+                <span className="preview-tag"><Sparkles size={13} color="#38bdf8" /> Calculated Preview</span>
+                <span className="preview-times">{correctionPayload.checkInTime} → {correctionPayload.checkOutTime}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.35rem', flexWrap: 'wrap', gap: '0.5rem', fontSize: '0.82rem', color: '#e2e8f0' }}>
-                <span>{correctionPayload.checkInTime} → {correctionPayload.checkOutTime}</span>
-                <span style={{ color: '#34d399', fontWeight: 700 }}>Net Work: {shiftPreview.netH}H {shiftPreview.netM}M</span>
-                <span style={{ color: '#fbbf24', fontSize: '0.78rem' }}>Total Breaks: {shiftPreview.breakTotal}M</span>
+              <div className="preview-stats-row">
+                <div className="preview-stat-item">
+                  <span className="preview-stat-lbl">Net Work</span>
+                  <span className="preview-stat-val net">{shiftPreview.netH}h {String(shiftPreview.netM).padStart(2, '0')}m</span>
+                </div>
+                <div className="preview-stat-item">
+                  <span className="preview-stat-lbl">Total Break</span>
+                  <span className="preview-stat-val brk">{shiftPreview.breakTotal}m</span>
+                </div>
               </div>
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.85rem', marginTop: '0.75rem' }}>
+          <div className="correction-modal-footer">
             <button 
               type="button" 
-              className="btn btn-outline" 
+              className="btn-cancel-modal" 
               onClick={() => setShowCorrectionModal(false)}
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="btn btn-primary"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+              className="btn-submit-modal"
             >
               <Sparkles size={15} /> Submit Request
             </button>

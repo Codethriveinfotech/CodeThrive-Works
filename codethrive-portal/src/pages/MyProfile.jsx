@@ -1001,130 +1001,132 @@ const MyProfile = () => {
             </Card>
           </div>
 
-          {/* Section: Office Wi-Fi & Employee Access Network Security Control */}
-          <div style={{ marginTop: '1.5rem' }}>
-            <Card title={
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '0.6rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <Wifi size={20} color="#38bdf8" />
-                  <span style={{ fontWeight: 700 }}>Office Wi-Fi & Employee Network Security Control</span>
-                </div>
-                <span style={{
-                  fontSize: '0.75rem',
-                  padding: '4px 12px',
-                  borderRadius: '20px',
-                  fontWeight: 700,
-                  background: companyProfile.officeWifiOnly ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                  color: companyProfile.officeWifiOnly ? '#f87171' : '#4ade80',
-                  border: companyProfile.officeWifiOnly ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(34, 197, 94, 0.4)'
-                }}>
-                  {companyProfile.officeWifiOnly ? '🔒 Office Wi-Fi Enforced' : '🌐 Remote / Other Wi-Fi Allowed'}
-                </span>
-              </div>
-            }>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '0.5rem 0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '0.98rem', color: '#fff', fontWeight: 600 }}>
-                      Enforce Office Wi-Fi for Employee Portal Login
-                    </h4>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: '#94a3b8', maxWidth: '650px' }}>
-                      When turned <strong>ON</strong>, employees can only log in when connected to CodeThrive Infotech Office Wi-Fi. When turned <strong>OFF</strong> (or during Work From Home), employees can log in from home or any Wi-Fi.
-                    </p>
+          {/* Section: Office Wi-Fi & Employee Access Network Security Control - Admin Only */}
+          {(isAdminPath || user?.role === 'admin' || user?.role === 'hr') && (
+            <div style={{ marginTop: '1.5rem' }}>
+              <Card title={
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '0.6rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <Wifi size={20} color="#38bdf8" />
+                    <span style={{ fontWeight: 700 }}>Office Wi-Fi & Employee Network Security Control</span>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.6rem' }}>
-                    <button
-                      type="button"
-                      disabled={isUpdatingNetwork}
-                      onClick={() => handleToggleWifiRestriction(false)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '8px',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        border: !companyProfile.officeWifiOnly ? '1.5px solid #22c55e' : '1px solid rgba(255,255,255,0.15)',
-                        background: !companyProfile.officeWifiOnly ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
-                        color: !companyProfile.officeWifiOnly ? '#4ade80' : '#94a3b8'
-                      }}
-                    >
-                      Allow Other Wi-Fi / WFH
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isUpdatingNetwork}
-                      onClick={() => handleToggleWifiRestriction(true)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '8px',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        border: companyProfile.officeWifiOnly ? '1.5px solid #ef4444' : '1px solid rgba(255,255,255,0.15)',
-                        background: companyProfile.officeWifiOnly ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                        color: companyProfile.officeWifiOnly ? '#f87171' : '#94a3b8'
-                      }}
-                    >
-                      Office Wi-Fi Only
-                    </button>
-                  </div>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontWeight: 700,
+                    background: companyProfile.officeWifiOnly ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                    color: companyProfile.officeWifiOnly ? '#f87171' : '#4ade80',
+                    border: companyProfile.officeWifiOnly ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(34, 197, 94, 0.4)'
+                  }}>
+                    {companyProfile.officeWifiOnly ? '🔒 Office Wi-Fi Enforced' : '🌐 Remote / Other Wi-Fi Allowed'}
+                  </span>
                 </div>
-
-                {/* Office Wi-Fi Public IP Configuration */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', alignItems: 'center' }}>
-                  <div>
-                    <label style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                      Configured Office Wi-Fi Public IP Address
-                    </label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <input
-                        type="text"
-                        placeholder="e.g. 122.164.88.10 or leave empty"
-                        defaultValue={companyProfile.officeWifiIp || ''}
-                        id="office-wifi-ip-input"
-                        className="input-field"
-                        style={{ padding: '0.55rem', fontSize: '0.88rem', fontFamily: 'monospace' }}
-                      />
+              }>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', padding: '0.5rem 0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: '0.98rem', color: '#fff', fontWeight: 600 }}>
+                        Enforce Office Wi-Fi for Employee Portal Login
+                      </h4>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: '#94a3b8', maxWidth: '650px' }}>
+                        When turned <strong>ON</strong>, employees can only log in when connected to CodeThrive Infotech Office Wi-Fi. When turned <strong>OFF</strong> (or during Work From Home), employees can log in from home or any Wi-Fi.
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.6rem' }}>
                       <button
                         type="button"
-                        onClick={() => {
-                          const val = document.getElementById('office-wifi-ip-input')?.value;
-                          handleSaveOfficeIp(val || '');
+                        disabled={isUpdatingNetwork}
+                        onClick={() => handleToggleWifiRestriction(false)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          borderRadius: '8px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          border: !companyProfile.officeWifiOnly ? '1.5px solid #22c55e' : '1px solid rgba(255,255,255,0.15)',
+                          background: !companyProfile.officeWifiOnly ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
+                          color: !companyProfile.officeWifiOnly ? '#4ade80' : '#94a3b8'
                         }}
-                        className="btn btn-primary"
-                        style={{ padding: '0.55rem 1rem', fontSize: '0.82rem', whiteSpace: 'nowrap' }}
                       >
-                        Save IP
+                        Allow Other Wi-Fi / WFH
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isUpdatingNetwork}
+                        onClick={() => handleToggleWifiRestriction(true)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          borderRadius: '8px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          border: companyProfile.officeWifiOnly ? '1.5px solid #ef4444' : '1px solid rgba(255,255,255,0.15)',
+                          background: companyProfile.officeWifiOnly ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                          color: companyProfile.officeWifiOnly ? '#f87171' : '#94a3b8'
+                        }}
+                      >
+                        Office Wi-Fi Only
                       </button>
                     </div>
                   </div>
 
-                  <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '10px', padding: '0.75rem 1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Your Current Connected Network IP:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          fetchNetworkInfo();
-                          if (currentNetworkIp) {
-                            const inp = document.getElementById('office-wifi-ip-input');
-                            if (inp) inp.value = currentNetworkIp;
-                            handleSaveOfficeIp(currentNetworkIp);
-                          }
-                        }}
-                        style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
-                      >
-                        Set as Office IP
-                      </button>
+                  {/* Office Wi-Fi Public IP Configuration */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', alignItems: 'center' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                        Configured Office Wi-Fi Public IP Address
+                      </label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input
+                          type="text"
+                          placeholder="e.g. 122.164.88.10 or leave empty"
+                          defaultValue={companyProfile.officeWifiIp || ''}
+                          id="office-wifi-ip-input"
+                          className="input-field"
+                          style={{ padding: '0.55rem', fontSize: '0.88rem', fontFamily: 'monospace' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const val = document.getElementById('office-wifi-ip-input')?.value;
+                            handleSaveOfficeIp(val || '');
+                          }}
+                          className="btn btn-primary"
+                          style={{ padding: '0.55rem 1rem', fontSize: '0.82rem', whiteSpace: 'nowrap' }}
+                        >
+                          Save IP
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace', marginTop: '0.2rem' }}>
-                      {currentNetworkIp || 'Detecting network IP...'}
+
+                    <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '10px', padding: '0.75rem 1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Your Current Connected Network IP:</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            fetchNetworkInfo();
+                            if (currentNetworkIp) {
+                              const inp = document.getElementById('office-wifi-ip-input');
+                              if (inp) inp.value = currentNetworkIp;
+                              handleSaveOfficeIp(currentNetworkIp);
+                            }
+                          }}
+                          style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+                        >
+                          Set as Office IP
+                        </button>
+                      </div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#38bdf8', fontFamily: 'monospace', marginTop: '0.2rem' }}>
+                        {currentNetworkIp || 'Detecting network IP...'}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          </div>
+              </Card>
+            </div>
+          )}
         </>
       )}
 
@@ -1621,7 +1623,7 @@ const MyProfile = () => {
             </div>
 
             <div className="profile-field-tile">
-              <span className="field-tile-label">Aadhaar / National ID</span>
+              <span className="field-tile-label">Aadhaar Number</span>
               <div className="field-tile-val mono">
                 {profile.aadhaarOrIdentityProofNumber || <span className="val-not-set">Not Provided</span>}
               </div>
@@ -1661,14 +1663,6 @@ const MyProfile = () => {
                 <h4 className="section-subheading" style={{ margin: 0 }}>
                   <UserCircle size={16} /> Emergency Contact
                 </h4>
-                <button 
-                  type="button" 
-                  className="btn-outline-glass"
-                  onClick={() => setIsEmergencyModalOpen(true)}
-                  style={{ padding: '0.35rem 0.85rem', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', borderRadius: '8px', cursor: 'pointer' }}
-                >
-                  <Edit3 size={13} /> Edit Emergency Contact
-                </button>
               </div>
               <div className="profile-tiles-grid" style={{ gridTemplateColumns: '1fr' }}>
                 <div className="profile-field-tile">
@@ -2016,7 +2010,7 @@ const MyProfile = () => {
               </div>
 
               <div className="form-group">
-                <label>Aadhaar / National ID Number (Full 12-Digit Number)</label>
+                <label>Aadhaar Number</label>
                 <input 
                   type="text" 
                   className="input-field" 
@@ -2024,9 +2018,6 @@ const MyProfile = () => {
                   value={formData.aadhaarOrIdentityProofNumber} 
                   onChange={e => setFormData({ ...formData, aadhaarOrIdentityProofNumber: e.target.value })} 
                 />
-                <span style={{ fontSize: '0.74rem', color: '#38bdf8', marginTop: '4px', display: 'block' }}>
-                  ✓ Your full number will be displayed in full without masking.
-                </span>
               </div>
             </div>
           )}
