@@ -5,7 +5,7 @@ import './DailyQuoteBanner.css';
 
 const DEFAULT_QUOTE = {
   quote: "Your focus determines your reality. Push beyond limits and craft excellence today.",
-  author: "CodeThrive Inspiration",
+  author: "CodeThrive Infotech Inspiration",
   theme: "Focus & Craft",
   badge: "Focus"
 };

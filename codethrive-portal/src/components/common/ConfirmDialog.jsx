@@ -50,7 +50,7 @@ const ConfirmDialog = ({
             </div>
 
             {/* Sub-label */}
-            <span className="ct-confirm-tag">CodeThrive Portal &bull; Confirmation</span>
+            <span className="ct-confirm-tag">CodeThrive Infotech Portal &bull; Confirmation</span>
 
             {/* Title & Description */}
             <h3 className="ct-confirm-title">{title}</h3>

@@ -371,7 +371,7 @@ const SettingsModal = ({ isOpen, onClose, isAdmin = false }) => {
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#f8fafc' }}>
-                  {user?.fullName || user?.name || 'CodeThrive User'}
+                  {user?.fullName || user?.name || 'CodeThrive Infotech User'}
                 </div>
                 <div style={{ fontSize: '0.785rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.1rem' }}>
                   <span>{user?.email || 'user@codethrive.com'}</span>

@@ -10,7 +10,7 @@ export const DAILY_QUOTES = [
   },
   {
     quote: "Your focus determines your reality. Push beyond limits and craft excellence today.",
-    author: "CodeThrive Inspiration",
+    author: "CodeThrive Infotech Inspiration",
     theme: "Focus & Craft",
     badge: "Focus"
   },
@@ -76,7 +76,7 @@ export const DAILY_QUOTES = [
   },
   {
     quote: "Stay dedicated. It's not about being the best, it's about being better than you were yesterday.",
-    author: "CodeThrive Inspiration",
+    author: "CodeThrive Infotech Inspiration",
     theme: "Growth Mindset",
     badge: "Progress"
   },
@@ -88,7 +88,7 @@ export const DAILY_QUOTES = [
   },
   {
     quote: "Stay hungry, stay driven. Incredible outcomes are built one focused hour at a time.",
-    author: "CodeThrive Inspiration",
+    author: "CodeThrive Infotech Inspiration",
     theme: "Drive",
     badge: "Drive"
   },
@@ -136,7 +136,7 @@ export const DAILY_QUOTES = [
   },
   {
     quote: "Courage, dedication, and self-belief make you an unstoppable force in your field.",
-    author: "CodeThrive Inspiration",
+    author: "CodeThrive Infotech Inspiration",
     theme: "Inner Strength",
     badge: "Strength"
   },
@@ -154,7 +154,7 @@ export const DAILY_QUOTES = [
   },
   {
     quote: "Dedication and integrity are the true hallmarks of an exceptional engineer.",
-    author: "CodeThrive Inspiration",
+    author: "CodeThrive Infotech Inspiration",
     theme: "Integrity",
     badge: "Integrity"
   },
@@ -172,7 +172,7 @@ export const DAILY_QUOTES = [
   },
   {
     quote: "Be passionate, be persistent, and keep building with heart and relentless pride.",
-    author: "CodeThrive Inspiration",
+    author: "CodeThrive Infotech Inspiration",
     theme: "Passion",
     badge: "Passion"
   },

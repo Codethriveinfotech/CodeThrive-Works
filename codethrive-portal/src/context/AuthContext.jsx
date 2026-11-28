@@ -138,7 +138,7 @@ export const AuthProvider = ({ children }) => {
         const adminUser = {
           _id: 'admin_local',
           email: email || 'admin@codethrive.com',
-          fullName: 'CodeThrive Super Admin',
+          fullName: 'CodeThrive Infotech Super Admin',
           role: 'superadmin',
           status: 'active'
         };

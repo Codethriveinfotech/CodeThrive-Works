@@ -578,7 +578,7 @@ const TeamsCallWidget = () => {
             setIsDirectoryOpen(!isDirectoryOpen);
             setIsConnectOpen(false);
           }}
-          title="CodeThrive Employees Contact Hub"
+          title="CodeThrive Infotech Employees Contact Hub"
           aria-label="Employees Contact Hub"
         >
           <div className="teams-icon-badge">
@@ -587,15 +587,15 @@ const TeamsCallWidget = () => {
           <span className="online-dot-pulse"></span>
         </button>
 
-        {/* FAB 2: Connect with CodeThrive (Official Channels) */}
+        {/* FAB 2: Connect with CodeThrive Infotech (Official Channels) */}
         <button 
           className={`teams-trigger-btn connect-btn ${isConnectOpen ? 'active' : ''}`}
           onClick={() => {
             setIsConnectOpen(!isConnectOpen);
             setIsDirectoryOpen(false);
           }}
-          title="Connect with CodeThrive"
-          aria-label="Connect with CodeThrive"
+          title="Connect with CodeThrive Infotech"
+          aria-label="Connect with CodeThrive Infotech"
         >
           <div className="teams-icon-badge">
             <PhoneCall size={20} color="#fff" />
@@ -604,7 +604,7 @@ const TeamsCallWidget = () => {
         </button>
       </div>
 
-      {/* MODAL 1: Connect with CodeThrive (Official Channels - Dark Theme) */}
+      {/* MODAL 1: Connect with CodeThrive Infotech (Official Channels - Dark Theme) */}
       {isConnectOpen && (
         <div className="teams-panel-card">
           {/* Header */}
@@ -616,7 +616,7 @@ const TeamsCallWidget = () => {
                 </svg>
               </div>
               <div>
-                <h4 className="teams-brand-title">Connect with CodeThrive</h4>
+                <h4 className="teams-brand-title">Connect with CodeThrive Infotech</h4>
                 <span className="teams-status-subtext">Fast response via any channel</span>
               </div>
             </div>
@@ -694,7 +694,7 @@ const TeamsCallWidget = () => {
                 <Users size={20} />
               </div>
               <div>
-                <h4 className="teams-brand-title">CodeThrive Contact Hub</h4>
+                <h4 className="teams-brand-title">CodeThrive Infotech Contact Hub</h4>
                 <span className="teams-status-subtext">
                   {isAdmin ? 'Registered Employees Directory' : 'Management & Staff Directory'}
                 </span>

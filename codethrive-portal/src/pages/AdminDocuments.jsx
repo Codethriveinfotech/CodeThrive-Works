@@ -13,7 +13,7 @@ import './Payroll.css';
 const DEFAULT_DOCUMENTS = [
   {
     _id: 'doc-1',
-    title: 'CodeThrive Employee Handbook 2026',
+    title: 'CodeThrive Infotech Employee Handbook 2026',
     documentType: 'Company Policy',
     fileUrl: 'docs/handbook.pdf',
     isPublic: true,

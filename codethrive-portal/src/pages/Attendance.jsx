@@ -1027,7 +1027,7 @@ const Attendance = () => {
           doc.text('• Total Break Allowance: 1 Hour 30 Minutes (Tea: 30m + Lunch: 1h)', 21, cardY + 22.5);
           doc.text('• Grace Period & Late Login: Check-ins past 10:15 AM are automatically marked as Late.', 21, cardY + 29.5);
           doc.text('• Non-Working Days: Sundays and Tamil Nadu Gazetted Public Holidays are fully exempted.', 21, cardY + 36.5);
-          doc.text('• Verification: Attendance records are officially validated and managed by CodeThrive HR/Admin Portal.', 21, cardY + 43.5);
+          doc.text('• Verification: Attendance records are officially validated and managed by CodeThrive Infotech HR/Admin Portal.', 21, cardY + 43.5);
         }
       } else {
         throw new Error('PDF autoTable renderer could not be initialized');

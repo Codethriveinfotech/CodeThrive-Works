@@ -1115,7 +1115,7 @@ const Dashboard = () => {
 
             <div className="dash-workplace-status">
               <span className="ws-dot"></span>
-              <span className="ws-text">CodeThrive Workplace &bull; On-Premises Office &bull; System Active</span>
+              <span className="ws-text">CodeThrive Infotech Workplace &bull; On-Premises Office &bull; System Active</span>
             </div>
 
           </div>

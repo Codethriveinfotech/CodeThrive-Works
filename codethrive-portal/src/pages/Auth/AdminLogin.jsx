@@ -71,7 +71,7 @@ const AdminLogin = () => {
             <ShieldAlert size={48} color="var(--primary)" />
           </div>
           <h2 style={{ fontSize: '1.6rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Admin Portal</h2>
-          <p style={{ color: 'var(--text-muted)' }}>Secure access for CodeThrive Administrators.</p>
+          <p style={{ color: 'var(--text-muted)' }}>Secure access for CodeThrive Infotech Administrators.</p>
         </div>
 
         {error && (

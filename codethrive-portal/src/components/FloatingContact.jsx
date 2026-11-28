@@ -5,7 +5,7 @@ import './FloatingContact.css';
 const FloatingContact = ({ 
   phoneNumber = "+919876543210", 
   whatsappNumber = "919876543210",
-  whatsappMessage = "Hello CodeThrive Team! I need some assistance." 
+  whatsappMessage = "Hello CodeThrive Infotech Team! I need some assistance." 
 }) => {
   const [isOpen, setIsOpen] = useState(true);
 

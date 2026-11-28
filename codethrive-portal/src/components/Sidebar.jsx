@@ -133,7 +133,7 @@ const Sidebar = () => {
       <ConfirmDialog
         isOpen={showLogoutConfirm}
         title="Confirm Logout"
-        message="Are you sure you want to log out of your CodeThrive account?"
+        message="Are you sure you want to log out of your CodeThrive Infotech account?"
         confirmText="Log Out"
         cancelText="Cancel"
         confirmVariant="danger"

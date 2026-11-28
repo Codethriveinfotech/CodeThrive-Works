@@ -178,7 +178,7 @@ const Login = () => {
         </form>
         
         <div className="auth-footer" style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <p>New to CodeThrive? <Link to="/employee/register">Register here</Link></p>
+          <p>New to CodeThrive Infotech? <Link to="/employee/register">Register here</Link></p>
           <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
               Are you an Administrator? <Link to="/admin/login" style={{ color: 'var(--primary)' }}>Go to Admin Portal</Link>

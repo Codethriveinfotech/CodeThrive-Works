@@ -3,7 +3,7 @@ import { Search, Settings, ChevronDown, RefreshCw, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import SettingsModal from './SettingsModal';
-import GlobalSearchBar from './GlobalSearchBar';
+import logoImg from '../assets/logo.png';
 
 const Topbar = () => {
   const { user } = useAuth();
@@ -11,7 +11,7 @@ const Topbar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const getDisplayName = () => user?.fullName || user?.name || 'CodeThrive Employee';
+  const getDisplayName = () => user?.fullName || user?.name || 'CodeThrive Infotech Employee';
   const getDisplayRole = () => user?.designation || user?.role || 'Employee';
 
   const getInitials = (name) => {
@@ -43,11 +43,42 @@ const Topbar = () => {
             <Menu size={22} color="#ffffff" />
           </button>
 
-          <GlobalSearchBar 
-            isAdmin={false} 
-            placeholder="Search Employee Portal (Tasks, Payslips, Profile)..." 
-            onOpenSettings={() => setIsSettingsOpen(true)}
-          />
+          <div className="topbar-brand-display" style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+            <img 
+              src={logoImg} 
+              alt="CodeThrive Infotech Logo" 
+              style={{ 
+                width: '34px', 
+                height: '34px', 
+                objectFit: 'contain',
+                borderRadius: '8px',
+                filter: 'drop-shadow(0 0 10px rgba(56, 189, 248, 0.5))',
+                flexShrink: 0
+              }} 
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', lineHeight: 1 }}>
+              <span style={{ 
+                fontSize: '1.15rem', 
+                fontWeight: 800, 
+                letterSpacing: '0.3px',
+                background: 'linear-gradient(135deg, #ffffff 0%, #38bdf8 65%, #0072ff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
+                CodeThrive
+              </span>
+              <span style={{ 
+                fontSize: '1.12rem', 
+                fontWeight: 800, 
+                letterSpacing: '0.3px',
+                background: 'linear-gradient(135deg, #00ff87 0%, #60efff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
+                Infotech
+              </span>
+            </div>
+          </div>
         </div>
         
         <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative' }}>

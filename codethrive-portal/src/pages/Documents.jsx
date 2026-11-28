@@ -541,7 +541,7 @@ const Documents = () => {
                           ? 'Verified educational or professional credential stored in corporate vault.'
                           : doc.documentType === 'ID Proof'
                           ? 'Government verified identity proof for employment compliance & records.'
-                          : 'Official corporate document registered in CodeThrive secure records.'
+                          : 'Official corporate document registered in CodeThrive Infotech secure records.'
                       )}
                     </p>
 

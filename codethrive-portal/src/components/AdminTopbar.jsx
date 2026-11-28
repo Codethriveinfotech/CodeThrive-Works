@@ -146,7 +146,7 @@ const AdminTopbar = () => {
 
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
-          new Notification('CodeThrive Month-End Audit Notice', {
+          new Notification('CodeThrive Infotech Month-End Audit Notice', {
             body: 'Today is Month-End! Monthly Employee Full Pdf is consolidated. WhatsApp alert sent to MD (7812864905).',
             icon: '/favicon.ico'
           });
