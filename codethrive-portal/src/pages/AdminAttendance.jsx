@@ -38,7 +38,7 @@ const fmtDuration = (secs) => {
 };
 
 const STATUS_OPTIONS = [
-  'Present', 'Absent', 'Permission', 'Half Day', 'On Leave', 'Late',
+  'Present', 'Absent', 'Permission', 'Half Day', 'On Leave', 'Late', 'Office Holiday', 'Sunday Holiday', 'Government Holiday'
 ];
 
 const getBadgeClass = (status) => {
@@ -47,6 +47,7 @@ const getBadgeClass = (status) => {
     'On Lunch': 'working', 'Present': 'present', 'Absent': 'absent',
     'Permission': 'permission', 'On Leave': 'leave', 'Half Day': 'half', 'Work From Home': 'wfh',
     'Late': 'late', 'Not Checked In': 'not-in',
+    'Office Holiday': 'holiday', 'Sunday Holiday': 'holiday', 'Government Holiday': 'holiday'
   };
   return map[status] || 'not-in';
 };
@@ -66,6 +67,11 @@ const getStatusPillStyle = (status) => {
     case 'late':
       return { background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.4)' };
     case 'permission':
+      return { background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.4)' };
+    case 'office holiday':
+    case 'sunday holiday':
+    case 'government holiday':
+    case 'holiday':
       return { background: 'rgba(168, 85, 247, 0.15)', color: '#c084fc', border: '1px solid rgba(168, 85, 247, 0.4)' };
     default:
       return { background: 'rgba(255, 255, 255, 0.08)', color: '#e2e8f0', border: '1px solid rgba(255, 255, 255, 0.15)' };
@@ -1036,6 +1042,9 @@ const AdminAttendance = () => {
                 <option value="Permission">Permission (Official Permission)</option>
                 <option value="On Leave">On Leave</option>
                 <option value="Absent">Absent</option>
+                <option value="Office Holiday">Office Holiday</option>
+                <option value="Sunday Holiday">Sunday Holiday</option>
+                <option value="Government Holiday">Government Holiday</option>
               </select>
             </div>
           </div>

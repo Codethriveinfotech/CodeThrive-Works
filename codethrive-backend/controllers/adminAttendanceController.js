@@ -139,7 +139,7 @@ exports.markAttendance = async (req, res) => {
 
     const validStatuses = [
       'Present', 'Absent', 'Permission', 'On Leave', 'Half Day',
-      'Late', 'Working', 'Checked Out',
+      'Late', 'Working', 'Checked Out', 'Office Holiday', 'Sunday Holiday', 'Government Holiday', 'Holiday',
     ];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({

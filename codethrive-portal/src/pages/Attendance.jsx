@@ -225,17 +225,47 @@ const Attendance = () => {
 
   const getRowAttendanceInfo = (row) => {
     const today = new Date();
-    const todayDateStr = today.toISOString().split('T')[0];
-    const rowDateObj = row.date ? new Date(row.date) : new Date();
-    const rowDateStr = row.date ? rowDateObj.toISOString().split('T')[0] : '';
+    const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    // Resolve rowDateStr cleanly from dateKey or row.date
+    let rowDateStr = row.dateKey || '';
+    if (!rowDateStr && row.date) {
+      if (typeof row.date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(row.date.trim())) {
+        rowDateStr = row.date.trim().split('T')[0];
+      } else {
+        const dt = new Date(row.date);
+        if (!isNaN(dt.getTime())) {
+          rowDateStr = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        }
+      }
+    }
     const isToday = rowDateStr === todayDateStr;
-    const dayOfWeek = rowDateObj.getDay(); // 0 is Sunday, 1-6 Mon-Sat
+
+    let dayOfWeek = 1;
+    if (rowDateStr && /^\d{4}-\d{2}-\d{2}$/.test(rowDateStr)) {
+      const [y, m, d] = rowDateStr.split('-').map(Number);
+      dayOfWeek = new Date(y, m - 1, d).getDay();
+    } else if (row.date) {
+      dayOfWeek = new Date(row.date).getDay();
+    }
+
     const currentHour = today.getHours();
     const mmdd = rowDateStr.slice(5);
     const govtHolidayName = TN_GOVT_HOLIDAYS[mmdd];
+    let rawStatus = row.status || 'Present';
+
+    // 0. Explicit Office Holiday
+    if (row.status === 'Office Holiday' || rawStatus === 'Office Holiday') {
+      return {
+        status: 'Office Holiday',
+        remarksText: row.correctionReason || row.remarks || 'Office Holiday',
+        remarksType: 'approved',
+        isPending: false
+      };
+    }
 
     // 1. Explicit Sunday Holiday (Sundays are strictly Sunday Holiday, never marked Absent)
-    if (row.isSundayHoliday || (dayOfWeek === 0 && (!row.firstLoginTime || row.status === 'Sunday Holiday'))) {
+    if (row.isSundayHoliday || rawStatus === 'Sunday Holiday' || (dayOfWeek === 0 && (!row.firstLoginTime || rawStatus === 'Sunday Holiday'))) {
       return {
         status: 'Sunday Holiday',
         remarksText: 'Sunday Holiday',
@@ -245,7 +275,7 @@ const Attendance = () => {
     }
 
     // 2. Explicit Government Holiday (Official TN Gazetted Holidays)
-    if (row.isGovtHoliday || (govtHolidayName && (!row.firstLoginTime || row.status === 'Government Holiday'))) {
+    if (row.isGovtHoliday || rawStatus === 'Government Holiday' || (govtHolidayName && (!row.firstLoginTime || rawStatus === 'Government Holiday'))) {
       return {
         status: 'Government Holiday',
         remarksText: `Government Holiday - ${govtHolidayName || row.holidayName || 'Gazetted'}`,
@@ -254,7 +284,6 @@ const Attendance = () => {
       };
     }
 
-    let rawStatus = row.status || 'Present';
     let resolvedStatus = rawStatus;
 
     // 3. Check if employee has leave applied or approved for this date (User requested: leave page-la leave apply panniruntha athu absent-a inga varanum)
@@ -965,14 +994,25 @@ const Attendance = () => {
 
   const exportExcel = () => {
     try {
-      const todayStr = new Date().toISOString().split('T')[0];
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       const exportData = filteredHistory.map(row => {
-        const dateObj = row.date ? new Date(row.date) : new Date();
-        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        const dateKey = row.dateKey || (row.date ? row.date.split('T')[0] : '');
+        let dayName = '';
+        let dateDisplay = '';
+        if (dateKey && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+          const [y, m, d] = dateKey.split('-').map(Number);
+          dateDisplay = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+          dayName = new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long' });
+        } else {
+          const dateObj = row.date ? new Date(row.date) : new Date();
+          dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+          dateDisplay = formatDate(row.date);
+        }
         const attInfo = getRowAttendanceInfo(row);
-        const rowStr = row.date ? new Date(row.date).toISOString().split('T')[0] : '';
-        const isRowToday = rowStr === todayStr;
+        const isRowToday = dateKey === todayStr;
         const isHoliday = attInfo.status.includes('Holiday');
+        const isAbsentOrHoliday = attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'On Leave' || isHoliday;
         const breakStr = attInfo.status === 'Absent' || isHoliday || attInfo.status === 'Leave' || attInfo.status === 'Weekend'
           ? '–'
           : (isRowToday ? formatBreakLunch(liveBreakDuration, '30m') : formatBreakLunch(row.totalBreakDurationInSeconds, '30m'));
@@ -981,9 +1021,9 @@ const Attendance = () => {
           : (isRowToday ? formatBreakLunch(liveLunchDuration, '1h 00m') : formatBreakLunch(row.totalLunchDurationInSeconds, '1h 00m'));
 
         return {
-          'Date': formatDate(row.date),
+          'Date': dateDisplay,
           'Day': dayName,
-          'Shift Timing': isHoliday ? '–' : '10:00 AM – 06:00 PM',
+          'Shift Timing': isAbsentOrHoliday ? '–' : '10:00 AM – 06:00 PM',
           'Break': breakStr,
           'Lunch': lunchStr,
           'Attendance Status': attInfo.status,
@@ -1080,12 +1120,19 @@ const Attendance = () => {
     const historyMap = {};
     (Array.isArray(history) ? history : []).forEach(row => {
       if (row.date) {
-        const d = new Date(row.date);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        const key = `${y}-${m}-${day}`;
-        if (!historyMap[key] || row.firstLoginTime || row.totalWorkDurationInSeconds > 0) {
+        let key = '';
+        if (typeof row.date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(row.date.trim())) {
+          key = row.date.trim().split('T')[0];
+        } else {
+          const d = new Date(row.date);
+          if (!isNaN(d.getTime())) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            key = `${y}-${m}-${day}`;
+          }
+        }
+        if (key && (!historyMap[key] || row.firstLoginTime || row.totalWorkDurationInSeconds > 0)) {
           historyMap[key] = row;
         }
       }
@@ -1093,14 +1140,14 @@ const Attendance = () => {
 
     const rows = [];
 
-    // Loop descending from endDay down to startDay (newest at top)
+    // Loop descending from endDay down to startDay (newest at top) - EXACTLY ONE ROW PER CALENDAR DAY
     for (let d = endDay; d >= startDay; d--) {
       const y = selectedYear;
       const m = String(selectedMonth).padStart(2, '0');
       const dayStr = String(d).padStart(2, '0');
       const dateKey = `${y}-${m}-${dayStr}`;
-      const dateObj = new Date(selectedYear, selectedMonth - 1, d);
-      const dayOfWeek = dateObj.getDay(); // 0 is Sunday, 1-6 Mon-Sat
+      const dateIsoNoon = `${dateKey}T12:00:00.000Z`; // Noon UTC prevents UTC-to-local timezone shifts in all regions
+      const dayOfWeek = new Date(selectedYear, selectedMonth - 1, d).getDay(); // 0 is Sunday, 1-6 Mon-Sat
       const mmdd = `${m}-${dayStr}`;
       const isSunday = dayOfWeek === 0;
       const govtHolidayName = TN_GOVT_HOLIDAYS[mmdd];
@@ -1111,7 +1158,11 @@ const Attendance = () => {
 
       // 1. If an actual punched record exists in history:
       if (existing && (existing.firstLoginTime || (existing.status && !['absent', 'not checked in'].includes(existing.status.toLowerCase())))) {
-        rows.push(existing);
+        rows.push({
+          ...existing,
+          dateKey,
+          date: existing.date || dateIsoNoon
+        });
         continue;
       }
 
@@ -1119,7 +1170,8 @@ const Attendance = () => {
       if (isToday && todayAttendance && todayAttendance.firstLoginTime) {
         rows.push({
           ...todayAttendance,
-          date: dateObj.toISOString(),
+          dateKey,
+          date: todayAttendance.date || dateIsoNoon,
           _id: todayAttendance._id || 'today_row',
           employee: todayAttendance.employee || user
         });
@@ -1131,7 +1183,8 @@ const Attendance = () => {
       if (isSunday) {
         rows.push({
           _id: `sun_${dateKey}`,
-          date: dateObj.toISOString(),
+          dateKey,
+          date: dateIsoNoon,
           status: 'Sunday Holiday',
           isSundayHoliday: true,
           remarks: 'Sunday Holiday',
@@ -1146,7 +1199,8 @@ const Attendance = () => {
       if (isGovtHoliday) {
         rows.push({
           _id: `gov_${dateKey}`,
-          date: dateObj.toISOString(),
+          dateKey,
+          date: dateIsoNoon,
           status: 'Government Holiday',
           isGovtHoliday: true,
           holidayName: govtHolidayName,
@@ -1166,7 +1220,8 @@ const Attendance = () => {
         if (currentHour >= 12) {
           rows.push({
             _id: `today_absent_${dateKey}`,
-            date: dateObj.toISOString(),
+            dateKey,
+            date: dateIsoNoon,
             status: 'Absent',
             remarks: matchingLeave ? `${matchingLeave.leaveType || 'Casual'} Leave (Approved)` : 'Absent (Cutoff 12:00 PM Passed)',
             totalBreakDurationInSeconds: 0,
@@ -1176,7 +1231,8 @@ const Attendance = () => {
         } else if (matchingLeave) {
           rows.push({
             _id: `today_leave_${dateKey}`,
-            date: dateObj.toISOString(),
+            dateKey,
+            date: dateIsoNoon,
             status: 'Absent',
             remarks: `${matchingLeave.leaveType || 'Casual'} Leave (Approved)`,
             totalBreakDurationInSeconds: 0,
@@ -1186,7 +1242,8 @@ const Attendance = () => {
         } else {
           rows.push({
             _id: `today_not_checked_in_${dateKey}`,
-            date: dateObj.toISOString(),
+            dateKey,
+            date: dateIsoNoon,
             status: 'Not Checked In',
             remarks: 'Standard Shift (10:00 AM – 06:00 PM)',
             totalBreakDurationInSeconds: 0,
@@ -1201,7 +1258,8 @@ const Attendance = () => {
       if (matchingLeave) {
         rows.push({
           _id: `leave_${dateKey}`,
-          date: dateObj.toISOString(),
+          dateKey,
+          date: dateIsoNoon,
           status: 'Absent',
           remarks: `${matchingLeave.leaveType || 'Casual'} Leave (Approved)`,
           totalBreakDurationInSeconds: 0,
@@ -1211,7 +1269,8 @@ const Attendance = () => {
       } else {
         rows.push({
           _id: `absent_${dateKey}`,
-          date: dateObj.toISOString(),
+          dateKey,
+          date: dateIsoNoon,
           status: 'Absent',
           remarks: 'Absent - No Punch-In',
           totalBreakDurationInSeconds: 0,
@@ -1227,7 +1286,14 @@ const Attendance = () => {
   // Filtered attendance history table records
   const filteredHistory = useMemo(() => {
     return monthRegisterRecords.filter(row => {
-      const dateStr = formatDate(row.date) || '';
+      const dateKey = row.dateKey || (row.date ? row.date.split('T')[0] : '');
+      let dateStr = '';
+      if (dateKey && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+        const [y, m, d] = dateKey.split('-');
+        dateStr = `${d}/${m}/${y}`;
+      } else {
+        dateStr = formatDate(row.date) || '';
+      }
       const attInfo = getRowAttendanceInfo(row);
       const statusStr = attInfo.status || row.status || 'Present';
       const empName = row.employee?.fullName || '';
@@ -1354,36 +1420,33 @@ const Attendance = () => {
     return count;
   }, [selectedMonth, selectedYear]);
 
-  // Actual present days in selected month directly computed from history records
-  const dynamicPresentDays = useMemo(() => {
-    if (!Array.isArray(history) || history.length === 0) {
-      return summary?.presentDays || 0;
-    }
+  // Key Attendance Stats dynamically derived from monthRegisterRecords
+  const { dynamicPresentDays, dynamicAbsentDays, dynamicLateDays } = useMemo(() => {
     let presentCount = 0;
-    history.forEach(row => {
-      const s = (row.status || '').toLowerCase();
-      if (['working', 'checked out', 'present', 'on break', 'on lunch', 'late', 'permission', 'work from home'].includes(s)) {
+    let absentCount = 0;
+    let lateCount = 0;
+
+    monthRegisterRecords.forEach(row => {
+      const attInfo = getRowAttendanceInfo(row);
+      const s = (attInfo.status || '').toLowerCase();
+      if (['working', 'checked out', 'present', 'on break', 'on lunch', 'permission', 'work from home'].includes(s)) {
         presentCount += 1;
+      } else if (s === 'late') {
+        presentCount += 1;
+        lateCount += 1;
       } else if (s === 'half day' || s === 'half-day') {
         presentCount += 0.5;
+      } else if (s === 'absent') {
+        absentCount += 1;
       }
     });
-    return presentCount;
-  }, [history, summary]);
 
-  const dynamicAbsentDays = useMemo(() => {
-    if (!Array.isArray(history) || history.length === 0) {
-      return summary?.absentDays || 0;
-    }
-    return history.filter(row => (row.status || '').toLowerCase() === 'absent').length;
-  }, [history, summary]);
-
-  const dynamicLateDays = useMemo(() => {
-    if (!Array.isArray(history) || history.length === 0) {
-      return summary?.lateDays || 0;
-    }
-    return history.filter(row => (row.status || '').toLowerCase() === 'late').length;
-  }, [history, summary]);
+    return {
+      dynamicPresentDays: presentCount,
+      dynamicAbsentDays: absentCount,
+      dynamicLateDays: lateCount
+    };
+  }, [monthRegisterRecords, leaveMap, correctionMap]);
 
   // Key Attendance Stats
   const totalWorkingDays = calculatedWorkingDays;
@@ -1799,16 +1862,25 @@ const Attendance = () => {
             <tbody>
               {filteredHistory.length > 0 ? (
                 filteredHistory.map((row, idx) => {
-                  const dateObj = row.date ? new Date(row.date) : new Date();
-                  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-                  const dateStr = formatDate(row.date);
+                  const dateKey = row.dateKey || (row.date ? row.date.split('T')[0] : '');
+                  let dayName = '';
+                  let dateStr = '';
+                  if (dateKey && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+                    const [y, m, d] = dateKey.split('-').map(Number);
+                    dateStr = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+                    dayName = new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long' });
+                  } else {
+                    const dateObj = row.date ? new Date(row.date) : new Date();
+                    dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                    dateStr = formatDate(row.date);
+                  }
                   const attInfo = getRowAttendanceInfo(row);
-                  const todayStr = new Date().toISOString().split('T')[0];
-                  const rowStr = row.date ? new Date(row.date).toISOString().split('T')[0] : '';
-                  const isRowToday = rowStr === todayStr;
+                  const today = new Date();
+                  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                  const isRowToday = dateKey === todayStr;
 
                   return (
-                    <tr key={row._id || idx}>
+                    <tr key={row._id || dateKey || idx}>
                       <td>
                         <span className="att-date-primary">{dateStr}</span>
                       </td>
@@ -1818,7 +1890,7 @@ const Attendance = () => {
                       </td>
 
                       <td>
-                        {attInfo.status.includes('Holiday') ? (
+                        {attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'On Leave' || attInfo.status.includes('Holiday') ? (
                           <span className="att-na-dash">–</span>
                         ) : (
                           <span className="att-shift-time">10:00 AM – 06:00 PM</span>
