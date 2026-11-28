@@ -16,6 +16,7 @@ import { zipSync } from 'fflate';
 import { formatDate } from '../utils/dateUtils';
 import DateInput from '../components/common/DateInput';
 import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
+import { getFastCache, setFastCache } from '../utils/fastCache';
 import './DailyReports.css';
 
 const DEMO_REPORTS = [];
@@ -23,8 +24,9 @@ const DEMO_REPORTS = [];
 
 const DailyReports = () => {
   const { user } = useAuth();
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cachedReports = getFastCache('cti_daily_reports');
+  const [reports, setReports] = useState(() => cachedReports || []);
+  const [loading, setLoading] = useState(() => !cachedReports);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usingDemoData, setUsingDemoData] = useState(false);
 
@@ -147,16 +149,16 @@ const DailyReports = () => {
 
   const fetchReports = async () => {
     try {
-      setLoading(true);
+      if (!getFastCache('cti_daily_reports')) {
+        setLoading(true);
+      }
       const res = await api.get('/daily-reports/my-reports');
       const fetched = (res.data?.data || []).filter(r => !isSeedReport(r));
 
-      if (fetched.length > 0) {
-        setReports(fetched);
-        setUsingDemoData(false);
-      } else {
-        setReports([]);
-      }
+      const cleanReports = fetched.length > 0 ? fetched : [];
+      setReports(cleanReports);
+      setFastCache('cti_daily_reports', cleanReports);
+      setUsingDemoData(false);
     } catch (err) {
       console.warn('Backend API offline or empty, initializing daily reports workspace', err);
       setReports([]);

@@ -14,15 +14,17 @@ import {
 import { formatDate } from '../utils/dateUtils';
 import ContactActionModal, { openDirectEmail } from '../components/common/ContactActionModal';
 import DateInput from '../components/common/DateInput';
+import { getFastCache, setFastCache } from '../utils/fastCache';
 import './MyProfile.css';
 
 const MyProfile = () => {
   const { user } = useAuth();
   const fileInputRef = useRef(null);
   
-  const [profile, setProfile] = useState(null);
-  const [attendanceSummary, setAttendanceSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cachedProfile = getFastCache('cti_my_profile');
+  const [profile, setProfile] = useState(() => cachedProfile?.profile || null);
+  const [attendanceSummary, setAttendanceSummary] = useState(() => cachedProfile?.attendanceSummary || null);
+  const [loading, setLoading] = useState(() => !cachedProfile);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [contactModal, setContactModal] = useState({ isOpen: false, name: '', phone: '' });
@@ -267,7 +269,9 @@ const MyProfile = () => {
 
   const fetchProfile = async () => {
     try {
-      setLoading(true);
+      if (!getFastCache('cti_my_profile')) {
+        setLoading(true);
+      }
       const [profileRes, summaryRes] = await Promise.all([
         api.get('/employees/me').catch(() => ({ data: null })),
         api.get('/attendance/summary').catch(() => ({ data: null }))
@@ -336,7 +340,9 @@ const MyProfile = () => {
       data.emergencyContact = (ec && typeof ec === 'object') ? ec : { name: '', phone: '', relationship: '' };
 
       setProfile(data);
-      setAttendanceSummary(summaryRes?.data?.data || null);
+      const summData = summaryRes?.data?.data || null;
+      setAttendanceSummary(summData);
+      setFastCache('cti_my_profile', { profile: data, attendanceSummary: summData });
 
       const safeSubstring = (val) => (typeof val === 'string' ? val.substring(0, 10) : (val ? String(val).substring(0, 10) : ''));
       const safeSkills = (skills) => (Array.isArray(skills) ? skills.join(', ') : (typeof skills === 'string' ? skills : ''));

@@ -39,10 +39,13 @@ const SUPPORTED_CATEGORIES = [
   }
 ];
 
+import { getFastCache, setFastCache } from '../utils/fastCache';
+
 const Documents = () => {
   const { user } = useAuth();
-  const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cachedDocs = getFastCache('cti_documents');
+  const [documents, setDocuments] = useState(() => cachedDocs || []);
+  const [loading, setLoading] = useState(() => !cachedDocs);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -154,16 +157,16 @@ const Documents = () => {
 
   const fetchDocuments = async () => {
     try {
-      setLoading(true);
+      if (!getFastCache('cti_documents')) {
+        setLoading(true);
+      }
       const res = await api.get('/documents');
       const docsList = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       const localDocs = JSON.parse(localStorage.getItem('cti_local_docs') || '[]');
 
-      if (docsList.length > 0) {
-        setDocuments([...docsList, ...localDocs]);
-      } else {
-        setDocuments(localDocs.length > 0 ? localDocs : DEMO_DOCUMENTS);
-      }
+      const merged = docsList.length > 0 ? [...docsList, ...localDocs] : (localDocs.length > 0 ? localDocs : DEMO_DOCUMENTS);
+      setDocuments(merged);
+      setFastCache('cti_documents', merged);
     } catch (err) {
       console.warn('Failed to fetch documents from server, using local storage vault', err);
       const localDocs = JSON.parse(localStorage.getItem('cti_local_docs') || '[]');

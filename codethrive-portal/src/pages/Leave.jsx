@@ -12,13 +12,15 @@ import {
 import { formatDate } from '../utils/dateUtils';
 import DateInput from '../components/common/DateInput';
 import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
+import { getFastCache, setFastCache } from '../utils/fastCache';
 import './Admin.css';
 import './Leave.css';
 
 const Leave = () => {
   const { user } = useAuth();
-  const [data, setData] = useState({ requests: [], casualLeaveBalance: 12, sickLeaveBalance: 12, paidLeaveBalance: 15, pendingRequests: 0 });
-  const [loading, setLoading] = useState(true);
+  const cachedLeave = getFastCache('cti_leave_data');
+  const [data, setData] = useState(() => cachedLeave || { requests: [], casualLeaveBalance: 12, sickLeaveBalance: 12, paidLeaveBalance: 15, pendingRequests: 0 });
+  const [loading, setLoading] = useState(() => !cachedLeave);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
@@ -40,7 +42,9 @@ const Leave = () => {
 
   const fetchLeaves = async () => {
     try {
-      setLoading(true);
+      if (!getFastCache('cti_leave_data')) {
+        setLoading(true);
+      }
       let apiRequests = [];
       let summaryData = {};
       try {
@@ -75,11 +79,12 @@ const Leave = () => {
 
       const mergedRequests = Array.from(mergedMap.values());
 
-      setData(prev => ({
-        ...prev,
+      const finalLeaves = {
         ...summaryData,
         requests: mergedRequests
-      }));
+      };
+      setData(finalLeaves);
+      setFastCache('cti_leave_data', finalLeaves);
     } catch (err) {
       console.warn('Error fetching leaves', err);
     } finally {

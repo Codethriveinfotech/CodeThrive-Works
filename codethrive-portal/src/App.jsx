@@ -10,6 +10,7 @@ import SplashScreen from './components/SplashScreen';
 import PageTransition from './components/PageTransition';
 import TeamsCallWidget from './components/TeamsCallWidget';
 import ScrollToTop from './components/ScrollToTop';
+import { prefetchEmployeeRoutes } from './utils/fastCache';
 import './App.css';
 
 // Lazy loading all pages to significantly improve initial load performance
@@ -196,6 +197,11 @@ const ProtectedRoute = ({ allowedRoles, loginPath = '/employee/login' }) => {
 
 const EmployeeLayout = () => {
   const location = useLocation();
+
+  useEffect(() => {
+    prefetchEmployeeRoutes();
+  }, []);
+
   return (
     <div className="app-container">
       <Sidebar />
@@ -203,13 +209,11 @@ const EmployeeLayout = () => {
         <Topbar />
         <main className="main-content">
           <ErrorBoundary>
-            <AnimatePresence initial={false}>
-              <PageTransition key={location.pathname}>
-                <Suspense fallback={<PageLoader />}>
-                  <Outlet />
-                </Suspense>
-              </PageTransition>
-            </AnimatePresence>
+            <PageTransition key={location.pathname}>
+              <Suspense fallback={null}>
+                <Outlet />
+              </Suspense>
+            </PageTransition>
           </ErrorBoundary>
         </main>
       </div>
@@ -226,13 +230,11 @@ const AdminLayout = () => {
         <AdminTopbar />
         <main className="main-content">
           <ErrorBoundary>
-            <AnimatePresence initial={false}>
-              <PageTransition key={location.pathname}>
-                <Suspense fallback={<PageLoader />}>
-                  <Outlet />
-                </Suspense>
-              </PageTransition>
-            </AnimatePresence>
+            <PageTransition key={location.pathname}>
+              <Suspense fallback={null}>
+                <Outlet />
+              </Suspense>
+            </PageTransition>
           </ErrorBoundary>
         </main>
       </div>

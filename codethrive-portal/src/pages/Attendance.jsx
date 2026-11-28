@@ -16,6 +16,7 @@ import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
 import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import { createOfficialCodeThriveDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
+import { getFastCache, setFastCache } from '../utils/fastCache';
 import './Attendance.css';
 
 // Official Gazetted Tamil Nadu Government Holidays
@@ -84,8 +85,9 @@ const Attendance = () => {
     }
   });
   const [isActionLoading, setIsActionLoading] = useState(false);
-  const [history, setHistory] = useState([]);
-  const [summary, setSummary] = useState(null);
+  const cachedAtt = getFastCache('cti_attendance_cache');
+  const [history, setHistory] = useState(() => cachedAtt?.history || []);
+  const [summary, setSummary] = useState(() => cachedAtt?.summary || null);
   const [employees, setEmployees] = useState([]); 
   
   // Real-time live duration trackers in seconds
@@ -695,12 +697,15 @@ const Attendance = () => {
         setActiveSession(null);
       }
 
-      setHistory(Array.isArray(historyData) ? historyData : []);
-      setSummary(summaryData || {
+      const finalHist = Array.isArray(historyData) ? historyData : [];
+      const finalSumm = summaryData || {
         totalWorkingDays: 22, presentDays: 20, absentDays: 1, leaveDays: 1, lateDays: 2, 
         halfDays: 0, workFromHomeDays: 3, attendancePercentage: 91, 
         totalWorkingHours: 165.5, averageWorkingHours: 8.2, overtimeHours: 4.5
-      });
+      };
+      setHistory(finalHist);
+      setSummary(finalSumm);
+      setFastCache('cti_attendance_cache', { history: finalHist, summary: finalSumm });
       setLoading(false);
     } catch (err) {
       console.warn('Backend API error in Attendance, using fallback', err);

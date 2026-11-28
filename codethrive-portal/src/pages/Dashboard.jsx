@@ -16,24 +16,26 @@ import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import { formatDate } from '../utils/dateUtils';
+import { getFastCache, setFastCache } from '../utils/fastCache';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const [attendance, setAttendance] = useState(null);
-  const [activeSession, setActiveSession] = useState(null);
+  const cachedDash = getFastCache('cti_dash_full');
+  const [attendance, setAttendance] = useState(() => cachedDash?.attendance || null);
+  const [activeSession, setActiveSession] = useState(() => cachedDash?.activeSession || null);
   
   // Dynamic live duration trackers (in seconds)
   const [liveWorkDuration, setLiveWorkDuration] = useState(0);
   const [liveBreakDuration, setLiveBreakDuration] = useState(0);
   const [liveLunchDuration, setLiveLunchDuration] = useState(0);
-  const [employeeProfile, setEmployeeProfile] = useState(null);
+  const [employeeProfile, setEmployeeProfile] = useState(() => cachedDash?.employeeProfile || null);
 
-  const [tasksData, setTasksData] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tasksData, setTasksData] = useState(() => cachedDash?.tasks || []);
+  const [notifications, setNotifications] = useState(() => cachedDash?.notifications || []);
+  const [loading, setLoading] = useState(() => !cachedDash);
   const [isActionLoading, setIsActionLoading] = useState(false);
 
   // Interactive Task Breakdown Modal States
@@ -63,13 +65,13 @@ const Dashboard = () => {
   };
 
   // Stats
-  const [taskStats, setTaskStats] = useState({ total: 0, pending: 0, completed: 0 });
-  const [leaveSummary, setLeaveSummary] = useState({ casualLeaveBalance: 12, sickLeaveBalance: 12, paidLeaveBalance: 15 });
-  const [monthlyAttSummary, setMonthlyAttSummary] = useState({ totalPresent: 20, onTimeRate: '98%' });
+  const [taskStats, setTaskStats] = useState(() => cachedDash?.taskStats || { total: 0, pending: 0, completed: 0 });
+  const [leaveSummary, setLeaveSummary] = useState(() => cachedDash?.leaveSummary || { casualLeaveBalance: 12, sickLeaveBalance: 12, paidLeaveBalance: 15 });
+  const [monthlyAttSummary, setMonthlyAttSummary] = useState(() => cachedDash?.monthlyAttSummary || { totalPresent: 20, onTimeRate: '98%' });
 
   // Derived arrays
-  const [priorityTasks, setPriorityTasks] = useState([]);
-  const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
+  const [priorityTasks, setPriorityTasks] = useState(() => cachedDash?.priorityTasks || []);
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState(() => cachedDash?.upcomingDeadlines || []);
 
   // 8-hour target progress
   const targetShiftSeconds = 8 * 3600; // 28,800s
@@ -190,12 +192,20 @@ const Dashboard = () => {
 
       const computedStats = { total: tasks.length, pending, completed };
       setTaskStats(computedStats);
-      try {
-        sessionStorage.setItem('cti_dash_stats', JSON.stringify(computedStats));
-        sessionStorage.setItem('cti_dash_tasks', JSON.stringify(tasks));
-      } catch {}
-      setPriorityTasks(priority.slice(0, 4));
-      setUpcomingDeadlines(deadlines.slice(0, 4));
+      const topPriority = priority.slice(0, 4);
+      const topDeadlines = deadlines.slice(0, 4);
+      setPriorityTasks(topPriority);
+      setUpcomingDeadlines(topDeadlines);
+
+      setFastCache('cti_dash_full', {
+        attendance: dashData.attendance,
+        activeSession: dashData.activeSession,
+        tasks,
+        taskStats: computedStats,
+        priorityTasks: topPriority,
+        upcomingDeadlines: topDeadlines,
+        notifications: Array.isArray(notifPayload) ? notifPayload : []
+      });
 
       setLoading(false);
     } catch (err) {

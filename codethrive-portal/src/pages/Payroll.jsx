@@ -18,13 +18,16 @@ import DateInput from '../components/common/DateInput';
 import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import './Payroll.css';
 
+import { getFastCache, setFastCache } from '../utils/fastCache';
+
 const DEMO_PAYSLIPS = [];
 
 
 const Payroll = () => {
   const { user } = useAuth();
-  const [payslips, setPayslips] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cachedPayroll = getFastCache('cti_payroll_payslips');
+  const [payslips, setPayslips] = useState(() => cachedPayroll || []);
+  const [loading, setLoading] = useState(() => !cachedPayroll);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,11 +76,14 @@ const Payroll = () => {
 
   const fetchPayslips = async () => {
     try {
-      setLoading(true);
+      if (!getFastCache('cti_payroll_payslips')) {
+        setLoading(true);
+      }
       const res = await api.get('/payroll/my-payslips');
       const fetched = (res.data?.data || []).filter(p => !isSeedPayslip(p));
-
-      setPayslips(Array.isArray(fetched) ? fetched : []);
+      const cleanList = Array.isArray(fetched) ? fetched : [];
+      setPayslips(cleanList);
+      setFastCache('cti_payroll_payslips', cleanList);
     } catch (err) {
       console.warn("Backend API payroll fetch error:", err);
       setPayslips([]);

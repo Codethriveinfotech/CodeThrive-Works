@@ -39,6 +39,19 @@ const Sidebar = () => {
     document.body.classList.remove('mobile-sidebar-open');
   };
 
+  const prefetchTarget = (path) => {
+    try {
+      if (path.includes('dashboard')) import('../pages/Dashboard').catch(() => {});
+      else if (path.includes('tasks')) import('../pages/MyTasks').catch(() => {});
+      else if (path.includes('reports')) import('../pages/DailyReports').catch(() => {});
+      else if (path.includes('leave')) import('../pages/Leave').catch(() => {});
+      else if (path.includes('attendance')) import('../pages/Attendance').catch(() => {});
+      else if (path.includes('payslips')) import('../pages/Payroll').catch(() => {});
+      else if (path.includes('documents')) import('../pages/Documents').catch(() => {});
+      else if (path.includes('profile')) import('../pages/MyProfile').catch(() => {});
+    } catch (e) {}
+  };
+
   const navLinks = [
     { name: 'Dashboard', path: '/employee/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'My Tasks', path: '/employee/tasks', icon: <CheckSquare size={20} /> },
@@ -90,6 +103,8 @@ const Sidebar = () => {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               title={collapsed ? link.name : ''}
               onClick={handleNavClick}
+              onMouseEnter={() => prefetchTarget(link.path)}
+              onTouchStart={() => prefetchTarget(link.path)}
               style={{ position: 'relative' }}
             >
               {({ isActive }) => (

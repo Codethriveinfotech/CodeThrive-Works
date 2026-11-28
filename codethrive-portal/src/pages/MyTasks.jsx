@@ -13,13 +13,15 @@ import {
 } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
+import { getFastCache, setFastCache } from '../utils/fastCache';
 import './MyTasks.css';
 
 const MyTasks = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cachedTasks = getFastCache('cti_my_tasks');
+  const [tasks, setTasks] = useState(() => cachedTasks || []);
+  const [loading, setLoading] = useState(() => !cachedTasks);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Search & Filter state
@@ -73,7 +75,9 @@ const MyTasks = () => {
 
   const fetchTasks = async () => {
     try {
-      setLoading(true);
+      if (!getFastCache('cti_my_tasks')) {
+        setLoading(true);
+      }
       const res = await api.get('/tasks/my-tasks');
       let fetched = (res.data?.data || []).filter(t => !isSeedTask(t));
 
@@ -87,7 +91,9 @@ const MyTasks = () => {
           fetched = merged;
         }
       }
-      setTasks(fetched.filter(t => !isSeedTask(t)));
+      const finalClean = fetched.filter(t => !isSeedTask(t));
+      setTasks(finalClean);
+      setFastCache('cti_my_tasks', finalClean);
     } catch (err) {
       console.warn('API fetch failed or offline, initializing tasks state', err);
       const empIdKey = user?._id || user?.id || user?.employeeId;
