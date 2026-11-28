@@ -61,7 +61,7 @@ const AdminLogin = () => {
         <LoginGreetingSplash 
           user={greetingSplashData.user}
           isFirstLogin={greetingSplashData.isFirstLogin}
-          customRedirectText="Entering CodeThrive Admin Workspace..."
+          customRedirectText="Entering CodeThrive Infotech..."
           onFinish={() => navigate('/admin/employees')}
         />
       )}

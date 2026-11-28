@@ -158,9 +158,11 @@
 .greeting-splash-logo {
   position: relative;
   z-index: 2;
+  width: 95px;
   max-width: 100px;
   height: auto;
   object-fit: contain;
+  border-radius: 18px;
   filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.6));
   animation: logoSpring 1s cubic-bezier(0.17, 0.89, 0.32, 1.25) forwards;
 }
