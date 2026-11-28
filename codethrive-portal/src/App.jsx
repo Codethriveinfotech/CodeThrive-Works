@@ -268,7 +268,7 @@ const AuthLayout = () => {
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
-  const [bootLoading, setBootLoading] = useState(false);
+  const [bootLoading, setBootLoading] = useState(true);
   const [isFading, setIsFading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
   const toastTimerRef = useRef(null);
@@ -282,6 +282,10 @@ function AppContent() {
   };
 
   useEffect(() => {
+    // Show splash screen with logo & company animation when website opens
+    const fadeTimer = setTimeout(() => setIsFading(true), 1300);
+    const removeTimer = setTimeout(() => setBootLoading(false), 1700);
+
     const savedTheme = localStorage.getItem('cti_theme') || 'dark';
     if (savedTheme === 'light') {
       document.body.classList.add('light-mode');
@@ -295,6 +299,11 @@ function AppContent() {
         localStorage.removeItem(key);
       });
     } catch (err) {}
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
   }, []);
 
   if (bootLoading || authLoading) {
