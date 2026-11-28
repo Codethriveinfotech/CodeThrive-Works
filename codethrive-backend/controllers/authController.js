@@ -3,7 +3,7 @@ const Employee = require('../models/Employee');
 const Attendance = require('../models/Attendance');
 
 // Helper to send token response
-const sendTokenResponse = async (user, statusCode, res) => {
+const sendTokenResponse = async (user, statusCode, res, extraData = {}) => {
   const token = require('jsonwebtoken').sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'dev_secret', {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   });
@@ -16,6 +16,10 @@ const sendTokenResponse = async (user, statusCode, res) => {
   };
 
   const employee = await Employee.findOne({ user: user._id });
+
+  const isFirstLogin = extraData.isFirstLogin !== undefined 
+    ? Boolean(extraData.isFirstLogin) 
+    : Boolean(!user.lastLogin || user.loginCount <= 1);
 
   res.status(statusCode)
     .cookie('token', token, options)
@@ -33,7 +37,9 @@ const sendTokenResponse = async (user, statusCode, res) => {
         phoneNumber: employee ? employee.personalPhoneNumber : null,
         designation: employee ? employee.designation : null,
         department: employee ? employee.department : null,
-        profilePhoto: employee ? (employee.profilePhoto || null) : (user.profilePhoto || null)
+        profilePhoto: employee ? (employee.profilePhoto || null) : (user.profilePhoto || null),
+        isFirstLogin: isFirstLogin,
+        loginCount: user.loginCount || 1
       }
     });
 };
@@ -342,14 +348,16 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Incorrect password. Please try again.' });
     }
 
+    const isFirstLogin = !user.lastLogin && (!user.loginCount || user.loginCount === 0);
+    user.loginCount = (user.loginCount || 0) + 1;
+    user.lastLogin = new Date();
+
     if (user.status !== 'active') {
       user.status = 'active';
-      await user.save();
     }
+    await user.save();
 
-
-
-    await sendTokenResponse(user, 200, res);
+    await sendTokenResponse(user, 200, res, { isFirstLogin });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -384,7 +392,12 @@ exports.adminLogin = async (req, res) => {
       return res.status(403).json({ success: false, message: `Account is ${user.status}. Contact Super Admin.` });
     }
 
-    await sendTokenResponse(user, 200, res);
+    const isFirstLogin = !user.lastLogin && (!user.loginCount || user.loginCount === 0);
+    user.loginCount = (user.loginCount || 0) + 1;
+    user.lastLogin = new Date();
+    await user.save();
+
+    await sendTokenResponse(user, 200, res, { isFirstLogin });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

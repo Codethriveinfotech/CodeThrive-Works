@@ -571,6 +571,7 @@ const Dashboard = () => {
   const isEvening = hr >= 17;
   const greeting = isMorning ? 'Good Morning' : (isEvening ? 'Good Evening' : 'Good Afternoon');
   const GreetingIcon = isEvening ? Moon : Sun;
+  const isFirstTimeOnboarding = Boolean(user?.isFirstLogin || sessionStorage.getItem('cti_just_first_login') === 'true');
 
   const todayDateStr = new Date().toLocaleDateString('en-US', { 
     weekday: 'short', 
@@ -657,10 +658,21 @@ const Dashboard = () => {
           </div>
 
           <h1 className="hero-title">
-            <GreetingIcon size={26} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
-            <div className="hero-greeting-text">
-              {greeting}, <span>{displayName}</span>
-            </div>
+            {isFirstTimeOnboarding ? (
+              <>
+                <Sparkles size={26} className="text-amber-400" />
+                <div className="hero-greeting-text">
+                  Welcome To CTI, <span>{displayName}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <GreetingIcon size={26} className={isEvening ? "text-indigo-300" : "text-amber-400"} />
+                <div className="hero-greeting-text">
+                  {greeting}, <span>{displayName}</span>
+                </div>
+              </>
+            )}
           </h1>
 
           <div className="hero-badges">

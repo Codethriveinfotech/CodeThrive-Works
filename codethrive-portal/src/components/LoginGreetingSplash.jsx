@@ -1,0 +1,158 @@
+import React, { useEffect, useState } from 'react';
+import { Sun, Sunrise, Moon, Sparkles, ShieldCheck } from 'lucide-react';
+import './LoginGreetingSplash.css';
+
+const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText }) => {
+  const [isFading, setIsFading] = useState(false);
+
+  useEffect(() => {
+    // Start fade-out at 2000ms
+    const fadeTimer = setTimeout(() => {
+      setIsFading(true);
+    }, 2100);
+
+    // Call onFinish at 2500ms
+    const finishTimer = setTimeout(() => {
+      if (onFinish) onFinish();
+    }, 2500);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(finishTimer);
+    };
+  }, [onFinish]);
+
+  // Determine time-based greeting
+  const hour = new Date().getHours();
+  let timeGreeting = 'Good Morning';
+  let GreetingIcon = Sunrise;
+  let iconTheme = 'morning';
+  let timeBadge = '☀️ MORNING WORKSPACE';
+  let subtitle = 'Wishing you an inspiring and productive day ahead.';
+
+  if (hour >= 12 && hour < 17) {
+    timeGreeting = 'Good Afternoon';
+    GreetingIcon = Sun;
+    iconTheme = 'afternoon';
+    timeBadge = '🌤️ AFTERNOON SESSION';
+    subtitle = 'Keep up the great momentum and focus.';
+  } else if (hour >= 17 || hour < 4) {
+    timeGreeting = 'Good Evening';
+    GreetingIcon = Moon;
+    iconTheme = 'evening';
+    timeBadge = '✨ EVENING WORKSPACE';
+    subtitle = 'Wrapping up milestones and crafting excellence today.';
+  }
+
+  // Name handling
+  const rawName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Team Member';
+  // Capitalize properly
+  const displayName = rawName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+  const firstName = displayName.split(' ')[0] || displayName;
+  const employeeId = user?.employeeId || null;
+  const designation = user?.designation || (user?.role === 'admin' ? 'System Administrator' : 'Software Developer');
+
+  const isFirstTime = Boolean(isFirstLogin);
+
+  return (
+    <div className={`login-greeting-overlay ${isFading ? 'fade-out' : ''}`}>
+      {/* Background Animated Glowing Spheres */}
+      <div className="greeting-sphere sphere-one"></div>
+      <div className="greeting-sphere sphere-two"></div>
+
+      {/* Ambient Floating Particles */}
+      <div className="greeting-particles">
+        {[...Array(16)].map((_, i) => (
+          <div
+            key={i}
+            className="greeting-particle"
+            style={{
+              left: `${(i * 6.25 + (i % 3) * 2)}%`,
+              animationDelay: `${(i * 0.18) % 2.5}s`,
+              animationDuration: `${2.2 + (i % 4) * 0.5}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Main Greeting Card */}
+      <div className="greeting-content-card">
+        {/* CodeThrive Logo with Aura Glow */}
+        <div className="greeting-logo-wrapper">
+          <div className="greeting-logo-glow"></div>
+          <img
+            src="/full_logo.png"
+            alt="CodeThrive Infotech Logo"
+            className="greeting-splash-logo"
+          />
+        </div>
+
+        {/* Dynamic Badge */}
+        <div className="greeting-badge-row">
+          {isFirstTime ? (
+            <span className="greeting-badge welcome-badge">
+              <Sparkles size={14} className="sparkle-spin" />
+              <span>FIRST TIME ONBOARDING • WELCOME</span>
+            </span>
+          ) : (
+            <span className={`greeting-badge ${iconTheme}-badge`}>
+              <GreetingIcon size={14} className="greeting-icon-pulse" />
+              <span>{timeBadge}</span>
+            </span>
+          )}
+        </div>
+
+        {/* Primary Greeting Title */}
+        <div className="greeting-title-container">
+          {isFirstTime ? (
+            <h1 className="greeting-main-heading welcome-heading">
+              Welcome To CTI
+            </h1>
+          ) : (
+            <h1 className="greeting-main-heading time-heading">
+              {timeGreeting}, <span className="greeting-user-name">{firstName}</span>
+            </h1>
+          )}
+        </div>
+
+        {/* User Details Pill */}
+        <div className="greeting-user-pill">
+          <div className="user-avatar-mini">
+            {user?.profilePhoto ? (
+              <img src={user.profilePhoto} alt={displayName} />
+            ) : (
+              <span>{firstName.charAt(0)}</span>
+            )}
+          </div>
+          <div className="user-info-text">
+            <span className="user-name-full">{displayName}</span>
+            <span className="user-meta-sub">
+              {designation} {employeeId ? `• ID: ${employeeId}` : ''}
+            </span>
+          </div>
+        </div>
+
+        {/* Subtitle Message */}
+        <p className="greeting-subtitle">
+          {isFirstTime
+            ? `Welcome to the CodeThrive Infotech family, ${firstName}! We're thrilled to have you onboard.`
+            : subtitle}
+        </p>
+
+        {/* Progress Loading Indicator */}
+        <div className="greeting-progress-container">
+          <div className="greeting-progress-track">
+            <div className="greeting-progress-fill">
+              <div className="progress-glow-head"></div>
+            </div>
+          </div>
+          <span className="greeting-loading-text">
+            {customRedirectText || (isFirstTime ? 'Preparing your new workspace...' : 'Entering CodeThrive Workspace...')}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginGreetingSplash;

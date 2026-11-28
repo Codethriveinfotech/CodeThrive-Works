@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, WifiOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import LoginGreetingSplash from '../../components/LoginGreetingSplash';
 import './Auth.css';
 
 const Login = () => {
@@ -13,6 +14,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isWifiError, setIsWifiError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [greetingSplashData, setGreetingSplashData] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -39,7 +41,22 @@ const Login = () => {
     setIsLoading(false);
 
     if (result.success) {
-      navigate('/employee/dashboard');
+      const userObj = result.user;
+      const userTrackingKey = `cti_has_logged_in_${userObj?.employeeId || userObj?.id || formData.employeeId.trim()}`;
+      const isFirst = Boolean(userObj?.isFirstLogin || !localStorage.getItem(userTrackingKey));
+
+      try {
+        localStorage.setItem(userTrackingKey, 'true');
+        if (isFirst) {
+          sessionStorage.setItem('cti_just_first_login', 'true');
+        }
+      } catch (err) {}
+
+      // Trigger animated greeting splash
+      setGreetingSplashData({
+        user: userObj,
+        isFirstLogin: isFirst
+      });
     } else {
       if (result.wifiRestricted) {
         setIsWifiError(true);
@@ -59,6 +76,13 @@ const Login = () => {
 
   return (
     <div className="auth-page">
+      {greetingSplashData && (
+        <LoginGreetingSplash 
+          user={greetingSplashData.user}
+          isFirstLogin={greetingSplashData.isFirstLogin}
+          onFinish={() => navigate('/employee/dashboard')}
+        />
+      )}
       <div className="auth-card card">
         <div className="auth-header">
           <div className="auth-logo-circle" style={{ width: '65px', height: '65px', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>

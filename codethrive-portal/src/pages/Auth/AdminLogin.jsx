@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import LoginGreetingSplash from '../../components/LoginGreetingSplash';
 import './Auth.css';
 
 const AdminLogin = () => {
@@ -12,6 +13,7 @@ const AdminLogin = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [greetingSplashData, setGreetingSplashData] = useState(null);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -36,7 +38,18 @@ const AdminLogin = () => {
     setIsLoading(false);
 
     if (result.success) {
-      navigate('/admin/employees');
+      const userObj = result.user;
+      const adminTrackingKey = `cti_has_logged_in_${userObj?.id || formData.email.trim()}`;
+      const isFirst = Boolean(userObj?.isFirstLogin || !localStorage.getItem(adminTrackingKey));
+
+      try {
+        localStorage.setItem(adminTrackingKey, 'true');
+      } catch (err) {}
+
+      setGreetingSplashData({
+        user: userObj,
+        isFirstLogin: isFirst
+      });
     } else {
       setError(result.message || 'Login failed.');
     }
@@ -44,6 +57,14 @@ const AdminLogin = () => {
 
   return (
     <div className="auth-page" style={{ background: 'var(--bg-main)' }}>
+      {greetingSplashData && (
+        <LoginGreetingSplash 
+          user={greetingSplashData.user}
+          isFirstLogin={greetingSplashData.isFirstLogin}
+          customRedirectText="Entering CodeThrive Admin Workspace..."
+          onFinish={() => navigate('/admin/employees')}
+        />
+      )}
       <div className="auth-card card" style={{ borderColor: 'var(--primary)', boxShadow: '0 0 20px rgba(99, 102, 241, 0.2)' }}>
         <div className="auth-header" style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
