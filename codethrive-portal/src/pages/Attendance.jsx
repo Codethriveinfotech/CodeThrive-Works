@@ -188,7 +188,7 @@ const Attendance = () => {
         if (start && end) {
           const cur = new Date(start);
           while (cur <= end) {
-            const dateKey = cur.toISOString().split('T')[0];
+            const dateKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
             map[dateKey] = l;
             cur.setDate(cur.getDate() + 1);
           }
@@ -221,6 +221,39 @@ const Attendance = () => {
       return `${m}m`;
     }
     return defaultVal;
+  };
+
+  const formatPunchTimes = (row, isRowToday) => {
+    const inTime = isRowToday ? (todayAttendance?.firstLoginTime || row?.firstLoginTime) : row?.firstLoginTime;
+    const outTime = isRowToday ? (todayAttendance?.lastLogoutTime || row?.lastLogoutTime) : row?.lastLogoutTime;
+    const status = (row?.status || '').toLowerCase();
+
+    // If never punched in:
+    if (!inTime) return '–';
+
+    const fmt = (ts) => {
+      try {
+        const d = new Date(ts);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+      } catch {
+        return '';
+      }
+    };
+
+    const inStr = fmt(inTime);
+    if (!inStr) return '–';
+
+    if (outTime) {
+      const outStr = fmt(outTime);
+      return `${inStr} – ${outStr}`;
+    }
+
+    if (isRowToday && (status === 'working' || status === 'on break' || status === 'on lunch' || !outTime)) {
+      return `${inStr} – Active`;
+    }
+
+    return inStr;
   };
 
   const getRowAttendanceInfo = (row) => {
@@ -630,7 +663,7 @@ const Attendance = () => {
 
       const now = new Date();
       const currentHour = now.getHours();
-      const todayDateKey = now.toISOString().split('T')[0];
+      const todayDateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const isApprovedLeaveToday = leaveMap[todayDateKey];
       const isPast2Hours = currentHour >= 12; // Per day 2 hours past 10:00 AM shift start = 12:00 PM
       const isWorkingDay = now.getDay() >= 1 && now.getDay() <= 6;
@@ -911,15 +944,32 @@ const Attendance = () => {
         ]
       });
 
-      const tableColumn = ["Date & Day", "Attendance Status", "Remarks / Shift"];
+      const tableColumn = ["Date & Day", "Check-In / Out", "Break", "Lunch", "Attendance Status", "Remarks / Shift"];
       const tableRows = recordsToExport.map(row => {
-        const dateObj = row.date ? new Date(row.date) : new Date();
-        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        const dateKey = row.dateKey || (row.date ? row.date.split('T')[0] : '');
+        let dayName = '';
+        let dateDisplay = '';
+        if (dateKey && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+          const [y, m, d] = dateKey.split('-').map(Number);
+          dateDisplay = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+          dayName = new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long' });
+        } else {
+          const dateObj = row.date ? new Date(row.date) : new Date();
+          dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+          dateDisplay = formatDate(row.date);
+        }
+        const attInfo = getRowAttendanceInfo(row);
+        const punchTimingStr = formatPunchTimes(row, false);
+        const breakStr = formatBreakLunch(row.totalBreakDurationInSeconds || 0);
+        const lunchStr = formatBreakLunch(row.totalLunchDurationInSeconds || 0);
 
         return [
-          `${formatDate(row.date)} (${dayName})`,
-          row.status || 'Present',
-          getRemarksDisplay(row).text
+          `${dateDisplay} (${dayName})`,
+          punchTimingStr,
+          breakStr,
+          lunchStr,
+          attInfo.status || row.status || 'Present',
+          attInfo.remarksText || 'Standard Shift'
         ];
       });
 
@@ -1011,19 +1061,16 @@ const Attendance = () => {
         }
         const attInfo = getRowAttendanceInfo(row);
         const isRowToday = dateKey === todayStr;
-        const isHoliday = attInfo.status.includes('Holiday');
-        const isAbsentOrHoliday = attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'On Leave' || isHoliday;
-        const breakStr = attInfo.status === 'Absent' || isHoliday || attInfo.status === 'Leave' || attInfo.status === 'Weekend'
-          ? '–'
-          : (isRowToday ? formatBreakLunch(liveBreakDuration, '30m') : formatBreakLunch(row.totalBreakDurationInSeconds, '30m'));
-        const lunchStr = attInfo.status === 'Absent' || isHoliday || attInfo.status === 'Leave' || attInfo.status === 'Weekend'
-          ? '–'
-          : (isRowToday ? formatBreakLunch(liveLunchDuration, '1h 00m') : formatBreakLunch(row.totalLunchDurationInSeconds, '1h 00m'));
+        const punchTimingStr = formatPunchTimes(row, isRowToday);
+        const breakSec = isRowToday ? liveBreakDuration : (row.totalBreakDurationInSeconds || 0);
+        const lunchSec = isRowToday ? liveLunchDuration : (row.totalLunchDurationInSeconds || 0);
+        const breakStr = formatBreakLunch(breakSec);
+        const lunchStr = formatBreakLunch(lunchSec);
 
         return {
           'Date': dateDisplay,
           'Day': dayName,
-          'Shift Timing': isAbsentOrHoliday ? '–' : '10:00 AM – 06:00 PM',
+          'Check-In / Out': punchTimingStr,
           'Break': breakStr,
           'Lunch': lunchStr,
           'Attendance Status': attInfo.status,
@@ -1851,7 +1898,7 @@ const Attendance = () => {
               <tr>
                 <th style={{ width: '130px' }}>Date</th>
                 <th style={{ width: '120px' }}>Day</th>
-                <th style={{ width: '155px' }}>Shift Timing</th>
+                <th style={{ width: '175px' }}>Check-In / Out</th>
                 <th style={{ width: '105px' }}>Break</th>
                 <th style={{ width: '105px' }}>Lunch</th>
                 {(isAdminHR || isTeamLead) && <th>Employee</th>}
@@ -1879,6 +1926,12 @@ const Attendance = () => {
                   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
                   const isRowToday = dateKey === todayStr;
 
+                  const punchTimingStr = formatPunchTimes(row, isRowToday);
+                  const breakSec = isRowToday ? liveBreakDuration : (row.totalBreakDurationInSeconds || 0);
+                  const lunchSec = isRowToday ? liveLunchDuration : (row.totalLunchDurationInSeconds || 0);
+                  const breakFormatted = formatBreakLunch(breakSec);
+                  const lunchFormatted = formatBreakLunch(lunchSec);
+
                   return (
                     <tr key={row._id || dateKey || idx}>
                       <td>
@@ -1890,30 +1943,26 @@ const Attendance = () => {
                       </td>
 
                       <td>
-                        {attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'On Leave' || attInfo.status.includes('Holiday') ? (
+                        {punchTimingStr === '–' ? (
                           <span className="att-na-dash">–</span>
                         ) : (
-                          <span className="att-shift-time">10:00 AM – 06:00 PM</span>
+                          <span className="att-shift-time">{punchTimingStr}</span>
                         )}
                       </td>
 
                       <td>
-                        {attInfo.status === 'Absent' || attInfo.status.includes('Holiday') || attInfo.status === 'Leave' || attInfo.status === 'Weekend' ? (
+                        {breakFormatted === '–' ? (
                           <span className="att-na-dash">–</span>
                         ) : (
-                          <span className="att-break-badge">
-                            {isRowToday ? formatBreakLunch(liveBreakDuration, '30m') : formatBreakLunch(row.totalBreakDurationInSeconds, '30m')}
-                          </span>
+                          <span className="att-break-badge">{breakFormatted}</span>
                         )}
                       </td>
 
                       <td>
-                        {attInfo.status === 'Absent' || attInfo.status.includes('Holiday') || attInfo.status === 'Leave' || attInfo.status === 'Weekend' ? (
+                        {lunchFormatted === '–' ? (
                           <span className="att-na-dash">–</span>
                         ) : (
-                          <span className="att-lunch-badge">
-                            {isRowToday ? formatBreakLunch(liveLunchDuration, '1h 00m') : formatBreakLunch(row.totalLunchDurationInSeconds, '1h 00m')}
-                          </span>
+                          <span className="att-lunch-badge">{lunchFormatted}</span>
                         )}
                       </td>
 
