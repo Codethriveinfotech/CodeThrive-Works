@@ -42,20 +42,30 @@ const Login = () => {
 
     if (result.success) {
       const userObj = result.user;
-      const userTrackingKey = `cti_has_logged_in_${userObj?.employeeId || userObj?.id || formData.employeeId.trim()}`;
-      const isFirst = Boolean(userObj?.isFirstLogin || !localStorage.getItem(userTrackingKey));
+      const empIdClean = (userObj?.employeeId || formData.employeeId.trim()).toUpperCase();
+      const newRegKey = `cti_newly_registered_${empIdClean}`;
 
-      try {
-        localStorage.setItem(userTrackingKey, 'true');
-        if (isFirst) {
+      // Welcome To CTI is ONLY for newly registered users on their first login
+      const isNewRegistered = Boolean(
+        localStorage.getItem(newRegKey) === 'true' || 
+        userObj?.isNewRegisteredUser
+      );
+
+      if (isNewRegistered) {
+        try {
+          localStorage.removeItem(newRegKey);
           sessionStorage.setItem('cti_just_first_login', 'true');
-        }
-      } catch (err) {}
+        } catch (err) {}
+      } else {
+        try {
+          sessionStorage.removeItem('cti_just_first_login');
+        } catch (err) {}
+      }
 
-      // Trigger animated greeting splash
+      // Trigger animated greeting splash: "Welcome To CTI" if new user, or Good Morning/Afternoon/Evening if existing user
       setGreetingSplashData({
         user: userObj,
-        isFirstLogin: isFirst
+        isFirstLogin: isNewRegistered
       });
     } else {
       if (result.wifiRestricted) {

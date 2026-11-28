@@ -39,6 +39,7 @@ const sendTokenResponse = async (user, statusCode, res, extraData = {}) => {
         department: employee ? employee.department : null,
         profilePhoto: employee ? (employee.profilePhoto || null) : (user.profilePhoto || null),
         isFirstLogin: isFirstLogin,
+        isNewRegisteredUser: Boolean(extraData.isNewRegisteredUser),
         loginCount: user.loginCount || 1
       }
     });
@@ -104,13 +105,15 @@ exports.registerEmployee = async (req, res) => {
         existingUser.password = password;
         existingUser.role = userRole;
         existingUser.status = 'active';
+        existingUser.isNewRegisteredUser = true;
         await existingUser.save();
       } else {
         existingUser = await User.create({
           email: emailId,
           password: password,
           role: userRole,
-          status: 'active'
+          status: 'active',
+          isNewRegisteredUser: true
         });
       }
 
@@ -150,7 +153,8 @@ exports.registerEmployee = async (req, res) => {
       email: emailId,
       password: password,
       role: userRole,
-      status: 'active'
+      status: 'active',
+      isNewRegisteredUser: true
     });
 
     // Create Employee record linked to User in MongoDB
@@ -348,7 +352,10 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Incorrect password. Please try again.' });
     }
 
-    const isFirstLogin = !user.lastLogin && (!user.loginCount || user.loginCount === 0);
+    const isNewRegistered = Boolean(user.isNewRegisteredUser);
+    if (user.isNewRegisteredUser) {
+      user.isNewRegisteredUser = false;
+    }
     user.loginCount = (user.loginCount || 0) + 1;
     user.lastLogin = new Date();
 
@@ -357,7 +364,7 @@ exports.login = async (req, res) => {
     }
     await user.save();
 
-    await sendTokenResponse(user, 200, res, { isFirstLogin });
+    await sendTokenResponse(user, 200, res, { isFirstLogin: isNewRegistered, isNewRegisteredUser: isNewRegistered });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -73,6 +73,10 @@ const Register = () => {
 
     if (result.success) {
       setSuccess(result.message);
+      try {
+        const empIdUpper = formData.employeeId.trim().toUpperCase();
+        localStorage.setItem(`cti_newly_registered_${empIdUpper}`, 'true');
+      } catch (err) {}
       setTimeout(() => navigate('/employee/login'), 2500);
     } else {
       const msg = result.message || 'Registration failed. Please check your details and try again.';

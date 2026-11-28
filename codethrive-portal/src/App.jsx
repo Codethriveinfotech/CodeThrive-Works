@@ -282,9 +282,9 @@ function AppContent() {
   };
 
   useEffect(() => {
-    // Show splash screen with logo & company animation when website opens
-    const fadeTimer = setTimeout(() => setIsFading(true), 1300);
-    const removeTimer = setTimeout(() => setBootLoading(false), 1700);
+    // Show splash screen with logo & company animation for 4 to 5 seconds when website opens
+    const fadeTimer = setTimeout(() => setIsFading(true), 4200);
+    const removeTimer = setTimeout(() => setBootLoading(false), 4800);
 
     const savedTheme = localStorage.getItem('cti_theme') || 'dark';
     if (savedTheme === 'light') {

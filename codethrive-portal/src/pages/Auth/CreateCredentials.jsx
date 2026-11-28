@@ -56,6 +56,12 @@ const CreateCredentials = () => {
 
     if (result.success) {
       setSuccess('Credentials created successfully! Redirecting to login...');
+      try {
+        const empIdUpper = (formData.employeeId || '').trim().toUpperCase();
+        if (empIdUpper) {
+          localStorage.setItem(`cti_newly_registered_${empIdUpper}`, 'true');
+        }
+      } catch (err) {}
       setTimeout(() => navigate('/employee/login'), 3000);
     } else {
       setError(result.message || 'Verification failed');

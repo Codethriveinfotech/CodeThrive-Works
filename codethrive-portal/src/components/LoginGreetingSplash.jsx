@@ -6,15 +6,14 @@ const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText 
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
-    // Start fade-out at 2000ms
+    // Keep greeting splash visible for 4 to 5 seconds before fading out and entering dashboard
     const fadeTimer = setTimeout(() => {
       setIsFading(true);
-    }, 2100);
+    }, 4200);
 
-    // Call onFinish at 2500ms
     const finishTimer = setTimeout(() => {
       if (onFinish) onFinish();
-    }, 2500);
+    }, 4800);
 
     return () => {
       clearTimeout(fadeTimer);
