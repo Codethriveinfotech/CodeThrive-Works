@@ -6,7 +6,8 @@ import Modal from '../components/common/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, CheckCircle, XCircle, Calendar, Clock, 
-  Eye, Check, X, Sparkles, RefreshCw, FileText, Layers
+  Eye, Check, X, Sparkles, RefreshCw, FileText, Layers,
+  Quote, User, Tag, ShieldCheck
 } from 'lucide-react';
 import './Admin.css';
 import './Modules.css';
@@ -181,12 +182,6 @@ const AdminLeave = () => {
         gap: '1.25rem'
       }}>
         <div>
-          <div className="admin-hero-pill-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.35)', color: '#fde68a' }}>
-            <Sparkles size={13} style={{ color: '#fbbf24' }} />
-            <span>HR Leave & Time-Off Governance</span>
-            <span style={{ opacity: 0.5 }}>•</span>
-            <span style={{ color: '#34d399' }}>Live Approvals</span>
-          </div>
           <h1 className="welcome-title-glowing" style={{ fontSize: '1.9rem', margin: '0 0 0.35rem 0' }}>Leave Management</h1>
           <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.88rem' }}>
             Review pending leave requests, authorize staff time-off, and track real-time leave balances across departments.
@@ -690,63 +685,142 @@ const AdminLeave = () => {
           isOpen={!!readingReasonModal}
           onClose={() => setReadingReasonModal(null)}
           title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#60a5fa' }}>
-              <Eye size={18} />
-              <span>Leave Reason — {readingReasonModal.employee?.fullName || 'Employee'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2))',
+                border: '1px solid rgba(99, 102, 241, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#818cf8'
+              }}>
+                <Quote size={17} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f8fafc', letterSpacing: '-0.01em' }}>
+                  Official Leave Application Reason
+                </span>
+                <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                  Submitted by {readingReasonModal.employee?.fullName || 'Staff Member'}
+                </span>
+              </div>
             </div>
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem', background: 'rgba(255, 255, 255, 0.03)', padding: '0.85rem', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.07)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', paddingTop: '0.25rem' }}>
+            {/* Metadata Pills Grid */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+              gap: '0.75rem', 
+              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.75))', 
+              padding: '0.9rem 1.1rem', 
+              borderRadius: '12px', 
+              border: '1px solid rgba(255, 255, 255, 0.08)' 
+            }}>
               <div>
-                <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Staff Member</span>
-                <div style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.88rem', marginTop: '2px' }}>{readingReasonModal.employee?.fullName}</div>
-                <span style={{ fontSize: '0.74rem', color: '#60a5fa' }}>{readingReasonModal.employee?.employeeId || readingReasonModal.employeeId}</span>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <User size={11} style={{ color: '#60a5fa' }} /> Staff Member
+                </span>
+                <div style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.9rem', marginTop: '3px' }}>
+                  {readingReasonModal.employee?.fullName || 'Employee'}
+                </div>
+                <span style={{ fontSize: '0.74rem', color: '#818cf8', fontFamily: 'monospace' }}>
+                  {readingReasonModal.employee?.employeeId || readingReasonModal.employeeId}
+                </span>
               </div>
+
               <div>
-                <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Leave Type</span>
-                <div style={{ fontWeight: 700, color: '#fbbf24', fontSize: '0.88rem', marginTop: '2px' }}>{readingReasonModal.leaveType}</div>
-              </div>
-              <div>
-                <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Leave Period</span>
-                <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.84rem', marginTop: '2px' }}>
-                  {fmtLeaveDate(readingReasonModal.startDate)} to {fmtLeaveDate(readingReasonModal.endDate)}
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Tag size={11} style={{ color: '#fbbf24' }} /> Leave Type
+                </span>
+                <div style={{ fontWeight: 700, color: '#fbbf24', fontSize: '0.9rem', marginTop: '3px' }}>
+                  {readingReasonModal.leaveType}
                 </div>
               </div>
+
               <div>
-                <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
-                <div style={{ marginTop: '2px' }}><StatusBadge status={readingReasonModal.status} /></div>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Calendar size={11} style={{ color: '#a78bfa' }} /> Period
+                </span>
+                <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.86rem', marginTop: '3px' }}>
+                  {fmtLeaveDate(readingReasonModal.startDate)} <span style={{ color: '#94a3b8' }}>→</span> {fmtLeaveDate(readingReasonModal.endDate)}
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <ShieldCheck size={11} style={{ color: '#34d399' }} /> Review Status
+                </span>
+                <div style={{ marginTop: '4px' }}>
+                  <StatusBadge status={readingReasonModal.status} />
+                </div>
               </div>
             </div>
 
+            {/* Quotation Statement Card */}
             <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#e2e8f0', marginBottom: '0.4rem', display: 'block' }}>
-                Reason for Leave
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1' }}>
+                  Employee Statement & Justification
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                  Full submitted remark
+                </span>
+              </div>
+
               <div style={{
-                background: 'rgba(15, 23, 42, 0.75)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '10px',
-                padding: '1rem',
-                color: '#cbd5e1',
-                fontSize: '0.92rem',
-                lineHeight: 1.6,
-                maxHeight: '220px',
-                overflowY: 'auto',
-                whiteSpace: 'pre-wrap'
+                position: 'relative',
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.65))',
+                border: '1px solid rgba(99, 102, 241, 0.28)',
+                borderLeft: '4px solid #6366f1',
+                borderRadius: '12px',
+                padding: '1.2rem 1.4rem',
+                boxShadow: '0 10px 28px rgba(0, 0, 0, 0.4)',
+                overflow: 'hidden'
               }}>
-                {readingReasonModal.reason || 'No specific remarks provided.'}
+                <Quote size={48} style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '14px',
+                  color: 'rgba(99, 102, 241, 0.08)',
+                  pointerEvents: 'none'
+                }} />
+
+                <p style={{
+                  position: 'relative',
+                  margin: 0,
+                  color: '#e2e8f0',
+                  fontSize: '0.94rem',
+                  lineHeight: 1.7,
+                  whiteSpace: 'pre-wrap',
+                  fontStyle: 'normal'
+                }}>
+                  {readingReasonModal.reason || 'No specific remarks provided.'}
+                </p>
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+            {/* Modal Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
               <button 
                 type="button" 
                 className="btn btn-outline" 
                 onClick={() => setReadingReasonModal(null)} 
-                style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
+                style={{ 
+                  padding: '0.55rem 1.5rem', 
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  borderRadius: '9px',
+                  borderColor: 'rgba(99, 102, 241, 0.35)',
+                  background: 'rgba(99, 102, 241, 0.08)',
+                  color: '#e2e8f0'
+                }}
               >
-                Close
+                Close Statement
               </button>
             </div>
           </div>

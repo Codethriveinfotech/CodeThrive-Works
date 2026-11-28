@@ -325,12 +325,6 @@ const AdminReports = () => {
       <div className="ultra-premium-hero">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
           <div>
-            <div className="admin-hero-pill-badge" style={{ background: 'rgba(14, 165, 233, 0.15)', border: '1px solid rgba(14, 165, 233, 0.35)', color: '#7dd3fc' }}>
-              <Sparkles size={13} style={{ color: '#38bdf8' }} />
-              <span>Executive Personnel Deliverables</span>
-              <span style={{ opacity: 0.5 }}>•</span>
-              <span style={{ color: '#34d399' }}>Daily Audit</span>
-            </div>
             <h1 className="welcome-title-glowing" style={{ fontSize: '1.9rem', margin: '0 0 0.35rem 0' }}>Daily Work Reports Audit</h1>
             <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.88rem' }}>
               Audit & Review End-of-Day Work Reports Submitted by Employees with One-Click Approvals

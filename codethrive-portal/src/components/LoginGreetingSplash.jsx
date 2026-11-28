@@ -52,7 +52,17 @@ const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText,
   const employeeId = user?.employeeId || null;
   const designation = user?.designation || (user?.role === 'admin' ? 'System Administrator' : 'Software Developer');
 
-  const isFirstTime = Boolean(isFirstLogin);
+  const isUserAdmin = Boolean(
+    isAdmin || 
+    user?.role === 'admin' || 
+    user?.role === 'Admin' || 
+    user?.isAdmin || 
+    user?.employeeId === 'CTI-ADM-001' ||
+    user?.email?.toLowerCase().includes('admin') ||
+    user?.designation?.toLowerCase().includes('admin')
+  );
+
+  const isFirstTime = !isUserAdmin && Boolean(isFirstLogin);
 
   return (
     <div className={`login-greeting-overlay ${isFading ? 'fade-out' : ''}`}>
@@ -87,7 +97,7 @@ const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText,
           />
         </div>
 
-        {isAdmin || user?.role === 'admin' ? (
+        {isUserAdmin ? (
           <>
             {/* Simple Executive Greeting for Admin */}
             <div className="greeting-title-container" style={{ margin: '1.25rem 0 0.5rem 0' }}>

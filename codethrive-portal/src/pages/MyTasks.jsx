@@ -233,14 +233,6 @@ const MyTasks = () => {
       <div className="tasks-hero">
         <div className="tasks-hero-ambient" />
         <div className="hero-main-content">
-          <div className="hero-meta-row">
-            <span className="tasks-hero-badge">
-              <CheckSquare size={13} /> Project Deliverables Hub
-            </span>
-            <span className="tasks-sprint-badge">
-              <Sparkles size={12} /> Active Sprint
-            </span>
-          </div>
           <h1 className="tasks-hero-title">
             <CheckSquare size={26} className="tasks-title-icon" /> My Tasks
           </h1>

@@ -368,12 +368,6 @@ const Employees = () => {
       {/* Header Banner */}
       <div className="page-header-hero">
         <div>
-          <div className="admin-hero-pill-badge" style={{ background: 'rgba(99, 102, 241, 0.15)', border: '1px solid rgba(99, 102, 241, 0.35)', color: '#a5b4fc' }}>
-            <Sparkles size={13} style={{ color: '#818cf8' }} />
-            <span>Executive Staff Directory</span>
-            <span style={{ opacity: 0.5 }}>•</span>
-            <span style={{ color: '#34d399' }}>Live Vault</span>
-          </div>
           <h1 style={{ fontSize: '1.8rem', margin: '0 0 0.4rem 0', fontWeight: 700 }}>Registered Employees Directory</h1>
           <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem' }}>
             Full Administrative Oversight of Registered Staff Profiles, Submissions, Tasks, Payroll & Account Access
