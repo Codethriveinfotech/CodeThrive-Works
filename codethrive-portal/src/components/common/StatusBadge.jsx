@@ -15,9 +15,9 @@ const StatusBadge = ({ status, text }) => {
     statusClass = 'warning';
   } else if (['inactive', 'rejected', 'failed', 'absent', 'not completed'].includes(s)) {
     statusClass = 'danger';
-  } else if (['permission'].includes(s)) {
+  } else if (['permission', 'sunday holiday', 'sunday', 'weekly off'].includes(s)) {
     statusClass = 'purple';
-  } else if (['new', 'leave', 'on leave', 'on break', 'work from home'].includes(s)) {
+  } else if (['new', 'leave', 'on leave', 'on break', 'work from home', 'government holiday', 'holiday', 'govt holiday'].includes(s)) {
     statusClass = 'info';
   }
 

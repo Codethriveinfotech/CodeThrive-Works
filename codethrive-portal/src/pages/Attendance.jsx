@@ -18,6 +18,32 @@ import DailyQuoteBanner from '../components/common/DailyQuoteBanner';
 import { createOfficialCodeThriveDoc, getCorporateTableStyles } from '../utils/pdfLetterhead';
 import './Attendance.css';
 
+// Official Gazetted Tamil Nadu Government Holidays
+const TN_GOVT_HOLIDAYS = {
+  '01-01': "New Year's Day",
+  '01-15': 'Pongal',
+  '01-16': 'Thiruvalluvar Day',
+  '01-17': 'Uzhavar Thirunal',
+  '01-26': 'Republic Day',
+  '03-19': 'Telugu New Year',
+  '03-21': 'Ramzan (Id-ul-Fitr)',
+  '03-31': 'Mahaveer Jayanthi',
+  '04-03': 'Good Friday',
+  '04-14': 'Tamil New Year / Dr. Ambedkar Jayanti',
+  '05-01': 'May Day (Labour Day)',
+  '05-28': 'Bakrid (Eid al-Adha)',
+  '06-26': 'Muharram',
+  '08-15': 'Independence Day',
+  '08-26': 'Milad-un-Nabi',
+  '09-04': 'Krishna Jayanthi',
+  '09-14': 'Vinayakar Chathurthi',
+  '10-02': 'Gandhi Jayanthi',
+  '10-19': 'Ayutha Pooja',
+  '10-20': 'Vijaya Dasami',
+  '11-08': 'Deepavali',
+  '12-25': 'Christmas'
+};
+
 const Attendance = () => {
   const { user } = useAuth();
   const isAdminHR = ['admin', 'superadmin', 'hr'].includes(user?.role);
@@ -205,17 +231,39 @@ const Attendance = () => {
     const isToday = rowDateStr === todayDateStr;
     const dayOfWeek = rowDateObj.getDay(); // 0 is Sunday, 1-6 Mon-Sat
     const currentHour = today.getHours();
+    const mmdd = rowDateStr.slice(5);
+    const govtHolidayName = TN_GOVT_HOLIDAYS[mmdd];
+
+    // 1. Explicit Sunday Holiday (Sundays are strictly Sunday Holiday, never marked Absent)
+    if (row.isSundayHoliday || (dayOfWeek === 0 && (!row.firstLoginTime || row.status === 'Sunday Holiday'))) {
+      return {
+        status: 'Sunday Holiday',
+        remarksText: 'Sunday Holiday',
+        remarksType: 'standard',
+        isPending: false
+      };
+    }
+
+    // 2. Explicit Government Holiday (Official TN Gazetted Holidays)
+    if (row.isGovtHoliday || (govtHolidayName && (!row.firstLoginTime || row.status === 'Government Holiday'))) {
+      return {
+        status: 'Government Holiday',
+        remarksText: `Government Holiday - ${govtHolidayName || row.holidayName || 'Gazetted'}`,
+        remarksType: 'approved',
+        isPending: false
+      };
+    }
 
     let rawStatus = row.status || 'Present';
     let resolvedStatus = rawStatus;
 
-    // 1. Check if employee has leave applied or approved for this date
+    // 3. Check if employee has leave applied or approved for this date (User requested: leave page-la leave apply panniruntha athu absent-a inga varanum)
     const matchingLeave = leaveMap[rowDateStr];
     if (matchingLeave) {
-      resolvedStatus = 'Leave';
+      resolvedStatus = 'Absent';
     } else if (isToday) {
-      // If today employee hasn't checked in and it's after 1:00 PM (13:00) on Mon-Sat:
-      if (!row.firstLoginTime && (!rawStatus || rawStatus === 'Not Checked In') && currentHour >= 13 && dayOfWeek >= 1 && dayOfWeek <= 6) {
+      // Per day 2 hours past shift start (10:00 AM + 2 hours = 12:00 PM) without checkin -> Absent!
+      if (!row.firstLoginTime && (!rawStatus || rawStatus === 'Not Checked In') && currentHour >= 12 && dayOfWeek >= 1 && dayOfWeek <= 6) {
         resolvedStatus = 'Absent';
       } else {
         resolvedStatus = rawStatus;
@@ -225,13 +273,8 @@ const Attendance = () => {
       const lower = rawStatus.toLowerCase();
       if (lower === 'working' || lower === 'checked in' || lower === 'active') {
         resolvedStatus = row.isLate ? 'Late' : 'Present';
-      } else if (lower === 'absent' || (!row.firstLoginTime && lower !== 'present' && lower !== 'half day' && lower !== 'permission' && lower !== 'leave')) {
-        // If Mon-Sat without login, mark Absent
-        if (dayOfWeek >= 1 && dayOfWeek <= 6) {
-          resolvedStatus = 'Absent';
-        } else {
-          resolvedStatus = 'Weekend';
-        }
+      } else if (lower === 'absent' || (!row.firstLoginTime && lower !== 'present' && lower !== 'half day' && lower !== 'permission')) {
+        resolvedStatus = 'Absent';
       }
     }
 
@@ -252,13 +295,22 @@ const Attendance = () => {
       remarksText = row.correctionReason.replace(/^Approved Correction:\s*/i, '').trim();
       remarksType = 'approved';
     } else if (matchingLeave) {
-      remarksText = `${matchingLeave.leaveType || 'Approved'} Leave`;
+      remarksText = `${matchingLeave.leaveType || 'Casual'} Leave (Approved)`;
       remarksType = 'approved';
     } else if (resolvedStatus === 'Absent') {
-      remarksText = isToday && currentHour >= 13 ? 'Absent (Cutoff 1:00 PM Passed)' : 'Absent - No Punch-In';
+      if (isToday && currentHour >= 12 && !matchingLeave) {
+        remarksText = 'Absent (Cutoff 12:00 PM Passed)';
+      } else if (row.remarks) {
+        remarksText = row.remarks;
+      } else {
+        remarksText = 'Absent - No Punch-In';
+      }
       remarksType = 'standard';
     } else if (resolvedStatus === 'Late' || row.isLate) {
       remarksText = 'Late Login (>10:15 AM)';
+      remarksType = 'standard';
+    } else if (resolvedStatus === 'Not Checked In') {
+      remarksText = 'Standard Shift (10:00 AM – 06:00 PM)';
       remarksType = 'standard';
     } else {
       remarksText = 'Standard Shift';
@@ -551,7 +603,7 @@ const Attendance = () => {
       const currentHour = now.getHours();
       const todayDateKey = now.toISOString().split('T')[0];
       const isApprovedLeaveToday = leaveMap[todayDateKey];
-      const isPast1PM = currentHour >= 13;
+      const isPast2Hours = currentHour >= 12; // Per day 2 hours past 10:00 AM shift start = 12:00 PM
       const isWorkingDay = now.getDay() >= 1 && now.getDay() <= 6;
 
       if (todayData && todayData.firstLoginTime) {
@@ -559,13 +611,13 @@ const Attendance = () => {
         setActiveSession(activeSessData);
       } else if (isApprovedLeaveToday) {
         setTodayAttendance({
-          status: 'Leave',
+          status: 'Absent',
           totalWorkDurationInSeconds: 0,
           totalBreakDurationInSeconds: 0,
           totalLunchDurationInSeconds: 0
         });
         setActiveSession(null);
-      } else if (isPast1PM && isWorkingDay) {
+      } else if (isPast2Hours && isWorkingDay) {
         setTodayAttendance({
           status: 'Absent',
           totalWorkDurationInSeconds: 0,
@@ -920,17 +972,18 @@ const Attendance = () => {
         const attInfo = getRowAttendanceInfo(row);
         const rowStr = row.date ? new Date(row.date).toISOString().split('T')[0] : '';
         const isRowToday = rowStr === todayStr;
-        const breakStr = attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'Weekend'
+        const isHoliday = attInfo.status.includes('Holiday');
+        const breakStr = attInfo.status === 'Absent' || isHoliday || attInfo.status === 'Leave' || attInfo.status === 'Weekend'
           ? '–'
           : (isRowToday ? formatBreakLunch(liveBreakDuration, '30m') : formatBreakLunch(row.totalBreakDurationInSeconds, '30m'));
-        const lunchStr = attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'Weekend'
+        const lunchStr = attInfo.status === 'Absent' || isHoliday || attInfo.status === 'Leave' || attInfo.status === 'Weekend'
           ? '–'
           : (isRowToday ? formatBreakLunch(liveLunchDuration, '1h 00m') : formatBreakLunch(row.totalLunchDurationInSeconds, '1h 00m'));
 
         return {
           'Date': formatDate(row.date),
           'Day': dayName,
-          'Shift Timing': '10:00 AM – 06:00 PM',
+          'Shift Timing': isHoliday ? '–' : '10:00 AM – 06:00 PM',
           'Break': breakStr,
           'Lunch': lunchStr,
           'Attendance Status': attInfo.status,
@@ -1002,11 +1055,181 @@ const Attendance = () => {
   };
 
 
+  // Comprehensive monthly register: covers every day from 02/11/2026 onwards for November 2026
+  const monthRegisterRecords = useMemo(() => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1; // 1-12
+    const currentDay = today.getDate();
+    const currentHour = today.getHours();
+
+    const isCurrentMonth = selectedYear === currentYear && selectedMonth === currentMonth;
+    const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+    // Portal officially in use starting from 02/11/2026
+    let startDay = 1;
+    if (selectedYear === 2026 && selectedMonth === 11) {
+      startDay = 2; // Started from 02/11/2026
+    } else if (new Date(selectedYear, selectedMonth - 1, 1) < new Date(2026, 10, 1)) {
+      return Array.isArray(history) ? history : [];
+    }
+
+    const endDay = isCurrentMonth ? currentDay : daysInMonth;
+
+    // Create lookup by date key (YYYY-MM-DD)
+    const historyMap = {};
+    (Array.isArray(history) ? history : []).forEach(row => {
+      if (row.date) {
+        const d = new Date(row.date);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const key = `${y}-${m}-${day}`;
+        if (!historyMap[key] || row.firstLoginTime || row.totalWorkDurationInSeconds > 0) {
+          historyMap[key] = row;
+        }
+      }
+    });
+
+    const rows = [];
+
+    // Loop descending from endDay down to startDay (newest at top)
+    for (let d = endDay; d >= startDay; d--) {
+      const y = selectedYear;
+      const m = String(selectedMonth).padStart(2, '0');
+      const dayStr = String(d).padStart(2, '0');
+      const dateKey = `${y}-${m}-${dayStr}`;
+      const dateObj = new Date(selectedYear, selectedMonth - 1, d);
+      const dayOfWeek = dateObj.getDay(); // 0 is Sunday, 1-6 Mon-Sat
+      const mmdd = `${m}-${dayStr}`;
+      const isSunday = dayOfWeek === 0;
+      const govtHolidayName = TN_GOVT_HOLIDAYS[mmdd];
+      const isGovtHoliday = Boolean(govtHolidayName);
+      const isToday = isCurrentMonth && d === currentDay;
+
+      const existing = historyMap[dateKey];
+
+      // 1. If an actual punched record exists in history:
+      if (existing && (existing.firstLoginTime || (existing.status && !['absent', 'not checked in'].includes(existing.status.toLowerCase())))) {
+        rows.push(existing);
+        continue;
+      }
+
+      // 2. If it's today and user has active session / first login in todayAttendance state:
+      if (isToday && todayAttendance && todayAttendance.firstLoginTime) {
+        rows.push({
+          ...todayAttendance,
+          date: dateObj.toISOString(),
+          _id: todayAttendance._id || 'today_row',
+          employee: todayAttendance.employee || user
+        });
+        continue;
+      }
+
+      // 3. For unpunched days (login aagama irukura dates):
+      // Sunday Holiday:
+      if (isSunday) {
+        rows.push({
+          _id: `sun_${dateKey}`,
+          date: dateObj.toISOString(),
+          status: 'Sunday Holiday',
+          isSundayHoliday: true,
+          remarks: 'Sunday Holiday',
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0,
+          employee: user
+        });
+        continue;
+      }
+
+      // Government Holiday:
+      if (isGovtHoliday) {
+        rows.push({
+          _id: `gov_${dateKey}`,
+          date: dateObj.toISOString(),
+          status: 'Government Holiday',
+          isGovtHoliday: true,
+          holidayName: govtHolidayName,
+          remarks: `Government Holiday - ${govtHolidayName}`,
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0,
+          employee: user
+        });
+        continue;
+      }
+
+      // Working day (Monday - Saturday):
+      const matchingLeave = leaveMap[dateKey];
+
+      if (isToday) {
+        // Shift starts at 10:00 AM. 2 hours after is 12:00 PM:
+        if (currentHour >= 12) {
+          rows.push({
+            _id: `today_absent_${dateKey}`,
+            date: dateObj.toISOString(),
+            status: 'Absent',
+            remarks: matchingLeave ? `${matchingLeave.leaveType || 'Casual'} Leave (Approved)` : 'Absent (Cutoff 12:00 PM Passed)',
+            totalBreakDurationInSeconds: 0,
+            totalLunchDurationInSeconds: 0,
+            employee: user
+          });
+        } else if (matchingLeave) {
+          rows.push({
+            _id: `today_leave_${dateKey}`,
+            date: dateObj.toISOString(),
+            status: 'Absent',
+            remarks: `${matchingLeave.leaveType || 'Casual'} Leave (Approved)`,
+            totalBreakDurationInSeconds: 0,
+            totalLunchDurationInSeconds: 0,
+            employee: user
+          });
+        } else {
+          rows.push({
+            _id: `today_not_checked_in_${dateKey}`,
+            date: dateObj.toISOString(),
+            status: 'Not Checked In',
+            remarks: 'Standard Shift (10:00 AM – 06:00 PM)',
+            totalBreakDurationInSeconds: 0,
+            totalLunchDurationInSeconds: 0,
+            employee: user
+          });
+        }
+        continue;
+      }
+
+      // Past working days from 02/11/2026 onwards without punch-in:
+      if (matchingLeave) {
+        rows.push({
+          _id: `leave_${dateKey}`,
+          date: dateObj.toISOString(),
+          status: 'Absent',
+          remarks: `${matchingLeave.leaveType || 'Casual'} Leave (Approved)`,
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0,
+          employee: user
+        });
+      } else {
+        rows.push({
+          _id: `absent_${dateKey}`,
+          date: dateObj.toISOString(),
+          status: 'Absent',
+          remarks: 'Absent - No Punch-In',
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0,
+          employee: user
+        });
+      }
+    }
+
+    return rows;
+  }, [history, selectedMonth, selectedYear, leaveMap, todayAttendance, user]);
+
   // Filtered attendance history table records
   const filteredHistory = useMemo(() => {
-    return (Array.isArray(history) ? history : []).filter(row => {
+    return monthRegisterRecords.filter(row => {
       const dateStr = formatDate(row.date) || '';
-      const statusStr = row.status || 'Present';
+      const attInfo = getRowAttendanceInfo(row);
+      const statusStr = attInfo.status || row.status || 'Present';
       const empName = row.employee?.fullName || '';
 
       const matchesSearch = dateStr.toLowerCase().includes(historySearch.toLowerCase()) ||
@@ -1014,11 +1237,12 @@ const Attendance = () => {
                             empName.toLowerCase().includes(historySearch.toLowerCase());
 
       const matchesStatus = historyStatusFilter === 'All' || 
-                            statusStr.toLowerCase() === historyStatusFilter.toLowerCase();
+                            statusStr.toLowerCase() === historyStatusFilter.toLowerCase() ||
+                            (historyStatusFilter === 'Holiday' && statusStr.toLowerCase().includes('holiday'));
 
       return matchesSearch && matchesStatus;
     });
-  }, [history, historySearch, historyStatusFilter]);
+  }, [monthRegisterRecords, historySearch, historyStatusFilter]);
 
   // Key Attendance Stats
   const formatDuration = (seconds) => {
@@ -1056,7 +1280,21 @@ const Attendance = () => {
   const hasActiveSession = Boolean(activeSession && (activeSession.status === 'Active' || activeSession.startTime));
   const activeSessionType = hasActiveSession ? activeSession.sessionType : null;
 
-  const currentStatus = todayAttendance?.status || 'Not Checked In';
+  const nowTime = new Date();
+  const currentHr = nowTime.getHours();
+  const todayKeyStr = nowTime.toISOString().split('T')[0];
+  const isLeaveTodayActive = Boolean(leaveMap[todayKeyStr]);
+  const isPast2HrToday = currentHr >= 12;
+  const isWorkingDayToday = nowTime.getDay() >= 1 && nowTime.getDay() <= 6;
+
+  let currentStatus = todayAttendance?.status || 'Not Checked In';
+  if (!todayAttendance?.firstLoginTime) {
+    if (isLeaveTodayActive) {
+      currentStatus = 'Absent';
+    } else if (isPast2HrToday && isWorkingDayToday) {
+      currentStatus = 'Absent';
+    }
+  }
   const isCheckedOut = (Boolean(todayAttendance?.lastLogoutTime) || todayAttendance?.status === 'Checked Out') && !hasActiveSession;
   const isOnBreak = activeSessionType === 'Break' || currentStatus === 'On Break';
   const isOnLunch = activeSessionType === 'Lunch' || currentStatus === 'On Lunch';
@@ -1521,7 +1759,7 @@ const Attendance = () => {
 
             {/* Status Filter Chips */}
             <div className="att-status-filters">
-              {['All', 'Present', 'Absent', 'Half Day', 'Permission', 'Late'].map(tab => (
+              {['All', 'Present', 'Absent', 'Half Day', 'Permission', 'Late', 'Holiday'].map(tab => (
                 <button
                   key={tab}
                   className={`att-filter-chip ${historyStatusFilter === tab ? 'active' : ''}`}
@@ -1580,11 +1818,15 @@ const Attendance = () => {
                       </td>
 
                       <td>
-                        <span className="att-shift-time">10:00 AM – 06:00 PM</span>
+                        {attInfo.status.includes('Holiday') ? (
+                          <span className="att-na-dash">–</span>
+                        ) : (
+                          <span className="att-shift-time">10:00 AM – 06:00 PM</span>
+                        )}
                       </td>
 
                       <td>
-                        {attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'Weekend' ? (
+                        {attInfo.status === 'Absent' || attInfo.status.includes('Holiday') || attInfo.status === 'Leave' || attInfo.status === 'Weekend' ? (
                           <span className="att-na-dash">–</span>
                         ) : (
                           <span className="att-break-badge">
@@ -1594,7 +1836,7 @@ const Attendance = () => {
                       </td>
 
                       <td>
-                        {attInfo.status === 'Absent' || attInfo.status === 'Leave' || attInfo.status === 'Weekend' ? (
+                        {attInfo.status === 'Absent' || attInfo.status.includes('Holiday') || attInfo.status === 'Leave' || attInfo.status === 'Weekend' ? (
                           <span className="att-na-dash">–</span>
                         ) : (
                           <span className="att-lunch-badge">
