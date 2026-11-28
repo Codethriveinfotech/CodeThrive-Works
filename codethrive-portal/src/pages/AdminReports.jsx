@@ -136,14 +136,23 @@ const AdminReports = () => {
     try {
       setLoading(true);
       const res = await api.get('/daily-reports');
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        setReports(res.data.data.filter(r => !isSeedReport(r)));
-      } else {
-        setReports([]);
-      }
+      let allReps = (res.data?.success && Array.isArray(res.data.data)) ? res.data.data : [];
+      try {
+        const local = JSON.parse(localStorage.getItem('cti_daily_reports') || '[]');
+        if (Array.isArray(local)) {
+          local.forEach(lr => {
+            if (!allReps.some(r => r._id === lr._id)) allReps.push(lr);
+          });
+        }
+      } catch (e) {}
+      setReports(allReps.filter(r => !isSeedReport(r)));
     } catch (err) {
       console.warn('API error fetching reports:', err);
-      setReports([]);
+      let localReps = [];
+      try {
+        localReps = JSON.parse(localStorage.getItem('cti_daily_reports') || '[]');
+      } catch (e) {}
+      setReports(localReps.filter(r => !isSeedReport(r)));
     } finally {
       setLoading(false);
     }

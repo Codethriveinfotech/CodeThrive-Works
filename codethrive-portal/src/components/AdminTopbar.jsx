@@ -10,6 +10,7 @@ import SettingsModal from './SettingsModal';
 import GlobalSearchBar from './GlobalSearchBar';
 import api from '../utils/api';
 import { generateEmployeeMasterDossierPDF } from '../utils/employeeMasterDossierPdf';
+import logoImg from '../assets/logo.png';
 
 const AdminTopbar = () => {
   const { user } = useAuth();
@@ -305,11 +306,44 @@ const AdminTopbar = () => {
             <Menu size={22} color="#ffffff" />
           </button>
 
-          <GlobalSearchBar 
-            isAdmin={true} 
-            placeholder="Search Admin Portal (Employees, Reports, Tasks)..." 
-            onOpenSettings={() => setIsSettingsOpen(true)}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', userSelect: 'none' }}>
+            <img 
+              src={logoImg} 
+              alt="CodeThrive Infotech" 
+              style={{ 
+                width: '34px', 
+                height: '34px', 
+                objectFit: 'contain',
+                borderRadius: '8px',
+                filter: 'drop-shadow(0 0 10px rgba(56, 189, 248, 0.5))',
+                flexShrink: 0
+              }} 
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', lineHeight: 1 }}>
+              <span style={{ 
+                fontSize: '1.15rem', 
+                fontWeight: 900, 
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+                background: 'linear-gradient(135deg, #ffffff 0%, #38bdf8 65%, #0072ff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
+                CODETHRIVE
+              </span>
+              <span style={{ 
+                fontSize: '1.12rem', 
+                fontWeight: 900, 
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+                background: 'linear-gradient(135deg, #00ff87 0%, #60efff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
+                INFOTECH
+              </span>
+            </div>
+          </div>
         </div>
         
         <div className="topbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', position: 'relative' }}>

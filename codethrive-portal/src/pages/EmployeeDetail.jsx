@@ -374,6 +374,7 @@ const EmployeeDetail = () => {
   // Daily Reports State
   const [reportDateFilter, setReportDateFilter] = useState('All');
   const [reportSearchTerm, setReportSearchTerm] = useState('');
+  const [reportViewMode, setReportViewMode] = useState('all'); // 'all' = Daily Reports, 'src' = SRC Deliverables only
   const [selectedReportForModal, setSelectedReportForModal] = useState(null);
 
   // Per-Day Attendance Audit State
@@ -889,8 +890,20 @@ const EmployeeDetail = () => {
       }
 
       // Match Daily Reports (Comprehensive match across ID, EmployeeID, Email, and Name)
-      const allReports = reportRes?.data?.data || reportRes?.data || [];
-      if (Array.isArray(allReports) && allReports.length > 0) {
+      let allReports = reportRes?.data?.data || reportRes?.data || [];
+      if (!Array.isArray(allReports)) allReports = [];
+      try {
+        const localReps = JSON.parse(localStorage.getItem('cti_daily_reports') || '[]');
+        if (Array.isArray(localReps)) {
+          localReps.forEach(lr => {
+            if (!allReports.some(r => r._id === lr._id)) {
+              allReports.push(lr);
+            }
+          });
+        }
+      } catch (e) {}
+
+      if (allReports.length > 0) {
         const empReports = allReports.filter(r => {
           if (isSeedR(r)) return false;
           const rEmp = r.employee || {};
@@ -2579,14 +2592,17 @@ CodeThrive Infotech • Confidential Personnel Archive
         {/* TAB 3: DAILY WORK REPORTS & SRC DOWNLOAD */}
         {activeTab === 'reports' && (() => {
           const allReports = employee.sentByEmployee?.dailyReports || [];
+          const srcReports = allReports.filter(r => r.srcFileName || r.srcFileUrl || (r.attachments && r.attachments.length > 0));
           const reportDates = Array.from(new Set(allReports.map(r => r.date).filter(Boolean)));
           const searchLower = reportSearchTerm.toLowerCase();
-          const displayedReports = allReports.filter(r => {
+          const targetReportsList = reportViewMode === 'src' ? srcReports : allReports;
+          const displayedReports = targetReportsList.filter(r => {
             const matchesDate = reportDateFilter === 'All' || r.date === reportDateFilter;
             const matchesSearch = !reportSearchTerm || 
               (r.title && r.title.toLowerCase().includes(searchLower)) ||
               (r.tasksWorked && r.tasksWorked.toLowerCase().includes(searchLower)) ||
               (r.workSummary && r.workSummary.toLowerCase().includes(searchLower)) ||
+              (r.srcFileName && r.srcFileName.toLowerCase().includes(searchLower)) ||
               (r.date && r.date.includes(searchLower));
             return matchesDate && matchesSearch;
           });
@@ -2608,32 +2624,77 @@ CodeThrive Infotech • Confidential Personnel Archive
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <FileText size={18} color="var(--primary-light)" /> 
-                    Daily Work Reports Submitted by {employee.fullName}
+                    Daily Work Reports & SRC Deliverables
                   </h3>
                   <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
-                    Inspect daily submissions, review completed deliverables, and download submitted SRC packages ({allReports.length} reports filed)
+                    Submitted by {employee.fullName} • {allReports.length} reports filed, {srcReports.length} SRC files attached
                   </span>
                 </div>
 
-                {/* Date Selector & Search Filters */}
+                {/* Sub-view Switcher & Filters */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  {/* View Mode Toggle: All Reports vs SRC Deliverables */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(0,0,0,0.3)', padding: '3px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setReportViewMode('all')}
+                      style={{
+                        background: reportViewMode === 'all' ? 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)' : 'transparent',
+                        color: reportViewMode === 'all' ? '#ffffff' : '#94a3b8',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '0.4rem 0.85rem',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        transition: 'all 0.2s ease',
+                        boxShadow: reportViewMode === 'all' ? '0 4px 12px rgba(2, 132, 199, 0.35)' : 'none'
+                      }}
+                    >
+                      <FileText size={14} /> Daily Reports ({allReports.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReportViewMode('src')}
+                      style={{
+                        background: reportViewMode === 'src' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent',
+                        color: reportViewMode === 'src' ? '#ffffff' : '#94a3b8',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '0.4rem 0.85rem',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        transition: 'all 0.2s ease',
+                        boxShadow: reportViewMode === 'src' ? '0 4px 12px rgba(16, 185, 129, 0.35)' : 'none'
+                      }}
+                    >
+                      <FileArchive size={14} /> SRC Deliverables ({srcReports.length})
+                    </button>
+                  </div>
+
                   {/* Specific Date / Report Selector */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#38bdf8', fontWeight: 600 }}>Select Date / Report:</span>
                     <select
                       value={reportDateFilter}
                       onChange={e => setReportDateFilter(e.target.value)}
                       className="input-box"
-                      style={{ width: 'auto', minWidth: '170px', height: '38px', fontSize: '0.84rem' }}
+                      style={{ width: 'auto', minWidth: '150px', height: '36px', fontSize: '0.82rem' }}
                     >
-                      <option value="All">All Submitted Reports ({allReports.length})</option>
+                      <option value="All">All Dates ({targetReportsList.length})</option>
                       {reportDates.map(d => (
-                        <option key={d} value={d}>{formatDate(d)} Report</option>
+                        <option key={d} value={d}>{formatDate(d)}</option>
                       ))}
                     </select>
                   </div>
 
-                  <div style={{ position: 'relative', minWidth: '200px' }}>
+                  <div style={{ position: 'relative', minWidth: '180px' }}>
                     <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input 
                       type="text"
@@ -2641,88 +2702,119 @@ CodeThrive Infotech • Confidential Personnel Archive
                       value={reportSearchTerm}
                       onChange={e => setReportSearchTerm(e.target.value)}
                       className="input-box"
-                      style={{ paddingLeft: '2.1rem', height: '38px', fontSize: '0.84rem' }}
+                      style={{ paddingLeft: '2.1rem', height: '36px', fontSize: '0.82rem' }}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Dedicated SRC Deliverables Quick Access Vault */}
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(15, 23, 42, 0.8) 100%)',
-                border: '1.5px solid rgba(56, 189, 248, 0.35)',
-                borderRadius: '16px',
-                padding: '1.1rem 1.4rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '1rem',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38bdf8' }}>
-                    <FileArchive size={22} />
-                  </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '0.98rem', color: '#ffffff', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      📦 Employee SRC Deliverable Files & Code Vault
-                      <span style={{ fontSize: '0.72rem', background: '#0284c7', color: '#fff', padding: '2px 8px', borderRadius: '12px' }}>
-                        {allReports.filter(r => r.srcFileName || r.srcFileUrl).length} Attached
-                      </span>
-                    </h4>
-                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', display: 'block', marginTop: '2px' }}>
-                      All daily source code archives, sprint deliverables, and project packages uploaded by {employee.fullName}
+              {reportViewMode === 'src' ? (
+                displayedReports.length === 0 ? (
+                  <div className="empty-state" style={{ padding: '2.5rem', textAlign: 'center', background: 'rgba(15, 23, 42, 0.45)', borderRadius: '14px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
+                    <FileArchive size={36} color="#38bdf8" style={{ margin: '0 auto 0.75rem auto', display: 'block', opacity: 0.6 }} />
+                    <h4 style={{ margin: '0 0 0.3rem 0', color: '#fff' }}>No SRC Deliverables Uploaded Yet</h4>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', maxWidth: '520px', margin: '0 auto' }}>
+                      When {employee.fullName} attaches source code zip archives or sprint deliverable files to their daily reports, they will be listed here separately for one-click download.
                     </span>
                   </div>
-                </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+                    {displayedReports.map(r => (
+                      <div 
+                        key={r._id}
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%)',
+                          border: '1.5px solid rgba(56, 189, 248, 0.3)',
+                          borderRadius: '14px',
+                          padding: '1.25rem',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.9rem',
+                          boxShadow: '0 4px 16px rgba(0,0,0,0.25)'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38bdf8', flexShrink: 0 }}>
+                              <FileArchive size={20} />
+                            </div>
+                            <div>
+                              <h4 style={{ margin: 0, fontSize: '0.92rem', color: '#ffffff', fontWeight: 700, lineHeight: 1.3 }}>
+                                {r.srcFileName || `${(employee.fullName || 'Employee').replace(/\s+/g, '_')}_SRC.zip`}
+                              </h4>
+                              <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 600 }}>
+                                {r.srcFileSize || 'SRC Package Ready'}
+                              </span>
+                            </div>
+                          </div>
+                          <StatusBadge status={r.status || 'Submitted'} />
+                        </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                  {allReports.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadSRC(allReports[0])}
-                      style={{
-                        background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                        border: 'none',
-                        color: '#ffffff',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '10px',
-                        fontSize: '0.82rem',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.45rem',
-                        fontWeight: 700,
-                        boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)'
-                      }}
-                    >
-                      <Download size={14} /> Download Latest SRC
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('documents')}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      color: '#cbd5e1',
-                      padding: '0.5rem 0.95rem',
-                      borderRadius: '10px',
-                      fontSize: '0.82rem',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.45rem',
-                      fontWeight: 600
-                    }}
-                  >
-                    <FolderArchive size={14} color="#a5b4fc" /> View Uploaded Documents
-                  </button>
-                </div>
-              </div>
+                        <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '8px', padding: '0.65rem 0.85rem', display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.8rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#94a3b8' }}>Submission Date:</span>
+                            <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{formatDate(r.date || r.createdAt)}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#94a3b8' }}>Project / Task:</span>
+                            <span style={{ color: '#60a5fa', fontWeight: 600, maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {r.projectTitle || r.tasksWorked || 'Development Sprint'}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#94a3b8' }}>Hours Logged:</span>
+                            <span style={{ color: '#34d399', fontWeight: 600 }}>{r.hoursWorked || r.hoursLogged || '8h 00m'}</span>
+                          </div>
+                        </div>
 
-              {displayedReports.length === 0 ? (
+                        <div style={{ display: 'flex', gap: '0.6rem', marginTop: 'auto' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadSRC(r)}
+                            style={{
+                              flex: 1,
+                              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                              border: 'none',
+                              color: '#ffffff',
+                              padding: '0.55rem',
+                              borderRadius: '8px',
+                              fontSize: '0.82rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.45rem',
+                              boxShadow: '0 2px 10px rgba(2, 132, 199, 0.35)'
+                            }}
+                          >
+                            <Download size={14} /> Download SRC File
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReportForModal(r)}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.06)',
+                              border: '1px solid rgba(255, 255, 255, 0.15)',
+                              color: '#e2e8f0',
+                              padding: '0.55rem 0.85rem',
+                              borderRadius: '8px',
+                              fontSize: '0.82rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem'
+                            }}
+                            title="Inspect Linked Daily Report"
+                          >
+                            <Eye size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : displayedReports.length === 0 ? (
                 <div className="empty-state" style={{ padding: '2.5rem', textAlign: 'center', background: 'rgba(15, 23, 42, 0.45)', borderRadius: '14px', border: '1px dashed rgba(255, 255, 255, 0.1)' }}>
                   <FileText size={36} color="var(--text-muted)" style={{ margin: '0 auto 0.75rem auto', display: 'block', opacity: 0.6 }} />
                   <h4 style={{ margin: '0 0 0.3rem 0', color: '#fff' }}>No Daily Reports Found for this Selection</h4>

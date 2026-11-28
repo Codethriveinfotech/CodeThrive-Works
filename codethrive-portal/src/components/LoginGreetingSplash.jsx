@@ -3,7 +3,7 @@ import { Sun, Sunrise, Moon, Sparkles, ShieldCheck } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 import './LoginGreetingSplash.css';
 
-const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText }) => {
+const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText, isAdmin }) => {
   const [isFading, setIsFading] = useState(false);
 
   useEffect(() => {
@@ -82,74 +82,99 @@ const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText 
           <div className="greeting-logo-glow"></div>
           <img
             src={logoImg}
-            alt="CodeThrive Logo"
+            alt="CodeThrive Infotech"
             className="greeting-splash-logo"
           />
         </div>
 
-        {/* Dynamic Badge */}
-        <div className="greeting-badge-row">
-          {isFirstTime ? (
-            <span className="greeting-badge welcome-badge">
-              <Sparkles size={14} className="sparkle-spin" />
-              <span>FIRST TIME ONBOARDING • WELCOME</span>
-            </span>
-          ) : (
-            <span className={`greeting-badge ${iconTheme}-badge`}>
-              <GreetingIcon size={14} className="greeting-icon-pulse" />
-              <span>{timeBadge}</span>
-            </span>
-          )}
-        </div>
-
-        {/* Primary Greeting Title */}
-        <div className="greeting-title-container">
-          {isFirstTime ? (
-            <h1 className="greeting-main-heading welcome-heading">
-              Welcome To CTI
-            </h1>
-          ) : (
-            <h1 className="greeting-main-heading time-heading">
-              {timeGreeting}, <span className="greeting-user-name">{firstName}</span>
-            </h1>
-          )}
-        </div>
-
-        {/* User Details Pill */}
-        <div className="greeting-user-pill">
-          <div className="user-avatar-mini">
-            {user?.profilePhoto ? (
-              <img src={user.profilePhoto} alt={displayName} />
-            ) : (
-              <span>{firstName.charAt(0)}</span>
-            )}
-          </div>
-          <div className="user-info-text">
-            <span className="user-name-full">{displayName}</span>
-            <span className="user-meta-sub">
-              {designation} {employeeId ? `• ID: ${employeeId}` : ''}
-            </span>
-          </div>
-        </div>
-
-        {/* Subtitle Message */}
-        <p className="greeting-subtitle">
-          {isFirstTime
-            ? `Welcome to the CodeThrive Infotech family, ${firstName}! We're thrilled to have you onboard.`
-            : subtitle}
-        </p>
-
-        {/* Progress Loading Indicator */}
-        <div className="greeting-progress-container">
-          <div className="greeting-progress-track">
-            <div className="greeting-progress-fill">
-              <div className="progress-glow-head"></div>
+        {isAdmin || user?.role === 'admin' ? (
+          <>
+            {/* Simple Executive Greeting for Admin */}
+            <div className="greeting-title-container" style={{ margin: '1.25rem 0 0.5rem 0' }}>
+              <h1 className="greeting-main-heading welcome-heading" style={{ fontSize: '2.1rem' }}>
+                Welcome Back Admin
+              </h1>
             </div>
-          </div>
-          <span className="greeting-loading-text">
-            {customRedirectText || 'Entering CodeThrive Infotech Workspace...'}
-          </span>
-        </div>
+
+            {/* Progress Loading Indicator */}
+            <div className="greeting-progress-container" style={{ marginTop: '1rem' }}>
+              <div className="greeting-progress-track">
+                <div className="greeting-progress-fill">
+                  <div className="progress-glow-head"></div>
+                </div>
+              </div>
+              <span className="greeting-loading-text">
+                {customRedirectText || 'Entering CodeThrive Infotech Workspace...'}
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Dynamic Badge */}
+            <div className="greeting-badge-row">
+              {isFirstTime ? (
+                <span className="greeting-badge welcome-badge">
+                  <Sparkles size={14} className="sparkle-spin" />
+                  <span>FIRST TIME ONBOARDING • WELCOME</span>
+                </span>
+              ) : (
+                <span className={`greeting-badge ${iconTheme}-badge`}>
+                  <GreetingIcon size={14} className="greeting-icon-pulse" />
+                  <span>{timeBadge}</span>
+                </span>
+              )}
+            </div>
+
+            {/* Primary Greeting Title */}
+            <div className="greeting-title-container">
+              {isFirstTime ? (
+                <h1 className="greeting-main-heading welcome-heading">
+                  Welcome To CTI
+                </h1>
+              ) : (
+                <h1 className="greeting-main-heading time-heading">
+                  {timeGreeting}, <span className="greeting-user-name">{firstName}</span>
+                </h1>
+              )}
+            </div>
+
+            {/* User Details Pill */}
+            <div className="greeting-user-pill">
+              <div className="user-avatar-mini">
+                {user?.profilePhoto ? (
+                  <img src={user.profilePhoto} alt={displayName} />
+                ) : (
+                  <span>{firstName.charAt(0)}</span>
+                )}
+              </div>
+              <div className="user-info-text">
+                <span className="user-name-full">{displayName}</span>
+                <span className="user-meta-sub">
+                  {designation} {employeeId ? `• ID: ${employeeId}` : ''}
+                </span>
+              </div>
+            </div>
+
+            {/* Subtitle Message */}
+            <p className="greeting-subtitle">
+              {isFirstTime
+                ? `Welcome to the CodeThrive Infotech family, ${firstName}! We're thrilled to have you onboard.`
+                : subtitle}
+            </p>
+
+            {/* Progress Loading Indicator */}
+            <div className="greeting-progress-container">
+              <div className="greeting-progress-track">
+                <div className="greeting-progress-fill">
+                  <div className="progress-glow-head"></div>
+                </div>
+              </div>
+              <span className="greeting-loading-text">
+                {customRedirectText || 'Entering CodeThrive Infotech Workspace...'}
+              </span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -270,10 +270,12 @@ const DailyReports = () => {
       const res = await api.post('/daily-reports', payload, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      let finalRep = null;
       if (res.data?.success) {
-        setReports([res.data.data, ...reports]);
+        finalRep = res.data.data;
+        setReports([finalRep, ...reports]);
       } else {
-        const fallbackRep = {
+        finalRep = {
           _id: 'rep-' + Date.now(),
           ...formData,
           srcFileName: selectedFile ? selectedFile.name : null,
@@ -282,8 +284,15 @@ const DailyReports = () => {
           status: 'Submitted',
           createdAt: new Date().toISOString()
         };
-        setReports([fallbackRep, ...reports]);
+        setReports([finalRep, ...reports]);
       }
+      try {
+        if (finalRep) {
+          const stored = JSON.parse(localStorage.getItem('cti_daily_reports') || '[]');
+          const updated = [finalRep, ...stored.filter(s => s._id !== finalRep._id)];
+          localStorage.setItem('cti_daily_reports', JSON.stringify(updated));
+        }
+      } catch (e) {}
       setIsSubmitModalOpen(false);
       resetForm();
     } catch (err) {
@@ -297,6 +306,11 @@ const DailyReports = () => {
         status: 'Submitted',
         createdAt: new Date().toISOString()
       };
+      try {
+        const stored = JSON.parse(localStorage.getItem('cti_daily_reports') || '[]');
+        const updated = [fallbackRep, ...stored.filter(s => s._id !== fallbackRep._id)];
+        localStorage.setItem('cti_daily_reports', JSON.stringify(updated));
+      } catch (e) {}
       setReports([fallbackRep, ...reports]);
       setIsSubmitModalOpen(false);
       resetForm();
@@ -337,10 +351,12 @@ const DailyReports = () => {
       const res = await api.post('/daily-reports', payload, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      let finalRep = null;
       if (res.data?.success) {
-        setReports([res.data.data, ...reports]);
+        finalRep = res.data.data;
+        setReports([finalRep, ...reports]);
       } else {
-        const fallbackRep = {
+        finalRep = {
           _id: 'src-' + Date.now(),
           ...srcFormData,
           workSummary: deliverableSummary,
@@ -351,8 +367,15 @@ const DailyReports = () => {
           status: 'Submitted',
           createdAt: new Date().toISOString()
         };
-        setReports([fallbackRep, ...reports]);
+        setReports([finalRep, ...reports]);
       }
+      try {
+        if (finalRep) {
+          const stored = JSON.parse(localStorage.getItem('cti_daily_reports') || '[]');
+          const updated = [finalRep, ...stored.filter(s => s._id !== finalRep._id)];
+          localStorage.setItem('cti_daily_reports', JSON.stringify(updated));
+        }
+      } catch (e) {}
       setIsSrcModalOpen(false);
       resetSrcModal();
       alert('✅ Project document/code archive submitted successfully to Admin!');
@@ -369,6 +392,11 @@ const DailyReports = () => {
         status: 'Submitted',
         createdAt: new Date().toISOString()
       };
+      try {
+        const stored = JSON.parse(localStorage.getItem('cti_daily_reports') || '[]');
+        const updated = [fallbackRep, ...stored.filter(s => s._id !== fallbackRep._id)];
+        localStorage.setItem('cti_daily_reports', JSON.stringify(updated));
+      } catch (e) {}
       setReports([fallbackRep, ...reports]);
       setIsSrcModalOpen(false);
       resetSrcModal();
