@@ -46,18 +46,6 @@
   animation: float2 12s infinite ease-in-out alternate;
 }
 
-.sphere-3 {
-  width: 450px;
-  height: 450px;
-  background: radial-gradient(circle, #10b981 0%, rgba(16, 185, 129, 0) 70%);
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  opacity: 0.18;
-  filter: blur(100px);
-  animation: floatPulse 8s infinite ease-in-out alternate;
-}
-
 @keyframes float1 {
   0% { transform: translate(0, 0) scale(1); }
   100% { transform: translate(50px, 45px) scale(1.08); }
@@ -66,11 +54,6 @@
 @keyframes float2 {
   0% { transform: translate(0, 0) scale(1); }
   100% { transform: translate(-50px, -45px) scale(1.06); }
-}
-
-@keyframes floatPulse {
-  0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.12; }
-  100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.22; }
 }
 
 /* Floating Particles */
@@ -115,7 +98,7 @@
 @keyframes introPop {
   0% { 
     opacity: 0;
-    transform: scale(0.88) translateY(24px); 
+    transform: scale(0.9) translateY(20px); 
   }
   100% { 
     opacity: 1;
@@ -129,25 +112,31 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 1.6rem;
+  margin-bottom: 1.5rem;
   background: transparent !important;
 }
 
 .splash-logo {
   position: relative;
   z-index: 2;
-  width: 145px;
-  max-width: 45vw;
+  width: 170px;
+  max-width: 50vw;
   height: auto;
   object-fit: contain;
   background: transparent !important;
-  filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.75)) drop-shadow(0 0 45px rgba(16, 185, 129, 0.4));
-  animation: logoBreath 3s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.45)) drop-shadow(0 0 50px rgba(0, 255, 135, 0.25));
+  animation: logoSpringIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes logoBreath {
-  0% { transform: scale(0.97); }
-  100% { transform: scale(1.03); }
+@keyframes logoSpringIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Company Title */
@@ -159,13 +148,14 @@
   gap: 0.45rem 0.75rem;
   font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
   filter: drop-shadow(0 4px 18px rgba(0, 198, 255, 0.35));
-  margin-bottom: 1.1rem;
+  margin: 0;
 }
 
 .company-title .brand-main {
   font-size: clamp(2rem, 6vw, 3.4rem);
   font-weight: 900;
   letter-spacing: 2.5px;
+  line-height: 1.1;
   background: linear-gradient(135deg, #ffffff 0%, #38bdf8 50%, #0072ff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -175,65 +165,47 @@
   font-size: clamp(1.8rem, 5.5vw, 3.1rem);
   font-weight: 800;
   letter-spacing: 3.5px;
+  line-height: 1.1;
   background: linear-gradient(135deg, #00ff87 0%, #60efff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Tagline Container */
-.splash-tagline-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.splash-tagline-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.45rem 1.2rem;
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 9999px;
-  font-size: 0.78rem;
+/* Official Tagline */
+.splash-tagline {
+  margin: 0.85rem 0 0 0;
+  font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+  font-size: clamp(0.85rem, 2.2vw, 1.1rem);
   font-weight: 600;
-  color: #94a3b8;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  animation: pillFadeIn 0.8s ease-out 0.3s both;
+  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+  animation: taglineFadeIn 0.8s ease-out 0.25s both;
 }
 
-@keyframes pillFadeIn {
-  0% { opacity: 0; transform: translateY(12px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-.splash-tagline-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #38bdf8;
-  box-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8;
-  animation: dotBlink 2s ease-in-out infinite alternate;
-}
-
-@keyframes dotBlink {
-  0% { opacity: 0.4; transform: scale(0.85); }
-  100% { opacity: 1; transform: scale(1.2); }
+@keyframes taglineFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 480px) {
   .splash-logo {
-    width: 110px;
+    width: 130px;
   }
   .company-title {
     gap: 0.3rem 0.5rem;
   }
-  .splash-tagline-pill {
-    font-size: 0.7rem;
-    padding: 0.38rem 0.95rem;
+  .splash-tagline {
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
   }
 }
