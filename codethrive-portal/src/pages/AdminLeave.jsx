@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import Card from '../components/common/Card';
 import StatusBadge from '../components/common/StatusBadge';
+import Modal from '../components/common/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, CheckCircle, XCircle, Calendar, Clock, 
@@ -10,12 +11,27 @@ import {
 import './Admin.css';
 import './Modules.css';
 
+const fmtLeaveDate = (d) => {
+  if (!d) return '—';
+  const cleanStr = String(d).split('T')[0];
+  const parts = cleanStr.split('-');
+  if (parts.length === 3) {
+    const y = parts[0];
+    const m = parseInt(parts[1], 10);
+    const day = parts[2];
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${day} ${monthNames[m - 1] || parts[1]} ${y}`;
+  }
+  return cleanStr;
+};
+
 const AdminLeave = () => {
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedLeave, setSelectedLeave] = useState(null);
+  const [readingReasonModal, setReadingReasonModal] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
   useEffect(() => {
@@ -155,57 +171,27 @@ const AdminLeave = () => {
       </AnimatePresence>
 
       {/* Hero Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(139, 92, 246, 0.1), rgba(15, 23, 42, 0.6))',
-        borderRadius: '20px',
-        padding: '2rem 2.2rem',
-        border: '1px solid rgba(245, 158, 11, 0.25)',
-        backdropFilter: 'blur(16px)',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+      <div className="ultra-premium-hero" style={{
+        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(45, 27, 75, 0.75) 50%, rgba(15, 23, 42, 0.92) 100%)',
+        border: '1px solid rgba(245, 158, 11, 0.35)',
         display: 'flex',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '1.5rem',
-        position: 'relative',
-        overflow: 'hidden'
+        gap: '1.25rem'
       }}>
-        <div style={{
-          position: 'absolute',
-          top: '-40px',
-          right: '-40px',
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 70%)',
-          pointerEvents: 'none'
-        }} />
-
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(245, 158, 11, 0.5)'
-            }}>
-              <Calendar size={22} color="#fff" />
-            </div>
-            <div>
-              <h1 style={{ fontSize: '1.9rem', fontWeight: 800, margin: 0, background: 'linear-gradient(90deg, #fff, #fde68a)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Leave Management
-              </h1>
-              <span style={{ fontSize: '0.85rem', color: '#fcd34d', fontWeight: 500 }}>HR Approval & Time-Off Console</span>
-            </div>
+          <div className="admin-hero-pill-badge" style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.35)', color: '#fde68a' }}>
+            <Sparkles size={13} style={{ color: '#fbbf24' }} />
+            <span>HR Leave & Time-Off Governance</span>
+            <span style={{ opacity: 0.5 }}>•</span>
+            <span style={{ color: '#34d399' }}>Live Approvals</span>
           </div>
-          <p style={{ color: 'var(--text-muted)', margin: '0.4rem 0 0 0', fontSize: '0.95rem', maxWidth: '600px' }}>
+          <h1 className="welcome-title-glowing" style={{ fontSize: '1.9rem', margin: '0 0 0.35rem 0' }}>Leave Management</h1>
+          <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.88rem' }}>
             Review pending leave requests, authorize staff time-off, and track real-time leave balances across departments.
           </p>
         </div>
-
       </div>
 
       {/* KPI Stats Grid */}
@@ -434,19 +420,16 @@ const AdminLeave = () => {
                 fontFamily: "'Outfit', sans-serif",
                 fontWeight: 700
               }}>
-                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px 0 0 12px' }}>Employee</th>
-                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)' }}>Leave Type</th>
-                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)' }}>Duration & Dates</th>
-                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)' }}>Reason Overview</th>
-                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'center', background: 'rgba(30, 41, 59, 0.4)' }}>Status</th>
-                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'right', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '0 12px 12px 0' }}>Actions</th>
+                <th style={{ padding: '0.85rem 1.15rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px 0 0 12px' }}>Employee</th>
+                <th style={{ padding: '0.85rem 1.15rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)' }}>Leave Type</th>
+                <th style={{ padding: '0.85rem 1.15rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)' }}>Date Period</th>
+                <th style={{ padding: '0.85rem 1.15rem', textAlign: 'left', background: 'rgba(30, 41, 59, 0.4)' }}>Reason</th>
+                <th style={{ padding: '0.85rem 1.15rem', textAlign: 'center', background: 'rgba(30, 41, 59, 0.4)' }}>Status</th>
+                <th style={{ padding: '0.85rem 1.15rem', textAlign: 'right', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '0 12px 12px 0' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredLeaves.map((req, index) => {
-                const days = calculateDays(req.startDate, req.endDate);
-                const empInitials = req.employee?.avatar || req.employee?.fullName?.split(' ').map(n => n[0]).join('') || 'EMP';
-                
                 return (
                   <motion.tr 
                     key={req._id}
@@ -462,38 +445,24 @@ const AdminLeave = () => {
                     }}
                     className="hover-lift"
                   >
-                    {/* Employee info */}
-                    <td style={{ padding: '1.1rem 1.25rem', borderRadius: '16px 0 0 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: '160px' }}>
-                        <div style={{
-                          width: '42px',
-                          height: '42px',
-                          borderRadius: '12px',
-                          background: 'linear-gradient(135deg, #6366f1, #3b82f6)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#fff',
-                          fontWeight: 800,
-                          fontSize: '0.95rem',
-                          boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
-                          flexShrink: 0
-                        }}>
-                          {empInitials}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.95rem', whiteSpace: 'nowrap' }}>{req.employee?.fullName}</span>
-                          <span style={{ fontSize: '0.785rem', color: '#60a5fa', fontWeight: 600, whiteSpace: 'nowrap' }}>{req.employee?.employeeId || req.employeeId}</span>
-                        </div>
+                    {/* Employee info: Name & ID without avatar image/circle */}
+                    <td style={{ padding: '0.9rem 1.15rem', borderRadius: '16px 0 0 16px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.92rem', whiteSpace: 'nowrap' }}>
+                          {req.employee?.fullName || 'Employee'}
+                        </span>
+                        <span style={{ fontSize: '0.78rem', color: '#60a5fa', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                          {req.employee?.employeeId || req.employeeId}
+                        </span>
                       </div>
                     </td>
 
                     {/* Leave Type */}
-                    <td style={{ padding: '1.1rem 1.25rem' }}>
+                    <td style={{ padding: '0.9rem 1.15rem' }}>
                       <span style={{
-                        padding: '0.4rem 0.85rem',
+                        padding: '0.35rem 0.8rem',
                         borderRadius: '20px',
-                        fontSize: '0.8rem',
+                        fontSize: '0.78rem',
                         fontWeight: 700,
                         whiteSpace: 'nowrap',
                         display: 'inline-block',
@@ -511,108 +480,108 @@ const AdminLeave = () => {
                       </span>
                     </td>
 
-                    {/* Duration */}
-                    <td style={{ padding: '1.1rem 1.25rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '150px' }}>
-                        <div style={{ fontSize: '0.88rem', color: '#f1f5f9', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                          {req.startDate} to {req.endDate}
-                        </div>
-                        <div style={{ fontSize: '0.785rem', color: '#fbbf24', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                          ⏱️ {days} {days === 1 ? 'Day' : 'Days'} Total
-                        </div>
+                    {/* Date Period: Only From and To dates formatted cleanly */}
+                    <td style={{ padding: '0.9rem 1.15rem' }}>
+                      <div style={{ fontSize: '0.86rem', color: '#f1f5f9', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                        {fmtLeaveDate(req.startDate)} to {fmtLeaveDate(req.endDate)}
                       </div>
                     </td>
 
-                    {/* Reason */}
-                    <td style={{ padding: '1.1rem 1.25rem', maxWidth: '240px' }}>
-                      <div style={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        color: '#cbd5e1',
-                        fontSize: '0.86rem'
-                      }}>
-                        {req.reason}
+                    {/* Reason: Read button & preview */}
+                    <td style={{ padding: '0.9rem 1.15rem', maxWidth: '240px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          color: '#cbd5e1',
+                          fontSize: '0.84rem',
+                          maxWidth: '160px'
+                        }}>
+                          {req.reason}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setReadingReasonModal(req)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            padding: '0.24rem 0.55rem',
+                            borderRadius: '6px',
+                            background: 'rgba(56, 189, 248, 0.12)',
+                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                            color: '#38bdf8',
+                            fontSize: '0.74rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: 'all 0.2s ease',
+                            flexShrink: 0
+                          }}
+                          title="Click to read full leave reason in popup"
+                        >
+                          <Eye size={13} />
+                          <span>Read</span>
+                        </button>
                       </div>
                     </td>
 
                     {/* Status */}
-                    <td style={{ padding: '1.1rem 1.25rem', textAlign: 'center' }}>
+                    <td style={{ padding: '0.9rem 1.15rem', textAlign: 'center' }}>
                       <StatusBadge status={req.status} />
                     </td>
 
-                    {/* Actions */}
-                    <td style={{ padding: '1.1rem 1.25rem', textAlign: 'right', borderRadius: '0 16px 16px 0' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
-                        <button
-                          onClick={() => setSelectedLeave(req)}
-                          style={{
-                            padding: '0.45rem 0.8rem',
-                            borderRadius: '10px',
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
-                            color: '#fff',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.35rem',
-                            transition: 'all 0.2s ease'
-                          }}
-                          title="View Full Application"
-                        >
-                          <Eye size={15} />
-                          <span>Inspect</span>
-                        </button>
-
+                    {/* Actions: Pending shows Approve/Reject; already Approved/Rejected shows no inspect or text */}
+                    <td style={{ padding: '0.9rem 1.15rem', textAlign: 'right', borderRadius: '0 16px 16px 0' }}>
+                      <div style={{ display: 'flex', gap: '0.45rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                         {req.status === 'Pending' ? (
                           <>
                             <button
                               onClick={() => handleStatusUpdate(req._id, 'Approved')}
                               style={{
-                                padding: '0.45rem 0.85rem',
-                                borderRadius: '10px',
+                                padding: '0.38rem 0.75rem',
+                                borderRadius: '8px',
                                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                                 border: 'none',
                                 color: '#fff',
-                                fontSize: '0.8rem',
+                                fontSize: '0.78rem',
                                 fontWeight: 700,
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.35rem',
-                                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)'
+                                gap: '0.3rem',
+                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.35)'
                               }}
+                              title="Approve Leave"
                             >
-                              <Check size={15} />
+                              <Check size={14} />
                               <span>Approve</span>
                             </button>
                             <button
                               onClick={() => handleStatusUpdate(req._id, 'Rejected')}
                               style={{
-                                padding: '0.45rem 0.85rem',
-                                borderRadius: '10px',
+                                padding: '0.38rem 0.75rem',
+                                borderRadius: '8px',
                                 background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                                 border: 'none',
                                 color: '#fff',
-                                fontSize: '0.8rem',
+                                fontSize: '0.78rem',
                                 fontWeight: 700,
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.35rem',
-                                boxShadow: '0 4px 14px rgba(239, 68, 68, 0.4)'
+                                gap: '0.3rem',
+                                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.35)'
                               }}
+                              title="Reject Leave"
                             >
-                              <X size={15} />
+                              <X size={14} />
                               <span>Reject</span>
                             </button>
                           </>
                         ) : (
-                          <span style={{ fontSize: '0.785rem', color: '#94a3b8', fontWeight: 600 }}>
-                            {req.status === 'Approved' ? '✓ Authorized' : '✗ Declined'}
-                          </span>
+                          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>—</span>
                         )}
                       </div>
                     </td>
@@ -715,158 +684,74 @@ const AdminLeave = () => {
         </div>
       </Card>
 
-      {/* Inspect Leave Detail Modal */}
-      <AnimatePresence>
-        {selectedLeave && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1.5rem'
-          }}>
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              style={{
-                background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-                borderRadius: '20px',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                width: '100%',
-                maxWidth: '540px',
-                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
-                overflow: 'hidden'
-              }}
-            >
+      {/* Leave Reason Popup Modal */}
+      {readingReasonModal && (
+        <Modal
+          isOpen={!!readingReasonModal}
+          onClose={() => setReadingReasonModal(null)}
+          title={
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#60a5fa' }}>
+              <Eye size={18} />
+              <span>Leave Reason — {readingReasonModal.employee?.fullName || 'Employee'}</span>
+            </div>
+          }
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem', background: 'rgba(255, 255, 255, 0.03)', padding: '0.85rem', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.07)' }}>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Staff Member</span>
+                <div style={{ fontWeight: 700, color: '#f8fafc', fontSize: '0.88rem', marginTop: '2px' }}>{readingReasonModal.employee?.fullName}</div>
+                <span style={{ fontSize: '0.74rem', color: '#60a5fa' }}>{readingReasonModal.employee?.employeeId || readingReasonModal.employeeId}</span>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Leave Type</span>
+                <div style={{ fontWeight: 700, color: '#fbbf24', fontSize: '0.88rem', marginTop: '2px' }}>{readingReasonModal.leaveType}</div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Leave Period</span>
+                <div style={{ fontWeight: 600, color: '#f8fafc', fontSize: '0.84rem', marginTop: '2px' }}>
+                  {fmtLeaveDate(readingReasonModal.startDate)} to {fmtLeaveDate(readingReasonModal.endDate)}
+                </div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
+                <div style={{ marginTop: '2px' }}><StatusBadge status={readingReasonModal.status} /></div>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#e2e8f0', marginBottom: '0.4rem', display: 'block' }}>
+                Reason for Leave
+              </label>
               <div style={{
-                padding: '1.5rem 1.8rem',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center',
-                background: 'rgba(255, 255, 255, 0.03)'
+                background: 'rgba(15, 23, 42, 0.75)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '10px',
+                padding: '1rem',
+                color: '#cbd5e1',
+                fontSize: '0.92rem',
+                lineHeight: 1.6,
+                maxHeight: '220px',
+                overflowY: 'auto',
+                whiteSpace: 'pre-wrap'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <FileText color="#f59e0b" size={22} />
-                  <h3 style={{ margin: 0, color: '#fff', fontSize: '1.2rem' }}>Leave Application Dossier</h3>
-                </div>
-                <button
-                  onClick={() => setSelectedLeave(null)}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                >
-                  <X size={20} />
-                </button>
+                {readingReasonModal.reason || 'No specific remarks provided.'}
               </div>
+            </div>
 
-              <div style={{ padding: '1.8rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px' }}>
-                  <div style={{
-                    width: '46px',
-                    height: '46px',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontWeight: 700,
-                    fontSize: '1.1rem'
-                  }}>
-                    {selectedLeave.employee?.avatar || 'EMP'}
-                  </div>
-                  <div>
-                    <h4 style={{ margin: 0, color: '#fff', fontSize: '1.1rem' }}>{selectedLeave.employee?.fullName}</h4>
-                    <span style={{ fontSize: '0.85rem', color: '#a5b4fc' }}>
-                      ID: {selectedLeave.employee?.employeeId || selectedLeave.employeeId} • {selectedLeave.employee?.department || 'Operations'}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.9rem', borderRadius: '10px' }}>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Leave Type</span>
-                    <div style={{ fontWeight: 700, color: '#fff', marginTop: '0.2rem' }}>{selectedLeave.leaveType}</div>
-                  </div>
-                  <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.9rem', borderRadius: '10px' }}>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Duration</span>
-                    <div style={{ fontWeight: 700, color: '#f59e0b', marginTop: '0.2rem' }}>
-                      {calculateDays(selectedLeave.startDate, selectedLeave.endDate)} Days Off
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '0.9rem', borderRadius: '10px' }}>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Date Window</span>
-                  <div style={{ fontWeight: 600, color: '#e2e8f0', marginTop: '0.2rem' }}>
-                    From {selectedLeave.startDate} to {selectedLeave.endDate}
-                  </div>
-                </div>
-
-                <div style={{ background: 'rgba(0, 0, 0, 0.25)', padding: '1rem', borderRadius: '10px' }}>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Application Reason</span>
-                  <p style={{ color: '#e2e8f0', margin: '0.4rem 0 0 0', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                    "{selectedLeave.reason}"
-                  </p>
-                </div>
-              </div>
-
-              <div style={{
-                padding: '1.2rem 1.8rem',
-                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                display: 'flex',
-                justify: 'space-between',
-                alignItems: 'center',
-                background: 'rgba(0, 0, 0, 0.2)'
-              }}>
-                <StatusBadge status={selectedLeave.status} />
-
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  {selectedLeave.status !== 'Approved' && (
-                    <button
-                      onClick={() => handleStatusUpdate(selectedLeave._id, 'Approved')}
-                      style={{
-                        padding: '0.6rem 1.2rem',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #10b981, #059669)',
-                        border: 'none',
-                        color: '#fff',
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Approve Request
-                    </button>
-                  )}
-                  {selectedLeave.status !== 'Rejected' && (
-                    <button
-                      onClick={() => handleStatusUpdate(selectedLeave._id, 'Rejected')}
-                      style={{
-                        padding: '0.6rem 1.2rem',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                        border: 'none',
-                        color: '#fff',
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Reject Request
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={() => setReadingReasonModal(null)} 
+                style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}
+              >
+                Close
+              </button>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+        </Modal>
+      )}
     </motion.div>
   );
 };

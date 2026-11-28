@@ -323,16 +323,22 @@ const AdminReports = () => {
       
       {/* 1. HERO HEADER */}
       <div className="ultra-premium-hero">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
           <div>
-            <h1 className="welcome-title-glowing">Daily Work Reports Audit</h1>
-            <p style={{ color: '#94a3b8', margin: '0.2rem 0 0 0', fontSize: '0.95rem' }}>
+            <div className="admin-hero-pill-badge" style={{ background: 'rgba(14, 165, 233, 0.15)', border: '1px solid rgba(14, 165, 233, 0.35)', color: '#7dd3fc' }}>
+              <Sparkles size={13} style={{ color: '#38bdf8' }} />
+              <span>Executive Personnel Deliverables</span>
+              <span style={{ opacity: 0.5 }}>•</span>
+              <span style={{ color: '#34d399' }}>Daily Audit</span>
+            </div>
+            <h1 className="welcome-title-glowing" style={{ fontSize: '1.9rem', margin: '0 0 0.35rem 0' }}>Daily Work Reports Audit</h1>
+            <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.88rem' }}>
               Audit & Review End-of-Day Work Reports Submitted by Employees with One-Click Approvals
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={exportDailyReportsPDF} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+            <button className="btn btn-primary" onClick={exportDailyReportsPDF} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.65rem 1.25rem', borderRadius: '10px', fontWeight: 700, fontSize: '0.88rem', boxShadow: '0 4px 18px rgba(14, 165, 233, 0.4)' }}>
               <Printer size={15} /> Download PDF
             </button>
           </div>
