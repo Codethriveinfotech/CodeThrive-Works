@@ -25,10 +25,8 @@ const SplashScreen = ({ isFading }) => {
       </div>
 
       <div className="splash-content">
-        {/* Luminous Logo with Holographic Aura & Orbit Ring */}
+        {/* Luminous Logo Emblem */}
         <div className="logo-wrapper">
-          <div className="splash-halo-glow"></div>
-          <div className="splash-orbit-ring"></div>
           <img 
             src="/logo-clean.png" 
             alt="CodeThrive Logo" 

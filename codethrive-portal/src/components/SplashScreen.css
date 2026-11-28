@@ -123,56 +123,25 @@
   }
 }
 
-/* Logo Wrapper & Glowing Rings */
+/* Logo Wrapper */
 .logo-wrapper {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 1.6rem;
-}
-
-.splash-halo-glow {
-  position: absolute;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.45) 0%, rgba(16, 185, 129, 0.2) 45%, transparent 70%);
-  filter: blur(28px);
-  animation: haloPulse 3s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes haloPulse {
-  0% { transform: scale(0.85); opacity: 0.5; }
-  100% { transform: scale(1.18); opacity: 0.95; }
-}
-
-.splash-orbit-ring {
-  position: absolute;
-  width: 175px;
-  height: 175px;
-  border-radius: 50%;
-  border: 1px dashed rgba(56, 189, 248, 0.3);
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
-  animation: orbitRotate 16s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes orbitRotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  background: transparent !important;
 }
 
 .splash-logo {
   position: relative;
   z-index: 2;
-  width: 140px;
+  width: 145px;
   max-width: 45vw;
   height: auto;
   object-fit: contain;
   background: transparent !important;
-  filter: drop-shadow(0 0 25px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 50px rgba(16, 185, 129, 0.45));
+  filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.75)) drop-shadow(0 0 45px rgba(16, 185, 129, 0.4));
   animation: logoBreath 3s ease-in-out infinite alternate;
 }
 
