@@ -80,9 +80,12 @@ const LoginGreetingSplash = ({ user, isFirstLogin, onFinish, customRedirectText 
         <div className="greeting-logo-wrapper">
           <div className="greeting-logo-glow"></div>
           <img
-            src="/full_logo.png"
-            alt="CodeThrive Infotech Logo"
+            src="/logo-clean.png"
+            alt="CodeThrive Logo"
             className="greeting-splash-logo"
+            onError={(e) => {
+              e.target.src = '/logo.png';
+            }}
           />
         </div>
 
