@@ -516,7 +516,7 @@ const AdminAttendance = () => {
 
             {/* Filter */}
             <div className="aa-filter-tabs">
-              {['ALL', 'Present', 'Absent', 'On Leave', 'Half Day', 'Late'].map(f => (
+              {['ALL', 'Present', 'Absent', 'On Leave', 'Half Day', 'Late', 'Sunday Holiday', 'Government Holiday', 'Office Holiday'].map(f => (
                 <button
                   key={f}
                   className={`aa-filter-btn ${filterStatus === f ? 'active' : ''}`}

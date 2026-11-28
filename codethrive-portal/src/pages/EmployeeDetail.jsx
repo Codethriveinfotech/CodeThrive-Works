@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../utils/api';
 import { jsPDF } from 'jspdf';
@@ -60,6 +60,31 @@ const getAuditMonthOptions = () => {
 };
 
 const AUDIT_MONTH_OPTIONS = getAuditMonthOptions();
+
+const TN_GOVT_HOLIDAYS = {
+  '01-01': "New Year's Day",
+  '01-15': 'Pongal',
+  '01-16': 'Thiruvalluvar Day',
+  '01-17': 'Uzhavar Thirunal',
+  '01-26': 'Republic Day',
+  '03-19': 'Telugu New Year',
+  '03-21': 'Ramzan (Id-ul-Fitr)',
+  '03-31': 'Mahaveer Jayanthi',
+  '04-03': 'Good Friday',
+  '04-14': 'Tamil New Year / Dr. Ambedkar Jayanti',
+  '05-01': 'May Day (Labour Day)',
+  '05-28': 'Bakrid (Eid al-Adha)',
+  '06-26': 'Muharram',
+  '08-15': 'Independence Day',
+  '08-26': 'Milad-un-Nabi',
+  '09-04': 'Krishna Jayanthi',
+  '09-14': 'Vinayakar Chathurthi',
+  '10-02': 'Gandhi Jayanthi',
+  '10-19': 'Ayutha Pooja',
+  '10-20': 'Vijaya Dasami',
+  '11-08': 'Deepavali',
+  '12-25': 'Christmas'
+};
 
 const DEFAULT_DEMO_EMPLOYEES = [
   {
@@ -470,27 +495,34 @@ const EmployeeDetail = () => {
 
   // Attendance status business rules:
   // 1. If manually rectified/approved by Admin -> respect Admin rectified status
-  // 2. Check in on or before grace time (10:15 AM) -> Present
-  // 3. Check in after grace time (10:15 AM) and before 1:00 PM -> Late (unless rectified)
-  // 4. Check in after 1:00 PM (13:00) -> Half Day
-  // 5. Did not check in -> On Leave
+  // 2. Explicit Sunday Holiday / Government Holiday / Office Holiday
+  // 3. Check in on or before grace time (10:15 AM) -> Present
+  // 4. Check in after grace time (10:15 AM) and before 1:00 PM -> Late (unless rectified)
+  // 5. Check in after 1:00 PM (13:00) -> Half Day
+  // 6. Did not check in -> Absent or Holiday
   const computeAttendanceStatus = (row) => {
-    if (!row) return 'On Leave';
+    if (!row) return 'Absent';
     if (row.isManualCorrection && row.status) {
       return row.status;
     }
-    const raw = (row.status || '').trim().toLowerCase();
-    if (raw === 'permission') return 'Permission';
-    if (raw === 'wfh' || raw === 'work from home') return 'Work From Home';
-    if (raw === 'leave' || raw === 'on leave') return 'On Leave';
-    if (raw === 'absent') return 'Absent';
+    const raw = (row.displayStatus || row.status || '').trim();
+    if (raw === 'Sunday Holiday') return 'Sunday Holiday';
+    if (raw === 'Government Holiday') return 'Government Holiday';
+    if (raw === 'Office Holiday') return 'Office Holiday';
+    if (raw.toLowerCase() === 'permission') return 'Permission';
+    if (raw.toLowerCase() === 'wfh' || raw.toLowerCase() === 'work from home') return 'Work From Home';
+    if (raw.toLowerCase() === 'on leave' || raw.toLowerCase() === 'leave') return 'On Leave';
+    if (raw.toLowerCase() === 'absent') return 'Absent';
+    if (raw === 'Not Checked In') return 'Not Checked In';
 
     if (!row.firstLoginTime) {
-      return 'On Leave';
+      if (row.isSundayHoliday) return 'Sunday Holiday';
+      if (row.isGovtHoliday) return 'Government Holiday';
+      return row.status || 'Absent';
     }
 
     const dt = new Date(row.firstLoginTime);
-    if (isNaN(dt.getTime())) return 'On Leave';
+    if (isNaN(dt.getTime())) return 'Absent';
 
     const istStr = dt.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
     const [h, m] = istStr.split(':').map(Number);
@@ -513,7 +545,10 @@ const EmployeeDetail = () => {
         ? record.date.split('T')[0] 
         : new Date(record.date).toISOString().split('T')[0];
 
-      let inTime = '09:30';
+      const currentStatus = record.displayStatus || record.status || computeAttendanceStatus(record) || 'Present';
+      const isAbsentOrHoliday = ['Absent', 'Sunday Holiday', 'Government Holiday', 'Office Holiday', 'Not Checked In'].includes(currentStatus);
+
+      let inTime = isAbsentOrHoliday ? '' : '09:30';
       if (record.firstLoginTime) {
         const d = new Date(record.firstLoginTime);
         const hh = String(d.getHours()).padStart(2, '0');
@@ -521,7 +556,7 @@ const EmployeeDetail = () => {
         inTime = `${hh}:${mm}`;
       }
 
-      let outTime = '18:30';
+      let outTime = isAbsentOrHoliday ? '' : '18:30';
       if (record.lastLogoutTime) {
         const d = new Date(record.lastLogoutTime);
         const hh = String(d.getHours()).padStart(2, '0');
@@ -534,12 +569,12 @@ const EmployeeDetail = () => {
 
       setRectifyForm({
         date: recDate,
-        status: record.status || computeAttendanceStatus(record) || 'Present',
+        status: currentStatus,
         inTime,
         outTime,
         breakMinutes: bMinutes,
         lunchMinutes: lMinutes,
-        reason: record.correctionReason || ''
+        reason: record.correctionReason || record.remarks || ''
       });
       setEditingAttendanceRecord(record);
     } else {
@@ -743,7 +778,8 @@ const EmployeeDetail = () => {
   };
 
   const exportEmpAttendancePDF = async () => {
-    if (!employee || !empAttendanceHistory) return;
+    const recordsToExport = displayAttendanceRecords?.length > 0 ? displayAttendanceRecords : empAttendanceHistory;
+    if (!employee || !recordsToExport) return;
     try {
       const { doc, startY, finalizeDoc } = await createOfficialCodeThriveDoc({
         title: 'EMPLOYEE ATTENDANCE AUDIT REPORT',
@@ -756,14 +792,14 @@ const EmployeeDetail = () => {
       });
 
       const tableColumn = ["Date", "Check-In", "Check-Out", "Work Time", "Break", "Lunch", "Status"];
-      const tableRows = empAttendanceHistory.map(row => [
+      const tableRows = recordsToExport.map(row => [
         formatDateWithDay(row.date),
         row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
         row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
-        formatHours(row.totalWorkDurationInSeconds),
-        formatHours(row.totalBreakDurationInSeconds || 0),
-        formatHours(row.totalLunchDurationInSeconds || 0),
-        computeAttendanceStatus(row)
+        row.totalWorkDurationInSeconds > 0 ? formatHours(row.totalWorkDurationInSeconds) : '–',
+        row.totalBreakDurationInSeconds > 0 ? formatHours(row.totalBreakDurationInSeconds) : '–',
+        row.totalLunchDurationInSeconds > 0 ? formatHours(row.totalLunchDurationInSeconds) : '–',
+        row.displayStatus || computeAttendanceStatus(row)
       ]);
 
       const autoTableFn = autoTable || doc.autoTable;
@@ -783,17 +819,18 @@ const EmployeeDetail = () => {
   };
 
   const exportEmpAttendanceWord = () => {
-    if (!employee || !empAttendanceHistory) return;
+    const recordsToExport = displayAttendanceRecords?.length > 0 ? displayAttendanceRecords : empAttendanceHistory;
+    if (!employee || !recordsToExport) return;
     try {
       const tableColumn = ["Date", "Check-In", "Check-Out", "Work Time", "Break", "Lunch", "Status"];
-      const tableRows = empAttendanceHistory.map(row => [
+      const tableRows = recordsToExport.map(row => [
         formatDateWithDay(row.date),
         row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
         row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
-        formatHours(row.totalWorkDurationInSeconds),
-        formatHours(row.totalBreakDurationInSeconds || 0),
-        formatHours(row.totalLunchDurationInSeconds || 0),
-        row.status || 'Present'
+        row.totalWorkDurationInSeconds > 0 ? formatHours(row.totalWorkDurationInSeconds) : '–',
+        row.totalBreakDurationInSeconds > 0 ? formatHours(row.totalBreakDurationInSeconds) : '–',
+        row.totalLunchDurationInSeconds > 0 ? formatHours(row.totalLunchDurationInSeconds) : '–',
+        row.displayStatus || computeAttendanceStatus(row)
       ]);
 
       exportOfficialWordDoc({
@@ -814,18 +851,19 @@ const EmployeeDetail = () => {
   };
 
   const exportEmpAttendanceExcel = () => {
-    if (!employee || !empAttendanceHistory) return;
+    const recordsToExport = displayAttendanceRecords?.length > 0 ? displayAttendanceRecords : empAttendanceHistory;
+    if (!employee || !recordsToExport) return;
     try {
-      const exportData = empAttendanceHistory.map(row => ({
+      const exportData = recordsToExport.map(row => ({
         Date: formatDate(row.date),
         'Employee ID': employee.employeeId,
         'Employee Name': employee.fullName,
         'Check-In Time': row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
         'Check-Out Time': row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
-        'Work Duration': formatHours(row.totalWorkDurationInSeconds),
-        'Break Duration': formatHours(row.totalBreakDurationInSeconds || 0),
-        'Lunch Duration': formatHours(row.totalLunchDurationInSeconds || 0),
-        Status: computeAttendanceStatus(row)
+        'Work Duration': row.totalWorkDurationInSeconds > 0 ? formatHours(row.totalWorkDurationInSeconds) : '–',
+        'Break Duration': row.totalBreakDurationInSeconds > 0 ? formatHours(row.totalBreakDurationInSeconds) : '–',
+        'Lunch Duration': row.totalLunchDurationInSeconds > 0 ? formatHours(row.totalLunchDurationInSeconds) : '–',
+        Status: row.displayStatus || computeAttendanceStatus(row)
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -1345,6 +1383,252 @@ CodeThrive Infotech • Confidential Personnel Archive
   const filteredLeaves = filterByMonth(employee?.sentByEmployee?.leaveApplications, l => l.startDate || l.dates || l.createdAt || l.month || '');
   const filteredPayslips = filterByMonth(employee?.sentByEmployee?.payslips, p => p.monthCode || p.month || p.createdAt || '');
   const completenessPct = calculateProfileCompleteness(employee);
+
+  // Comprehensive daily attendance register matching the employee portal
+  // Covers all days starting from 02/11/2026 onwards for November 2026 (descending)
+  const displayAttendanceRecords = useMemo(() => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1; // 1-12
+    const currentDay = today.getDate();
+    const currentHour = today.getHours();
+
+    let targetYear = 2026;
+    let targetMonth = 11;
+    if (selectedAuditMonth && selectedAuditMonth !== 'All') {
+      const [y, m] = selectedAuditMonth.split('-').map(Number);
+      if (y && m) {
+        targetYear = y;
+        targetMonth = m;
+      }
+    }
+
+    const isCurrentMonth = targetYear === currentYear && targetMonth === currentMonth;
+    const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+
+    // Portal officially in use starting from 02/11/2026
+    let startDay = 1;
+    if (targetYear === 2026 && targetMonth === 11) {
+      startDay = 2; // Started from 02/11/2026
+    } else if (new Date(targetYear, targetMonth - 1, 1) < new Date(2026, 10, 1)) {
+      return Array.isArray(empAttendanceHistory) ? empAttendanceHistory : [];
+    }
+
+    const endDay = isCurrentMonth ? currentDay : daysInMonth;
+
+    // Create lookup by date key (YYYY-MM-DD) from empAttendanceHistory
+    const historyMap = {};
+    (Array.isArray(empAttendanceHistory) ? empAttendanceHistory : []).forEach(row => {
+      if (row.date) {
+        let key = '';
+        if (typeof row.date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(row.date.trim())) {
+          key = row.date.trim().split('T')[0];
+        } else {
+          const d = new Date(row.date);
+          if (!isNaN(d.getTime())) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            key = `${y}-${m}-${day}`;
+          }
+        }
+        if (key && (!historyMap[key] || row.firstLoginTime || row.totalWorkDurationInSeconds > 0)) {
+          historyMap[key] = row;
+        }
+      }
+    });
+
+    // Leave map for employee
+    const leaveMap = {};
+    (employee?.sentByEmployee?.leaveApplications || []).forEach(l => {
+      const st = (l.status || '').toLowerCase();
+      if (st === 'approved' || st === 'pending') {
+        const start = l.startDate ? new Date(l.startDate) : null;
+        const end = l.endDate ? new Date(l.endDate) : start;
+        if (start && end) {
+          const cur = new Date(start);
+          while (cur <= end) {
+            const dateKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+            leaveMap[dateKey] = l;
+            cur.setDate(cur.getDate() + 1);
+          }
+        }
+      }
+    });
+
+    const rows = [];
+
+    // Loop descending from endDay down to startDay (newest at top)
+    for (let d = endDay; d >= startDay; d--) {
+      const y = targetYear;
+      const m = String(targetMonth).padStart(2, '0');
+      const dayStr = String(d).padStart(2, '0');
+      const dateKey = `${y}-${m}-${dayStr}`;
+      const dateIsoNoon = `${dateKey}T12:00:00.000Z`;
+      const dayOfWeek = new Date(targetYear, targetMonth - 1, d).getDay(); // 0 is Sunday
+      const mmdd = `${m}-${dayStr}`;
+      const isSunday = dayOfWeek === 0;
+      const govtHolidayName = TN_GOVT_HOLIDAYS[mmdd];
+      const isGovtHoliday = Boolean(govtHolidayName);
+      const isToday = isCurrentMonth && d === currentDay;
+
+      const existing = historyMap[dateKey];
+
+      // 1. If an actual punched record exists in history:
+      if (existing && (existing.firstLoginTime || (existing.status && !['absent', 'not checked in'].includes(existing.status.toLowerCase())))) {
+        let computedStatus = existing.status;
+        if (!existing.isManualCorrection) {
+          if (existing.firstLoginTime) {
+            const dt = new Date(existing.firstLoginTime);
+            const istStr = dt.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+            const [h, min] = istStr.split(':').map(Number);
+            if (h >= 13) computedStatus = 'Half Day';
+            else if (h > 10 || (h === 10 && min > 15)) computedStatus = 'Late';
+            else computedStatus = 'Present';
+          }
+        }
+        rows.push({
+          ...existing,
+          dateKey,
+          date: existing.date || dateIsoNoon,
+          displayStatus: computedStatus || 'Present',
+          status: computedStatus || 'Present'
+        });
+        continue;
+      }
+
+      // 2. Unpunched days:
+      // Sunday Holiday:
+      if (isSunday) {
+        rows.push({
+          _id: `sun_${dateKey}`,
+          dateKey,
+          date: dateIsoNoon,
+          status: 'Sunday Holiday',
+          displayStatus: 'Sunday Holiday',
+          isSundayHoliday: true,
+          remarks: 'Sunday Holiday',
+          firstLoginTime: null,
+          lastLogoutTime: null,
+          totalWorkDurationInSeconds: 0,
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0,
+          employee
+        });
+        continue;
+      }
+
+      // Government Holiday:
+      if (isGovtHoliday) {
+        rows.push({
+          _id: `gov_${dateKey}`,
+          dateKey,
+          date: dateIsoNoon,
+          status: 'Government Holiday',
+          displayStatus: 'Government Holiday',
+          isGovtHoliday: true,
+          holidayName: govtHolidayName,
+          remarks: `Government Holiday - ${govtHolidayName}`,
+          firstLoginTime: null,
+          lastLogoutTime: null,
+          totalWorkDurationInSeconds: 0,
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0,
+          employee
+        });
+        continue;
+      }
+
+      // Working day (Monday - Saturday):
+      const matchingLeave = leaveMap[dateKey];
+
+      if (isToday) {
+        // Shift starts at 10:00 AM. 2 hours after is 12:00 PM:
+        if (currentHour >= 12) {
+          rows.push({
+            _id: `today_absent_${dateKey}`,
+            dateKey,
+            date: dateIsoNoon,
+            status: 'Absent',
+            displayStatus: 'Absent',
+            remarks: matchingLeave ? `${matchingLeave.leaveType || 'Casual'} Leave (Approved)` : 'Absent (Cutoff 12:00 PM Passed)',
+            firstLoginTime: null,
+            lastLogoutTime: null,
+            totalWorkDurationInSeconds: 0,
+            totalBreakDurationInSeconds: 0,
+            totalLunchDurationInSeconds: 0,
+            employee
+          });
+        } else if (matchingLeave) {
+          rows.push({
+            _id: `today_leave_${dateKey}`,
+            dateKey,
+            date: dateIsoNoon,
+            status: 'Absent',
+            displayStatus: 'Absent',
+            remarks: `${matchingLeave.leaveType || 'Casual'} Leave (Approved)`,
+            firstLoginTime: null,
+            lastLogoutTime: null,
+            totalWorkDurationInSeconds: 0,
+            totalBreakDurationInSeconds: 0,
+            totalLunchDurationInSeconds: 0,
+            employee
+          });
+        } else {
+          rows.push({
+            _id: `today_not_checked_in_${dateKey}`,
+            dateKey,
+            date: dateIsoNoon,
+            status: 'Not Checked In',
+            displayStatus: 'Not Checked In',
+            remarks: 'Standard Shift (10:00 AM – 06:00 PM)',
+            firstLoginTime: null,
+            lastLogoutTime: null,
+            totalWorkDurationInSeconds: 0,
+            totalBreakDurationInSeconds: 0,
+            totalLunchDurationInSeconds: 0,
+            employee
+          });
+        }
+        continue;
+      }
+
+      // Past working days from 02/11/2026 onwards without punch-in:
+      if (matchingLeave) {
+        rows.push({
+          _id: `leave_${dateKey}`,
+          dateKey,
+          date: dateIsoNoon,
+          status: 'Absent',
+          displayStatus: 'Absent',
+          remarks: `${matchingLeave.leaveType || 'Casual'} Leave (Approved)`,
+          firstLoginTime: null,
+          lastLogoutTime: null,
+          totalWorkDurationInSeconds: 0,
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0,
+          employee
+        });
+      } else {
+        rows.push({
+          _id: `absent_${dateKey}`,
+          dateKey,
+          date: dateIsoNoon,
+          status: 'Absent',
+          displayStatus: 'Absent',
+          remarks: 'Absent - No Punch-In',
+          firstLoginTime: null,
+          lastLogoutTime: null,
+          totalWorkDurationInSeconds: 0,
+          totalBreakDurationInSeconds: 0,
+          totalLunchDurationInSeconds: 0,
+          employee
+        });
+      }
+    }
+
+    return rows;
+  }, [empAttendanceHistory, selectedAuditMonth, employee]);
 
   const handleDownloadMonthlyAuditPDF = async () => {
     if (!employee) return;
@@ -3362,7 +3646,7 @@ CodeThrive Infotech • Confidential Personnel Archive
                   Per-Day Check-In & Check-Out Attendance Audit: {employee.fullName}
                 </h3>
                 <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  Showing daily attendance logs ({empAttendanceHistory.length} records)
+                  Showing daily attendance logs ({displayAttendanceRecords.length} records)
                 </span>
               </div>
 
@@ -3388,28 +3672,28 @@ CodeThrive Infotech • Confidential Personnel Archive
             <div className="metrics-grid-4">
               <div className="metric-box">
                 <span className="box-title">Today's Live Status</span>
-                <StatusBadge status={computeAttendanceStatus(empAttendanceHistory[0])} />
+                <StatusBadge status={displayAttendanceRecords[0]?.displayStatus || 'Not Checked In'} />
               </div>
               <div className="metric-box">
                 <span className="box-title">Today Check-In</span>
                 <span className="box-val" style={{ color: 'var(--success)' }}>
-                  {empAttendanceHistory[0]?.firstLoginTime 
-                    ? new Date(empAttendanceHistory[0].firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                  {displayAttendanceRecords[0]?.firstLoginTime 
+                    ? new Date(displayAttendanceRecords[0].firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
                     : '--:--'}
                 </span>
               </div>
               <div className="metric-box">
                 <span className="box-title">Today Check-Out</span>
                 <span className="box-val" style={{ color: 'var(--info)' }}>
-                  {empAttendanceHistory[0]?.lastLogoutTime 
-                    ? new Date(empAttendanceHistory[0].lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                  {displayAttendanceRecords[0]?.lastLogoutTime 
+                    ? new Date(displayAttendanceRecords[0].lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
                     : '--:--'}
                 </span>
               </div>
               <div className="metric-box">
                 <span className="box-title">Total Days Logged</span>
                 <span className="box-val" style={{ color: 'var(--primary-light)' }}>
-                  {empAttendanceHistory.length} Days
+                  {displayAttendanceRecords.length} Days
                 </span>
               </div>
             </div>
@@ -3436,52 +3720,72 @@ CodeThrive Infotech • Confidential Personnel Archive
                       header: 'Check In Time',
                       accessor: 'firstLoginTime',
                       render: row => (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--success)', fontWeight: 600, fontFamily: 'monospace' }}>
-                          <LogIn size={14} /> {row.firstLoginTime ? new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                        </span>
+                        row.firstLoginTime ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--success)', fontWeight: 600, fontFamily: 'monospace' }}>
+                            <LogIn size={14} /> {new Date(row.firstLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace' }}>--:--</span>
+                        )
                       )
                     },
                     {
                       header: 'Check Out Time',
                       accessor: 'lastLogoutTime',
                       render: row => (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#f43f5e', fontWeight: 600, fontFamily: 'monospace' }}>
-                          <LogOut size={14} /> {row.lastLogoutTime ? new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                        </span>
+                        row.lastLogoutTime ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#f43f5e', fontWeight: 600, fontFamily: 'monospace' }}>
+                            <LogOut size={14} /> {new Date(row.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace' }}>--:--</span>
+                        )
                       )
                     },
                     {
                       header: 'Work Duration',
                       accessor: 'totalWorkDurationInSeconds',
                       render: row => (
-                        <span style={{ fontWeight: 700, color: 'var(--primary-light)', fontFamily: 'monospace' }}>
-                          {formatHours(row.totalWorkDurationInSeconds)}
-                        </span>
+                        row.totalWorkDurationInSeconds > 0 ? (
+                          <span style={{ fontWeight: 700, color: 'var(--primary-light)', fontFamily: 'monospace' }}>
+                            {formatHours(row.totalWorkDurationInSeconds)}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace' }}>–</span>
+                        )
                       )
                     },
                     {
                       header: 'Break Time',
                       accessor: 'totalBreakDurationInSeconds',
                       render: row => (
-                        <span style={{ color: '#fbbf24', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <Coffee size={13} /> {formatHours(row.totalBreakDurationInSeconds || 0)}
-                        </span>
+                        row.totalBreakDurationInSeconds > 0 ? (
+                          <span style={{ color: '#fbbf24', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Coffee size={13} /> {formatHours(row.totalBreakDurationInSeconds || 0)}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>–</span>
+                        )
                       )
                     },
                     {
                       header: 'Lunch Time',
                       accessor: 'totalLunchDurationInSeconds',
                       render: row => (
-                        <span style={{ color: '#60a5fa', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <Utensils size={13} /> {formatHours(row.totalLunchDurationInSeconds || 0)}
-                        </span>
+                        row.totalLunchDurationInSeconds > 0 ? (
+                          <span style={{ color: '#60a5fa', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Utensils size={13} /> {formatHours(row.totalLunchDurationInSeconds || 0)}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>–</span>
+                        )
                       )
                     },
                     {
                       header: 'Status',
                       accessor: 'status',
                       render: row => {
-                        const computed = computeAttendanceStatus(row);
+                        const computed = row.displayStatus || computeAttendanceStatus(row);
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                             <StatusBadge status={computed} text={computed} />
@@ -3515,7 +3819,7 @@ CodeThrive Infotech • Confidential Personnel Archive
                       )
                     }
                   ]}
-                  data={empAttendanceHistory}
+                  data={displayAttendanceRecords}
                   searchable={true}
                   itemsPerPage={10}
                 />
@@ -4489,6 +4793,9 @@ CodeThrive Infotech • Confidential Personnel Archive
                 <option value="Permission">Permission (Official Permission)</option>
                 <option value="On Leave">On Leave</option>
                 <option value="Absent">Absent</option>
+                <option value="Office Holiday">Office Holiday</option>
+                <option value="Sunday Holiday">Sunday Holiday</option>
+                <option value="Government Holiday">Government Holiday</option>
               </select>
             </div>
           </div>

@@ -1,6 +1,32 @@
 const Attendance = require('../models/Attendance');
 const Employee = require('../models/Employee');
 const AttendanceCorrection = require('../models/AttendanceCorrection');
+const LeaveRequest = require('../models/LeaveRequest');
+
+const TN_GOVT_HOLIDAYS = {
+  '01-01': "New Year's Day",
+  '01-15': 'Pongal',
+  '01-16': 'Thiruvalluvar Day',
+  '01-17': 'Uzhavar Thirunal',
+  '01-26': 'Republic Day',
+  '03-19': 'Telugu New Year',
+  '03-21': 'Ramzan (Id-ul-Fitr)',
+  '03-31': 'Mahaveer Jayanthi',
+  '04-03': 'Good Friday',
+  '04-14': 'Tamil New Year / Dr. Ambedkar Jayanti',
+  '05-01': 'May Day (Labour Day)',
+  '05-28': 'Bakrid (Eid al-Adha)',
+  '06-26': 'Muharram',
+  '08-15': 'Independence Day',
+  '08-26': 'Milad-un-Nabi',
+  '09-04': 'Krishna Jayanthi',
+  '09-14': 'Vinayakar Chathurthi',
+  '10-02': 'Gandhi Jayanthi',
+  '10-19': 'Ayutha Pooja',
+  '10-20': 'Vijaya Dasami',
+  '11-08': 'Deepavali',
+  '12-25': 'Christmas'
+};
 
 // Helper: Get start & end of a given date (or today)
 const getDayRange = (dateStr) => {
@@ -19,6 +45,30 @@ exports.getAttendanceRegister = async (req, res) => {
   try {
     const { date } = req.query;
     const { start, end } = getDayRange(date);
+
+    // Date computation for Sunday, Govt Holiday, and past/today status
+    const targetDate = date ? new Date(date) : new Date();
+    const dayOfWeek = targetDate.getDay(); // 0 = Sunday
+    const mStr = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const dStr = String(targetDate.getDate()).padStart(2, '0');
+    const mmdd = `${mStr}-${dStr}`;
+    const govtHolidayName = TN_GOVT_HOLIDAYS[mmdd];
+    const isSunday = dayOfWeek === 0;
+    const isGovtHoliday = Boolean(govtHolidayName);
+
+    const todayDate = new Date();
+    const isToday = targetDate.toDateString() === todayDate.toDateString();
+    const isPastDate = targetDate < new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
+    const currentHour = todayDate.getHours();
+
+    // Fetch approved leaves on this date
+    const activeLeaves = await LeaveRequest.find({
+      status: { $in: ['Approved', 'approved'] },
+      startDate: { $lte: end },
+      endDate: { $gte: start }
+    }).lean().catch(() => []);
+    const leaveEmpMap = new Map();
+    activeLeaves.forEach(l => leaveEmpMap.set(l.employee.toString(), l));
 
     // Fetch all active employees (excluding Admin/Superadmin accounts)
     const allEmployees = await Employee.find({
@@ -64,21 +114,29 @@ exports.getAttendanceRegister = async (req, res) => {
           if (att && att.isManualCorrection && att.status) {
             return att.status;
           }
-          // 2. Explicit approved leave or permission
-          if (att && att.status && ['Permission', 'On Leave', 'Absent', 'Half Day'].includes(att.status)) {
+          // 2. Explicit approved leave or holiday or status in DB
+          if (att && att.status && ['Permission', 'On Leave', 'Absent', 'Half Day', 'Office Holiday', 'Sunday Holiday', 'Government Holiday'].includes(att.status)) {
             return att.status;
           }
-          // 3. Not checked in yet
-          if (!att || !att.firstLoginTime) {
-            return att?.status || 'On Leave';
+          // 3. Punched in with login time
+          if (att && att.firstLoginTime) {
+            const dt = new Date(att.firstLoginTime);
+            const istStr = dt.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
+            const [h, m] = istStr.split(':').map(Number);
+            if (h >= 13) return 'Half Day';
+            if (h > 10 || (h === 10 && m > 15)) return 'Late';
+            return 'Present';
           }
-          // 4. Automatic calculation based on login time
-          const dt = new Date(att.firstLoginTime);
-          const istStr = dt.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour12: false });
-          const [h, m] = istStr.split(':').map(Number);
-          if (h >= 13) return 'Half Day';
-          if (h > 10 || (h === 10 && m > 15)) return 'Late';
-          return 'Present';
+          // 4. Not punched in
+          if (isSunday) return 'Sunday Holiday';
+          if (isGovtHoliday) return 'Government Holiday';
+          if (leaveEmpMap.has(emp._id.toString())) return 'Absent';
+          if (isToday) {
+            if (currentHour >= 12) return 'Absent';
+            return 'Not Checked In';
+          }
+          if (isPastDate) return 'Absent';
+          return 'Not Checked In';
         })(),
         firstLoginTime: att ? att.firstLoginTime : null,
         lastLogoutTime: att ? att.lastLogoutTime : null,
@@ -91,12 +149,13 @@ exports.getAttendanceRegister = async (req, res) => {
     // Summary stats
     const summary = {
       total: register.length,
-      present: register.filter(r => ['Working', 'Checked Out', 'On Break', 'On Lunch', 'Present', 'Late', 'Permission'].includes(r.status)).length,
+      present: register.filter(r => ['Working', 'Checked Out', 'On Break', 'On Lunch', 'Present', 'Late'].includes(r.status)).length,
       absent: register.filter(r => r.status === 'Absent').length,
       permission: register.filter(r => r.status === 'Permission').length,
       onLeave: register.filter(r => r.status === 'On Leave').length,
       halfDay: register.filter(r => r.status === 'Half Day').length,
       late: register.filter(r => r.status === 'Late').length,
+      holiday: register.filter(r => ['Sunday Holiday', 'Government Holiday', 'Office Holiday'].includes(r.status)).length,
     };
 
     res.status(200).json({
